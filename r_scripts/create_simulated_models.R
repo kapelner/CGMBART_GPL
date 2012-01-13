@@ -3,7 +3,7 @@
 #vector of data models below if you want to include it in the bake-off.
 #You should use underscores for spaces for display purposes later
 
-simulated_data_models = c(
+simulated_data_model_names = c(
 	"just_noise_linear",
 	"univariate_linear",
 	"bivariate_linear",
@@ -11,7 +11,14 @@ simulated_data_models = c(
 	"friedman"
 )
 
-DEFAULT_N = 2000
+simulate_data_from_simulation_name = function(simulated_data_model_name){
+	#get the function from the R environment by doing a string lookup
+	simulated_data_model_function = get(paste("simu_data_mod__", simulated_data_model_name, sep = ""))
+	#then just run the function... pretty simple
+	simulated_data_model_function()
+}
+
+DEFAULT_N = 1000
 DEFAULT_SIGMA = 1
 
 

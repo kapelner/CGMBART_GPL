@@ -7,9 +7,9 @@ library(rJava)
 source("r_scripts//create_simulated_models.R")
 
 #constants
+NUM_GIGS_RAM_TO_USE = 4
 JAR_DEPENDENCIES = c("bart_java.jar", "commons-math-2.1.jar", "jai_codec.jar", "jai_core.jar", "gemident_1_12_12.jar")
 DATA_FILENAME = "datasets/bart_data.csv"
-
 
 bart_model = function(training_data, num_trees = 50, num_burn_in = 1000, num_iterations_after_burn_in = 1000, class_or_regr = "r", debug_log = FALSE){
 	num_gibbs = num_burn_in + num_iterations_after_burn_in
@@ -23,19 +23,15 @@ bart_model = function(training_data, num_trees = 50, num_burn_in = 1000, num_ite
 	#this is how we're going to send the data in BART for now even
 	#though it is inefficient
 	write.csv(training_data, DATA_FILENAME, row.names = FALSE)
-	#open up the java and create the BART model to spec with what user wants
-	.jinit()
-	for (dependency in JAR_DEPENDENCIES){
-		.jaddClassPath(paste(directory_where_code_is, "\\", dependency, sep = ""))
-	}
-	bart_machine = .jnew("CGM_BART.CGMBARTRegression")
-	if (debug_log){
-		.jcall(bart_machine, "V", "writeToDebugLog")	
-	}
+	
+	#initialize the JVM
+	bart_machine = init_jvm_and_bart_object(debug_log)
+	#make bart to spec with what the user wants
 	.jcall(bart_machine, "V", "setNumTrees", as.integer(num_trees))
 	.jcall(bart_machine, "V", "setNumGibbsBurnIn", as.integer(num_burn_in))
 	.jcall(bart_machine, "V", "setNumGibbsTotalIterations", as.integer(num_gibbs))
 	
+	#build the bart machine for use later
 	#need http://math.acadiau.ca/ACMMaC/Rmpi/sample.html RMPI here
 	#or better yet do this in pieces and plot slowly
 	.jcall(bart_machine, "V", "Build")
@@ -64,33 +60,44 @@ bart_model = function(training_data, num_trees = 50, num_burn_in = 1000, num_ite
 		all_tree_liks = all_tree_liks)
 }
 
-plot_sigsqs_convergence_diagnostics = function(model){
+init_jvm_and_bart_object = function(debug_log){
+	.jinit(parameters = paste("-Xmx", NUM_GIGS_RAM_TO_USE, "g", sep = ""))
+	for (dependency in JAR_DEPENDENCIES){
+		.jaddClassPath(paste(directory_where_code_is, "\\", dependency, sep = ""))
+	}
+	bart_machine = .jnew("CGM_BART.CGMBARTRegression")
+	if (debug_log){
+		.jcall(bart_machine, "V", "writeToDebugLog")	
+	}
+	bart_machine
+}
+
+plot_sigsqs_convergence_diagnostics = function(model, extra_text = NULL){
 	sigsqs = model[["sigsqs"]]
 	num_iterations_after_burn_in = model[["num_iterations_after_burn_in"]]
+	num_burn_in = model[["num_burn_in"]]
 	num_gibbs = model[["num_gibbs"]]
 	
 	#first look at sigsqs
 	avg_sigsqs = mean(sigsqs[(length(sigsqs) - num_iterations_after_burn_in) : length(sigsqs)], na.rm = TRUE)
 	windows() 
 	plot(sigsqs, 
-			main = paste("Sigsq throughout entire project  sigsq after burn in ~ ", round(avg_sigsqs, 2)), 
-			xlab = "Gibbs sample #", 
+			main = paste("Sigsq throughout entire project  sigsq after burn in ~ ", round(avg_sigsqs, 2), ifelse(is.null(extra_text), "", paste("\n", extra_text))), 
+			xlab = "Gibbs sample # (gray line indicates burn-in, yellow lines are the 95% PPI after burn-in)", 
 			ylim = c(max(min(sigsqs) - 0.1, 0), min(sigsqs) + 7.5 * min(sigsqs)),
 			pch = ".", 
-			cex = 3, 
+			cex = 3,
 			col = "gray")
-	points(sigsqs, 
-			main = paste("Sigsq throughout entire project sigsq after burn in ~ ", round(avg_sigsqs, 2)), 
-			xlab = "Gibbs sample #",
-			pch = ".", 
-			col = "red")
+	points(sigsqs, pch = ".", col = "red")
 	ppi_sigsqs = quantile(sigsqs[(length(sigsqs) - num_gibbs) : length(sigsqs)], c(.025, .975))
-	abline(a = ppi_sigsqs[1], b = 0, col = "grey")
-	abline(a = ppi_sigsqs[2], b = 0, col = "grey")	
+	abline(a = ppi_sigsqs[1], b = 0, col = "yellow")
+	abline(a = ppi_sigsqs[2], b = 0, col = "yellow")	
+	abline(v = num_burn_in, col = "gray")
 }
 
-plot_tree_liks_convergence_diagnostics = function(model){
+plot_tree_liks_convergence_diagnostics = function(model, extra_text = NULL){
 	all_tree_liks = model[["all_tree_liks"]]
+	num_burn_in = model[["num_burn_in"]]
 	num_gibbs = model[["num_gibbs"]]	
 	
 	treeliks_scale = (max(all_tree_liks) - min(all_tree_liks)) * 0.05
@@ -100,16 +107,17 @@ plot_tree_liks_convergence_diagnostics = function(model){
 			all_tree_liks[1, ], 
 			col = sample(colors(), 1),
 			pch = ".",
-			main = "tree log proportional likelihood by iteration", 
+			main = paste("Tree ln(prop Lik) by Iteration", ifelse(is.null(extra_text), "", paste("\n", extra_text))), 
 			ylim = c(max(all_tree_liks) - treeliks_scale, max(all_tree_liks) + 200),
-			xlab = "Gibbs sample #", 
+			xlab = "Gibbs sample # (gray line indicates burn in)", 
 			ylab = "log proportional likelihood")
 	for (t in 2 : nrow(all_tree_liks)){
 		points(1 : (num_gibbs + 1), all_tree_liks[t, ], col = sample(colors(), 1), main = "tree log proportional likelihood", pch = ".", cex = 2)
-	}	
+	}
+	abline(v = num_burn_in, col = "gray")
 }
 
-plot_y_vs_yhat = function(bart_predictions){
+plot_y_vs_yhat = function(bart_predictions, extra_text = NULL){
 	y = bart_predictions[["y"]]
 	n = length(y)
 	y_hat = bart_predictions[["y_hat"]]
@@ -122,9 +130,10 @@ plot_y_vs_yhat = function(bart_predictions){
 	L2_err = bart_predictions[["L2_err"]]
 
 	#make the general plot
+	windows() 
 	plot(y, 
 		y_hat, 
-		main = paste("y vs yhat from BART with ", (ppi_conf * 100), "% PPIs (", round(prop_ys_in_ppi * 100, 2), "% coverage)\nL1err = ", L1_err, " L2err = ", L2_err, sep = ""), 
+		main = paste("BART y vs yhat, ", (ppi_conf * 100), "% PPIs (", round(prop_ys_in_ppi * 100, 2), "% coverage), L1err = ", L1_err, ", L2err = ", L2_err, ifelse(is.null(extra_text), "", paste("\n", extra_text)), sep = ""), 
 		xlab = paste("y\ngreen circle - the PPI for yhat captures true y", sep = ""), 
 		ylab = "y_hat")
 	#draw PPI's
@@ -138,12 +147,16 @@ plot_y_vs_yhat = function(bart_predictions){
 	abline(a = 0, b = 1, col = "blue")		
 }
 
-look_at_sample_of_test_data = function(bart_predictions, grid_len = 3){
+look_at_sample_of_test_data = function(bart_predictions, grid_len = 3, extra_text = NULL){
 	par(mfrow = c(grid_len, grid_len))
+	windows() 
 	for (i in sample(1 : n, grid_len^2)){
 		y_i = test_data$y[i]
 		samps = as.numeric(y_hat_posterior_samples[i, ])
-		hist(samps, br = 50, main = paste("point #", i, "in the dataset y =", round(y_i, 2)), xlim = c(min(y_i, samps), max(y_i, samps)))
+		hist(samps, 
+			br = 50, 
+			main = paste("point #", i, "in the dataset y =", round(y_i, 2), ifelse(is.null(extra_text), "", paste("\n", extra_text))), 
+			xlim = c(min(y_i, samps), max(y_i, samps)))
 		abline(v = y_hat[i], col = "purple", lwd = 3)
 		abline(v = sample_mode(samps), col = "blue")
 		abline(v = median(samps), col = "red")
@@ -155,7 +168,6 @@ look_at_sample_of_test_data = function(bart_predictions, grid_len = 3){
 
 
 predict_and_calc_ppis = function(model, test_data, ppi_conf = 0.95){
-
 	#pull out data objects for convenience
 	bart_machine = model[["bart_machine"]]
 	num_iterations_after_burn_in = model[["num_iterations_after_burn_in"]]
@@ -204,6 +216,21 @@ predict_and_calc_ppis = function(model, test_data, ppi_conf = 0.95){
 		L2_err = L2_err)
 }
 
+run_random_forests_and_plot_y_vs_yhat = function(training_data, test_data, extra_text = NULL){
+	rf_mod = randomForest(y ~., training_data)
+	yhat_rf = predict(rf_mod, test_data)
+	
+	l1err_rf = round(sum(abs(test_data$y - yhat_rf)), 1)
+	l2err_rf = round(sum((test_data$y - yhat_rf)^2), 1)	
+	
+	windows()
+	plot(test_data$y, 
+			yhat_rf, 
+			main = paste("y vs yhat Random Forests model L1err = ", l1err_rf, " L2err = ", l2err_rf, ifelse(is.null(extra_text), "", paste("\n", extra_text)), sep = ""), 
+			xlab = "y", 
+			ylab = "y_hat")	
+}
+
 error_in_data = function(data){
 	if (is.null(colnames(data))){
 		stop("no colnames in data matrix", call. = FALSE)
@@ -217,14 +244,14 @@ error_in_data = function(data){
 }
 
 pre_process_data = function(data){
-	#to do 
+	#TO-DO
 	#MUST BE DETERMINISTIC!
 	#1) convert categorical data into 0/1's
 	#2) delete missing data rows
 	data
 }
 
-#believe it or not... there's no standard R function for this, is that really true?
+#believe it or not... there's no standard R function for this, isn't that pathetic?
 sample_mode = function(data){
 	as.numeric(names(sort(-table(data)))[1])
 }
