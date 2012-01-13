@@ -142,7 +142,7 @@ plot_y_vs_yhat = function(bart_predictions, extra_text = NULL){
 	}
 	#draw green dots or red dots depending upon inclusion in the PPI
 	for (i in 1 : n){
-		points(y[i], y_hat[i], col = ifelse(y_inside_ppi[i], "green", "red"), cex = 0.8)	
+		points(y[i], y_hat[i], col = ifelse(y_inside_ppi[i], "green", "red"), cex = 0.8, pch = ".")	
 	}
 	abline(a = 0, b = 1, col = "blue")		
 }
@@ -191,6 +191,7 @@ predict_and_calc_ppis = function(model, test_data, ppi_conf = 0.95){
 	for (i in 1 : n){
 		samps = .jcall(bart_machine, "[D", "getGibbsSamplesForPrediction", c(as.numeric(test_data[i, ]), NA))
 		y_hat_posterior_samples[i, ] = samps
+		######## NOT RIGHT!!!
 		ppi_a[i] = quantile(sort(samps), (1 - ppi_conf) / 2)
 		ppi_b[i] = quantile(sort(samps), (1 + ppi_conf) / 2)
 	}

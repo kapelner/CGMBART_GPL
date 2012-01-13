@@ -4,7 +4,7 @@
 #You should use underscores for spaces for display purposes later
 
 simulated_data_model_names = c(
-	"just_noise_linear",
+#	"just_noise_linear",
 	"univariate_linear",
 	"bivariate_linear",
 	"simple_tree_structure",

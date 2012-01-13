@@ -45,3 +45,5 @@ mathematica_scripts/*
 #latex_notes
 latex_notes/*
 debug_output/*
+output_plots/*
+datasets/bart_data.csv
