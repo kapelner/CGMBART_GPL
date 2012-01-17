@@ -8,6 +8,7 @@ source("r_scripts//create_simulated_models.R")
 
 #constants
 NUM_GIGS_RAM_TO_USE = 4
+PLOTS_DIR = "output_plots"
 JAR_DEPENDENCIES = c("bart_java.jar", "commons-math-2.1.jar", "jai_codec.jar", "jai_core.jar", "gemident_1_12_12.jar")
 DATA_FILENAME = "datasets/bart_data.csv"
 
@@ -53,6 +54,7 @@ bart_model = function(training_data, num_trees = 50, num_burn_in = 1000, num_ite
 #		cat(paste("BART iteration:", .jcall(bart_machine, "I", "currentGibbsSampleIteration")))
 #	}
 	list(bart_machine = bart_machine, 
+		num_trees = num_trees,
 		num_burn_in = num_burn_in,
 		num_iterations_after_burn_in = num_iterations_after_burn_in, 
 		num_gibbs = num_gibbs,
@@ -72,11 +74,12 @@ init_jvm_and_bart_object = function(debug_log){
 	bart_machine
 }
 
-plot_sigsqs_convergence_diagnostics = function(model, extra_text = NULL){
-	sigsqs = model[["sigsqs"]]
-	num_iterations_after_burn_in = model[["num_iterations_after_burn_in"]]
-	num_burn_in = model[["num_burn_in"]]
-	num_gibbs = model[["num_gibbs"]]
+plot_sigsqs_convergence_diagnostics = function(bart_machine, extra_text = NULL, data_title = "data_model", save_plot = FALSE){
+	sigsqs = bart_machine[["sigsqs"]]
+	num_iterations_after_burn_in = bart_machine[["num_iterations_after_burn_in"]]
+	num_burn_in = bart_machine[["num_burn_in"]]
+	num_gibbs = bart_machine[["num_gibbs"]]
+	num_trees = bart_machine[["num_trees"]]
 	
 	#first look at sigsqs
 	avg_sigsqs = mean(sigsqs[(length(sigsqs) - num_iterations_after_burn_in) : length(sigsqs)], na.rm = TRUE)
@@ -93,12 +96,17 @@ plot_sigsqs_convergence_diagnostics = function(model, extra_text = NULL){
 	abline(a = ppi_sigsqs[1], b = 0, col = "yellow")
 	abline(a = ppi_sigsqs[2], b = 0, col = "yellow")	
 	abline(v = num_burn_in, col = "gray")
+	
+	if (save_plot){
+		save_plot_function(bart_machine, "sigsqs")
+	}
+	
 }
 
-plot_tree_liks_convergence_diagnostics = function(model, extra_text = NULL){
-	all_tree_liks = model[["all_tree_liks"]]
-	num_burn_in = model[["num_burn_in"]]
-	num_gibbs = model[["num_gibbs"]]	
+plot_tree_liks_convergence_diagnostics = function(bart_machine, extra_text = NULL, data_title = "data_model", save_plot = FALSE){
+	all_tree_liks = bart_machine[["all_tree_liks"]]
+	num_burn_in = bart_machine[["num_burn_in"]]
+	num_gibbs = bart_machine[["num_gibbs"]]
 	
 	treeliks_scale = (max(all_tree_liks) - min(all_tree_liks)) * 0.05
 	
@@ -117,9 +125,13 @@ plot_tree_liks_convergence_diagnostics = function(model, extra_text = NULL){
 			finally = function(exc){})
 	}
 	abline(v = num_burn_in, col = "gray")
+	
+	if (save_plot){
+		save_plot_function(bart_machine, "tree_liks")
+	}	
 }
 
-plot_y_vs_yhat = function(bart_predictions, extra_text = NULL){
+plot_y_vs_yhat = function(bart_predictions, extra_text = NULL, data_title = "data_model", save_plot = FALSE, bart_machine = NULL){
 	y = bart_predictions[["y"]]
 	n = length(y)
 	y_hat = bart_predictions[["y_hat"]]
@@ -148,6 +160,10 @@ plot_y_vs_yhat = function(bart_predictions, extra_text = NULL){
 		points(y[i], y_hat[i], col = ifelse(y_inside_ppi[i], "green", "red"), cex = 1, pch = 16)	
 	}
 	abline(a = 0, b = 1, col = "blue")
+
+	if (save_plot){	
+		save_plot_function(bart_machine, "yvyhat_bart")
+	}	
 }
 
 look_at_sample_of_test_data = function(bart_predictions, grid_len = 3, extra_text = NULL){
@@ -220,7 +236,7 @@ predict_and_calc_ppis = function(model, test_data, ppi_conf = 0.95){
 		L2_err = L2_err)
 }
 
-run_random_forests_and_plot_y_vs_yhat = function(training_data, test_data, extra_text = NULL){
+run_random_forests_and_plot_y_vs_yhat = function(training_data, test_data, extra_text = NULL, data_title = "data_model", save_plot = FALSE, bart_machine = NULL){
 	rf_mod = randomForest(y ~., training_data)
 	yhat_rf = predict(rf_mod, test_data)
 	
@@ -233,6 +249,10 @@ run_random_forests_and_plot_y_vs_yhat = function(training_data, test_data, extra
 			main = paste("y vs yhat Random Forests model L1err = ", l1err_rf, " L2err = ", l2err_rf, ifelse(is.null(extra_text), "", paste("\n", extra_text)), sep = ""), 
 			xlab = "y", 
 			ylab = "y_hat")	
+	
+	if (save_plot){
+		save_plot_function(bart_machine, "yvyhat_rf")
+	}
 }
 
 error_in_data = function(data){
@@ -258,4 +278,16 @@ pre_process_data = function(data){
 #believe it or not... there's no standard R function for this, isn't that pathetic?
 sample_mode = function(data){
 	as.numeric(names(sort(-table(data)))[1])
+}
+
+save_plot_function = function(bart_machine, identifying_text){
+	if (is.null(bart_machine)){
+		stop("you cannot save a plot unless you pass the bart_machine object", call. = FALSE)
+	}
+	num_iterations_after_burn_in = bart_machine[["num_iterations_after_burn_in"]]
+	num_burn_in = bart_machine[["num_burn_in"]]
+	num_trees = bart_machine[["num_trees"]]	
+	plot_filename = paste(PLOTS_DIR, "//", data_title, "_", identifying_text, "_m_", num_trees, "_n_B_", num_burn_in, "_n_G_a_", num_iterations_after_burn_in, ".pdf", sep = "")
+	cat(paste("plot saved as", plot_filename, "\n"))
+	savePlot(plot_filename, "pdf")	
 }
