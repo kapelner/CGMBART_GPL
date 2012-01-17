@@ -62,7 +62,7 @@ bart_model = function(training_data, num_trees = 50, num_burn_in = 1000, num_ite
 init_jvm_and_bart_object = function(debug_log){
 	.jinit(parameters = paste("-Xmx", NUM_GIGS_RAM_TO_USE, "g", sep = ""))
 	for (dependency in JAR_DEPENDENCIES){
-		.jaddClassPath(paste(directory_where_code_is, "\\", dependency, sep = ""))
+		.jaddClassPath(paste(directory_where_code_is, "/", dependency, sep = ""))
 	}
 	bart_machine = .jnew("CGM_BART.CGMBARTRegression")
 	if (debug_log){
@@ -95,7 +95,7 @@ plot_sigsqs_convergence_diagnostics = function(bart_machine, extra_text = NULL, 
 	abline(v = num_burn_in, col = "gray")
 	
 	if (save_plot){
-		save_plot_function(bart_machine, "sigsqs")
+		save_plot_function(bart_machine, "sigsqs", data_title)
 	}
 	
 }
@@ -124,7 +124,7 @@ plot_tree_liks_convergence_diagnostics = function(bart_machine, extra_text = NUL
 	abline(v = num_burn_in, col = "gray")
 	
 	if (save_plot){
-		save_plot_function(bart_machine, "tree_liks")
+		save_plot_function(bart_machine, "tree_liks", data_title)
 	}	
 }
 
@@ -159,7 +159,7 @@ plot_y_vs_yhat = function(bart_predictions, extra_text = NULL, data_title = "dat
 	abline(a = 0, b = 1, col = "blue")
 
 	if (save_plot){	
-		save_plot_function(bart_machine, "yvyhat_bart")
+		save_plot_function(bart_machine, "yvyhat_bart", data_title)
 	}	
 }
 
@@ -248,7 +248,7 @@ run_random_forests_and_plot_y_vs_yhat = function(training_data, test_data, extra
 			ylab = "y_hat")	
 	
 	if (save_plot){
-		save_plot_function(bart_machine, "yvyhat_rf")
+		save_plot_function(bart_machine, "yvyhat_rf", data_title)
 	}
 }
 
@@ -277,7 +277,7 @@ sample_mode = function(data){
 	as.numeric(names(sort(-table(data)))[1])
 }
 
-save_plot_function = function(bart_machine, identifying_text){
+save_plot_function = function(bart_machine, identifying_text, data_title){
 	if (is.null(bart_machine)){
 		stop("you cannot save a plot unless you pass the bart_machine object", call. = FALSE)
 	}
@@ -286,5 +286,5 @@ save_plot_function = function(bart_machine, identifying_text){
 	num_trees = bart_machine[["num_trees"]]	
 	plot_filename = paste(PLOTS_DIR, "//", data_title, "_", identifying_text, "_m_", num_trees, "_n_B_", num_burn_in, "_n_G_a_", num_iterations_after_burn_in, ".pdf", sep = "")
 	cat(paste("plot saved as", plot_filename, "\n"))
-	savePlot(plot_filename, "pdf")	
+	savePlot(plot_filename, "pdf")
 }
