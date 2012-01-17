@@ -1,10 +1,7 @@
-#working directory
-directory_where_code_is = "C:\\Users\\kapelner\\workspace\\CGMBART_GPL"
-setwd(directory_where_code_is)
 
 #libraries and dependencies
-library(rJava)
-source("r_scripts//create_simulated_models.R")
+tryCatch(library(randomForest), error = function(e){install.packages("randomForest")}, finally = library(randomForest))
+tryCatch(library(rJava), error = function(e){install.packages("rJava")}, finally = library(rJava))
 
 #constants
 NUM_GIGS_RAM_TO_USE = 4
