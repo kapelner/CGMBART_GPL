@@ -112,7 +112,9 @@ plot_tree_liks_convergence_diagnostics = function(model, extra_text = NULL){
 			xlab = "Gibbs sample # (gray line indicates burn in)", 
 			ylab = "log proportional likelihood")
 	for (t in 2 : nrow(all_tree_liks)){
-		points(1 : (num_gibbs + 1), all_tree_liks[t, ], col = sample(colors(), 1), main = "tree log proportional likelihood", pch = ".", cex = 2)
+		tryCatch({points(1 : (num_gibbs + 1), all_tree_liks[t, ], col = sample(colors(), 1), main = "tree log proportional likelihood", pch = ".", cex = 2)},
+			error = function(exc){},
+			finally = function(exc){})
 	}
 	abline(v = num_burn_in, col = "gray")
 }
@@ -135,16 +137,17 @@ plot_y_vs_yhat = function(bart_predictions, extra_text = NULL){
 		y_hat, 
 		main = paste("BART y vs yhat, ", (ppi_conf * 100), "% PPIs (", round(prop_ys_in_ppi * 100, 2), "% coverage), L1err = ", L1_err, ", L2err = ", L2_err, ifelse(is.null(extra_text), "", paste("\n", extra_text)), sep = ""), 
 		xlab = paste("y\ngreen circle - the PPI for yhat captures true y", sep = ""), 
-		ylab = "y_hat")
+		ylab = "y_hat", 
+		cex = 0)
 	#draw PPI's
 	for (i in 1 : n){
 		segments(y[i], ppi_a[i], y[i], ppi_b[i], col = "black", lwd = 0.1)	
 	}
 	#draw green dots or red dots depending upon inclusion in the PPI
 	for (i in 1 : n){
-		points(y[i], y_hat[i], col = ifelse(y_inside_ppi[i], "green", "red"), cex = 0.8, pch = ".")	
+		points(y[i], y_hat[i], col = ifelse(y_inside_ppi[i], "green", "red"), cex = 1, pch = 16)	
 	}
-	abline(a = 0, b = 1, col = "blue")		
+	abline(a = 0, b = 1, col = "blue")
 }
 
 look_at_sample_of_test_data = function(bart_predictions, grid_len = 3, extra_text = NULL){
