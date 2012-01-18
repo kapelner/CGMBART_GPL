@@ -1,5 +1,8 @@
-#directory_where_code_is = "C:\\Users\\kapelner\\workspace\\CGMBART_GPL"
-directory_where_code_is = getwd()
+directory_where_code_is = getwd() #usually we're on a linux box and we'll just navigate manually to the directory
+#if we're on windows, then we're on the dev box, so use a specified directory
+if (.Platform$OS.type == "windows"){
+	directory_where_code_is = "C:\\Users\\kapelner\\workspace\\CGMBART_GPL"
+}
 setwd(directory_where_code_is)
 
 source("r_scripts/bart_package.R")

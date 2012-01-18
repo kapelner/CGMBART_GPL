@@ -80,7 +80,7 @@ plot_sigsqs_convergence_diagnostics = function(bart_machine, extra_text = NULL, 
 	
 	#first look at sigsqs
 	avg_sigsqs = mean(sigsqs[(length(sigsqs) - num_iterations_after_burn_in) : length(sigsqs)], na.rm = TRUE)
-	windows() 
+	dev.new() 
 	plot(sigsqs, 
 			main = paste("Sigsq throughout entire project  sigsq after burn in ~ ", round(avg_sigsqs, 2), ifelse(is.null(extra_text), "", paste("\n", extra_text))), 
 			xlab = "Gibbs sample # (gray line indicates burn-in, yellow lines are the 95% PPI after burn-in)", 
@@ -107,7 +107,7 @@ plot_tree_liks_convergence_diagnostics = function(bart_machine, extra_text = NUL
 	
 	treeliks_scale = (max(all_tree_liks) - min(all_tree_liks)) * 0.05
 	
-	windows() 
+	dev.new() 
 	plot(1 : (num_gibbs + 1),  # + 1 for the prior
 			all_tree_liks[1, ], 
 			col = sample(colors(), 1),
@@ -141,7 +141,7 @@ plot_y_vs_yhat = function(bart_predictions, extra_text = NULL, data_title = "dat
 	L2_err = bart_predictions[["L2_err"]]
 
 	#make the general plot
-	windows() 
+	dev.new() 
 	plot(y, 
 		y_hat, 
 		main = paste("BART y vs yhat, ", (ppi_conf * 100), "% PPIs (", round(prop_ys_in_ppi * 100, 2), "% coverage), L1err = ", L1_err, ", L2err = ", L2_err, ifelse(is.null(extra_text), "", paste("\n", extra_text)), sep = ""), 
@@ -165,7 +165,7 @@ plot_y_vs_yhat = function(bart_predictions, extra_text = NULL, data_title = "dat
 
 look_at_sample_of_test_data = function(bart_predictions, grid_len = 3, extra_text = NULL){
 	par(mfrow = c(grid_len, grid_len))
-	windows() 
+	dev.new() 
 	for (i in sample(1 : n, grid_len^2)){
 		y_i = test_data$y[i]
 		samps = as.numeric(y_hat_posterior_samples[i, ])
@@ -240,7 +240,7 @@ run_random_forests_and_plot_y_vs_yhat = function(training_data, test_data, extra
 	l1err_rf = round(sum(abs(test_data$y - yhat_rf)), 1)
 	l2err_rf = round(sum((test_data$y - yhat_rf)^2), 1)	
 	
-	windows()
+	dev.new()
 	plot(test_data$y, 
 			yhat_rf, 
 			main = paste("y vs yhat Random Forests model L1err = ", l1err_rf, " L2err = ", l2err_rf, ifelse(is.null(extra_text), "", paste("\n", extra_text)), sep = ""), 
