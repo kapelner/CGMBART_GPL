@@ -21,7 +21,7 @@
     with this program; if not, write to the Free Software Foundation, Inc.,
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
-
+ 
 package CGM_BART;
 
 import java.io.File;
@@ -44,21 +44,21 @@ public class CGMBARTRegression extends CGMBART1 {
 	 */
 	public CGMBARTRegression(DatumSetupForEntireRun datumSetupForEntireRun, JProgressBarAndLabel buildProgress) {
 		super(datumSetupForEntireRun, buildProgress);
-		System.out.println("CGMBARTRegression init\n\n\n");
+		System.out.println("CGMBARTRegression init\n");
 	}
-	
+	 
 	/** Default constructor for R package
 	 * 
 	 * @param datumSetupForEntireRun
 	 * @param buildProgress
 	 */
-	public CGMBARTRegression() {
+	public CGMBARTRegression() { 
 		super(new DataSetupForCSVFile(new File("datasets", "bart_data.csv"), true), new JProgressBarAndLabel(0, 0, null));
-		//kind of klunky but whatever
+		//kind of klunky but whatever 
 		this.setData(((DataSetupForCSVFile)this.datumSetupForEntireRun).getX_y());
 		System.err.println("default data loaded CGMBARTRegression");
 	}	
-	
+	 
 
 	public void writeEvaluationDiagnostics() {
 		

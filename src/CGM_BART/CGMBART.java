@@ -57,14 +57,12 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 	protected static PrintWriter evaluations;
 	protected static final boolean TREE_ILLUST = false;
 	protected static final boolean WRITE_DETAILED_DEBUG_FILES = false;
-	static {
 
-	}	
-	static {	
+	static {
+		Classifier.writeToDebugLog();
 		try {
 			output = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + "\\output" + DEBUG_EXT)));
 			TreeIllustration.DeletePreviousTreeIllustrations();
-			
 			
 			y_and_y_trans = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + "\\y_and_y_trans" + DEBUG_EXT)));
 			sigsqs = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + "\\sigsqs" + DEBUG_EXT)));

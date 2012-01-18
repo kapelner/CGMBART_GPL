@@ -1,5 +1,5 @@
-#directory_where_code_is = "C:\\Users\\kapelner\\workspace\\CGMBART_GPL"
-directory_where_code_is = getwd()
+directory_where_code_is = "C:\\Users\\kapelner\\workspace\\CGMBART_GPL"
+#directory_where_code_is = getwd()
 setwd(directory_where_code_is)
 
 source("r_scripts/bart_package.R")
