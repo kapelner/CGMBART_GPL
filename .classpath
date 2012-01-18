@@ -4,7 +4,7 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/GemIdent_GPL_v2"/>
 	<classpathentry kind="lib" path="commons-math-2.1.jar"/>
-	<classpathentry kind="lib" path="gemident_1_12_12.jar"/>
+	<classpathentry kind="lib" path="gemident_1_12_12.jar" sourcepath="C:/Users/kapelner/workspace/GemIdent_GPL_v2_github"/>
 	<classpathentry kind="lib" path="jai_codec.jar"/>
 	<classpathentry kind="lib" path="jai_core.jar"/>
 	<classpathentry kind="output" path="bin"/>

@@ -9,6 +9,12 @@ PLOTS_DIR = "output_plots"
 JAR_DEPENDENCIES = c("bart_java.jar", "commons-math-2.1.jar", "jai_codec.jar", "jai_core.jar", "gemident_1_12_12.jar")
 DATA_FILENAME = "datasets/bart_data.csv"
 
+.jinit(parameters = paste("-Xmx", NUM_GIGS_RAM_TO_USE, "g", sep = ""))
+for (dependency in JAR_DEPENDENCIES){
+	.jaddClassPath(paste(directory_where_code_is, "/", dependency, sep = ""))
+}
+bart_machine = .jnew("CGM_BART.CGMBARTRegression")
+
 bart_model = function(training_data, num_trees = 50, num_burn_in = 1000, num_iterations_after_burn_in = 1000, class_or_regr = "r", debug_log = FALSE){
 	num_gibbs = num_burn_in + num_iterations_after_burn_in
 	#check for errors in data
