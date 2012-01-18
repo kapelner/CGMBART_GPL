@@ -44,7 +44,7 @@ public class CGMBARTRegression extends CGMBART1 {
 	 */
 	public CGMBARTRegression(DatumSetupForEntireRun datumSetupForEntireRun, JProgressBarAndLabel buildProgress) {
 		super(datumSetupForEntireRun, buildProgress);
-		System.out.println("CGMBARTRegression init\n");
+//		System.out.println("CGMBARTRegression init\n");
 	}
 	 
 	/** Default constructor for R package
@@ -55,9 +55,9 @@ public class CGMBARTRegression extends CGMBART1 {
 	public CGMBARTRegression() { 
 		super(new DataSetupForCSVFile(new File("datasets", "bart_data.csv"), true), new JProgressBarAndLabel(0, 0, null));
 		//kind of klunky but whatever 
-		System.err.println("about to do setData on datumsetup: " + this.datumSetupForEntireRun);
+//		System.err.println("about to do setData on datumsetup: " + this.datumSetupForEntireRun);
 		this.setData(((DataSetupForCSVFile)this.datumSetupForEntireRun).getX_y());
-		System.err.println("default data loaded CGMBARTRegression");
+//		System.err.println("default data loaded CGMBARTRegression");
 	}	
 	 
 

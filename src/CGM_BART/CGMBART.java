@@ -25,6 +25,7 @@
 package CGM_BART;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -62,33 +63,34 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 //		Classifier.writeToDebugLog();
 //	}
 
-//	static {
-//		try {
-//			output = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + "\\output" + DEBUG_EXT)));
-//			TreeIllustration.DeletePreviousTreeIllustrations();
-//			
-//			y_and_y_trans = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + "\\y_and_y_trans" + DEBUG_EXT)));
-//			sigsqs = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + "\\sigsqs" + DEBUG_EXT)));
-//			sigsqs.println("sample_num,sigsq");
-//			sigsqs_draws = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + "\\sigsqs_draws" + DEBUG_EXT)));
-//			double[] simu = new double[1000];
-//			for (int i = 1; i <= 1000; i++){
-//				simu[i-1] = i;
-//			}			
-//			sigsqs_draws.println("sample_num,nu,lambda,n,sse,realization,corr," + IOTools.StringJoin(simu, ","));			
-//			tree_liks = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + "\\tree_liks" + DEBUG_EXT)));
-//			evaluations = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + "\\evaluations" + DEBUG_EXT)));
-//			remainings = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + "\\remainings" + DEBUG_EXT)));
-//			tree_liks.print("sample_num,");
-//			for (int t = 0; t < DEFAULT_NUM_TREES; t++){
-//				tree_liks.print("t_" + t + "_lik,t_" + t + "_id,");
-//			}
-//			tree_liks.print("\n");
-//			TreeIllustration.DeletePreviousTreeIllustrations();	        
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
-//	}
+	static {
+		try {
+			
+			output = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.pathSeparator + "output" + DEBUG_EXT)));
+			TreeIllustration.DeletePreviousTreeIllustrations();
+			
+			y_and_y_trans = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.pathSeparator + "y_and_y_trans" + DEBUG_EXT)));
+			sigsqs = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.pathSeparator + "sigsqs" + DEBUG_EXT)));
+			sigsqs.println("sample_num,sigsq");
+			sigsqs_draws = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.pathSeparator + "sigsqs_draws" + DEBUG_EXT)));
+			double[] simu = new double[1000];
+			for (int i = 1; i <= 1000; i++){
+				simu[i-1] = i;
+			}			
+			sigsqs_draws.println("sample_num,nu,lambda,n,sse,realization,corr," + IOTools.StringJoin(simu, ","));			
+			tree_liks = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.pathSeparator + "tree_liks" + DEBUG_EXT)));
+			evaluations = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.pathSeparator + "evaluations" + DEBUG_EXT)));
+			remainings = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.pathSeparator + "remainings" + DEBUG_EXT)));
+			tree_liks.print("sample_num,");
+			for (int t = 0; t < DEFAULT_NUM_TREES; t++){
+				tree_liks.print("t_" + t + "_lik,t_" + t + "_id,");
+			}
+			tree_liks.print("\n");
+			TreeIllustration.DeletePreviousTreeIllustrations();	        
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 
 	/** the actual list of trees */
 	protected ArrayList<ArrayList<CGMTreeNode>> gibbs_samples_of_cgm_trees;
@@ -131,7 +133,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 	 */
 	public CGMBART(DatumSetupForEntireRun datumSetupForEntireRun, JProgressBarAndLabel buildProgress) {
 		super(datumSetupForEntireRun, buildProgress);
-		System.out.println("CGMBART constructor");
+//		System.out.println("CGMBART constructor");
 		m = DEFAULT_NUM_TREES;
 		num_gibbs_burn_in = DEFAULT_NUM_GIBBS_BURN_IN;
 		num_gibbs_total_iterations = DEFAULT_NUM_GIBBS_TOTAL_ITERATIONS;
@@ -383,17 +385,17 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 		sigsqs_draws.close();
 		evaluations.close();
 	}
-//	private void OpenDebugFiles(){		
-//		try {
-//			sigsqs = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + "\\sigsqs" + DEBUG_EXT, true)));
-//			sigsqs_draws = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + "\\sigsqs_draws" + DEBUG_EXT, true)));
-//			tree_liks = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + "\\tree_liks" + DEBUG_EXT, true)));
-//			evaluations = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + "\\evaluations" + DEBUG_EXT, true)));
-//			remainings = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + "\\remainings" + DEBUG_EXT, true)));	
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}			
-//	}
+	private void OpenDebugFiles(){		
+		try {
+			sigsqs = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.pathSeparator + "sigsqs" + DEBUG_EXT, true)));
+			sigsqs_draws = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.pathSeparator + "sigsqs_draws" + DEBUG_EXT, true)));
+			tree_liks = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.pathSeparator + "tree_liks" + DEBUG_EXT, true)));
+			evaluations = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.pathSeparator + "evaluations" + DEBUG_EXT, true)));
+			remainings = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.pathSeparator + "remainings" + DEBUG_EXT, true)));	
+		} catch (IOException e) {
+			e.printStackTrace();
+		}			
+	}
 
 	protected abstract CGMTreeNode SampleTreeByCalculatingRemainingsAndDrawingFromTreeDist(int i, int t, TreeArrayIllustration tree_array_illustration);
 
@@ -524,14 +526,14 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 	//make sure you get the prior correct if you don't transform
 	private static final double YminAndYmaxHalfDiff = 0.5;
 	protected void transformResponseVariable() {
-		System.out.println("transform response var");
+		
 		//make sure to initialize the y_trans to be y first
 		super.transformResponseVariable();
 		//make data we need later
 		y_min = StatToolbox.sample_minimum(y);
 		y_max = StatToolbox.sample_maximum(y);
 		y_range_sq = Math.pow(y_max - y_min, 2);
-		//now only go through with it if we have the variable set
+
 		if (TRANSFORM_Y){
 			for (int i = 0; i < n; i++){
 				y_trans[i] = (y[i] - y_min) / (y_max - y_min) - YminAndYmaxHalfDiff;
@@ -540,7 +542,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 		//debug stuff
 		y_and_y_trans.println("y,y_trans");
 		for (int i = 0; i < n; i++){
-//			System.out.println("y_trans[i] = " + y_trans[i] + " y[i] = " + y[i] + " y_untransform = " + un_transform_y(y_trans[i]));
+			System.out.println("y_trans[i] = " + y_trans[i] + " y[i] = " + y[i] + " y_untransform = " + un_transform_y(y_trans[i]));
 			y_and_y_trans.println(y[i] + "," + y_trans[i]);
 		}
 		y_and_y_trans.close();

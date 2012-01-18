@@ -25,6 +25,7 @@
 package CGM_BayesianCART1998;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -68,10 +69,10 @@ public abstract class CGMPosteriorBuilder {
 	static {
 		try {
 			if (DEBUG_ITERATIONS){
-				mh_log_lik_iterations = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + "\\mh_log_lik_iterations.txt")));
-				mh_posterior_iterations = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + "\\mh_posterior_iterations.txt")));
-				mh_num_leaves_iterations = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + "\\mh_num_leaves_iterations.txt")));
-				mh_iterations_record = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + "\\mh_iterations_record.txt")));
+				mh_log_lik_iterations = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.pathSeparator + "mh_log_lik_iterations.txt")));
+				mh_posterior_iterations = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.pathSeparator + "mh_posterior_iterations.txt")));
+				mh_num_leaves_iterations = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.pathSeparator + "mh_num_leaves_iterations.txt")));
+				mh_iterations_record = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.pathSeparator + "mh_iterations_record.txt")));
 				TreeIllustration.DeletePreviousTreeIllustrations();
 			}
 		} catch (IOException e) {}
