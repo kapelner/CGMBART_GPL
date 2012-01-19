@@ -66,21 +66,21 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 	static {
 		try {
 			
-			output = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.pathSeparator + "output" + DEBUG_EXT)));
+			output = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "output" + DEBUG_EXT)));
 			TreeIllustration.DeletePreviousTreeIllustrations();
 			
-			y_and_y_trans = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.pathSeparator + "y_and_y_trans" + DEBUG_EXT)));
-			sigsqs = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.pathSeparator + "sigsqs" + DEBUG_EXT)));
+			y_and_y_trans = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "y_and_y_trans" + DEBUG_EXT)));
+			sigsqs = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "sigsqs" + DEBUG_EXT)));
 			sigsqs.println("sample_num,sigsq");
-			sigsqs_draws = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.pathSeparator + "sigsqs_draws" + DEBUG_EXT)));
+			sigsqs_draws = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "sigsqs_draws" + DEBUG_EXT)));
 			double[] simu = new double[1000];
 			for (int i = 1; i <= 1000; i++){
 				simu[i-1] = i;
 			}			
 			sigsqs_draws.println("sample_num,nu,lambda,n,sse,realization,corr," + IOTools.StringJoin(simu, ","));			
-			tree_liks = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.pathSeparator + "tree_liks" + DEBUG_EXT)));
-			evaluations = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.pathSeparator + "evaluations" + DEBUG_EXT)));
-			remainings = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.pathSeparator + "remainings" + DEBUG_EXT)));
+			tree_liks = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "tree_liks" + DEBUG_EXT)));
+			evaluations = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "evaluations" + DEBUG_EXT)));
+			remainings = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "remainings" + DEBUG_EXT)));
 			tree_liks.print("sample_num,");
 			for (int t = 0; t < DEFAULT_NUM_TREES; t++){
 				tree_liks.print("t_" + t + "_lik,t_" + t + "_id,");
@@ -387,11 +387,11 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 	}
 	private void OpenDebugFiles(){		
 		try {
-			sigsqs = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.pathSeparator + "sigsqs" + DEBUG_EXT, true)));
-			sigsqs_draws = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.pathSeparator + "sigsqs_draws" + DEBUG_EXT, true)));
-			tree_liks = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.pathSeparator + "tree_liks" + DEBUG_EXT, true)));
-			evaluations = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.pathSeparator + "evaluations" + DEBUG_EXT, true)));
-			remainings = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.pathSeparator + "remainings" + DEBUG_EXT, true)));	
+			sigsqs = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "sigsqs" + DEBUG_EXT, true)));
+			sigsqs_draws = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "sigsqs_draws" + DEBUG_EXT, true)));
+			tree_liks = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "tree_liks" + DEBUG_EXT, true)));
+			evaluations = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "evaluations" + DEBUG_EXT, true)));
+			remainings = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "remainings" + DEBUG_EXT, true)));	
 		} catch (IOException e) {
 			e.printStackTrace();
 		}			

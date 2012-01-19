@@ -81,6 +81,9 @@ plot_sigsqs_convergence_diagnostics = function(bart_machine, extra_text = NULL, 
 	#first look at sigsqs
 	avg_sigsqs = mean(sigsqs[(length(sigsqs) - num_iterations_after_burn_in) : length(sigsqs)], na.rm = TRUE)
 	dev.new() 
+	if (save_plot){
+		save_plot_function(bart_machine, "sigsqs", data_title)
+	}	
 	plot(sigsqs, 
 			main = paste("Sigsq throughout entire project  sigsq after burn in ~ ", round(avg_sigsqs, 2), ifelse(is.null(extra_text), "", paste("\n", extra_text))), 
 			xlab = "Gibbs sample # (gray line indicates burn-in, yellow lines are the 95% PPI after burn-in)", 
@@ -94,9 +97,7 @@ plot_sigsqs_convergence_diagnostics = function(bart_machine, extra_text = NULL, 
 	abline(a = ppi_sigsqs[2], b = 0, col = "yellow")	
 	abline(v = num_burn_in, col = "gray")
 	
-	if (save_plot){
-		save_plot_function(bart_machine, "sigsqs", data_title)
-	}
+	dev.off()
 	
 }
 
@@ -108,6 +109,9 @@ plot_tree_liks_convergence_diagnostics = function(bart_machine, extra_text = NUL
 	treeliks_scale = (max(all_tree_liks) - min(all_tree_liks)) * 0.05
 	
 	dev.new() 
+	if (save_plot){
+		save_plot_function(bart_machine, "tree_liks", data_title)
+	}		
 	plot(1 : (num_gibbs + 1),  # + 1 for the prior
 			all_tree_liks[1, ], 
 			col = sample(colors(), 1),
@@ -123,9 +127,7 @@ plot_tree_liks_convergence_diagnostics = function(bart_machine, extra_text = NUL
 	}
 	abline(v = num_burn_in, col = "gray")
 	
-	if (save_plot){
-		save_plot_function(bart_machine, "tree_liks", data_title)
-	}	
+	dev.off()
 }
 
 plot_y_vs_yhat = function(bart_predictions, extra_text = NULL, data_title = "data_model", save_plot = FALSE, bart_machine = NULL){
@@ -142,6 +144,9 @@ plot_y_vs_yhat = function(bart_predictions, extra_text = NULL, data_title = "dat
 
 	#make the general plot
 	dev.new() 
+	if (save_plot){	
+		save_plot_function(bart_machine, "yvyhat_bart", data_title)
+	}	
 	plot(y, 
 		y_hat, 
 		main = paste("BART y vs yhat, ", (ppi_conf * 100), "% PPIs (", round(prop_ys_in_ppi * 100, 2), "% coverage), L1err = ", L1_err, ", L2err = ", L2_err, ifelse(is.null(extra_text), "", paste("\n", extra_text)), sep = ""), 
@@ -158,9 +163,7 @@ plot_y_vs_yhat = function(bart_predictions, extra_text = NULL, data_title = "dat
 	}
 	abline(a = 0, b = 1, col = "blue")
 
-	if (save_plot){	
-		save_plot_function(bart_machine, "yvyhat_bart", data_title)
-	}	
+	dev.off()
 }
 
 look_at_sample_of_test_data = function(bart_predictions, grid_len = 3, extra_text = NULL){
@@ -241,15 +244,16 @@ run_random_forests_and_plot_y_vs_yhat = function(training_data, test_data, extra
 	l2err_rf = round(sum((test_data$y - yhat_rf)^2), 1)	
 	
 	dev.new()
+	if (save_plot){
+		save_plot_function(bart_machine, "yvyhat_rf", data_title)
+	}	
 	plot(test_data$y, 
 			yhat_rf, 
 			main = paste("y vs yhat Random Forests model L1err = ", l1err_rf, " L2err = ", l2err_rf, ifelse(is.null(extra_text), "", paste("\n", extra_text)), sep = ""), 
 			xlab = "y", 
 			ylab = "y_hat")	
-	
-	if (save_plot){
-		save_plot_function(bart_machine, "yvyhat_rf", data_title)
-	}
+	dev.off()
+
 }
 
 error_in_data = function(data){
@@ -284,7 +288,7 @@ save_plot_function = function(bart_machine, identifying_text, data_title){
 	num_iterations_after_burn_in = bart_machine[["num_iterations_after_burn_in"]]
 	num_burn_in = bart_machine[["num_burn_in"]]
 	num_trees = bart_machine[["num_trees"]]	
-	plot_filename = paste(PLOTS_DIR, "//", data_title, "_", identifying_text, "_m_", num_trees, "_n_B_", num_burn_in, "_n_G_a_", num_iterations_after_burn_in, ".pdf", sep = "")
+	plot_filename = paste(PLOTS_DIR, "/", data_title, "_", identifying_text, "_m_", num_trees, "_n_B_", num_burn_in, "_n_G_a_", num_iterations_after_burn_in, ".pdf", sep = "")
+	pdf(plot_filename)
 	cat(paste("plot saved as", plot_filename, "\n"))
-	savePlot(plot_filename, "pdf")
 }
