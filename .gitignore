@@ -45,6 +45,12 @@ mathematica_scripts/*
 #latex_notes
 latex_notes/*
 debug_output/*.csv
-output_plots/*
+output_plots/*.pdf
 datasets/bart_data.csv
 .externalToolBuilders/*
+sweave_reports/*.aux
+sweave_reports/*.log
+sweave_reports/*.out
+sweave_reports/*.pdf
+sweave_reports/*.tex
+sweave_reports/*.toc

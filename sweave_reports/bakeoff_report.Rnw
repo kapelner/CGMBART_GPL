@@ -1,0 +1,89 @@
+\documentclass[landscape, 12pt]{report}
+
+\usepackage{subfigure}
+\usepackage[margin=0.3in]{geometry}
+\usepackage{Sweave}
+\usepackage{hyperref}
+\usepackage{placeins}
+
+\SweaveOpts{echo=FALSE}
+
+<<load_R_code>>=
+setwd("C:\\Users\\kapelner\\workspace\\CGMBART_GPL\\sweave_reports")
+source("../r_scripts/bart_bakeoff.R")
+setwd("C:\\Users\\kapelner\\workspace\\CGMBART_GPL\\sweave_reports")
+@
+
+\title{Analysis of BART output}
+\author{Adam Kapelner}
+
+\begin{document}
+\maketitle
+
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{3}
+\tableofcontents
+
+<<whole_doc, results=tex>>=
+
+for (real_regression_data_set in real_regression_data_sets) { 
+	cat(paste("\n\n\\chapter{", gsub("_", " ", real_regression_data_set), "}\n\n", sep = "")) 
+	cat("\\pagebreak\n")
+	
+	for (num_trees in num_trees_of_interest){
+		cat(paste("\n\n\\section{m = ", num_trees, "}\n\n", sep = "")) 
+		for (num_burn_in in c(2000)){
+			cat(paste("\n\n\\subsection{N\\_B = ", num_burn_in, ", N\\_G = ", num_iterations_after_burn_in, "}\n\n", sep = ""))
+			for (num_iterations_after_burn_in in c(2000)){
+#				r_forestfires_sigsqs_m_20_n_B_2000_n_G_a_2000
+#				r_forestfires_tree_liks_m_20_n_B_2000_n_G_a_2000
+#				r_forestfires_yvyhat_rf_m_20_n_B_2000_n_G_a_2000
+#				r_forestfires_yvyhat_bart_m_20_n_B_2000_n_G_a_2000
+				cat("\\begin{figure}\n")
+				cat("\\centering\n")	
+				image_titles = c("sigsqs", "tree_liks", "yvyhat_bart", "yvyhat_rf")
+				for (i in 1 : length(image_titles)){
+					cat("\\subfigure{\n")
+					cat(paste("\\includegraphics[width=3.5in]{../output_plots/", real_regression_data_set, "_", image_titles[i], "_m_", num_trees, "_n_B_", num_burn_in, "_n_G_a_", num_iterations_after_burn_in, ".pdf}\n", sep = ""))
+					cat("}\n")
+					if (i == 2){
+						cat("\\\\\n")
+					}
+				}
+				cat("\\end{figure}\n")	
+				cat("\\FloatBarrier\n\n")
+			}
+		}		
+	}
+}
+
+for (simulated_data_model_name in simulated_data_model_names){
+	cat(paste("\n\n\\chapter{", gsub("_", " ", simulated_data_model_name), "}\n\n", sep = "")) 
+	cat("\\pagebreak\n")
+
+	for (num_trees in num_trees_of_interest){
+		cat(paste("\n\n\\section{m = ", num_trees, "}\n\n", sep = "")) 
+		for (num_burn_in in c(2000)){
+			cat(paste("\n\n\\subsection{N\\_B = ", num_burn_in, ", N\\_G = ", num_iterations_after_burn_in, "}\n\n", sep = ""))
+			for (num_iterations_after_burn_in in c(2000)){
+
+				cat("\\begin{figure}\n")
+				cat("\\centering\n")				
+				image_titles = c("sigsqs", "tree_liks", "yvyhat_bart", "yvyhat_rf")
+				for (i in 1 : length(image_titles)){
+					cat("\\subfigure{\n")
+					cat(paste("\\includegraphics[width=3.5in]{../output_plots/", simulated_data_model_name, "_", image_titles[i], "_m_", num_trees, "_n_B_", num_burn_in, "_n_G_a_", num_iterations_after_burn_in, ".pdf}\n", sep = ""))
+					cat("}\n")
+					if (i == 2){
+						cat("\\\\\n")
+					}
+				}
+				cat("\\end{figure}\n")	
+				cat("\\FloatBarrier\n\n")
+			}
+		}		
+	}
+}
+@
+
+\end{document}

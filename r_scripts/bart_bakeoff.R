@@ -1,5 +1,7 @@
+#source("r_scripts/bart_bakeoff.R")
+
 directory_where_code_is = getwd() #usually we're on a linux box and we'll just navigate manually to the directory
-#if we're on windows, then we're on the dev box, so use a specified directory
+#if we're on windows, then we're on the dev box, so use a prespecified directory
 if (.Platform$OS.type == "windows"){
 	directory_where_code_is = "C:\\Users\\kapelner\\workspace\\CGMBART_GPL"
 }
@@ -33,31 +35,33 @@ run_bart_model_and_save_diags_and_results = function(training_data, test_data, d
 real_regression_data_sets = c("r_boston", "r_forestfires", "r_concretedata")
 
 #some constants for now... do an easy simulation first in order to make sure it works, then go for the gold
-num_trees_of_interest = c(1, 100, 75, 50, 20, 10, 5, 2)
-num_burn_ins_of_interest = c(50, 2000, 1000, 500, 200, 100)
-num_iterations_after_burn_ins_of_interest = c(50, 2000, 1000, 500, 200, 100)
+num_trees_of_interest = c(100, 75, 50, 20, 10, 5, 2, 1) #7 * 8 * 4 * 4 = 896
+num_burn_ins_of_interest = c(2000, 1000, 500, 200)
+num_iterations_after_burn_ins_of_interest = c(2000, 1000, 500, 200)
 
-for (num_burn_in in num_burn_ins_of_interest){
-	for (num_iterations_after_burn_in in num_iterations_after_burn_ins_of_interest){
-		for (num_trees in num_trees_of_interest){
-			#R is dumb
-			graphics.off()
-			
-			for (real_regression_data_set in real_regression_data_sets){
-				raw_data = read.csv(paste("datasets//", real_regression_data_set, ".csv", sep = ""))				
-				#now pull out half training and half test randomly				
-				training_indices = sort(sample(1 : nrow(raw_data), nrow(raw_data) / 2))
-				test_indices = setdiff(1 : nrow(raw_data), training_indices)
+run_bakeoff = function(){
+	for (num_burn_in in num_burn_ins_of_interest){
+		for (num_iterations_after_burn_in in num_iterations_after_burn_ins_of_interest){
+			for (num_trees in num_trees_of_interest){
+				#R is dumb
+				graphics.off()
 				
-				run_bart_model_and_save_diags_and_results(raw_data[training_indices, ], raw_data[test_indices, ], real_regression_data_set, num_trees, num_burn_in, num_iterations_after_burn_in)
+				for (real_regression_data_set in real_regression_data_sets){
+					raw_data = read.csv(paste("datasets//", real_regression_data_set, ".csv", sep = ""))				
+					#now pull out half training and half test randomly				
+					training_indices = sort(sample(1 : nrow(raw_data), nrow(raw_data) / 2))
+					test_indices = setdiff(1 : nrow(raw_data), training_indices)
+					
+					run_bart_model_and_save_diags_and_results(raw_data[training_indices, ], raw_data[test_indices, ], real_regression_data_set, num_trees, num_burn_in, num_iterations_after_burn_in)
+				}
+				
+				for (simulated_data_model_name in simulated_data_model_names){
+					training_data = simulate_data_from_simulation_name(simulated_data_model_name)
+					test_data = simulate_data_from_simulation_name(simulated_data_model_name)
+					
+					run_bart_model_and_save_diags_and_results(training_data, test_data, simulated_data_model_name, num_trees, num_burn_in, num_iterations_after_burn_in)				
+				}			
 			}
-			
-			for (simulated_data_model_name in simulated_data_model_names){
-				training_data = simulate_data_from_simulation_name(simulated_data_model_name)
-				test_data = simulate_data_from_simulation_name(simulated_data_model_name)
-				
-				run_bart_model_and_save_diags_and_results(training_data, test_data, simulated_data_model_name, num_trees, num_burn_in, num_iterations_after_burn_in)				
-			}			
 		}
 	}
 }
