@@ -51,7 +51,6 @@ public class DataSetupForCSVFile extends DatumSetupForEntireRun {
 		extractNumClassesFromDataMatrix();
 	}
 	
-
 	private void extractNumClassesFromDataMatrix() {
 		HashSet<Double> set_of_classes = new HashSet<Double>();
 		for (double[] record : X_y){
@@ -60,7 +59,7 @@ public class DataSetupForCSVFile extends DatumSetupForEntireRun {
 			set_of_classes.add(k); //the last position is the response
 		}
 		K = set_of_classes.size();
-		System.out.println("num classes: " + K);
+//		System.out.println("num classes: " + K);
 	}
 
 	private void LoadDataIntoXyFormatAndFindFeatureNamesAndP(File file) throws IOException{		
@@ -81,10 +80,10 @@ public class DataSetupForCSVFile extends DatumSetupForEntireRun {
 					feature_types.add(FeatureType.NUMBER); //default for now
 				}
 				feature_names = new ArrayList<String>(p);
-				for (int i = 0; i < p; i++){
-					feature_names.add(datums[i]); //default for now
-					System.out.println("feature " + (i + 1) + " " + datums[i]);
-				}
+//				for (int i = 0; i < p; i++){
+//					feature_names.add(datums[i]); //default for now
+//					System.out.println("feature " + (i + 1) + " " + datums[i]);
+//				}
 			}
 			else {
 				final double[] record = new double[datums.length];

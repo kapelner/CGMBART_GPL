@@ -39,14 +39,14 @@ public class DataAnalysis {
 	//NEED TO IMPLEMENT: http://www.simonwhatley.co.uk/using-ant-with-eclipse
 	
 //	private static final String DataSetFilename = "r_simple";
-//	private static final String DataSetFilename = "r_treemodel";
+	private static final String DataSetFilename = "r_treemodel";
 //	private static final String DataSetFilename = "r_friedman";
 //	private static final String DataSetFilename = "r_univariatelinear";
 //	private static final String DataSetFilename = "r_bivariatelinear";
 //	private static final String DataSetFilename = "r_boston";	
 //	private static final String DataSetFilename = "r_forestfires";
 //	private static final String DataSetFilename = "r_concretedata";
-	private static final String DataSetFilename = "bart_data";
+//	private static final String DataSetFilename = "bart_data";
 
 	public static void main(String[] args) throws IOException{
 		

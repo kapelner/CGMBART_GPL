@@ -453,4 +453,16 @@ public class CGMTreeNode extends TreeNode implements Cloneable, Serializable {
 			return this.left.numLeaves() + this.right.numLeaves();
 		}
 	}
+
+	public String splitToString() {
+		if (this.isLeaf){
+			String klass = this.klass == null ? "null" : TreeIllustration.two_digit_format.format(this.klass);
+			return "leaf rule: " + klass;
+		}
+		else {
+			String split = this.splitAttributeM == null ? "null" : TreeIllustration.two_digit_format.format(this.splitAttributeM);
+			String value = this.splitValue == null ? "null" : TreeIllustration.two_digit_format.format(this.splitValue);
+			return "x_" + split + "  <  " + value;
+		}
+	}
 }

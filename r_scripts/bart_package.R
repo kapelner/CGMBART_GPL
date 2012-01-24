@@ -23,25 +23,24 @@ bart_model = function(training_data, num_trees = 50, num_burn_in = 1000, num_ite
 	write.csv(training_data, DATA_FILENAME, row.names = FALSE)
 	
 	#initialize the JVM
-	bart_machine = init_jvm_and_bart_object(debug_log)
+	java_bart_machine = init_jvm_and_bart_object(debug_log)
 	#make bart to spec with what the user wants
-	.jcall(bart_machine, "V", "setNumTrees", as.integer(num_trees))
-	.jcall(bart_machine, "V", "setNumGibbsBurnIn", as.integer(num_burn_in))
-	.jcall(bart_machine, "V", "setNumGibbsTotalIterations", as.integer(num_gibbs))
+	.jcall(java_bart_machine, "V", "setNumTrees", as.integer(num_trees))
+	.jcall(java_bart_machine, "V", "setNumGibbsBurnIn", as.integer(num_burn_in))
+	.jcall(java_bart_machine, "V", "setNumGibbsTotalIterations", as.integer(num_gibbs))
 	
 	#build the bart machine for use later
 	#need http://math.acadiau.ca/ACMMaC/Rmpi/sample.html RMPI here
 	#or better yet do this in pieces and plot slowly
-	.jcall(bart_machine, "V", "Build")
+	.jcall(java_bart_machine, "V", "Build")
 	
 	#now once it's done, let's extract things that are related to diagnosing the build of the BART model
-	sigsqs = .jcall(bart_machine, "[D", "getGibbsSamplesSigsqs")
+
 	
-	#need to matrix this up
-	all_tree_liks = matrix(NA, nrow = num_trees, ncol = num_gibbs + 1)
-	for (t in 1 : num_trees){
-		all_tree_liks[t, ] = .jcall(bart_machine, "[D", "getLikForTree", as.integer(t - 1))
-	}
+	#now get all tree likelihoods
+
+	
+	#now get tree depths
 	
 	
 #	while (TRUE){
@@ -50,13 +49,11 @@ bart_model = function(training_data, num_trees = 50, num_burn_in = 1000, num_ite
 #		}
 #		cat(paste("BART iteration:", .jcall(bart_machine, "I", "currentGibbsSampleIteration")))
 #	}
-	list(bart_machine = bart_machine, 
+	list(java_bart_machine = java_bart_machine, 
 		num_trees = num_trees,
 		num_burn_in = num_burn_in,
 		num_iterations_after_burn_in = num_iterations_after_burn_in, 
-		num_gibbs = num_gibbs,
-		sigsqs = sigsqs,
-		all_tree_liks = all_tree_liks)
+		num_gibbs = num_gibbs)
 }
 
 init_jvm_and_bart_object = function(debug_log){
@@ -64,19 +61,20 @@ init_jvm_and_bart_object = function(debug_log){
 	for (dependency in JAR_DEPENDENCIES){
 		.jaddClassPath(paste(directory_where_code_is, "/", dependency, sep = ""))
 	}
-	bart_machine = .jnew("CGM_BART.CGMBARTRegression")
+	java_bart_machine = .jnew("CGM_BART.CGMBARTRegression")
 	if (debug_log){
-		.jcall(bart_machine, "V", "writeToDebugLog")	
+		.jcall(java_bart_machine, "V", "writeToDebugLog")	
 	}
-	bart_machine
+	java_bart_machine
 }
 
 plot_sigsqs_convergence_diagnostics = function(bart_machine, extra_text = NULL, data_title = "data_model", save_plot = FALSE){
-	sigsqs = bart_machine[["sigsqs"]]
-	num_iterations_after_burn_in = bart_machine[["num_iterations_after_burn_in"]]
-	num_burn_in = bart_machine[["num_burn_in"]]
-	num_gibbs = bart_machine[["num_gibbs"]]
-	num_trees = bart_machine[["num_trees"]]
+	#pull it from Java
+	sigsqs = .jcall(bart_machine$java_bart_machine, "[D", "getGibbsSamplesSigsqs")
+	num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in
+	num_burn_in = bart_machine$num_burn_in
+	num_gibbs = bart_machine$num_gibbs
+	num_trees = bart_machine$num_trees
 	
 	#first look at sigsqs
 	avg_sigsqs = mean(sigsqs[(length(sigsqs) - num_iterations_after_burn_in) : length(sigsqs)], na.rm = TRUE)
@@ -104,10 +102,108 @@ plot_sigsqs_convergence_diagnostics = function(bart_machine, extra_text = NULL, 
 	
 }
 
+plot_tree_num_nodes = function(bart_machine, extra_text = NULL, data_title = "data_model", save_plot = FALSE){
+	java_bart_machine = bart_machine$java_bart_machine
+	num_burn_in = bart_machine$num_burn_in
+	num_gibbs = bart_machine$num_gibbs
+	num_trees = bart_machine$num_trees
+	
+	all_tree_num_nodes = matrix(NA, nrow = num_trees, ncol = num_gibbs + 1)
+	for (n in 1 : (num_gibbs + 1)){
+		all_tree_num_nodes[, n] = .jcall(java_bart_machine, "[I", "getNumNodesForTreesInGibbsSamp", as.integer(n - 1))
+	}
+	
+	if (save_plot){
+		save_plot_function(bart_machine, "tree_nodes", data_title)
+	}	
+	else {
+		dev.new()
+	}	
+	plot(1 : (num_gibbs + 1),  # + 1 for the prior
+			all_tree_num_nodes[1, ], 
+			col = sample(colors(), 1),
+			pch = ".",
+			type = "l", 
+			main = paste("Num Nodes by Iteration", ifelse(is.null(extra_text), "", paste("\n", extra_text))), 
+			ylim = c(min(all_tree_num_nodes), max(all_tree_num_nodes)),
+			xlab = "Gibbs sample # (gray line indicates burn in)", 
+			ylab = "num nodes")
+	for (t in 2 : nrow(all_tree_num_nodes)){
+		tryCatch({points(1 : (num_gibbs + 1), all_tree_num_nodes[t, ], col = sample(colors(), 1), pch = ".", type = "l", cex = 2)},
+				error = function(exc){},
+				finally = function(exc){})
+	}
+	abline(v = num_burn_in, col = "gray")
+	
+	dev.off()
+}
+
+get_root_splits_of_trees = function(bart_machine, data_title = "data_model", save_as_csv = FALSE){
+	java_bart_machine = bart_machine$java_bart_machine
+	num_gibbs = bart_machine$num_gibbs
+	num_burn_in = bart_machine$num_burn_in
+	num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in
+	num_trees = bart_machine$num_trees
+	
+	root_splits = matrix(NA, nrow = num_gibbs + 1, ncol = 2) #column vector
+	colnames(root_splits) = c("gibbs_iter", "root_split_as_string")
+	for (n in 1 : (num_gibbs + 1)){
+		root_splits[n, 1] = n - 1
+		root_splits[n, 2] = .jcall(java_bart_machine, "S", "getRootSplits", as.integer(n - 1))
+	}	
+	if (save_as_csv){
+		csv_filename = paste(PLOTS_DIR, "/", data_title, "_first_splits_m_", num_trees, "_n_B_", num_burn_in, "_n_G_a_", num_iterations_after_burn_in, ".csv", sep = "")
+		write.csv(root_splits, csv_filename, row.names = FALSE)
+	}
+	root_splits
+}
+
+plot_tree_depths = function(bart_machine, extra_text = NULL, data_title = "data_model", save_plot = FALSE){
+	java_bart_machine = bart_machine$java_bart_machine
+	num_burn_in = bart_machine$num_burn_in
+	num_gibbs = bart_machine$num_gibbs
+	num_trees = bart_machine$num_trees
+	
+	all_tree_depths = matrix(NA, nrow = num_trees, ncol = num_gibbs + 1)
+	for (n in 1 : (num_gibbs + 1)){
+		all_tree_depths[, n] = .jcall(java_bart_machine, "[I", "getDepthsForTreesInGibbsSamp", as.integer(n - 1))
+	}
+	
+	if (save_plot){
+		save_plot_function(bart_machine, "tree_depths", data_title)
+	}	
+	else {
+		dev.new()
+	}	
+	plot(1 : (num_gibbs + 1),  # + 1 for the prior
+			all_tree_depths[1, ], 
+			col = sample(colors(), 1),
+			pch = ".",
+			type = "l", 
+			main = paste("Depth by Iteration", ifelse(is.null(extra_text), "", paste("\n", extra_text))), 
+			ylim = c(min(all_tree_depths), max(all_tree_depths)),
+			xlab = "Gibbs sample # (gray line indicates burn in)", 
+			ylab = "depth")
+	for (t in 2 : nrow(all_tree_depths)){
+		tryCatch({points(1 : (num_gibbs + 1), all_tree_depths[t, ], col = sample(colors(), 1), pch = ".", type = "l", cex = 2)},
+				error = function(exc){},
+				finally = function(exc){})
+	}
+	abline(v = num_burn_in, col = "gray")
+	
+	dev.off()
+}
+
 plot_tree_liks_convergence_diagnostics = function(bart_machine, extra_text = NULL, data_title = "data_model", save_plot = FALSE){
-	all_tree_liks = bart_machine[["all_tree_liks"]]
-	num_burn_in = bart_machine[["num_burn_in"]]
-	num_gibbs = bart_machine[["num_gibbs"]]
+	java_bart_machine = bart_machine$java_bart_machine
+	num_burn_in = bart_machine$num_burn_in
+	num_gibbs = bart_machine$num_gibbs
+	num_trees = bart_machine$num_trees
+	
+	all_tree_liks = matrix(NA, nrow = num_trees, ncol = num_gibbs + 1)
+	for (t in 1 : num_trees){
+		all_tree_liks[t, ] = .jcall(java_bart_machine, "[D", "getLikForTree", as.integer(t - 1))
+	}	
 	
 	treeliks_scale = (max(all_tree_liks) - min(all_tree_liks)) * 0.05
 	
@@ -126,7 +222,7 @@ plot_tree_liks_convergence_diagnostics = function(bart_machine, extra_text = NUL
 			xlab = "Gibbs sample # (gray line indicates burn in)", 
 			ylab = "log proportional likelihood")
 	for (t in 2 : nrow(all_tree_liks)){
-		tryCatch({points(1 : (num_gibbs + 1), all_tree_liks[t, ], col = sample(colors(), 1), main = "tree log proportional likelihood", pch = ".", cex = 2)},
+		tryCatch({points(1 : (num_gibbs + 1), all_tree_liks[t, ], col = sample(colors(), 1), pch = ".", cex = 2)},
 			error = function(exc){},
 			finally = function(exc){})
 	}
@@ -144,9 +240,10 @@ plot_y_vs_yhat = function(bart_predictions, extra_text = NULL, data_title = "dat
 	ppi_conf = bart_predictions[["ppi_conf"]]
 	y_inside_ppi = bart_predictions[["y_inside_ppi"]]
 	prop_ys_in_ppi = bart_predictions[["prop_ys_in_ppi"]]
-	L1_err = bart_predictions[["L1_err"]]
-	L2_err = bart_predictions[["L2_err"]]
-
+	L1_err = round(bart_predictions[["L1_err"]])
+	L2_err = round(bart_predictions[["L2_err"]])
+	rmse = bart_predictions[["rmse"]]
+	
 	#make the general plot
 	if (save_plot){	
 		save_plot_function(bart_machine, "yvyhat_bart", data_title)
@@ -156,7 +253,7 @@ plot_y_vs_yhat = function(bart_predictions, extra_text = NULL, data_title = "dat
 	}		
 	plot(y, 
 		y_hat, 
-		main = paste("BART y vs yhat, ", (ppi_conf * 100), "% PPIs (", round(prop_ys_in_ppi * 100, 2), "% cvrg), L1err = ", L1_err, ", L2err = ", L2_err, ifelse(is.null(extra_text), "", paste("\n", extra_text)), sep = ""), 
+		main = paste("BART y-yhat, ", (ppi_conf * 100), "% PPIs (", round(prop_ys_in_ppi * 100, 2), "% cvrg), L1/2 = ", L1_err, "/", L2_err, ", rmse = ", round(rmse, 2), ifelse(is.null(extra_text), "", paste("\n", extra_text)), sep = ""), 
 		xlab = paste("y\ngreen circle - the PPI for yhat captures true y", sep = ""), 
 		ylab = "y_hat", 
 		cex = 0)
@@ -166,7 +263,7 @@ plot_y_vs_yhat = function(bart_predictions, extra_text = NULL, data_title = "dat
 	}
 	#draw green dots or red dots depending upon inclusion in the PPI
 	for (i in 1 : n){
-		points(y[i], y_hat[i], col = ifelse(y_inside_ppi[i], "green", "red"), cex = 0.1, pch = 16)	
+		points(y[i], y_hat[i], col = ifelse(y_inside_ppi[i], "green", "red"), cex = 0.3, pch = 16)	
 	}
 	abline(a = 0, b = 1, col = "blue")
 
@@ -195,7 +292,7 @@ look_at_sample_of_test_data = function(bart_predictions, grid_len = 3, extra_tex
 
 predict_and_calc_ppis = function(model, test_data, ppi_conf = 0.95){
 	#pull out data objects for convenience
-	bart_machine = model[["bart_machine"]]
+	java_bart_machine = model[["java_bart_machine"]]
 	num_iterations_after_burn_in = model[["num_iterations_after_burn_in"]]
 	n = nrow(test_data)
 	y = test_data$y
@@ -205,7 +302,7 @@ predict_and_calc_ppis = function(model, test_data, ppi_conf = 0.95){
 		return;
 	}	
 	test_data = pre_process_data(test_data)
-	if (!.jcall(bart_machine, "Z", "gibbsFinished")){
+	if (!.jcall(java_bart_machine, "Z", "gibbsFinished")){
 		stop("BART model not finished building yet", call. = FALSE)
 		return
 	}
@@ -215,7 +312,7 @@ predict_and_calc_ppis = function(model, test_data, ppi_conf = 0.95){
 	ppi_a = array(NA, n)
 	ppi_b = array(NA, n)	
 	for (i in 1 : n){
-		samps = .jcall(bart_machine, "[D", "getGibbsSamplesForPrediction", c(as.numeric(test_data[i, ]), NA))
+		samps = .jcall(java_bart_machine, "[D", "getGibbsSamplesForPrediction", c(as.numeric(test_data[i, ]), NA))
 		y_hat_posterior_samples[i, ] = samps
 		######## NOT RIGHT!!!
 		ppi_a[i] = quantile(sort(samps), (1 - ppi_conf) / 2)
@@ -240,7 +337,8 @@ predict_and_calc_ppis = function(model, test_data, ppi_conf = 0.95){
 		y_inside_ppi = y_inside_ppi, 
 		prop_ys_in_ppi = prop_ys_in_ppi,
 		L1_err = L1_err,
-		L2_err = L2_err)
+		L2_err = L2_err,
+		rmse = sqrt(L2_err / n))
 }
 
 run_random_forests_and_plot_y_vs_yhat = function(training_data, test_data, extra_text = NULL, data_title = "data_model", save_plot = FALSE, bart_machine = NULL){

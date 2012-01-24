@@ -209,11 +209,11 @@ public abstract class CGMPosteriorBuilder {
 		double ln_prob_y_proposal = 0;
 		if (keep_highest_lik){
 			ln_prob_y_proposal = calculateLnProbYGivenTree(T_star); //duplicate, but whatever
-			System.out.println("log_r: " + log_r + " ln_prob_y_proposal: " + ln_prob_y_proposal + " highest_log_probability: " + highest_log_probability);
+//			System.out.println("log_r: " + log_r + " ln_prob_y_proposal: " + ln_prob_y_proposal + " highest_log_probability: " + highest_log_probability);
 			if (ln_prob_y_proposal > highest_log_probability){			
 				highest_log_probability = ln_prob_y_proposal;
 				most_likely_tree = T_star.clone(true);
-				System.out.println("most likely tree log prob: " + ln_prob_y_proposal);
+//				System.out.println("most likely tree log prob: " + ln_prob_y_proposal);
 			}
 		}
 		//now determine if we keep the proposal or not (if log_r is zero, means both trees same)
@@ -221,7 +221,7 @@ public abstract class CGMPosteriorBuilder {
 //		System.out.println("ln_u_0_1: " + ln_u_0_1 + " ln_r: " + log_r);
 		if (ln_u_0_1 < log_r){ //accept proposal
 			num_acceptances++;
-			System.out.println("proposal ACCEPTED\n\n");
+//			System.out.println("proposal ACCEPTED\n\n");
 			if (DEBUG_ITERATIONS){
 				iteration_info.put("num_acceptances", num_acceptances + "");
 				iteration_info.put("ln_prob_y_proposal", ln_prob_y_proposal + "");
@@ -232,7 +232,7 @@ public abstract class CGMPosteriorBuilder {
 			return T_star;
 		}
 		//reject proposal
-		System.out.println("proposal REJECTED\n\n");
+//		System.out.println("proposal REJECTED\n\n");
 		if (DEBUG_ITERATIONS){
 			iteration_info.put("log_r", one_digit_format.format(log_r));
 			iteration_info.put("acc_or_rej", "REJECTED");
@@ -268,24 +268,24 @@ public abstract class CGMPosteriorBuilder {
 		if (DEBUG_ITERATIONS){
 			iteration_info.put("change_step", "GROW");
 		}
-		System.out.println("proposal via GROW  " + T.stringID());
+//		System.out.println("proposal via GROW  " + T.stringID());
 		ArrayList<CGMTreeNode> growth_nodes = CGMTreeNode.getTerminalNodesWithDataAboveN(T, N_RULE);
-		System.out.print("num growth nodes: " + growth_nodes.size() +":");
-		for (CGMTreeNode node : growth_nodes){
-			System.out.print(" " + node.stringID());
-		}
-		System.out.print("\n");
+//		System.out.print("num growth nodes: " + growth_nodes.size() +":");
+//		for (CGMTreeNode node : growth_nodes){
+//			System.out.print(" " + node.stringID());
+//		}
+//		System.out.print("\n");
 		//if there are no growth nodes at all, we need to get out with our skin intact,
 		//we return a probability of null
 		if (growth_nodes.size() == 0){
-			System.out.println("no growth nodes in GROW step!");
+//			System.out.println("no growth nodes in GROW step!");
 			return null;
 		}
 		//now we pick one of these nodes with enough data points randomly
 		CGMTreeNode growth_node = growth_nodes.get((int)Math.floor(Math.random() * growth_nodes.size()));
 		//now we give it a split attribute and value and assign the children data
 		treePriorBuilder.splitNodeAndAssignRule(growth_node);
-		System.out.println("growth node: " + growth_node.stringID() + " rule: " + " X_" + growth_node.splitAttributeM + " < " + growth_node.splitValue);
+//		System.out.println("growth node: " + growth_node.stringID() + " rule: " + " X_" + growth_node.splitAttributeM + " < " + growth_node.splitValue);
 		if (DEBUG_ITERATIONS){
 			iteration_info.put("changed_node", growth_node.stringID());
 			iteration_info.put("split_attribute", growth_node.splitAttributeM + "");
@@ -312,7 +312,7 @@ public abstract class CGMPosteriorBuilder {
 		//if we didn't split at all, return 0 so tree doesn't pass
 	private double calculateLogRatioForGrow(CGMTreeNode T_i, CGMTreeNode T_star, Double prob_split) {
 		if (prob_split == null){
-			System.out.println("probSplit null in calculateLogRatioForGrow");
+//			System.out.println("probSplit null in calculateLogRatioForGrow");
 			return 0;
 		}
 		//now we calculate each quantity
@@ -326,7 +326,7 @@ public abstract class CGMPosteriorBuilder {
 		double ln_prob_y_proposal = calculateLnProbYGivenTree(T_star);
 		//and the probability of y given the original tree
 		double ln_prob_y_original = calculateLnProbYGivenTree(T_i);
-		System.out.println("calculateLogRatioForGrow p(y|T*) / p(y|Ti) = " + Math.pow(Math.E, ln_prob_y_proposal - ln_prob_y_original));
+//		System.out.println("calculateLogRatioForGrow p(y|T*) / p(y|Ti) = " + Math.pow(Math.E, ln_prob_y_proposal - ln_prob_y_original));
 		//now add everything up appropriately
 		return Math.log(prob_split) + ln_b - lnbtwobstar + ln_prob_y_proposal - ln_prob_y_original;
 	}
@@ -343,7 +343,7 @@ public abstract class CGMPosteriorBuilder {
 			iteration_info.put("change_step", "PRUNE");
 		}
 		//get a random terminal node (all terminal nodes accepted)
-		System.out.println("proposal via PRUNE  " + T.stringID());
+//		System.out.println("proposal via PRUNE  " + T.stringID());
 		ArrayList<CGMTreeNode> terminal_nodes = CGMTreeNode.getTerminalNodesWithDataAboveN(T, 0);
 //		System.out.print("num terminal nodes: " + terminal_nodes.size());
 //		for (CGMTreeNode node : terminal_nodes){
@@ -360,7 +360,7 @@ public abstract class CGMPosteriorBuilder {
 		//if there are no branch nodes at all, we need to get out with our skin intact,
 		//we return a probability of null
 		if (branch_nodes.size() == 0){
-			System.out.println("no branch nodes in PRUNE step!");
+//			System.out.println("no branch nodes in PRUNE step!");
 			return null;
 		}		
 		//now we pick one of these nodes randomly AND take its parent
@@ -369,7 +369,7 @@ public abstract class CGMPosteriorBuilder {
 		//if the prune node happened to be the root node,
 		//its parent is null, and we have to jet big time
 		if (prune_node == null){
-			System.out.println("no prune nodes in PRUNE step!");
+//			System.out.println("no prune nodes in PRUNE step!");
 			return null;			
 		}
 //		System.out.println("prune_node node: " + prune_node.stringID() + " rule: " + " X_" + prune_node.splitAttributeM + " < " + prune_node.splitValue);		
@@ -398,7 +398,7 @@ public abstract class CGMPosteriorBuilder {
 	private double calculateLogRatioForPrune(CGMTreeNode T_i, CGMTreeNode T_star, Double prob_split) {
 		//if we didn't prune at all, return 0 so tree doesn't pass
 		if (prob_split == null){
-			System.out.println("probSplit null in calculateLogRatioForPrune");
+//			System.out.println("probSplit null in calculateLogRatioForPrune");
 			return 0;
 		}
 		//now we calculate each quantity
@@ -412,7 +412,7 @@ public abstract class CGMPosteriorBuilder {
 		double ln_prob_y_proposal = calculateLnProbYGivenTree(T_star);
 		//and the probability of y given the original tree
 		double ln_prob_y_original = calculateLnProbYGivenTree(T_i);
-		System.out.println("calculateLogRatioForPrune p(y|T*) / p(y|Ti) = " + Math.pow(Math.E, ln_prob_y_proposal - ln_prob_y_original));
+//		System.out.println("calculateLogRatioForPrune p(y|T*) / p(y|Ti) = " + Math.pow(Math.E, ln_prob_y_proposal - ln_prob_y_original));
 		//now add everything up appropriately
 		return -Math.log(prob_split) + ln_bstar - ln_twob + ln_prob_y_proposal - ln_prob_y_original;
 	}
@@ -428,7 +428,7 @@ public abstract class CGMPosteriorBuilder {
 	private double calculateLogRatioForChangeOrSwap(CGMTreeNode T_i, CGMTreeNode T_star) {
 		double ln_prob_y_proposal = calculateLnProbYGivenTree(T_star);
 		double ln_prob_y_original = calculateLnProbYGivenTree(T_i);
-		System.out.println("calculateLogRatioForChangeOrSwap p(y|T*) / p(y|Ti) = " + Math.pow(Math.E, ln_prob_y_proposal - ln_prob_y_original));
+//		System.out.println("calculateLogRatioForChangeOrSwap p(y|T*) / p(y|Ti) = " + Math.pow(Math.E, ln_prob_y_proposal - ln_prob_y_original));
 		return ln_prob_y_proposal - ln_prob_y_original;
 	}
 
@@ -443,11 +443,11 @@ public abstract class CGMPosteriorBuilder {
 		if (DEBUG_ITERATIONS){
 			iteration_info.put("change_step", "CHANGE");
 		}		
-		System.out.println("proposal via CHANGE  " + T.stringID());
+//		System.out.println("proposal via CHANGE  " + T.stringID());
 		//get all the internal nodes
 		ArrayList<CGMTreeNode> internal_nodes = CGMTreeNode.findInternalNodes(T);
 		if (internal_nodes.isEmpty()){
-			System.out.println("no internal nodes");
+//			System.out.println("no internal nodes");
 			return;
 		}
 		//pick one internal node at random
@@ -469,11 +469,11 @@ public abstract class CGMPosteriorBuilder {
 		if (DEBUG_ITERATIONS){
 			iteration_info.put("change_step", "SWAP");
 		}			
-		System.out.println("proposal via SWAP  " + T.stringID());
+//		System.out.println("proposal via SWAP  " + T.stringID());
 		//get all the doubly internal nodes (i.e. internal nodes whose children are internal nodes as well)
 		ArrayList<CGMTreeNode> doubly_internal_nodes = CGMTreeNode.findDoublyInternalNodes(T);
 		if (doubly_internal_nodes.isEmpty()){
-			System.out.println("no doubly internal nodes");
+//			System.out.println("no doubly internal nodes");
 			return;
 		}
 		//pick one internal node at random

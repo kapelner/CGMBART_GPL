@@ -32,16 +32,13 @@ for (real_regression_data_set in real_regression_data_sets) {
 	
 	for (num_trees in num_trees_of_interest){
 		cat(paste("\n\n\\section{m = ", num_trees, "}\n\n", sep = "")) 
-		for (num_burn_in in c(2000)){
+		for (num_burn_in in num_burn_ins_of_interest){
 			cat(paste("\n\n\\subsection{N\\_B = ", num_burn_in, ", N\\_G = ", num_iterations_after_burn_in, "}\n\n", sep = ""))
-			for (num_iterations_after_burn_in in c(2000)){
-#				r_forestfires_sigsqs_m_20_n_B_2000_n_G_a_2000
-#				r_forestfires_tree_liks_m_20_n_B_2000_n_G_a_2000
-#				r_forestfires_yvyhat_rf_m_20_n_B_2000_n_G_a_2000
-#				r_forestfires_yvyhat_bart_m_20_n_B_2000_n_G_a_2000
+			for (num_iterations_after_burn_in in num_iterations_after_burn_ins_of_interest){
+				
 				cat("\\begin{figure}\n")
-				cat("\\centering\n")	
-				image_titles = c("sigsqs", "tree_liks", "yvyhat_bart", "yvyhat_rf")
+				cat("\\centering\n")
+				image_titles = c("sigsqs", "tree_liks", "tree_nodes", "tree_depths", "yvyhat_bart", "yvyhat_rf")
 				for (i in 1 : length(image_titles)){
 					cat("\\subfigure{\n")
 					cat(paste("\\includegraphics[width=3.5in]{../output_plots/", real_regression_data_set, "_", image_titles[i], "_m_", num_trees, "_n_B_", num_burn_in, "_n_G_a_", num_iterations_after_burn_in, ".pdf}\n", sep = ""))

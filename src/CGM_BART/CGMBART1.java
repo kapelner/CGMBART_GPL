@@ -44,6 +44,9 @@ public abstract class CGMBART1 extends CGMBART {
 		//now we're off to the races, gibbs sampling away. We begin at sample **1** since we've already built the zeroth sample from the prior
 		for (gibb_sample_i = 1; gibb_sample_i <= num_gibbs_total_iterations; gibb_sample_i++){
 			runGibbsSamplerForTreesAndSigsqOnce(gibb_sample_i);
+			if (gibb_sample_i % 100 == 0){
+				System.out.println("gibbs iter: " + gibb_sample_i);
+			}
 		}
 	}
 	
@@ -54,7 +57,7 @@ public abstract class CGMBART1 extends CGMBART {
 		gibbs_samples_of_cgm_trees.add(0, initial_trees);	
 		//now assign the first sigsq using the prior and add it to the master list
 		double initial_sigsq = 1; //sampleInitialSigsqByDrawingFromThePrior();
-		System.out.println("initial_sigsq: " + initial_sigsq);
+//		System.out.println("initial_sigsq: " + initial_sigsq);
 		gibbs_samples_of_sigsq.add(0, initial_sigsq);
 		
 
@@ -64,7 +67,7 @@ public abstract class CGMBART1 extends CGMBART {
 			for (int i = 0; i < 1000; i++){
 				initial_sigma_simus[i] = sampleInitialSigsqByDrawingFromThePrior() * (TRANSFORM_Y ? y_range_sq : 1);
 			}
-			System.out.print("\n\n\n");
+//			System.out.print("\n\n\n");
 			sigsqs_draws.println(0 + "," + hyper_nu + "," + hyper_lambda + "," + 0 + "," + 0 + "," + (initial_sigsq * (TRANSFORM_Y ? y_range_sq : 1)) + "," + y_range_sq + "," + IOTools.StringJoin(initial_sigma_simus, ","));		
 		}
 		
@@ -183,14 +186,14 @@ public abstract class CGMBART1 extends CGMBART {
 	}	
 	
 	private ArrayList<CGMTreeNode> createInitialTreesByDrawingFromThePrior() {
-		System.out.println("CGMBART CreateInitialTrees numtrees: " + m);
+//		System.out.println("CGMBART CreateInitialTrees numtrees: " + m);
 		//initialize array for the first time
 		ArrayList<CGMTreeNode> cgm_trees = new ArrayList<CGMTreeNode>(m);
 		//now we're going to build each tree based on the prior given in section 2 of the paper
 		//first thing is first, we create the tree structures using priors for p(T_1), p(T_2), .., p(T_m)
 		
 		for (int i = 0; i < m; i++){
-			System.out.println("CGMBART create prior on tree: " + (i + 1));
+//			System.out.println("CGMBART create prior on tree: " + (i + 1));
 			CGMTreeNode tree = tree_prior_builder.buildTreeStructureBasedOnPrior();
 			tree.updateWithNewResponsesAndPropagate(X_y, y_trans, p);
 			cgm_trees.add(tree);

@@ -5,10 +5,10 @@
 
 simulated_data_model_names = c(
 #	"just_noise_linear",
-	"univariate_linear",
-	"bivariate_linear",
-	"simple_tree_structure",
-	"friedman"
+#	"univariate_linear",
+#	"bivariate_linear",
+	"simple_tree_structure"
+#	"friedman"
 )
 
 simulate_data_from_simulation_name = function(simulated_data_model_name){

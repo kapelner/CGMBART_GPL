@@ -129,7 +129,7 @@ public final class CGMBARTPosteriorBuilder extends CGMRegressionMeanShiftPosteri
 //			System.out.println("calculateLnProbYGivenTree running total: " + ln_prob);			
 		}
 		ln_prob -= 0.5 * term_b;
-		System.out.println("calculateLnProbYGivenTree is prop to: " + ln_prob);
+//		System.out.println("calculateLnProbYGivenTree is prop to: " + ln_prob);
 //		System.out.println("ProbYGivenTree :" + Math.pow(ln_prob, Math.E));
 		
 		return ln_prob;
