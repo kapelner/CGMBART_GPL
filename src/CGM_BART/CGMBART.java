@@ -85,7 +85,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 				tree_liks.print("t_" + t + "_lik,t_" + t + "_id,");
 			}
 			tree_liks.print("\n");
-			TreeIllustration.DeletePreviousTreeIllustrations();	        
+			TreeIllustration.DeletePreviousTreeIllustrations();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -200,6 +200,19 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 		BurnBothChains();
 		//for some reason we don't thin... I don't really understand why... has to do with autocorrelation and stickiness?
 //		ThinBothChains();
+		
+		//make sure you can do stuff from R
+		getGibbsSamplesSigsqs();
+		for (int i = 0; i < num_gibbs_total_iterations; i++){
+			getNumNodesForTreesInGibbsSamp(i);
+			getRootSplits(i);
+			getDepthsForTreesInGibbsSamp(i);
+		}
+		for (int t = 0; t < m; t++){
+			getLikForTree(t);
+		}
+		
+		getGibbsSamplesForPrediction(X_y.get(0));
 
 	}
 	
@@ -290,7 +303,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 			tree_array_illustration.AddTree(tree);
 			
 			//now sample from M_j | T_j, R_j, \sigma by just assigning leaves a draw from the leaf posterior				
-//			System.out.println("Sampling M_" + (t + 1) + " / " + m + " iter " + sample_num);
+			System.out.println("Sampling M_" + (t + 1) + " / " + m + " iter " + sample_num);
 			assignLeafValsUsingPosteriorMeanAndCurrentSigsq(tree, gibbs_samples_of_sigsq.get(sample_num - 1));
 			
 			if (stop_bit){
@@ -365,18 +378,23 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 		
 		
 		//now close and open all debug
-//		if (Math.random() < 0.0333){
-//			CloseDebugFiles();
-//			OpenDebugFiles();
-//		}
+		if (Math.random() < 0.0333){
+			CloseDebugFiles();
+			OpenDebugFiles();
+		}
 	
 	}
 	
 	public double[] getGibbsSamplesSigsqs(){
-		double[] sigsqs_to_export = new double[gibbs_samples_of_sigsq.size()];
-		for (int i = 0; i < gibbs_samples_of_sigsq.size(); i++){
-			sigsqs_to_export[i] = gibbs_samples_of_sigsq.get(i) * (TRANSFORM_Y ? y_range_sq : 1);		
-		}
+		double[] sigsqs_to_export = new double[1];
+		try {		
+			sigsqs_to_export = new double[gibbs_samples_of_sigsq.size()];
+			for (int i = 0; i < gibbs_samples_of_sigsq.size(); i++){
+				
+					sigsqs_to_export[i] = gibbs_samples_of_sigsq.get(i) * (TRANSFORM_Y ? y_range_sq : 1);
+				
+			}
+		} catch (Exception e){}
 		return sigsqs_to_export;
 	}
 	
@@ -418,17 +436,18 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 		sigsqs_draws.close();
 		evaluations.close();
 	}
-//	private void OpenDebugFiles(){		
-//		try {
-//			sigsqs = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "sigsqs" + DEBUG_EXT, true)));
-//			sigsqs_draws = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "sigsqs_draws" + DEBUG_EXT, true)));
-//			tree_liks = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "tree_liks" + DEBUG_EXT, true)));
-//			evaluations = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "evaluations" + DEBUG_EXT, true)));
-//			remainings = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "remainings" + DEBUG_EXT, true)));	
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}			
-//	}
+	
+	private void OpenDebugFiles(){		
+		try {
+			sigsqs = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "sigsqs" + DEBUG_EXT, true)));
+			sigsqs_draws = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "sigsqs_draws" + DEBUG_EXT, true)));
+			tree_liks = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "tree_liks" + DEBUG_EXT, true)));
+			evaluations = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "evaluations" + DEBUG_EXT, true)));
+			remainings = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "remainings" + DEBUG_EXT, true)));	
+		} catch (IOException e) {
+			e.printStackTrace();
+		}			
+	}
 
 	protected abstract CGMTreeNode SampleTreeByCalculatingRemainingsAndDrawingFromTreeDist(int i, int t, TreeArrayIllustration tree_array_illustration);
 
@@ -445,6 +464,9 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 			double posterior_mean = leafPosteriorMean(node, sigsq, posterior_sigsq);
 //			System.out.println("posterior_mean = " + posterior_mean + " node.avg_response = " + node.avg_response());
 			node.y_prediction = StatToolbox.sample_from_norm_dist(posterior_mean, posterior_sigsq);
+			if (node.y_prediction == StatToolbox.ILLEGAL_FLAG){
+				node.y_prediction = 0.0; //this could happen on an empty node
+			}
 //			System.out.println("assignLeafFINAL " + node.y_prediction + " (sigsq = " + sigsq + ")");
 		}
 		else {
@@ -454,11 +476,12 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 	}
 
 	private double leafPosteriorMean(CGMTreeNode node, double sigsq, double posterior_var) {
+		System.out.println("leafPosteriorMean hyper_sigsq_mu " + hyper_sigsq_mu + " node.n " + node.n + " sigsq " + sigsq + " node.avg_response() " + node.avg_response() + " posterior_var " + posterior_var);
 		return (hyper_mu_mu / hyper_sigsq_mu + node.n / sigsq * node.avg_response()) / (1 / posterior_var);
 	}
 
 	private double leafPosteriorVar(CGMTreeNode node, double sigsq) {
-//		System.out.println("leafPosteriorVar sigsq " + sigsq + " var " + 1 / (1 / hyper_sigsq_mu + node.n * m / sigsq));
+		System.out.println("leafPosteriorVar sigsq " + sigsq + " var " + 1 / (1 / hyper_sigsq_mu + node.n * m / sigsq));
 		return 1 / (1 / hyper_sigsq_mu + node.n / sigsq);
 	}
 

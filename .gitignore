@@ -34,15 +34,16 @@ Thumbs.db
 
 # other stuff project specific
 
+log
+log.lck
+log~
 bin/*
 .project
 .gitignore~
 .gitignore.swp
 .settings/*
 r_scripts/debug_only/*
-#mathematica_scripts
 mathematica_scripts/*
-#latex_notes
 latex_notes/*
 debug_output/*.csv
 debug_output/*.png

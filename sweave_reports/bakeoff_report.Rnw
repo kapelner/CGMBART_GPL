@@ -37,7 +37,7 @@ for (model_name in c(real_regression_data_sets, simulated_data_model_names)){
 			for (num_iterations_after_burn_in in num_iterations_after_burn_ins_of_interest){
 				cat(paste("\n\n\\subsection{N\\_B = ", num_burn_in, ", N\\_G = ", num_iterations_after_burn_in, "}\n\n", sep = ""))				
 
-				image_titles = c("sigsqs", "tree_liks", "tree_nodes", "tree_depths", "yvyhat_bart", "yvyhat_cart", "yvyhat_rf", "yvyhat_BT_bart")
+				image_titles = c("sigsqs", "tree_liks", "tree_nodes", "tree_depths", "yvyhat_bart", "yvyhat_BT_bart", "yvyhat_rf", "yvyhat_cart")
 				for (i in 1 : length(image_titles)){
 					if (i %% 2 == 1){
 						cat("\\begin{figure}\n")
@@ -53,14 +53,14 @@ for (model_name in c(real_regression_data_sets, simulated_data_model_names)){
 				}				
 				
 				#now we can load in the root splits
-				csv_filename = paste("../", PLOTS_DIR, "/", model_name, "_first_splits_m_", num_trees, "_n_B_", num_burn_in, "_n_G_a_", num_iterations_after_burn_in, ".csv", sep = "")
-				root_splits = read.csv(csv_filename, header = TRUE)
-				cat(paste("\n\n\\paragraph{Root Splits}\n\n", sep = ""))
-				cat("{\\tiny\\begin{verbatim}\n")
-				for (i in 1 : nrow(root_splits)){
-					cat(paste(root_splits[i, 1], ": ", root_splits[i, 2], "\n"))
-				}
-				cat("\\end{verbatim}}\n\n")				
+#				csv_filename = paste("../", PLOTS_DIR, "/", model_name, "_first_splits_m_", num_trees, "_n_B_", num_burn_in, "_n_G_a_", num_iterations_after_burn_in, ".csv", sep = "")
+#				root_splits = read.csv(csv_filename, header = TRUE)
+#				cat(paste("\n\n\\paragraph{Root Splits}\n\n", sep = ""))
+#				cat("{\\tiny\\begin{verbatim}\n")
+#				for (i in 1 : nrow(root_splits)){
+#					cat(paste(root_splits[i, 1], ": ", root_splits[i, 2], "\n"))
+#				}
+#				cat("\\end{verbatim}}\n\n")				
 			}
 		}		
 	}

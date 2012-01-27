@@ -73,9 +73,11 @@ init_jvm_and_bart_object = function(debug_log, print_tree_illustrations, print_o
 	}
 	java_bart_machine = .jnew("CGM_BART.CGMBARTRegression")
 	if (debug_log){
+#		cat("warning: printing out the log file will slow down the runtime perceptibly\n")
 		.jcall(java_bart_machine, "V", "writeToDebugLog")
 	}
 	if (print_tree_illustrations){
+		cat("warning: printing tree illustrations will slow down the runtime significantly\n")
 		.jcall(java_bart_machine, "V", "printTreeIllustations")
 	}
 	if (!is.null(print_out_every)){
@@ -86,7 +88,10 @@ init_jvm_and_bart_object = function(debug_log, print_tree_illustrations, print_o
 
 plot_sigsqs_convergence_diagnostics = function(bart_machine, extra_text = NULL, data_title = "data_model", save_plot = FALSE){
 	#pull it from Java
-	sigsqs = .jcall(bart_machine$java_bart_machine, "[D", "getGibbsSamplesSigsqs")
+	tryCatch({sigsqs = .jcall(bart_machine$java_bart_machine, "[D", "getGibbsSamplesSigsqs")},
+			error = function(exc){return},
+			finally = function(exc){})
+	
 	num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in
 	num_burn_in = bart_machine$num_burn_in
 	num_gibbs = bart_machine$num_gibbs
@@ -126,7 +131,9 @@ plot_tree_num_nodes = function(bart_machine, extra_text = NULL, data_title = "da
 	
 	all_tree_num_nodes = matrix(NA, nrow = num_trees, ncol = num_gibbs + 1)
 	for (n in 1 : (num_gibbs + 1)){
-		all_tree_num_nodes[, n] = .jcall(java_bart_machine, "[I", "getNumNodesForTreesInGibbsSamp", as.integer(n - 1))
+		tryCatch({all_tree_num_nodes[, n] = .jcall(java_bart_machine, "[I", "getNumNodesForTreesInGibbsSamp", as.integer(n - 1))},
+				error = function(exc){return},
+				finally = function(exc){})
 	}
 	
 	if (save_plot){
@@ -182,7 +189,10 @@ plot_tree_depths = function(bart_machine, extra_text = NULL, data_title = "data_
 	
 	all_tree_depths = matrix(NA, nrow = num_trees, ncol = num_gibbs + 1)
 	for (n in 1 : (num_gibbs + 1)){
-		all_tree_depths[, n] = .jcall(java_bart_machine, "[I", "getDepthsForTreesInGibbsSamp", as.integer(n - 1))
+		tryCatch({all_tree_depths[, n] = .jcall(java_bart_machine, "[I", "getDepthsForTreesInGibbsSamp", as.integer(n - 1))},
+				error = function(exc){return},
+				finally = function(exc){})		
+		
 	}
 	
 	if (save_plot){
@@ -217,8 +227,10 @@ plot_tree_liks_convergence_diagnostics = function(bart_machine, extra_text = NUL
 	num_trees = bart_machine$num_trees
 	
 	all_tree_liks = matrix(NA, nrow = num_trees, ncol = num_gibbs + 1)
-	for (t in 1 : num_trees){
-		all_tree_liks[t, ] = .jcall(java_bart_machine, "[D", "getLikForTree", as.integer(t - 1))
+	for (t in 1 : num_trees){		
+		tryCatch({all_tree_liks[t, ] = .jcall(java_bart_machine, "[D", "getLikForTree", as.integer(t - 1))},
+				error = function(exc){return},
+				finally = function(exc){})			
 	}	
 	
 	treeliks_scale = (max(all_tree_liks) - min(all_tree_liks)) * 0.05
@@ -328,7 +340,9 @@ predict_and_calc_ppis = function(model, test_data, ppi_conf = 0.95){
 	ppi_a = array(NA, n)
 	ppi_b = array(NA, n)	
 	for (i in 1 : n){
-		samps = .jcall(java_bart_machine, "[D", "getGibbsSamplesForPrediction", c(as.numeric(test_data[i, ]), NA))
+		tryCatch({samps = .jcall(java_bart_machine, "[D", "getGibbsSamplesForPrediction", c(as.numeric(test_data[i, ]), NA))},
+				error = function(exc){return},
+				finally = function(exc){})		
 		y_hat_posterior_samples[i, ] = samps
 		######## NOT RIGHT!!!
 		ppi_a[i] = quantile(sort(samps), (1 - ppi_conf) / 2)

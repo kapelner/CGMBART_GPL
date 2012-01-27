@@ -1,8 +1,5 @@
 #source("r_scripts/bart_bakeoff.R")
 
-#run_bakeoff()
-
-
 directory_where_code_is = getwd() #usually we're on a linux box and we'll just navigate manually to the directory
 #if we're on windows, then we're on the dev box, so use a prespecified directory
 if (.Platform$OS.type == "windows"){
@@ -15,38 +12,40 @@ source("r_scripts/create_simulated_models.R")
 graphics.off()
 
 real_regression_data_sets = c(
-#		"r_boston", 
-#		"r_forestfires", 
-#		"r_concretedata"
+	"r_boston", 
+	"r_forestfires", 
+	"r_concretedata"
 )
 
 #simulation constants... these can be modulated based on what you want to run
-#num_trees_of_interest = c(
-#		100, 
-#		75, 
-#		50, 
-#		20, 
-#		10, 
-#		5, 
-#		2, 
-#		1
-#)
+num_trees_of_interest = c(
+	100, 
+	75, 
+	50, 
+	20, 
+	10, 
+	5, 
+	2, 
+	1
+)
 
-num_trees_of_interest = c(1)
+#run_bakeoff()
+
+#num_trees_of_interest = c(1)
 
 num_burn_ins_of_interest = c(
-		2000,
-		1000,
-		500, 
-		200,
-		100
+	2000
+#	1000,
+#	500, 
+#	200,
+#	100
 )
 num_iterations_after_burn_ins_of_interest = c(
-		2000, 
-		1000,
-		500, 
-		200,
-		100
+	2000
+#	1000,
+#	500, 
+#	200,
+#	100
 )
 
 run_bakeoff = function(){
@@ -82,7 +81,12 @@ run_bart_model_and_save_diags_and_results = function(training_data, test_data, d
 	extra_text = paste("on model \"", gsub("_", " ", data_title), "\" m = ", num_trees, " n_B = ", num_burn_in, ", n_G_a = ", num_iterations_after_burn_in, sep = "")
 	
 	#generate the bart model
-	bart_machine = bart_model(training_data, num_trees = num_trees, num_burn_in = num_burn_in, num_iterations_after_burn_in = num_iterations_after_burn_in) #, print_tree_illustrations = TRUE
+	bart_machine = bart_model(training_data, 
+		num_trees = num_trees, 
+		num_burn_in = num_burn_in, 
+#		print_tree_illustrations = TRUE,
+#		debug_log = TRUE,
+		num_iterations_after_burn_in = num_iterations_after_burn_in)
 	
 	#do some plots to diagnose convergence
 	plot_sigsqs_convergence_diagnostics(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = TRUE)

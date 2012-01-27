@@ -65,7 +65,7 @@ public class StatToolbox {
 	}
 	
 	public static double sample_from_norm_dist(double mu, double sigma){
-//		System.out.println("sample_from_norm_dist mu=" + mu + " sigsq=" + sigma);
+		System.out.println("sample_from_norm_dist mu=" + mu + " sigsq=" + sigma);
 		try {
 			return new NormalDistributionImpl(mu, sigma).inverseCumulativeProbability(Math.random());
 		} catch (MathException e) {
