@@ -2,6 +2,8 @@
 #libraries and dependencies
 tryCatch(library(randomForest), error = function(e){install.packages("randomForest")}, finally = library(randomForest))
 tryCatch(library(rJava), error = function(e){install.packages("rJava")}, finally = library(rJava))
+tryCatch(library(BayesTree), error = function(e){install.packages("BayesTree")}, finally = library(BayesTree))
+tryCatch(library(rpart), error = function(e){install.packages("rpart")}, finally = library(rpart))
 
 #constants
 NUM_GIGS_RAM_TO_USE = ifelse(.Platform$OS.type == "windows", 4, 8)
@@ -9,7 +11,15 @@ PLOTS_DIR = "output_plots"
 JAR_DEPENDENCIES = c("bart_java.jar", "commons-math-2.1.jar", "jai_codec.jar", "jai_core.jar", "gemident_1_12_12.jar")
 DATA_FILENAME = "datasets/bart_data.csv"
 
-bart_model = function(training_data, num_trees = 50, num_burn_in = 1000, num_iterations_after_burn_in = 1000, class_or_regr = "r", debug_log = FALSE){
+bart_model = function(training_data, 
+		num_trees = 50, 
+		num_burn_in = 1000, 
+		num_iterations_after_burn_in = 1000, 
+		class_or_regr = "r", 
+		debug_log = FALSE, 
+		print_tree_illustrations = FALSE, 
+		print_out_every = NULL){
+
 	num_gibbs = num_burn_in + num_iterations_after_burn_in
 	#check for errors in data
 	if (error_in_data(training_data)){
@@ -23,7 +33,7 @@ bart_model = function(training_data, num_trees = 50, num_burn_in = 1000, num_ite
 	write.csv(training_data, DATA_FILENAME, row.names = FALSE)
 	
 	#initialize the JVM
-	java_bart_machine = init_jvm_and_bart_object(debug_log)
+	java_bart_machine = init_jvm_and_bart_object(debug_log, print_tree_illustrations, print_out_every)
 	#make bart to spec with what the user wants
 	.jcall(java_bart_machine, "V", "setNumTrees", as.integer(num_trees))
 	.jcall(java_bart_machine, "V", "setNumGibbsBurnIn", as.integer(num_burn_in))
@@ -56,14 +66,20 @@ bart_model = function(training_data, num_trees = 50, num_burn_in = 1000, num_ite
 		num_gibbs = num_gibbs)
 }
 
-init_jvm_and_bart_object = function(debug_log){
+init_jvm_and_bart_object = function(debug_log, print_tree_illustrations, print_out_every){
 	.jinit(parameters = paste("-Xmx", NUM_GIGS_RAM_TO_USE, "g", sep = ""))
 	for (dependency in JAR_DEPENDENCIES){
 		.jaddClassPath(paste(directory_where_code_is, "/", dependency, sep = ""))
 	}
 	java_bart_machine = .jnew("CGM_BART.CGMBARTRegression")
 	if (debug_log){
-		.jcall(java_bart_machine, "V", "writeToDebugLog")	
+		.jcall(java_bart_machine, "V", "writeToDebugLog")
+	}
+	if (print_tree_illustrations){
+		.jcall(java_bart_machine, "V", "printTreeIllustations")
+	}
+	if (!is.null(print_out_every)){
+		.jcall(java_bart_machine, "V", "setPrintOutEveryNIter", as.integer(print_out_every))
 	}
 	java_bart_machine
 }
@@ -356,11 +372,64 @@ run_random_forests_and_plot_y_vs_yhat = function(training_data, test_data, extra
 	}		
 	plot(test_data$y, 
 			yhat_rf, 
-			main = paste("y vs yhat Random Forests model L1err = ", l1err_rf, " L2err = ", l2err_rf, ifelse(is.null(extra_text), "", paste("\n", extra_text)), sep = ""), 
+			main = paste("y vs yhat Random Forests model L1/2 = ", l1err_rf, "/", l2err_rf, ifelse(is.null(extra_text), "", paste("\n", extra_text)), sep = ""), 
 			xlab = "y", 
 			ylab = "y_hat")	
 	dev.off()
 
+}
+
+run_bayes_tree_bart_impl_and_plot_y_vs_yhat = function(training_data, test_data, extra_text = NULL, data_title = "data_model", save_plot = FALSE, bart_machine = NULL){
+	p = ncol(training_data) - 1
+	bayes_tree_bart_mod = bart(x.train = training_data[, 1 : p],
+		y.train = training_data[, p + 1],
+		x.test = test_data[, 1 : p],
+		sigdf = 3, #$\nu = 3$, this is the same value we used in the implementation
+		ntree = bart_machine$num_trees, #keep it the same
+		ndpost = bart_machine$num_iterations_after_burn_in,
+		nskip = bart_machine$num_burn_in, #keep it the same --- default is 100 in BayesTree -- huh??
+		usequants = TRUE,
+		verbose = FALSE) #this is how I implemented BART - basically allowing any split point in the data itself
+		
+	y_hat = bayes_tree_bart_mod$yhat.test.mean
+	l1err = round(sum(abs(test_data$y - y_hat)), 1)
+	l2err = round(sum((test_data$y - y_hat)^2), 1)	
+	
+	if (save_plot){
+		save_plot_function(bart_machine, "yvyhat_BT_bart", data_title)
+	}	
+	else {
+		dev.new()
+	}		
+	plot(test_data$y, 
+			y_hat, 
+			main = paste("y vs yhat BT BART model L1/2 = ", l1err, "/", l2err, ifelse(is.null(extra_text), "", paste("\n", extra_text)), sep = ""), 
+			xlab = "y", 
+			ylab = "y_hat")	
+	dev.off()
+	
+}
+
+run_cart_and_plot_y_vs_yhat = function(training_data, test_data, extra_text = NULL, data_title = "data_model", save_plot = FALSE, bart_machine = NULL){
+	model = rpart(y ~ ., training_data)
+	y_hat = predict(model, test_data)
+	
+	l1err = round(sum(abs(test_data$y - y_hat)), 1)
+	l2err = round(sum((test_data$y - y_hat)^2), 1)	
+	
+	if (save_plot){
+		save_plot_function(bart_machine, "yvyhat_cart", data_title)
+	}	
+	else {
+		dev.new()
+	}		
+	plot(test_data$y, 
+			y_hat, 
+			main = paste("y vs yhat CART model L1/2 = ", l1err, "/", l2err, ifelse(is.null(extra_text), "", paste("\n", extra_text)), sep = ""), 
+			xlab = "y", 
+			ylab = "y_hat")	
+	dev.off()
+	
 }
 
 error_in_data = function(data){

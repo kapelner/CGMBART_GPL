@@ -56,7 +56,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 	protected static PrintWriter tree_liks;
 	protected static PrintWriter remainings;
 	protected static PrintWriter evaluations;
-	protected static final boolean TREE_ILLUST = false;
+	protected static boolean TREE_ILLUST = false;
 	protected static final boolean WRITE_DETAILED_DEBUG_FILES = false;
 	
 //	static {
@@ -64,8 +64,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 //	}
 
 	static {
-		try {
-			
+		try {			
 			output = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "output" + DEBUG_EXT)));
 			TreeIllustration.DeletePreviousTreeIllustrations();
 			
@@ -94,10 +93,10 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 
 	/** the actual list of trees */
 	protected ArrayList<ArrayList<CGMTreeNode>> gibbs_samples_of_cgm_trees;
-	protected ArrayList<ArrayList<CGMTreeNode>> gibbs_samples_of_cgm_trees_burned;
+	protected ArrayList<ArrayList<CGMTreeNode>> gibbs_samples_of_cgm_trees_after_burn_in;
 	/** the variance of the errors */
 	protected ArrayList<Double> gibbs_samples_of_sigsq;
-	protected ArrayList<Double> gibbs_samples_of_sigsq_burned;
+	protected ArrayList<Double> gibbs_samples_of_sigsq_after_burn_in;
 	/** information about the response variable */
 	protected double y_min;
 	protected double y_max;
@@ -119,9 +118,9 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 	/** if the user pressed stop, we can cancel the Gibbs Sampling to unlock the CPU */
 	protected boolean stop_bit;
 	
-
+	protected static Integer PrintOutEvery = null;
 	
-
+	
 	/** Serializable happy */
 	public CGMBART(){}
 	
@@ -143,6 +142,14 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 		this.m = m;
 	}
 	
+	public void printTreeIllustations(){
+		TREE_ILLUST = true;
+	}
+	
+	public void setPrintOutEveryNIter(int print_out_every){
+		PrintOutEvery = print_out_every;
+	}
+	
 	public void setNumGibbsBurnIn(int num_gibbs_burn_in){
 		this.num_gibbs_burn_in = num_gibbs_burn_in;
 	}
@@ -156,25 +163,24 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 		//first establish the hyperparams sigsq_mu, nu, lambda
 		calculateHyperparameters();
 		all_tree_liks = new double[m][num_gibbs_total_iterations + 1];
-		
+
 		//now generate a prior builder... used in any implementation
 		tree_prior_builder = new CGMBARTPriorBuilder(X_y, p); //this is technically incorrect since we should create the initial trees by dividing y by m... but who cares, it won't make a difference anyway
 
-		
 		//now initialize the gibbs sampler array for trees and error variances
 		gibbs_samples_of_cgm_trees = new ArrayList<ArrayList<CGMTreeNode>>(num_gibbs_total_iterations);
-		gibbs_samples_of_cgm_trees_burned = new ArrayList<ArrayList<CGMTreeNode>>(num_gibbs_total_iterations - num_gibbs_burn_in);
+		gibbs_samples_of_cgm_trees_after_burn_in = new ArrayList<ArrayList<CGMTreeNode>>(num_gibbs_total_iterations - num_gibbs_burn_in);
 		gibbs_samples_of_cgm_trees.add(null);
 		gibbs_samples_of_sigsq = new ArrayList<Double>(num_gibbs_total_iterations);	
-		gibbs_samples_of_sigsq_burned = new ArrayList<Double>(num_gibbs_total_iterations - num_gibbs_burn_in);	
-		
+		gibbs_samples_of_sigsq_after_burn_in = new ArrayList<Double>(num_gibbs_total_iterations - num_gibbs_burn_in);	
+
 		//this section is different for the different BART implementations
 		//but it basically does all the Gibbs sampling
 		CoreBuild();
-		
+
 		//make sure debug files are closed
 		CloseDebugFiles();
-		
+
 //		System.err.println("num gibbs samples of cgm trees: " + gibbs_samples_of_cgm_trees.size());
 //		for (int i = 1; i <= gibbs_samples_of_cgm_trees.size(); i++){
 //			ArrayList<CGMTreeNode> trees = gibbs_samples_of_cgm_trees.get(i - 1);
@@ -209,8 +215,8 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 
 	private void BurnBothChains() {		
 		for (int i = num_gibbs_burn_in; i < num_gibbs_total_iterations; i++){
-			gibbs_samples_of_cgm_trees_burned.add(gibbs_samples_of_cgm_trees.get(i));
-			gibbs_samples_of_sigsq_burned.add(gibbs_samples_of_sigsq.get(i));
+			gibbs_samples_of_cgm_trees_after_burn_in.add(gibbs_samples_of_cgm_trees.get(i));
+			gibbs_samples_of_sigsq_after_burn_in.add(gibbs_samples_of_sigsq.get(i));
 		}	
 	}	
 	
@@ -229,7 +235,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 		double[] y_gibbs_samples = new double[numSamplesAfterBurningAndThinning()];		
 				
 		for (int i = 0; i < numSamplesAfterBurningAndThinning(); i++){
-			ArrayList<CGMTreeNode> cgm_trees = gibbs_samples_of_cgm_trees_burned.get(i);
+			ArrayList<CGMTreeNode> cgm_trees = gibbs_samples_of_cgm_trees_after_burn_in.get(i);
 			double yt_i = 0;
 			for (CGMTreeNode tree : cgm_trees){ //sum of trees right?
 				yt_i += tree.Evaluate(record);
@@ -309,11 +315,11 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 		}
 //		final Thread illustrator_thread = new Thread(){
 //			public void run(){
-		if (Math.random() < 0.0333){
+//		if (Math.random() < 0.0333){
 			if (TREE_ILLUST){
 				tree_array_illustration.CreateIllustrationAndSaveImage();
 			}
-		}
+//		}
 //			}
 //		};
 //		illustrator_thread.start();
@@ -412,17 +418,17 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 		sigsqs_draws.close();
 		evaluations.close();
 	}
-	private void OpenDebugFiles(){		
-		try {
-			sigsqs = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "sigsqs" + DEBUG_EXT, true)));
-			sigsqs_draws = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "sigsqs_draws" + DEBUG_EXT, true)));
-			tree_liks = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "tree_liks" + DEBUG_EXT, true)));
-			evaluations = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "evaluations" + DEBUG_EXT, true)));
-			remainings = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "remainings" + DEBUG_EXT, true)));	
-		} catch (IOException e) {
-			e.printStackTrace();
-		}			
-	}
+//	private void OpenDebugFiles(){		
+//		try {
+//			sigsqs = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "sigsqs" + DEBUG_EXT, true)));
+//			sigsqs_draws = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "sigsqs_draws" + DEBUG_EXT, true)));
+//			tree_liks = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "tree_liks" + DEBUG_EXT, true)));
+//			evaluations = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "evaluations" + DEBUG_EXT, true)));
+//			remainings = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "remainings" + DEBUG_EXT, true)));	
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}			
+//	}
 
 	protected abstract CGMTreeNode SampleTreeByCalculatingRemainingsAndDrawingFromTreeDist(int i, int t, TreeArrayIllustration tree_array_illustration);
 
@@ -447,7 +453,6 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 		}
 	}
 
-	///WRONG????
 	private double leafPosteriorMean(CGMTreeNode node, double sigsq, double posterior_var) {
 		return (hyper_mu_mu / hyper_sigsq_mu + node.n / sigsq * node.avg_response()) / (1 / posterior_var);
 	}

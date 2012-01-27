@@ -384,7 +384,10 @@ public class CGMTreeNode extends TreeNode implements Cloneable, Serializable {
 	}
 	
 	public static void propagateRuleChangeOrSwapThroughoutTree(CGMTreeNode node) {
-		//only propagate if we are in an internal node
+		//only propagate if we are in a split node and NOT a leaf
+		if (node.left == null || node.right == null){
+			return;
+		}
 //		System.out.println("propagate changes " + node.stringID() + "  new n:" + node.n);
 		if (!node.isLeaf){
 //			System.out.println("propagate changes in node that is not leaf");
@@ -404,15 +407,16 @@ public class CGMTreeNode extends TreeNode implements Cloneable, Serializable {
 //				System.out.println("parent " + node.stringID() + " right node " + node.right.stringID()+ " record num " + (i+1) + " " + IOTools.StringJoin(node.right.data.get(i), ","));
 //			}		
 //			System.out.println("right avg: " + StatToolbox.sample_average(node.right.get_ys_in_data())); 
-			if (node.left.n == 0 || node.right.n == 0){
-				//gotta prune if one of the children is empty
-				CGMTreeNode.pruneTreeAt(node);
-			}
-			else {
+			///////////////////////////NO PRUNING!!!!
+//			if (node.left.n == 0 || node.right.n == 0){
+//				//gotta prune if one of the children is empty
+//				CGMTreeNode.pruneTreeAt(node);
+//			}
+//			else {
 				//now recursively take care of the children
 				propagateRuleChangeOrSwapThroughoutTree(node.left);
 				propagateRuleChangeOrSwapThroughoutTree(node.right);
-			}
+//			}
 		}
 	}
 

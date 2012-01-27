@@ -36,7 +36,7 @@ public abstract class CGMBART1 extends CGMBART {
 	
 	public CGMBART1(DatumSetupForEntireRun datumSetupForEntireRun, JProgressBarAndLabel buildProgress) {
 		super(datumSetupForEntireRun, buildProgress);
-	}	
+	}
 
 	protected void CoreBuild(){	
 		InitiateGibbsChain();
@@ -44,7 +44,7 @@ public abstract class CGMBART1 extends CGMBART {
 		//now we're off to the races, gibbs sampling away. We begin at sample **1** since we've already built the zeroth sample from the prior
 		for (gibb_sample_i = 1; gibb_sample_i <= num_gibbs_total_iterations; gibb_sample_i++){
 			runGibbsSamplerForTreesAndSigsqOnce(gibb_sample_i);
-			if (gibb_sample_i % 100 == 0){
+			if (PrintOutEvery != null && gibb_sample_i % PrintOutEvery == 0){
 				System.out.println("gibbs iter: " + gibb_sample_i);
 			}
 		}
@@ -56,7 +56,7 @@ public abstract class CGMBART1 extends CGMBART {
 		ArrayList<CGMTreeNode> initial_trees = createInitialTreesByDrawingFromThePrior();
 		gibbs_samples_of_cgm_trees.add(0, initial_trees);	
 		//now assign the first sigsq using the prior and add it to the master list
-		double initial_sigsq = 1; //sampleInitialSigsqByDrawingFromThePrior();
+		double initial_sigsq = sampleInitialSigsqByDrawingFromThePrior();
 //		System.out.println("initial_sigsq: " + initial_sigsq);
 		gibbs_samples_of_sigsq.add(0, initial_sigsq);
 		
@@ -195,9 +195,17 @@ public abstract class CGMBART1 extends CGMBART {
 		for (int i = 0; i < m; i++){
 //			System.out.println("CGMBART create prior on tree: " + (i + 1));
 			CGMTreeNode tree = tree_prior_builder.buildTreeStructureBasedOnPrior();
+			modifyTreeForDebugging(tree);
 			tree.updateWithNewResponsesAndPropagate(X_y, y_trans, p);
 			cgm_trees.add(tree);
 		}
 		return cgm_trees;
+	}
+
+	private void modifyTreeForDebugging(CGMTreeNode tree) {
+		//let's ensure the correct root node
+//		tree.splitAttributeM = 0;
+//		tree.splitValue = (double)30;
+//		tree.isLeaf = false;
 	}	
 }

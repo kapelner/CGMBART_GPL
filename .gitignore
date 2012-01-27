@@ -45,6 +45,7 @@ mathematica_scripts/*
 #latex_notes
 latex_notes/*
 debug_output/*.csv
+debug_output/*.png
 output_plots/*.pdf
 output_plots/*.csv
 datasets/bart_data.csv
@@ -55,3 +56,4 @@ sweave_reports/*.out
 sweave_reports/*.pdf
 sweave_reports/*.tex
 sweave_reports/*.toc
+sweave_reports/auxilary_latex_files/*

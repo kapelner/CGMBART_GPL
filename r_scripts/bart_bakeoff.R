@@ -32,19 +32,21 @@ real_regression_data_sets = c(
 #		1
 #)
 
-num_trees_of_interest = c(1, 2, 5, 10)
+num_trees_of_interest = c(1)
 
 num_burn_ins_of_interest = c(
-#		2000,
-#		1000,
-#		500, 
-		200
+		2000,
+		1000,
+		500, 
+		200,
+		100
 )
 num_iterations_after_burn_ins_of_interest = c(
-#		2000, 
-#		1000,
-#		500, 
-		200
+		2000, 
+		1000,
+		500, 
+		200,
+		100
 )
 
 run_bakeoff = function(){
@@ -80,7 +82,7 @@ run_bart_model_and_save_diags_and_results = function(training_data, test_data, d
 	extra_text = paste("on model \"", gsub("_", " ", data_title), "\" m = ", num_trees, " n_B = ", num_burn_in, ", n_G_a = ", num_iterations_after_burn_in, sep = "")
 	
 	#generate the bart model
-	bart_machine = bart_model(training_data, num_trees = num_trees, num_burn_in = num_burn_in, num_iterations_after_burn_in = num_iterations_after_burn_in)
+	bart_machine = bart_model(training_data, num_trees = num_trees, num_burn_in = num_burn_in, num_iterations_after_burn_in = num_iterations_after_burn_in) #, print_tree_illustrations = TRUE
 	
 	#do some plots to diagnose convergence
 	plot_sigsqs_convergence_diagnostics(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = TRUE)
@@ -94,6 +96,10 @@ run_bart_model_and_save_diags_and_results = function(training_data, test_data, d
 	#diagnose how good the y_hat's from the bart model are
 	plot_y_vs_yhat(predictions, extra_text = extra_text, data_title = data_title, save_plot = TRUE, bart_machine = bart_machine)
 	
-	#now see how good random forests does in comparison
+	#now see how Rob's algorithm does
+	run_bayes_tree_bart_impl_and_plot_y_vs_yhat(training_data, test_data, extra_text = extra_text, data_title = data_title, save_plot = TRUE, bart_machine = bart_machine)
+	
+	#now see how good random forests and CART does in comparison
 	run_random_forests_and_plot_y_vs_yhat(training_data, test_data, extra_text = extra_text, data_title = data_title, save_plot = TRUE, bart_machine = bart_machine)
+	run_cart_and_plot_y_vs_yhat(training_data, test_data, extra_text = extra_text, data_title = data_title, save_plot = TRUE, bart_machine = bart_machine)
 }
