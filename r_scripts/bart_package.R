@@ -87,10 +87,11 @@ init_jvm_and_bart_object = function(debug_log, print_tree_illustrations, print_o
 }
 
 plot_sigsqs_convergence_diagnostics = function(bart_machine, extra_text = NULL, data_title = "data_model", save_plot = FALSE){
-	#pull it from Java
-	tryCatch({sigsqs = .jcall(bart_machine$java_bart_machine, "[D", "getGibbsSamplesSigsqs")},
-			error = function(exc){return},
-			finally = function(exc){})
+#	tryCatch({
+	sigsqs = .jcall(bart_machine$java_bart_machine, "[D", "getGibbsSamplesSigsqs")
+#	},
+#	error = function(exc){return},
+#	finally = function(exc){})
 	
 	num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in
 	num_burn_in = bart_machine$num_burn_in
@@ -131,9 +132,11 @@ plot_tree_num_nodes = function(bart_machine, extra_text = NULL, data_title = "da
 	
 	all_tree_num_nodes = matrix(NA, nrow = num_trees, ncol = num_gibbs + 1)
 	for (n in 1 : (num_gibbs + 1)){
-		tryCatch({all_tree_num_nodes[, n] = .jcall(java_bart_machine, "[I", "getNumNodesForTreesInGibbsSamp", as.integer(n - 1))},
-				error = function(exc){return},
-				finally = function(exc){})
+#		tryCatch({
+		all_tree_num_nodes[, n] = .jcall(java_bart_machine, "[I", "getNumNodesForTreesInGibbsSamp", as.integer(n - 1))
+#		},
+#		error = function(exc){return},
+#		finally = function(exc){})
 	}
 	
 	if (save_plot){
@@ -151,10 +154,10 @@ plot_tree_num_nodes = function(bart_machine, extra_text = NULL, data_title = "da
 			ylim = c(min(all_tree_num_nodes), max(all_tree_num_nodes)),
 			xlab = "Gibbs sample # (gray line indicates burn in)", 
 			ylab = "num nodes")
-	for (t in 2 : nrow(all_tree_num_nodes)){
-		tryCatch({points(1 : (num_gibbs + 1), all_tree_num_nodes[t, ], col = sample(colors(), 1), pch = ".", type = "l", cex = 2)},
-				error = function(exc){},
-				finally = function(exc){})
+	if (num_trees > 1){
+		for (t in 2 : nrow(all_tree_num_nodes)){
+			points(1 : (num_gibbs + 1), all_tree_num_nodes[t, ], col = sample(colors(), 1), pch = ".", type = "l", cex = 2)
+		}
 	}
 	abline(v = num_burn_in, col = "gray")
 	
@@ -189,9 +192,11 @@ plot_tree_depths = function(bart_machine, extra_text = NULL, data_title = "data_
 	
 	all_tree_depths = matrix(NA, nrow = num_trees, ncol = num_gibbs + 1)
 	for (n in 1 : (num_gibbs + 1)){
-		tryCatch({all_tree_depths[, n] = .jcall(java_bart_machine, "[I", "getDepthsForTreesInGibbsSamp", as.integer(n - 1))},
-				error = function(exc){return},
-				finally = function(exc){})		
+#		tryCatch({
+		all_tree_depths[, n] = .jcall(java_bart_machine, "[I", "getDepthsForTreesInGibbsSamp", as.integer(n - 1))
+#		},
+#		error = function(exc){return},
+#		finally = function(exc){})		
 		
 	}
 	
@@ -210,10 +215,10 @@ plot_tree_depths = function(bart_machine, extra_text = NULL, data_title = "data_
 			ylim = c(min(all_tree_depths), max(all_tree_depths)),
 			xlab = "Gibbs sample # (gray line indicates burn in)", 
 			ylab = "depth")
-	for (t in 2 : nrow(all_tree_depths)){
-		tryCatch({points(1 : (num_gibbs + 1), all_tree_depths[t, ], col = sample(colors(), 1), pch = ".", type = "l", cex = 2)},
-				error = function(exc){},
-				finally = function(exc){})
+	if (num_trees > 1){
+		for (t in 2 : nrow(all_tree_depths)){
+			points(1 : (num_gibbs + 1), all_tree_depths[t, ], col = sample(colors(), 1), pch = ".", type = "l", cex = 2)
+		}
 	}
 	abline(v = num_burn_in, col = "gray")
 	
@@ -228,9 +233,11 @@ plot_tree_liks_convergence_diagnostics = function(bart_machine, extra_text = NUL
 	
 	all_tree_liks = matrix(NA, nrow = num_trees, ncol = num_gibbs + 1)
 	for (t in 1 : num_trees){		
-		tryCatch({all_tree_liks[t, ] = .jcall(java_bart_machine, "[D", "getLikForTree", as.integer(t - 1))},
-				error = function(exc){return},
-				finally = function(exc){})			
+#		tryCatch({
+		all_tree_liks[t, ] = .jcall(java_bart_machine, "[D", "getLikForTree", as.integer(t - 1))
+#		},
+#		error = function(exc){return},
+#		finally = function(exc){})			
 	}	
 	
 	treeliks_scale = (max(all_tree_liks) - min(all_tree_liks)) * 0.05
@@ -249,10 +256,10 @@ plot_tree_liks_convergence_diagnostics = function(bart_machine, extra_text = NUL
 			ylim = c(max(all_tree_liks) - treeliks_scale, max(all_tree_liks) + 200),
 			xlab = "Gibbs sample # (gray line indicates burn in)", 
 			ylab = "log proportional likelihood")
-	for (t in 2 : nrow(all_tree_liks)){
-		tryCatch({points(1 : (num_gibbs + 1), all_tree_liks[t, ], col = sample(colors(), 1), pch = ".", cex = 2)},
-			error = function(exc){},
-			finally = function(exc){})
+	if (num_trees > 1){
+		for (t in 2 : nrow(all_tree_liks)){
+			points(1 : (num_gibbs + 1), all_tree_liks[t, ], col = sample(colors(), 1), pch = ".", cex = 2)
+		}
 	}
 	abline(v = num_burn_in, col = "gray")
 	
@@ -340,9 +347,11 @@ predict_and_calc_ppis = function(model, test_data, ppi_conf = 0.95){
 	ppi_a = array(NA, n)
 	ppi_b = array(NA, n)	
 	for (i in 1 : n){
-		tryCatch({samps = .jcall(java_bart_machine, "[D", "getGibbsSamplesForPrediction", c(as.numeric(test_data[i, ]), NA))},
-				error = function(exc){return},
-				finally = function(exc){})		
+#		tryCatch({
+		samps = .jcall(java_bart_machine, "[D", "getGibbsSamplesForPrediction", c(as.numeric(test_data[i, ]), NA))
+#		},
+#		error = function(exc){return},
+#		finally = function(exc){})		
 		y_hat_posterior_samples[i, ] = samps
 		######## NOT RIGHT!!!
 		ppi_a[i] = quantile(sort(samps), (1 - ppi_conf) / 2)
@@ -371,26 +380,31 @@ predict_and_calc_ppis = function(model, test_data, ppi_conf = 0.95){
 		rmse = sqrt(L2_err / n))
 }
 
-run_random_forests_and_plot_y_vs_yhat = function(training_data, test_data, extra_text = NULL, data_title = "data_model", save_plot = FALSE, bart_machine = NULL){
-	rf_mod = randomForest(y ~., training_data)
-	yhat_rf = predict(rf_mod, test_data)
-	
-	l1err_rf = round(sum(abs(test_data$y - yhat_rf)), 1)
-	l2err_rf = round(sum((test_data$y - yhat_rf)^2), 1)	
+run_other_model_and_plot_y_vs_yhat = function(y_hat, model_name, test_data, extra_text = NULL, data_title = "data_model", save_plot = FALSE, bart_machine = NULL){
+	L1_err = round(sum(abs(test_data$y - y_hat)), 1)
+	L2_err = round(sum((test_data$y - y_hat)^2), 1)	
+	rmse = sqrt(L2_err / length(y_hat))
 	
 	if (save_plot){
-		save_plot_function(bart_machine, "yvyhat_rf", data_title)
+		save_plot_function(bart_machine, paste("yvyhat_", model_name, "_", sep = ""), data_title)
 	}	
 	else {
 		dev.new()
 	}		
 	plot(test_data$y, 
-			yhat_rf, 
-			main = paste("y vs yhat Random Forests model L1/2 = ", l1err_rf, "/", l2err_rf, ifelse(is.null(extra_text), "", paste("\n", extra_text)), sep = ""), 
+			y_hat, 
+			main = paste("y/yhat ", model_name, " model L1/2 = ", L1_err, "/", L2_err, " rmse = ", rmse, ifelse(is.null(extra_text), "", paste("\n", extra_text)), sep = ""), 
 			xlab = "y", 
 			ylab = "y_hat")	
 	dev.off()
+	
+	list(y_hat = y_hat, L1_err = L1_err, L2_err = L2_err, rmse = rmse)		
+}
 
+run_random_forests_and_plot_y_vs_yhat = function(training_data, test_data, extra_text = NULL, data_title = "data_model", save_plot = FALSE, bart_machine = NULL){
+	rf_mod = randomForest(y ~., training_data)
+	y_hat = predict(rf_mod, test_data)
+	run_other_model_and_plot_y_vs_yhat(y_hat, "RF", test_data, extra_text, data_title, save_plot, bart_machine)
 }
 
 run_bayes_tree_bart_impl_and_plot_y_vs_yhat = function(training_data, test_data, extra_text = NULL, data_title = "data_model", save_plot = FALSE, bart_machine = NULL){
@@ -406,44 +420,13 @@ run_bayes_tree_bart_impl_and_plot_y_vs_yhat = function(training_data, test_data,
 		verbose = FALSE) #this is how I implemented BART - basically allowing any split point in the data itself
 		
 	y_hat = bayes_tree_bart_mod$yhat.test.mean
-	l1err = round(sum(abs(test_data$y - y_hat)), 1)
-	l2err = round(sum((test_data$y - y_hat)^2), 1)	
-	
-	if (save_plot){
-		save_plot_function(bart_machine, "yvyhat_BT_bart", data_title)
-	}	
-	else {
-		dev.new()
-	}		
-	plot(test_data$y, 
-			y_hat, 
-			main = paste("y vs yhat BT BART model L1/2 = ", l1err, "/", l2err, ifelse(is.null(extra_text), "", paste("\n", extra_text)), sep = ""), 
-			xlab = "y", 
-			ylab = "y_hat")	
-	dev.off()
-	
+	run_other_model_and_plot_y_vs_yhat(y_hat, "R_BART", test_data, extra_text, data_title, save_plot, bart_machine)
 }
 
 run_cart_and_plot_y_vs_yhat = function(training_data, test_data, extra_text = NULL, data_title = "data_model", save_plot = FALSE, bart_machine = NULL){
-	model = rpart(y ~ ., training_data)
-	y_hat = predict(model, test_data)
-	
-	l1err = round(sum(abs(test_data$y - y_hat)), 1)
-	l2err = round(sum((test_data$y - y_hat)^2), 1)	
-	
-	if (save_plot){
-		save_plot_function(bart_machine, "yvyhat_cart", data_title)
-	}	
-	else {
-		dev.new()
-	}		
-	plot(test_data$y, 
-			y_hat, 
-			main = paste("y vs yhat CART model L1/2 = ", l1err, "/", l2err, ifelse(is.null(extra_text), "", paste("\n", extra_text)), sep = ""), 
-			xlab = "y", 
-			ylab = "y_hat")	
-	dev.off()
-	
+	cart_model = rpart(y ~ ., training_data)
+	y_hat = predict(cart_model, test_data)
+	run_other_model_and_plot_y_vs_yhat(y_hat, "CART", test_data, extra_text, data_title, save_plot, bart_machine)
 }
 
 error_in_data = function(data){

@@ -37,7 +37,7 @@ for (model_name in c(real_regression_data_sets, simulated_data_model_names)){
 			for (num_iterations_after_burn_in in num_iterations_after_burn_ins_of_interest){
 				cat(paste("\n\n\\subsection{N\\_B = ", num_burn_in, ", N\\_G = ", num_iterations_after_burn_in, "}\n\n", sep = ""))				
 
-				image_titles = c("sigsqs", "tree_liks", "tree_nodes", "tree_depths", "yvyhat_bart", "yvyhat_BT_bart", "yvyhat_rf", "yvyhat_cart")
+				image_titles = c("sigsqs", "tree_liks", "tree_nodes", "tree_depths", "yvyhat_bart", "yvyhat_R_BART", "yvyhat_RF", "yvyhat_CART")
 				for (i in 1 : length(image_titles)){
 					if (i %% 2 == 1){
 						cat("\\begin{figure}\n")

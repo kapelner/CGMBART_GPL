@@ -34,13 +34,13 @@ Thumbs.db
 
 # other stuff project specific
 
+*.swp
 log
 log.lck
 log~
 bin/*
 .project
 .gitignore~
-.gitignore.swp
 .settings/*
 r_scripts/debug_only/*
 mathematica_scripts/*

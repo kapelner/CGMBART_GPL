@@ -32,7 +32,7 @@ import GemIdentClassificationEngine.DatumSetupForEntireRun;
 import GemIdentTools.IOTools;
 import GemIdentView.JProgressBarAndLabel;
 
-public class CGMBARTRegression extends CGMBART1 {
+public class CGMBARTRegression extends CGMBART2010 {
 	private static final long serialVersionUID = 6418127647567343927L;
 	
 	

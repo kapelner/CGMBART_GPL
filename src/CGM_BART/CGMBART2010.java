@@ -32,9 +32,9 @@ import GemIdentTools.IOTools;
 import GemIdentView.JProgressBarAndLabel;
 
 @SuppressWarnings("serial")
-public abstract class CGMBART1 extends CGMBART {
+public abstract class CGMBART2010 extends CGMBART {
 	
-	public CGMBART1(DatumSetupForEntireRun datumSetupForEntireRun, JProgressBarAndLabel buildProgress) {
+	public CGMBART2010(DatumSetupForEntireRun datumSetupForEntireRun, JProgressBarAndLabel buildProgress) {
 		super(datumSetupForEntireRun, buildProgress);
 	}
 

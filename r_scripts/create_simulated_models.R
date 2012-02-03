@@ -4,11 +4,11 @@
 #You should use underscores for spaces for display purposes later
 
 simulated_data_model_names = c(
-	"just_noise_linear",
+#	"just_noise_linear",
 	"univariate_linear",
 	"bivariate_linear",
-	"simple_tree_structure",
-	"friedman"
+	"friedman",
+	"simple_tree_structure"	
 )
 
 simulate_data_from_simulation_name = function(simulated_data_model_name){

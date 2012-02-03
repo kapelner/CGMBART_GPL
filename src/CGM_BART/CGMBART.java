@@ -52,6 +52,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 	
 	protected static PrintWriter y_and_y_trans;
 	protected static PrintWriter sigsqs;
+	protected static PrintWriter other_debug;
 	protected static PrintWriter sigsqs_draws;
 	protected static PrintWriter tree_liks;
 	protected static PrintWriter remainings;
@@ -67,7 +68,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 		try {			
 			output = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "output" + DEBUG_EXT)));
 			TreeIllustration.DeletePreviousTreeIllustrations();
-			
+			other_debug = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "other_debug" + DEBUG_EXT)));
 			y_and_y_trans = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "y_and_y_trans" + DEBUG_EXT)));
 			sigsqs = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "sigsqs" + DEBUG_EXT)));
 			sigsqs.println("sample_num,sigsq");
@@ -386,15 +387,19 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 	}
 	
 	public double[] getGibbsSamplesSigsqs(){
-		double[] sigsqs_to_export = new double[1];
-		try {		
-			sigsqs_to_export = new double[gibbs_samples_of_sigsq.size()];
+		other_debug.println("gibbs_samples_of_sigsq.size()," + gibbs_samples_of_sigsq.size());
+		CloseDebugFiles();
+		OpenDebugFiles();
+		System.out.println("getGibbsSamplesSigsqs() gibbs_samples_of_sigsq.size() = " + gibbs_samples_of_sigsq.size());
+//		double[] sigsqs_to_export = new double[1];
+//		try {
+			double[] sigsqs_to_export = new double[gibbs_samples_of_sigsq.size()];
 			for (int i = 0; i < gibbs_samples_of_sigsq.size(); i++){
 				
 					sigsqs_to_export[i] = gibbs_samples_of_sigsq.get(i) * (TRANSFORM_Y ? y_range_sq : 1);
 				
 			}
-		} catch (Exception e){}
+//		} catch (Exception e){}
 		return sigsqs_to_export;
 	}
 	
@@ -429,17 +434,19 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 		return IOTools.StringJoin(root_splits, "   ||   ");		
 	}
 	
-	private void CloseDebugFiles(){
+	private static void CloseDebugFiles(){
 		tree_liks.close();
 		remainings.close();
 		sigsqs.close();
 		sigsqs_draws.close();
 		evaluations.close();
+		other_debug.close();
 	}
 	
-	private void OpenDebugFiles(){		
+	private static void OpenDebugFiles(){		
 		try {
 			sigsqs = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "sigsqs" + DEBUG_EXT, true)));
+			other_debug = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "other_debug" + DEBUG_EXT, true)));
 			sigsqs_draws = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "sigsqs_draws" + DEBUG_EXT, true)));
 			tree_liks = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "tree_liks" + DEBUG_EXT, true)));
 			evaluations = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "evaluations" + DEBUG_EXT, true)));
@@ -476,12 +483,12 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 	}
 
 	private double leafPosteriorMean(CGMTreeNode node, double sigsq, double posterior_var) {
-		System.out.println("leafPosteriorMean hyper_sigsq_mu " + hyper_sigsq_mu + " node.n " + node.n + " sigsq " + sigsq + " node.avg_response() " + node.avg_response() + " posterior_var " + posterior_var);
+//		System.out.println("leafPosteriorMean hyper_sigsq_mu " + hyper_sigsq_mu + " node.n " + node.n + " sigsq " + sigsq + " node.avg_response() " + node.avg_response() + " posterior_var " + posterior_var);
 		return (hyper_mu_mu / hyper_sigsq_mu + node.n / sigsq * node.avg_response()) / (1 / posterior_var);
 	}
 
 	private double leafPosteriorVar(CGMTreeNode node, double sigsq) {
-		System.out.println("leafPosteriorVar sigsq " + sigsq + " var " + 1 / (1 / hyper_sigsq_mu + node.n * m / sigsq));
+//		System.out.println("leafPosteriorVar sigsq " + sigsq + " var " + 1 / (1 / hyper_sigsq_mu + node.n * m / sigsq));
 		return 1 / (1 / hyper_sigsq_mu + node.n / sigsq);
 	}
 

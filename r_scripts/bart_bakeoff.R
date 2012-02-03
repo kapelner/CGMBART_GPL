@@ -19,33 +19,51 @@ real_regression_data_sets = c(
 
 #simulation constants... these can be modulated based on what you want to run
 num_trees_of_interest = c(
-	100, 
-	75, 
-	50, 
-	20, 
-	10, 
-	5, 
-	2, 
+#	100, 
+#	75, 
+#	50, 
+#	20, 
+#	10, 
+#	5, 
+#	2, 
 	1
 )
 
 #run_bakeoff()
 
-#num_trees_of_interest = c(1)
-
 num_burn_ins_of_interest = c(
-	2000
+#	2000
 #	1000,
+	500, 
+	200,
+	100
+)
+num_iterations_after_burn_ins_of_interest = c(
+	2000,
+	1000
 #	500, 
 #	200,
 #	100
 )
-num_iterations_after_burn_ins_of_interest = c(
-	2000
-#	1000,
-#	500, 
-#	200,
-#	100
+
+simulation_results = matrix(NA, nrow = 0, ncol = 16)
+colnames(simulation_results) = c(
+	"data_model", 
+	"m",
+	"N_B", 
+	"N_G", 
+	"A_BART_L1", 
+	"A_BART_L2", 
+	"A_BART_rmse", 
+	"R_BART_L1", 
+	"R_BART_L2", 
+	"R_BART_rmse",
+	"RF_L1",
+	"RF_L2",
+	"RF_rmse",
+	"CART_L1",
+	"CART_L2",
+	"CART_rmse"
 )
 
 run_bakeoff = function(){
@@ -94,16 +112,36 @@ run_bart_model_and_save_diags_and_results = function(training_data, test_data, d
 	plot_tree_num_nodes(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = TRUE)
 	plot_tree_depths(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = TRUE)
 	get_root_splits_of_trees(bart_machine, data_title = data_title, save_as_csv = TRUE)
-	
+
 	#now use the bart model to predict y_hat's for the test data
-	predictions = predict_and_calc_ppis(bart_machine, test_data)
+	a_bart_predictions = predict_and_calc_ppis(bart_machine, test_data)
 	#diagnose how good the y_hat's from the bart model are
-	plot_y_vs_yhat(predictions, extra_text = extra_text, data_title = data_title, save_plot = TRUE, bart_machine = bart_machine)
+	plot_y_vs_yhat(a_bart_predictions, extra_text = extra_text, data_title = data_title, save_plot = TRUE, bart_machine = bart_machine)
 	
 	#now see how Rob's algorithm does
-	run_bayes_tree_bart_impl_and_plot_y_vs_yhat(training_data, test_data, extra_text = extra_text, data_title = data_title, save_plot = TRUE, bart_machine = bart_machine)
+	r_bart_predictions = run_bayes_tree_bart_impl_and_plot_y_vs_yhat(training_data, test_data, extra_text = extra_text, data_title = data_title, save_plot = TRUE, bart_machine = bart_machine)
 	
 	#now see how good random forests and CART does in comparison
-	run_random_forests_and_plot_y_vs_yhat(training_data, test_data, extra_text = extra_text, data_title = data_title, save_plot = TRUE, bart_machine = bart_machine)
-	run_cart_and_plot_y_vs_yhat(training_data, test_data, extra_text = extra_text, data_title = data_title, save_plot = TRUE, bart_machine = bart_machine)
+	rf_predictions = run_random_forests_and_plot_y_vs_yhat(training_data, test_data, extra_text = extra_text, data_title = data_title, save_plot = TRUE, bart_machine = bart_machine)
+	cart_predictions = run_cart_and_plot_y_vs_yhat(training_data, test_data, extra_text = extra_text, data_title = data_title, save_plot = TRUE, bart_machine = bart_machine)
+	
+	new_simul_row = c(
+		data_title, 
+		num_trees, 
+		num_burn_in, 
+		num_iterations_after_burn_in,
+		a_bart_predictions$L1_err,
+		a_bart_predictions$L2_err,
+		a_bart_predictions$rmse,
+		r_bart_predictions$L1_err,
+		r_bart_predictions$L2_err,
+		r_bart_predictions$rmse,	
+		rf_predictions$L1_err,
+		rf_predictions$L2_err,
+		rf_predictions$rmse,
+		cart_predictions$L1_err,
+		cart_predictions$L2_err,
+		cart_predictions$rmse		
+	)
+	simulation_results = rbind(simulation_results, new_simul_row)
 }
