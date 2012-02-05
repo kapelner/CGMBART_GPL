@@ -324,11 +324,18 @@ look_at_sample_of_test_data = function(bart_predictions, grid_len = 3, extra_tex
 	}	
 }
 
+ensure_bart_is_done_in_java = function(java_bart_machine){
+	if (!.jcall(java_bart_machine, "Z", "gibbsFinished")){
+		stop("BART model not finished building yet", call. = FALSE)
+		return
+	}	
+}
 
-predict_and_calc_ppis = function(model, test_data, ppi_conf = 0.95){
+
+predict_and_calc_ppis = function(bart_machine, test_data, ppi_conf = 0.95){
 	#pull out data objects for convenience
-	java_bart_machine = model[["java_bart_machine"]]
-	num_iterations_after_burn_in = model[["num_iterations_after_burn_in"]]
+	java_bart_machine = bart_machine$java_bart_machine
+	num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in
 	n = nrow(test_data)
 	y = test_data$y
 
@@ -337,10 +344,9 @@ predict_and_calc_ppis = function(model, test_data, ppi_conf = 0.95){
 		return;
 	}	
 	test_data = pre_process_data(test_data)
-	if (!.jcall(java_bart_machine, "Z", "gibbsFinished")){
-		stop("BART model not finished building yet", call. = FALSE)
-		return
-	}
+	
+	#make sure the darn thing is done building (useful check for parallelized code)
+	ensure_bart_is_done_in_java(java_bart_machine)
 	
 	#do the evaluation as a loop... one day this should be done better than this with a matrix
 	y_hat_posterior_samples = matrix(NA, nrow = nrow(test_data), ncol = num_iterations_after_burn_in) 
@@ -393,7 +399,7 @@ run_other_model_and_plot_y_vs_yhat = function(y_hat, model_name, test_data, extr
 	}		
 	plot(test_data$y, 
 			y_hat, 
-			main = paste("y/yhat ", model_name, " model L1/2 = ", L1_err, "/", L2_err, " rmse = ", rmse, ifelse(is.null(extra_text), "", paste("\n", extra_text)), sep = ""), 
+			main = paste("y/yhat ", model_name, " model L1/2 = ", L1_err, "/", L2_err, " rmse = ", round(rmse, 2), ifelse(is.null(extra_text), "", paste("\n", extra_text)), sep = ""), 
 			xlab = "y", 
 			ylab = "y_hat")	
 	dev.off()

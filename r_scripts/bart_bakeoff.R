@@ -105,14 +105,26 @@ run_bart_model_and_save_diags_and_results = function(training_data, test_data, d
 #		print_tree_illustrations = TRUE,
 #		debug_log = TRUE,
 		num_iterations_after_burn_in = num_iterations_after_burn_in)
-	
-	#do some plots to diagnose convergence
-	plot_sigsqs_convergence_diagnostics(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = TRUE)
-	plot_tree_liks_convergence_diagnostics(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = TRUE)
-	plot_tree_num_nodes(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = TRUE)
-	plot_tree_depths(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = TRUE)
-	get_root_splits_of_trees(bart_machine, data_title = data_title, save_as_csv = TRUE)
 
+	ensure_bart_is_done_in_java(bart_machine$java_bart_machine)
+
+	#do some plots to diagnose convergence
+	tryCatch({
+		plot_sigsqs_convergence_diagnostics(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = TRUE)
+	}, error = function(e){}, finally = function(){})
+	tryCatch({
+		plot_tree_liks_convergence_diagnostics(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = TRUE)	
+	}, error = function(e){}, finally = function(){})
+	tryCatch({
+		plot_tree_num_nodes(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = TRUE)	
+	}, error = function(e){}, finally = function(){})
+	tryCatch({
+		plot_tree_depths(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = TRUE)
+	}, error = function(e){}, finally = function(){})
+	tryCatch({
+		get_root_splits_of_trees(bart_machine, data_title = data_title, save_as_csv = TRUE)				
+	}, error = function(e){}, finally = function(){})
+	
 	#now use the bart model to predict y_hat's for the test data
 	a_bart_predictions = predict_and_calc_ppis(bart_machine, test_data)
 	#diagnose how good the y_hat's from the bart model are
