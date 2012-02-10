@@ -44,10 +44,11 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 	
 	//do not set this to FALSE!!! The whole thing will break...
 	protected static final boolean TRANSFORM_Y = true;
-	protected static final int DEFAULT_NUM_TREES = 10;
+	protected static final int DEFAULT_NUM_TREES = 5;
 	//this burn in number needs to be computed via some sort of moving average or time series calculation
-	protected static final int DEFAULT_NUM_GIBBS_BURN_IN = 50;
-	protected static final int DEFAULT_NUM_GIBBS_TOTAL_ITERATIONS = 100;
+	protected static final int DEFAULT_NUM_GIBBS_BURN_IN = 100;
+	protected static final int DEFAULT_NUM_GIBBS_TOTAL_ITERATIONS = 200; //this must be larger than the number of burn in!!!
+	
 //	protected static final double GIBBS_THIN_RATIO = 0.1;
 	
 	protected static PrintWriter y_and_y_trans;
@@ -246,8 +247,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 	protected double[] getGibbsSamplesForPrediction(double[] record){
 //		System.out.println("eval record: " + record + " numtrees:" + this.bayesian_trees.size());
 		//the results for each of the gibbs samples
-		double[] y_gibbs_samples = new double[numSamplesAfterBurningAndThinning()];		
-				
+		double[] y_gibbs_samples = new double[numSamplesAfterBurningAndThinning()];	
 		for (int i = 0; i < numSamplesAfterBurningAndThinning(); i++){
 			ArrayList<CGMTreeNode> cgm_trees = gibbs_samples_of_cgm_trees_after_burn_in.get(i);
 			double yt_i = 0;
@@ -268,9 +268,9 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 		//calculate index of the CI_a and CI_b
 		int n_bottom = (int)Math.round((1 - coverage) / 2 * y_gibbs_samples_sorted.length) - 1; //-1 because arrays start at zero
 		int n_top = (int)Math.round(((1 - coverage) / 2 + coverage) * y_gibbs_samples_sorted.length) - 1; //-1 because arrays start at zero
-		
+//		System.out.print("getPostPredictiveIntervalForPrediction record = " + IOTools.StringJoin(record, ",") + "  Ng=" + y_gibbs_samples_sorted.length + " n_a=" + n_bottom + " n_b=" + n_top + " guess = " + Evaluate(record));
 		double[] conf_interval = {y_gibbs_samples_sorted[n_bottom], y_gibbs_samples_sorted[n_top]};
-//		System.out.println("getPostPredictiveIntervalForPrediction record = " + IOTools.StringJoin(record, ",") + "  Ng=" + y_gibbs_samples_sorted.length + " n_a=" + n_bottom + " n_b=" + n_top + " guess = " + Evaluate(record) + "  [" + conf_interval[0] + ", " + conf_interval[1] + "]");
+//		System.out.println("  [" + conf_interval[0] + ", " + conf_interval[1] + "]");
 		return conf_interval;
 	}
 	
@@ -303,8 +303,10 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 			
 			tree_array_illustration.AddTree(tree);
 			
-			//now sample from M_j | T_j, R_j, \sigma by just assigning leaves a draw from the leaf posterior				
-			System.out.println("Sampling M_" + (t + 1) + " / " + m + " iter " + sample_num);
+			//now sample from M_j | T_j, R_j, \sigma by just assigning leaves a draw from the leaf posterior
+			if (t + 1 == 1){
+				System.out.println("Sampling M_" + (t + 1) + "/" + m + " iter " + sample_num + "/" + num_gibbs_total_iterations);
+			}
 			assignLeafValsUsingPosteriorMeanAndCurrentSigsq(tree, gibbs_samples_of_sigsq.get(sample_num - 1));
 			
 			if (stop_bit){
@@ -391,15 +393,12 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 		CloseDebugFiles();
 		OpenDebugFiles();
 		System.out.println("getGibbsSamplesSigsqs() gibbs_samples_of_sigsq.size() = " + gibbs_samples_of_sigsq.size());
-//		double[] sigsqs_to_export = new double[1];
-//		try {
-			double[] sigsqs_to_export = new double[gibbs_samples_of_sigsq.size()];
-			for (int i = 0; i < gibbs_samples_of_sigsq.size(); i++){
-				
-					sigsqs_to_export[i] = gibbs_samples_of_sigsq.get(i) * (TRANSFORM_Y ? y_range_sq : 1);
-				
-			}
-//		} catch (Exception e){}
+		double[] sigsqs_to_export = new double[gibbs_samples_of_sigsq.size()];
+		for (int i = 0; i < gibbs_samples_of_sigsq.size(); i++){
+			
+				sigsqs_to_export[i] = gibbs_samples_of_sigsq.get(i) * (TRANSFORM_Y ? y_range_sq : 1);
+			
+		}
 		return sigsqs_to_export;
 	}
 	
@@ -471,8 +470,9 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 			double posterior_mean = leafPosteriorMean(node, sigsq, posterior_sigsq);
 //			System.out.println("posterior_mean = " + posterior_mean + " node.avg_response = " + node.avg_response());
 			node.y_prediction = StatToolbox.sample_from_norm_dist(posterior_mean, posterior_sigsq);
-			if (node.y_prediction == StatToolbox.ILLEGAL_FLAG){
+			if (node.y_prediction == StatToolbox.ILLEGAL_FLAG){				
 				node.y_prediction = 0.0; //this could happen on an empty node
+//				System.out.println("ERROR assignLeafFINAL " + node.y_prediction + " (sigsq = " + sigsq + ")");
 			}
 //			System.out.println("assignLeafFINAL " + node.y_prediction + " (sigsq = " + sigsq + ")");
 		}

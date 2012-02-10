@@ -39,9 +39,9 @@ public class DataAnalysis {
 	//NEED TO IMPLEMENT: http://www.simonwhatley.co.uk/using-ant-with-eclipse
 	
 //	private static final String DataSetFilename = "r_simple";
-	private static final String DataSetFilename = "r_treemodel";
+//	private static final String DataSetFilename = "r_treemodel";
 //	private static final String DataSetFilename = "r_friedman";
-//	private static final String DataSetFilename = "r_univariatelinear";
+	private static final String DataSetFilename = "r_univariatelinear";
 //	private static final String DataSetFilename = "r_bivariatelinear";
 //	private static final String DataSetFilename = "r_boston";	
 //	private static final String DataSetFilename = "r_forestfires";
@@ -64,12 +64,14 @@ public class DataAnalysis {
 		}
 		else { //regression problem
 //			machine = new RandomForest(data, new JProgressBarAndLabel(0, 0, null));
-			machine = new CGMBARTRegression(data, new JProgressBarAndLabel(0, 0, null));
-			machine.setData(data.getX_y());
-			machine.Build();
-			System.out.println("L1 error: " + Math.round(machine.calculateInSampleLoss(Classifier.ErrorTypes.L1)) + " L2 error: " + Math.round(machine.calculateInSampleLoss(Classifier.ErrorTypes.L2)));
-			//now we'll do 95% CI and error rates
-			machine.writeEvaluationDiagnostics();
+			for (int num_times = 0; num_times < 100; num_times++){
+				machine = new CGMBARTRegression(data, new JProgressBarAndLabel(0, 0, null));
+				machine.setData(data.getX_y());
+				machine.Build();
+				System.out.println("L1 error: " + Math.round(machine.calculateInSampleLoss(Classifier.ErrorTypes.L1)) + " L2 error: " + Math.round(machine.calculateInSampleLoss(Classifier.ErrorTypes.L2)));
+				//now we'll do 95% CI and error rates
+				machine.writeEvaluationDiagnostics();
+			}
 		}		
 	}
 

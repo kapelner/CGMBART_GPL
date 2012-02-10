@@ -40,8 +40,10 @@ log.lck
 log~
 bin/*
 .project
+.gitignore.swo
 .gitignore~
 .settings/*
+simulation_results.csv
 r_scripts/debug_only/*
 mathematica_scripts/*
 latex_notes/*

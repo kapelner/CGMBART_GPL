@@ -173,6 +173,9 @@ public abstract class CGMTreePriorBuilder {
 	 */
 	public double assignSplitValue(List<double[]> data, int j) {
 		int nsub = data.size();
+		if (nsub == 0){ //if there's no data here... what else are you going to do?
+			return 0;
+		}
 		ArrayList<Double> predictor_data = new ArrayList<Double>(nsub);
 		for (int i = 0; i < nsub; i++){
 			predictor_data.add(data.get(i)[j]);

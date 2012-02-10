@@ -45,7 +45,7 @@ public abstract class CGMBART2010 extends CGMBART {
 		for (gibb_sample_i = 1; gibb_sample_i <= num_gibbs_total_iterations; gibb_sample_i++){
 			runGibbsSamplerForTreesAndSigsqOnce(gibb_sample_i);
 			if (PrintOutEvery != null && gibb_sample_i % PrintOutEvery == 0){
-				System.out.println("gibbs iter: " + gibb_sample_i);
+				System.out.println("gibbs iter: " + gibb_sample_i + "/" + num_gibbs_total_iterations);
 			}
 		}
 	}

@@ -21,11 +21,11 @@ real_regression_data_sets = c(
 num_trees_of_interest = c(
 #	100, 
 #	75, 
-#	50, 
+#	50
 #	20, 
 #	10, 
 #	5, 
-#	2, 
+#	2, s
 	1
 )
 
@@ -33,17 +33,17 @@ num_trees_of_interest = c(
 
 num_burn_ins_of_interest = c(
 #	2000
-#	1000,
-	500, 
-	200,
+#	1000
+#	500, 
+#	200,
 	100
 )
 num_iterations_after_burn_ins_of_interest = c(
-	2000,
-	1000
+#	2000
+#	1000
 #	500, 
 #	200,
-#	100
+	100
 )
 
 simulation_results = matrix(NA, nrow = 0, ncol = 16)
@@ -79,21 +79,38 @@ run_bakeoff = function(){
 					test_indices = setdiff(1 : nrow(raw_data), training_indices)
 					training_data = raw_data[training_indices, ]
 					test_data = raw_data[test_indices, ]
-					run_bart_model_and_save_diags_and_results(training_data, test_data, real_regression_data_set, num_trees, num_burn_in, num_iterations_after_burn_in)
+#					tryCatch({
+						run_bart_model_and_save_diags_and_results(training_data, test_data, real_regression_data_set, num_trees, num_burn_in, num_iterations_after_burn_in)
+#					}, error = function(e){}, finally = function(){})
 				}
 				
 				for (simulated_data_model_name in simulated_data_model_names){
 					training_data = simulate_data_from_simulation_name(simulated_data_model_name)
 					test_data = simulate_data_from_simulation_name(simulated_data_model_name)
 					
-					run_bart_model_and_save_diags_and_results(training_data, test_data, simulated_data_model_name, num_trees, num_burn_in, num_iterations_after_burn_in)				
+#					tryCatch({
+						run_bart_model_and_save_diags_and_results(training_data, test_data, simulated_data_model_name, num_trees, num_burn_in, num_iterations_after_burn_in)
+#					}, error = function(e){}, finally = function(){})
 				}			
 			}
 		}
 	}
+	prettify_simulation_results_and_save_as_csv()
 }
 
+prettify_simulation_results_and_save_as_csv = function(){
+	#now update simulation results object
+	rownames(simulation_results) = NULL
+	simulation_results = as.data.frame(simulation_results)
+	for (j in 2 : 16){
+		simulation_results[, j] = as.numeric(as.character(simulation_results[, j]))
+	}	
+	write.csv(simulation_results, "simulation_results.csv", row.names = FALSE)
+}
+
+
 run_bart_model_and_save_diags_and_results = function(training_data, test_data, data_title, num_trees, num_burn_in, num_iterations_after_burn_in){
+	num_tot_models = num_tot_models + 1
 	cat(paste("model \"", data_title, "\", m = ", num_trees, ", n_B = ", num_burn_in, ", n_G_a = ", num_iterations_after_burn_in, "\n", sep = ""))
 	
 	extra_text = paste("on model \"", gsub("_", " ", data_title), "\" m = ", num_trees, " n_B = ", num_burn_in, ", n_G_a = ", num_iterations_after_burn_in, sep = "")
@@ -106,54 +123,63 @@ run_bart_model_and_save_diags_and_results = function(training_data, test_data, d
 #		debug_log = TRUE,
 		num_iterations_after_burn_in = num_iterations_after_burn_in)
 
-	ensure_bart_is_done_in_java(bart_machine$java_bart_machine)
+#	tryCatch({
+		ensure_bart_is_done_in_java(bart_machine$java_bart_machine)
+#	}, error = function(e){
+#		print("this run didn't work because of that bug I can't figure out.")		
+		
+		#now use the bart model to predict y_hat's for the test data
+		a_bart_predictions = predict_and_calc_ppis(bart_machine, test_data)
+		#diagnose how good the y_hat's from the bart model are
+		plot_y_vs_yhat(a_bart_predictions, extra_text = extra_text, data_title = data_title, save_plot = TRUE, bart_machine = bart_machine)
+		
+		#now see how Rob's algorithm does
+		r_bart_predictions = run_bayes_tree_bart_impl_and_plot_y_vs_yhat(training_data, test_data, extra_text = extra_text, data_title = data_title, save_plot = TRUE, bart_machine = bart_machine)
+		
+		#now see how good random forests and CART does in comparison
+		rf_predictions = run_random_forests_and_plot_y_vs_yhat(training_data, test_data, extra_text = extra_text, data_title = data_title, save_plot = TRUE, bart_machine = bart_machine)
+		cart_predictions = run_cart_and_plot_y_vs_yhat(training_data, test_data, extra_text = extra_text, data_title = data_title, save_plot = TRUE, bart_machine = bart_machine)
+		
+		
+		#do some plots to diagnose convergence
+#		tryCatch({
+					plot_sigsqs_convergence_diagnostics(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = TRUE)
+#				}, error = function(e){}, finally = function(){})
+#		tryCatch({
+					plot_tree_liks_convergence_diagnostics(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = TRUE)	
+#				}, error = function(e){}, finally = function(){})
+#		tryCatch({
+					plot_tree_num_nodes(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = TRUE)	
+#				}, error = function(e){}, finally = function(){})
+#		tryCatch({
+					plot_tree_depths(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = TRUE)
+#				}, error = function(e){}, finally = function(){})
+#		tryCatch({
+#					get_root_splits_of_trees(bart_machine, data_title = data_title, save_as_csv = TRUE)				
+#				}, error = function(e){}, finally = function(){})
+		
+		new_simul_row = c(
+			data_title, 
+			num_trees, 
+			num_burn_in, 
+			num_iterations_after_burn_in,
+			a_bart_predictions$L1_err,
+			a_bart_predictions$L2_err,
+			round(a_bart_predictions$rmse, 2),
+			r_bart_predictions$L1_err,
+			r_bart_predictions$L2_err,
+			round(r_bart_predictions$rmse, 2),	
+			rf_predictions$L1_err,
+			rf_predictions$L2_err,
+			round(rf_predictions$rmse, 2),
+			cart_predictions$L1_err,
+			cart_predictions$L2_err,
+			round(cart_predictions$rmse, 2)		
+		)
+#		print(new_simul_row)
+		simulation_results = rbind(simulation_results, new_simul_row)	
+#		print(paste("simulation results updated n =", nrow(simulation_results), " p =", ncol(simulation_results), " class =", class(simulation_results), " class =", class(new_simul_row)))
+		assign("simulation_results", simulation_results, .GlobalEnv)
+#	}, finally = function(){})
 
-	#do some plots to diagnose convergence
-	tryCatch({
-		plot_sigsqs_convergence_diagnostics(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = TRUE)
-	}, error = function(e){}, finally = function(){})
-	tryCatch({
-		plot_tree_liks_convergence_diagnostics(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = TRUE)	
-	}, error = function(e){}, finally = function(){})
-	tryCatch({
-		plot_tree_num_nodes(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = TRUE)	
-	}, error = function(e){}, finally = function(){})
-	tryCatch({
-		plot_tree_depths(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = TRUE)
-	}, error = function(e){}, finally = function(){})
-	tryCatch({
-		get_root_splits_of_trees(bart_machine, data_title = data_title, save_as_csv = TRUE)				
-	}, error = function(e){}, finally = function(){})
-	
-	#now use the bart model to predict y_hat's for the test data
-	a_bart_predictions = predict_and_calc_ppis(bart_machine, test_data)
-	#diagnose how good the y_hat's from the bart model are
-	plot_y_vs_yhat(a_bart_predictions, extra_text = extra_text, data_title = data_title, save_plot = TRUE, bart_machine = bart_machine)
-	
-	#now see how Rob's algorithm does
-	r_bart_predictions = run_bayes_tree_bart_impl_and_plot_y_vs_yhat(training_data, test_data, extra_text = extra_text, data_title = data_title, save_plot = TRUE, bart_machine = bart_machine)
-	
-	#now see how good random forests and CART does in comparison
-	rf_predictions = run_random_forests_and_plot_y_vs_yhat(training_data, test_data, extra_text = extra_text, data_title = data_title, save_plot = TRUE, bart_machine = bart_machine)
-	cart_predictions = run_cart_and_plot_y_vs_yhat(training_data, test_data, extra_text = extra_text, data_title = data_title, save_plot = TRUE, bart_machine = bart_machine)
-	
-	new_simul_row = c(
-		data_title, 
-		num_trees, 
-		num_burn_in, 
-		num_iterations_after_burn_in,
-		a_bart_predictions$L1_err,
-		a_bart_predictions$L2_err,
-		a_bart_predictions$rmse,
-		r_bart_predictions$L1_err,
-		r_bart_predictions$L2_err,
-		r_bart_predictions$rmse,	
-		rf_predictions$L1_err,
-		rf_predictions$L2_err,
-		rf_predictions$rmse,
-		cart_predictions$L1_err,
-		cart_predictions$L2_err,
-		cart_predictions$rmse		
-	)
-	simulation_results = rbind(simulation_results, new_simul_row)
 }
