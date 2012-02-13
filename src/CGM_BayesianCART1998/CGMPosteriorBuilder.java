@@ -96,9 +96,8 @@ public abstract class CGMPosteriorBuilder {
 		iteration_info = new HashMap<String, String>();
 		
 		if (DEBUG_ITERATIONS){
-			double ln_prob_y = calculateLnProbYGivenTree(T_0);
-			mh_log_lik_iterations.println(ln_prob_y);
-			mh_posterior_iterations.println(ln_prob_y + Math.log(treePriorBuilder.probabilityOfTree(T_0))); //num_iter + "," + 
+			mh_log_lik_iterations.println(T_0.log_prop_lik);
+			mh_posterior_iterations.println(T_0.log_prop_lik + Math.log(treePriorBuilder.probabilityOfTree(T_0))); //num_iter + "," + 
 			mh_num_leaves_iterations.println(CGMTreeNode.numTerminalNodes(T_0));
 			//print out how the tree looks
 			iteration_info.put("num_restart", LeadingZeroes(num_restart, 3));
@@ -116,13 +115,11 @@ public abstract class CGMPosteriorBuilder {
 			
 			//iterate and write over previous tree			
 			T_0 = iterateMHPosteriorTreeSpaceSearch(T_0, true);
-						
-						
+
 			//do some debug info if necessary
 			if (DEBUG_ITERATIONS){
-				double ln_prob_y = calculateLnProbYGivenTree(T_0);
-				mh_log_lik_iterations.println(ln_prob_y);
-				mh_posterior_iterations.println(ln_prob_y + Math.log(treePriorBuilder.probabilityOfTree(T_0))); //num_iter + "," + 
+				mh_log_lik_iterations.println(T_0.log_prop_lik);
+				mh_posterior_iterations.println(T_0.log_prop_lik + Math.log(treePriorBuilder.probabilityOfTree(T_0))); //num_iter + "," + 
 				mh_num_leaves_iterations.println(CGMTreeNode.numTerminalNodes(T_0));
 				mh_iterations_record.println(iteration_info.get("num_restart") + "," + iteration_info.get("num_iterations"));				
 			}			
@@ -206,12 +203,10 @@ public abstract class CGMPosteriorBuilder {
 		}
 		
 		//keep the most likely tree around
-		double ln_prob_y_proposal = 0;
 		if (keep_highest_lik){
-			ln_prob_y_proposal = calculateLnProbYGivenTree(T_star); //duplicate, but whatever
 //			System.out.println("log_r: " + log_r + " ln_prob_y_proposal: " + ln_prob_y_proposal + " highest_log_probability: " + highest_log_probability);
-			if (ln_prob_y_proposal > highest_log_probability){			
-				highest_log_probability = ln_prob_y_proposal;
+			if (T_star.log_prop_lik > highest_log_probability){			
+				highest_log_probability = T_star.log_prop_lik;
 				most_likely_tree = T_star.clone(true);
 //				System.out.println("most likely tree log prob: " + ln_prob_y_proposal);
 			}
@@ -224,7 +219,7 @@ public abstract class CGMPosteriorBuilder {
 //			System.out.println("proposal ACCEPTED\n\n");
 			if (DEBUG_ITERATIONS){
 				iteration_info.put("num_acceptances", num_acceptances + "");
-				iteration_info.put("ln_prob_y_proposal", ln_prob_y_proposal + "");
+				iteration_info.put("ln_prob_y_proposal", T_star.log_prop_lik + "");
 				iteration_info.put("log_r", one_digit_format.format(log_r));
 				iteration_info.put("acc_or_rej", "ACCEPTED");
 				new TreeIllustration(T_star, iteration_info).WriteTitleAndSaveImage();

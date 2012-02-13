@@ -17,33 +17,44 @@ real_regression_data_sets = c(
 	"r_concretedata"
 )
 
+simulated_data_sets = c(
+#	"just_noise_linear",
+	"univariate_linear",
+	"bivariate_linear",
+	"friedman",
+	"simple_tree_structure"
+)
+
 #simulation constants... these can be modulated based on what you want to run
 num_trees_of_interest = c(
 #	100, 
 #	75, 
-#	50
+#	50,
 #	20, 
 #	10, 
 #	5, 
-#	2, s
+#	2,
 	1
 )
 
 #run_bakeoff()
+setwd("C:\\Users\\kapelner\\workspace\\CGMBART_GPL\\sweave_reports")
+Sweave("bakeoff_report.Rnw")
+setwd("C:\\Users\\kapelner\\workspace\\CGMBART_GPL")
 
 num_burn_ins_of_interest = c(
-#	2000
+	2000
 #	1000
 #	500, 
 #	200,
-	100
+#	100
 )
 num_iterations_after_burn_ins_of_interest = c(
-#	2000
+	2000
 #	1000
 #	500, 
 #	200,
-	100
+#	100
 )
 
 simulation_results = matrix(NA, nrow = 0, ncol = 16)
@@ -66,6 +77,8 @@ colnames(simulation_results) = c(
 	"CART_rmse"
 )
 
+run_model_N_times = 1
+
 run_bakeoff = function(){
 	for (num_burn_in in num_burn_ins_of_interest){
 		for (num_iterations_after_burn_in in num_iterations_after_burn_ins_of_interest){
@@ -73,24 +86,23 @@ run_bakeoff = function(){
 				graphics.off() #make sure to shut graphics off otherwise it eventually overloads the console
 				
 				for (real_regression_data_set in real_regression_data_sets){
-					raw_data = read.csv(paste("datasets//", real_regression_data_set, ".csv", sep = ""))				
-					#now pull out half training and half test *randomly*			
-					training_indices = sort(sample(1 : nrow(raw_data), nrow(raw_data) / 2))
-					test_indices = setdiff(1 : nrow(raw_data), training_indices)
-					training_data = raw_data[training_indices, ]
-					test_data = raw_data[test_indices, ]
-#					tryCatch({
+					for (mod in 1 : run_model_N_times){
+						raw_data = read.csv(paste("datasets//", real_regression_data_set, ".csv", sep = ""))				
+						#now pull out half training and half test *randomly*			
+						training_indices = sort(sample(1 : nrow(raw_data), nrow(raw_data) / 2))
+						test_indices = setdiff(1 : nrow(raw_data), training_indices)
+						training_data = raw_data[training_indices, ]
+						test_data = raw_data[test_indices, ]
 						run_bart_model_and_save_diags_and_results(training_data, test_data, real_regression_data_set, num_trees, num_burn_in, num_iterations_after_burn_in)
-#					}, error = function(e){}, finally = function(){})
+					}
 				}
 				
-				for (simulated_data_model_name in simulated_data_model_names){
-					training_data = simulate_data_from_simulation_name(simulated_data_model_name)
-					test_data = simulate_data_from_simulation_name(simulated_data_model_name)
-					
-#					tryCatch({
-						run_bart_model_and_save_diags_and_results(training_data, test_data, simulated_data_model_name, num_trees, num_burn_in, num_iterations_after_burn_in)
-#					}, error = function(e){}, finally = function(){})
+				for (simulated_data_set in simulated_data_sets){
+					for (mod in 1 : run_model_N_times){
+						training_data = simulate_data_from_simulation_name(simulated_data_set)
+						test_data = simulate_data_from_simulation_name(simulated_data_set)
+						run_bart_model_and_save_diags_and_results(training_data, test_data, simulated_data_set, num_trees, num_burn_in, num_iterations_after_burn_in)
+					}
 				}			
 			}
 		}
@@ -104,13 +116,15 @@ prettify_simulation_results_and_save_as_csv = function(){
 	simulation_results = as.data.frame(simulation_results)
 	for (j in 2 : 16){
 		simulation_results[, j] = as.numeric(as.character(simulation_results[, j]))
-	}	
-	write.csv(simulation_results, "simulation_results.csv", row.names = FALSE)
+	}
+	#assign it to the object
+	assign("simulation_results_pretty", simulation_results, .GlobalEnv)
+	#write it to file
+	write.csv(simulation_results, paste(PLOTS_DIR, "/", "simulation_results.csv", sep = ""), row.names = FALSE)
 }
 
 
 run_bart_model_and_save_diags_and_results = function(training_data, test_data, data_title, num_trees, num_burn_in, num_iterations_after_burn_in){
-	num_tot_models = num_tot_models + 1
 	cat(paste("model \"", data_title, "\", m = ", num_trees, ", n_B = ", num_burn_in, ", n_G_a = ", num_iterations_after_burn_in, "\n", sep = ""))
 	
 	extra_text = paste("on model \"", gsub("_", " ", data_title), "\" m = ", num_trees, " n_B = ", num_burn_in, ", n_G_a = ", num_iterations_after_burn_in, sep = "")
@@ -163,17 +177,17 @@ run_bart_model_and_save_diags_and_results = function(training_data, test_data, d
 			num_trees, 
 			num_burn_in, 
 			num_iterations_after_burn_in,
-			a_bart_predictions$L1_err,
-			a_bart_predictions$L2_err,
+			round(a_bart_predictions$L1_err, 0),
+			round(a_bart_predictions$L2_err, 0),
 			round(a_bart_predictions$rmse, 2),
-			r_bart_predictions$L1_err,
-			r_bart_predictions$L2_err,
+			round(r_bart_predictions$L1_err, 0),
+			round(r_bart_predictions$L2_err, 0),
 			round(r_bart_predictions$rmse, 2),	
-			rf_predictions$L1_err,
-			rf_predictions$L2_err,
+			round(rf_predictions$L1_err, 0),
+			round(rf_predictions$L2_err, 0),
 			round(rf_predictions$rmse, 2),
-			cart_predictions$L1_err,
-			cart_predictions$L2_err,
+			round(cart_predictions$L1_err, 0),
+			round(cart_predictions$L2_err, 0),
 			round(cart_predictions$rmse, 2)		
 		)
 #		print(new_simul_row)

@@ -3,14 +3,6 @@
 #vector of data models below if you want to include it in the bake-off.
 #You should use underscores for spaces for display purposes later
 
-simulated_data_model_names = c(
-#	"just_noise_linear",
-	"univariate_linear",
-	"bivariate_linear",
-	"friedman",
-	"simple_tree_structure"	
-)
-
 simulate_data_from_simulation_name = function(simulated_data_model_name){
 	#get the function from the R environment by doing a string lookup
 	simulated_data_model_function = get(paste("simu_data_mod__", simulated_data_model_name, sep = ""))

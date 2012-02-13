@@ -113,7 +113,7 @@ public abstract class CGMCART extends ClassificationAndRegressionTree implements
 		CGMTreeNode global_best_tree = null;
 		for (int i = 0; i < num_restarts; i++){
 			CGMTreeNode best_tree = best_tree_by_restart[i];
-			double ln_prob_y_proposal = tree_posterior_builder.calculateLnProbYGivenTree(best_tree);
+			double ln_prob_y_proposal = best_tree.log_prop_lik;
 			System.out.println("evaluate iteration block " + (i + 1) + " best tree log-likelihood: " + ln_prob_y_proposal);
 			if (ln_prob_y_proposal > highest_log_probability){	
 				System.out.println("most likely tree log-likelihood: " + ln_prob_y_proposal);

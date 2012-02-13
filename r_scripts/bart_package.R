@@ -4,6 +4,7 @@ tryCatch(library(randomForest), error = function(e){install.packages("randomFore
 tryCatch(library(rJava), error = function(e){install.packages("rJava")}, finally = library(rJava))
 tryCatch(library(BayesTree), error = function(e){install.packages("BayesTree")}, finally = library(BayesTree))
 tryCatch(library(rpart), error = function(e){install.packages("rpart")}, finally = library(rpart))
+tryCatch(library(xtable), error = function(e){install.packages("xtable")}, finally = library(xtable))
 
 #constants
 NUM_GIGS_RAM_TO_USE = ifelse(.Platform$OS.type == "windows", 4, 8)
@@ -22,7 +23,7 @@ DATA_FILENAME = "datasets/bart_data.csv"
 #print_tree_illustrations = FALSE
 #print_out_every = NULL
 #source("r_scripts/create_simulated_models.R")
-#simulated_data_model_name = simulated_data_model_names[1]
+#simulated_data_model_name = simulated_data_sets[1]
 #training_data = simulate_data_from_simulation_name(simulated_data_model_name)
 #test_data = simulate_data_from_simulation_name(simulated_data_model_name)
 
@@ -61,7 +62,6 @@ bart_model = function(training_data,
 #	print(java_bart_machine)
 	#now once it's done, let's extract things that are related to diagnosing the build of the BART model
 	ensure_bart_is_done_in_java(java_bart_machine)
-	sigsqs = .jcall(java_bart_machine, "[D", "getGibbsSamplesSigsqs")
 	
 	list(java_bart_machine = java_bart_machine, 
 		num_trees = num_trees,

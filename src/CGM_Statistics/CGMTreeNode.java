@@ -52,6 +52,8 @@ public class CGMTreeNode extends TreeNode implements Cloneable, Serializable {
 	public int generation;
 	/** the amount of data points at this node */
 	public int n;
+	/** keep the log proportional likelihood of this tree around, if null, must be computed */
+	public Double log_prop_lik;
 
 
 	public CGMTreeNode(CGMTreeNode parent, List<double[]> data){
@@ -109,6 +111,7 @@ public class CGMTreeNode extends TreeNode implements Cloneable, Serializable {
 		copy.splitValue = splitValue;
 		copy.klass = klass;	
 		copy.n = n;
+		copy.log_prop_lik = log_prop_lik;
 		return copy;
 	}
 
@@ -468,5 +471,9 @@ public class CGMTreeNode extends TreeNode implements Cloneable, Serializable {
 			String value = this.splitValue == null ? "null" : TreeIllustration.two_digit_format.format(this.splitValue);
 			return "x_" + split + "  <  " + value;
 		}
+	}
+
+	public void initLogPropLik() {
+		this.log_prop_lik = 0.0;
 	}
 }

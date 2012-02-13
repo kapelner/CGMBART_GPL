@@ -26,6 +26,7 @@ package CGM_BART;
 
 import java.util.ArrayList;
 
+import CGM_Matrices.CGMDoubleMatrix;
 import CGM_BayesianCART1998.*;
 import CGM_Statistics.*;
 import GemIdentTools.Matrices.DoubleMatrix;
@@ -46,7 +47,7 @@ public final class CGMBARTPosteriorBuilder extends CGMRegressionMeanShiftPosteri
 	
 	public CGMBARTPosteriorBuilder(CGMTreePriorBuilder tree_prior_builder) {
 		super(tree_prior_builder);
-	}		
+	}
 
 	public CGMBARTPosteriorBuilder(CGMTreePriorBuilder tree_prior_builder, double[] y) {
 		super(tree_prior_builder, y);
@@ -132,15 +133,34 @@ public final class CGMBARTPosteriorBuilder extends CGMRegressionMeanShiftPosteri
 //		System.out.println("calculateLnProbYGivenTree is prop to: " + ln_prob);
 //		System.out.println("ProbYGivenTree :" + Math.pow(ln_prob, Math.E));
 		
+		//cache this value so we never have to calculate it again
+		T.log_prop_lik = ln_prob;
 		return ln_prob;
 	}
 
 	private DoubleMatrix generateInvSigmaMatrix(int n) {
-		DoubleMatrix JnOverN = DoubleMatrix.JnOverN(n);
-		DoubleMatrix In = DoubleMatrix.In(n);	
-		DoubleMatrix first_term = JnOverN.times(1 / (hyper_sigsq_mu * n + sigsq));
-		DoubleMatrix second_term = (In.minus(JnOverN)).times(1 / sigsq);
-		return first_term.plus(second_term);
+//		DoubleMatrix jn_over_n = CGMDoubleMatrix.CachedJnOverN(n);
+//		DoubleMatrix in = DoubleMatrix.In(n);
+//		DoubleMatrix first_term = jn_over_n.times(1 / (hyper_sigsq_mu * n + sigsq));
+//		DoubleMatrix second_term = (in.minus(jn_over_n)).times(1 / sigsq);
+//		return first_term.plus(second_term);
+
+		double shared_term = 1 / (n * (hyper_sigsq_mu * n + sigsq));
+		double on_diag = shared_term + 1 / sigsq * (1 - 1 / (double)n);
+		double off_diag = shared_term - 1 / (n * sigsq);
+		
+		DoubleMatrix inv_sigma = new DoubleMatrix(n, n);
+		for (int i = 0; i < n; i++){
+			for (int j = 0; j < n; j++){
+				if (i == j){
+					inv_sigma.set(i, j, on_diag);
+				}
+				else {
+					inv_sigma.set(i, j, off_diag);
+				}
+			}			
+		}
+		return inv_sigma;
 	}
 
 //	private DoubleMatrix generateSigmaMatrix(int n) {

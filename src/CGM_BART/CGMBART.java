@@ -44,10 +44,10 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 	
 	//do not set this to FALSE!!! The whole thing will break...
 	protected static final boolean TRANSFORM_Y = true;
-	protected static final int DEFAULT_NUM_TREES = 5;
+	protected static final int DEFAULT_NUM_TREES = 20;
 	//this burn in number needs to be computed via some sort of moving average or time series calculation
-	protected static final int DEFAULT_NUM_GIBBS_BURN_IN = 100;
-	protected static final int DEFAULT_NUM_GIBBS_TOTAL_ITERATIONS = 200; //this must be larger than the number of burn in!!!
+	protected static final int DEFAULT_NUM_GIBBS_BURN_IN = 500;
+	protected static final int DEFAULT_NUM_GIBBS_TOTAL_ITERATIONS = 500; //this must be larger than the number of burn in!!!
 	
 //	protected static final double GIBBS_THIN_RATIO = 0.1;
 	

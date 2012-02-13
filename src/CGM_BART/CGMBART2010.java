@@ -177,7 +177,7 @@ public abstract class CGMBART2010 extends CGMBART {
 		
 		//DEBUG
 //		System.err.println("tree star: " + tree_star.stringID());
-		double lik = posterior_builder.calculateLnProbYGivenTree(tree_star);
+		double lik = tree_star.log_prop_lik;
 		tree_liks.print(lik + "," + tree_star.stringID() + ",");
 		tree_array_illustration.addLikelihood(lik);
 		all_tree_liks[t][prev_sample_num + 1] = lik;
@@ -195,6 +195,7 @@ public abstract class CGMBART2010 extends CGMBART {
 		for (int i = 0; i < m; i++){
 //			System.out.println("CGMBART create prior on tree: " + (i + 1));
 			CGMTreeNode tree = tree_prior_builder.buildTreeStructureBasedOnPrior();
+			tree.initLogPropLik();
 			modifyTreeForDebugging(tree);
 			tree.updateWithNewResponsesAndPropagate(X_y, y_trans, p);
 			cgm_trees.add(tree);

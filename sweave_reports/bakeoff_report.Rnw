@@ -1,4 +1,4 @@
-\documentclass[12pt]{report}
+\documentclass[12pt, landscape]{report}
 
 \usepackage{subfigure}
 \usepackage[margin=0.3in]{geometry}
@@ -9,9 +9,9 @@
 \SweaveOpts{echo=FALSE}
 
 <<load_R_code>>=
-setwd("C:\\Users\\kapelner\\workspace\\CGMBART_GPL\\sweave_reports")
-source("../r_scripts/bart_bakeoff.R")
-setwd("C:\\Users\\kapelner\\workspace\\CGMBART_GPL\\sweave_reports")
+#setwd("C:\\Users\\kapelner\\workspace\\CGMBART_GPL\\sweave_reports")
+#source("../r_scripts/bart_bakeoff.R")
+#setwd("C:\\Users\\kapelner\\workspace\\CGMBART_GPL\\sweave_reports")
 @
 
 \title{Analysis of BART output}
@@ -26,7 +26,7 @@ setwd("C:\\Users\\kapelner\\workspace\\CGMBART_GPL\\sweave_reports")
 
 <<whole_doc, results=tex>>=
 
-for (model_name in c(real_regression_data_sets, simulated_data_model_names)){
+for (model_name in c(real_regression_data_sets, simulated_data_sets)){
 	cat(paste("\n\n\\chapter{", gsub("_", " ", model_name), "}\n\n", sep = "")) 
 	cat("\\pagebreak\n")
 
@@ -67,5 +67,14 @@ for (model_name in c(real_regression_data_sets, simulated_data_model_names)){
 }
 @
 
+	
+%now we should dump the simulation results
+\chapter{Summary of Results}
+
+\tiny
+<<summary_table, results=tex>>=
+	print(xtable(simulation_results, caption = "All Simulation Results"), size = "\\tiny", include.rownames = FALSE)
+@
+\normalsize
 
 \end{document}
