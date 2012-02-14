@@ -43,9 +43,9 @@ num_trees_of_interest = c(
 )
 
 #run_bakeoff()
-#setwd("C:\\Users\\kapelner\\workspace\\CGMBART_GPL\\sweave_reports")
-#Sweave("bakeoff_report.Rnw")
-#setwd("C:\\Users\\kapelner\\workspace\\CGMBART_GPL")
+setwd("C:\\Users\\kapelner\\workspace\\CGMBART_GPL\\sweave_reports")
+Sweave("bakeoff_report.Rnw")
+setwd("C:\\Users\\kapelner\\workspace\\CGMBART_GPL")
 
 num_burn_ins_of_interest = c(
 	2000
@@ -129,26 +129,28 @@ prettify_simulation_results_and_save_as_csv = function(){
 }
 
 draw_boxplots_of_sim_results = function(){
+	graphics.off() #just clear it out first
 	for (num_burn_in in num_burn_ins_of_interest){
 		for (num_iterations_after_burn_in in num_iterations_after_burn_ins_of_interest){
 			for (num_trees in num_trees_of_interest){				
 				for (data_set in c(real_regression_data_sets, simulated_data_sets)){
 					all_results = simulation_results_pretty[simulation_results_pretty$data_model == data_set & simulation_results_pretty$m == num_trees & simulation_results_pretty$N_B == num_burn_in & simulation_results_pretty$N_G == num_iterations_after_burn_in, ]
-					windows()
+					plot_filename = paste(PLOTS_DIR, "/rmse_comp_", data_set, "_m_", num_trees, "_n_B_", num_burn_in, "_n_G_a_", num_iterations_after_burn_in, ".pdf", sep = "")
+					pdf(file = plot_filename)
 					boxplot(all_results$A_BART_rmse, all_results$R_BART_rmse, all_results$RF_rmse, all_results$CART_rmse, 
 						names = c("my BART", "Rob's BART", "RF", "CART"),
 						horizontal = TRUE,
 						main = paste("RMSE comparison for ", data_set, ", m = ", num_trees, ", N_B = ", num_burn_in, ", N_G = ", num_iterations_after_burn_in, sep = ""),
-						xlab = paste("RMSE's (n = ", run_model_N_times, " simulations)", sep = ""))					
+						xlab = paste("RMSE's (n = ", run_model_N_times, " simulations)", sep = ""))
+					dev.off()
 				}
 			}
 		}
 	}	
 }
 
-create_avg_sim_results_and_save_as_csv = function(){
-	avg_simulation_results = matrix(NA, nrow = 0, ncol = 12)
-	colnames(avg_simulation_results) = c(
+avg_simulation_results = matrix(NA, nrow = 0, ncol = 12)
+colnames(avg_simulation_results) = c(
 		"data_model", 
 		"m",
 		"N_B", 
@@ -161,8 +163,9 @@ create_avg_sim_results_and_save_as_csv = function(){
 		"RF_rmse_se",
 		"CART_rmse_avg",
 		"CART_rmse_se"
-	)
+)
 
+create_avg_sim_results_and_save_as_csv = function(){
 	for (num_burn_in in num_burn_ins_of_interest){
 		for (num_iterations_after_burn_in in num_iterations_after_burn_ins_of_interest){
 			for (num_trees in num_trees_of_interest){				
@@ -187,6 +190,7 @@ create_avg_sim_results_and_save_as_csv = function(){
 			}
 		}
 	}
+	assign("avg_simulation_results", avg_simulation_results, .GlobalEnv)
 	#make it pretty right away
 	#now update simulation results object
 	rownames(avg_simulation_results) = NULL
@@ -196,7 +200,7 @@ create_avg_sim_results_and_save_as_csv = function(){
 	}
 	#write it to file
 	write.csv(avg_simulation_results, paste(PLOTS_DIR, "/", "avg_simulation_results.csv", sep = ""), row.names = FALSE)	
-	assign("avg_simulation_results", avg_simulation_results, .GlobalEnv)
+	assign("avg_simulation_results_pretty", avg_simulation_results, .GlobalEnv)
 }
 
 
