@@ -71,10 +71,12 @@ for (model_name in c(real_regression_data_sets, simulated_data_sets)){
 %now we should dump the simulation results
 \chapter{Summary of Results}
 
-\tiny
-<<summary_table, results=tex>>=
+<<summary_tables, results=tex>>=
 	print(xtable(simulation_results, caption = "All Simulation Results"), size = "\\tiny", include.rownames = FALSE)
+	print(xtable(avg_simulation_results, caption = "Average Simulation Results"), size = "\\tiny", include.rownames = FALSE)
 @
-\normalsize
+
+
+%%%%% NEED TO ADD PLOTS HERE OF RESULTS
 
 \end{document}

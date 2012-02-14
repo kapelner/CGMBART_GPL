@@ -11,6 +11,11 @@ source("r_scripts/bart_package.R")
 source("r_scripts/create_simulated_models.R")
 graphics.off()
 
+
+
+run_model_N_times = 6
+
+
 real_regression_data_sets = c(
 	"r_boston", 
 	"r_forestfires", 
@@ -29,18 +34,18 @@ simulated_data_sets = c(
 num_trees_of_interest = c(
 #	100, 
 #	75, 
-#	50,
+	50,
 #	20, 
-#	10, 
+	10, 
 #	5, 
 #	2,
 	1
 )
 
 #run_bakeoff()
-setwd("C:\\Users\\kapelner\\workspace\\CGMBART_GPL\\sweave_reports")
-Sweave("bakeoff_report.Rnw")
-setwd("C:\\Users\\kapelner\\workspace\\CGMBART_GPL")
+#setwd("C:\\Users\\kapelner\\workspace\\CGMBART_GPL\\sweave_reports")
+#Sweave("bakeoff_report.Rnw")
+#setwd("C:\\Users\\kapelner\\workspace\\CGMBART_GPL")
 
 num_burn_ins_of_interest = c(
 	2000
@@ -77,8 +82,6 @@ colnames(simulation_results) = c(
 	"CART_rmse"
 )
 
-run_model_N_times = 1
-
 run_bakeoff = function(){
 	for (num_burn_in in num_burn_ins_of_interest){
 		for (num_iterations_after_burn_in in num_iterations_after_burn_ins_of_interest){
@@ -96,7 +99,7 @@ run_bakeoff = function(){
 						run_bart_model_and_save_diags_and_results(training_data, test_data, real_regression_data_set, num_trees, num_burn_in, num_iterations_after_burn_in)
 					}
 				}
-				
+
 				for (simulated_data_set in simulated_data_sets){
 					for (mod in 1 : run_model_N_times){
 						training_data = simulate_data_from_simulation_name(simulated_data_set)
@@ -108,6 +111,8 @@ run_bakeoff = function(){
 		}
 	}
 	prettify_simulation_results_and_save_as_csv()
+	create_avg_sim_results_and_save_as_csv()
+	draw_boxplots_of_sim_results()
 }
 
 prettify_simulation_results_and_save_as_csv = function(){
@@ -121,6 +126,77 @@ prettify_simulation_results_and_save_as_csv = function(){
 	assign("simulation_results_pretty", simulation_results, .GlobalEnv)
 	#write it to file
 	write.csv(simulation_results, paste(PLOTS_DIR, "/", "simulation_results.csv", sep = ""), row.names = FALSE)
+}
+
+draw_boxplots_of_sim_results = function(){
+	for (num_burn_in in num_burn_ins_of_interest){
+		for (num_iterations_after_burn_in in num_iterations_after_burn_ins_of_interest){
+			for (num_trees in num_trees_of_interest){				
+				for (data_set in c(real_regression_data_sets, simulated_data_sets)){
+					all_results = simulation_results_pretty[simulation_results_pretty$data_model == data_set & simulation_results_pretty$m == num_trees & simulation_results_pretty$N_B == num_burn_in & simulation_results_pretty$N_G == num_iterations_after_burn_in, ]
+					windows()
+					boxplot(all_results$A_BART_rmse, all_results$R_BART_rmse, all_results$RF_rmse, all_results$CART_rmse, 
+						names = c("my BART", "Rob's BART", "RF", "CART"),
+						horizontal = TRUE,
+						main = paste("RMSE comparison for ", data_set, ", m = ", num_trees, ", N_B = ", num_burn_in, ", N_G = ", num_iterations_after_burn_in, sep = ""),
+						xlab = paste("RMSE's (n = ", run_model_N_times, " simulations)", sep = ""))					
+				}
+			}
+		}
+	}	
+}
+
+create_avg_sim_results_and_save_as_csv = function(){
+	avg_simulation_results = matrix(NA, nrow = 0, ncol = 12)
+	colnames(avg_simulation_results) = c(
+		"data_model", 
+		"m",
+		"N_B", 
+		"N_G",
+		"A_BART_rmse_avg", 
+		"A_BART_rmse_se", 
+		"R_BART_rmse_avg",
+		"R_BART_rmse_se",
+		"RF_rmse_avg",
+		"RF_rmse_se",
+		"CART_rmse_avg",
+		"CART_rmse_se"
+	)
+
+	for (num_burn_in in num_burn_ins_of_interest){
+		for (num_iterations_after_burn_in in num_iterations_after_burn_ins_of_interest){
+			for (num_trees in num_trees_of_interest){				
+				for (data_set in c(real_regression_data_sets, simulated_data_sets)){
+					all_results = simulation_results_pretty[simulation_results_pretty$data_model == data_set & simulation_results_pretty$m == num_trees & simulation_results_pretty$N_B == num_burn_in & simulation_results_pretty$N_G == num_iterations_after_burn_in, ]
+					new_simul_row = c(
+						data_set, 
+						num_trees, 
+						num_burn_in, 
+						num_iterations_after_burn_in,
+						round(mean(all_results$A_BART_rmse), 2),
+						round(sd(all_results$A_BART_rmse), 1),
+						round(mean(all_results$R_BART_rmse), 2),
+						round(sd(all_results$R_BART_rmse), 1),
+						round(mean(all_results$RF_rmse), 2),
+						round(sd(all_results$RF_rmse), 1),					
+						round(mean(all_results$CART_rmse), 2),
+						round(sd(all_results$CART_rmse), 1)				
+					)
+					avg_simulation_results = rbind(avg_simulation_results, new_simul_row)					
+				}
+			}
+		}
+	}
+	#make it pretty right away
+	#now update simulation results object
+	rownames(avg_simulation_results) = NULL
+	avg_simulation_results = as.data.frame(avg_simulation_results)
+	for (j in 2 : 11){
+		avg_simulation_results[, j] = as.numeric(as.character(avg_simulation_results[, j]))
+	}
+	#write it to file
+	write.csv(avg_simulation_results, paste(PLOTS_DIR, "/", "avg_simulation_results.csv", sep = ""), row.names = FALSE)	
+	assign("avg_simulation_results", avg_simulation_results, .GlobalEnv)
 }
 
 
