@@ -76,66 +76,74 @@ public final class CGMBARTPosteriorBuilder extends CGMRegressionMeanShiftPosteri
 		int n = treePriorBuilder.getN();
 		
 		//calculate term zero:
-		double ln_prob = -n * ln_two_pi; //- 0.5 * (n - b) * Math.log(sigsq);
+		double ln_prob = -n * ln_two_pi;
 //		System.out.println("calculateLnProbYGivenTree after term 0: " + ln_prob);
 		
 		//now loop over all nodes and calculate term a
-		double term_a = 0;
+		
 		for (CGMTreeNode node : terminal_nodes){
-//			DoubleMatrix sigma = generateSigmaMatrix(node.n);
-//			System.out.println("sigma: \n" + sigma.crop(0, 5, 0, 5).toString(4));
-//			double det = sigma.det();
-//			System.out.println("det(sigma) " + det);
-			double det_by_book = Math.pow(sigsq, node.n - 1) * (hyper_sigsq_mu * node.n + sigsq);
-			//do some corrections to the determinant due to computational limitations of the double storage
-			if (det_by_book == 0){
-				det_by_book = Double.MIN_NORMAL;
-			}
-//			if (det_by_book == Double.NaN || det_by_book == Double.NEGATIVE_INFINITY || det_by_book == Double.POSITIVE_INFINITY){
-//				System.err.println("det: " + det_by_book + " sigsq: " + sigsq + " sigsqmu: " + hyper_sigsq_mu + " n: " + node.n);
+//			if (node.log_prop_lik == null){
+				ln_prob += calculcateLnProbOfNode(node);
 //			}
-			if (det_by_book == Double.POSITIVE_INFINITY){
-				det_by_book = Double.MAX_VALUE;
-			}
-//			System.out.println("det(sigma) as calculated with book " + det_by_book + " ln(det(sigma)) as calculated with book " + Math.log(det_by_book));			
-			term_a += Math.log(det_by_book);
-//			ln_prob -= 0.5 * Math.log(det_by_book);
-//			System.out.println("calculateLnProbYGivenTree running total: " + ln_prob);
-		}	
-		ln_prob -= 0.5 * term_a;
-		
-		
-		//now loop over all nodes and calculate term b
-		double term_b = 0;		
-		for (CGMTreeNode node : terminal_nodes){
-			DoubleMatrix rs = new DoubleMatrix(node.get_ys_in_data());
-			DoubleMatrix mu = new DoubleMatrix(hyper_mu_bar, node.n);
-			DoubleMatrix rs_min_mu = rs.minus(mu);
-//			System.out.println("rs dims " + rs.getRowDimension() + " x " + rs.getColumnDimension() + " rs: \n" + rs.transpose().toString(2));
-//			System.out.println("mu dims " + mu.getRowDimension() + " x " + mu.getColumnDimension() + " mu: \n" + mu.transpose().toString(2));
-//			System.out.println("rs_min_mu dims " + rs_min_mu.getRowDimension() + " x " + rs_min_mu.getColumnDimension() + " rs_min_mu: \n" + rs_min_mu.transpose().toString(2));
-//			System.out.println("rs transpose dims " + rs.transpose().getRowDimension() + " x " + rs.transpose().getColumnDimension() + "  " + rs.transpose().toString(1));
-//			DoubleMatrix sigma = generateSigmaMatrix(node.n);
-			DoubleMatrix inv_sigma = generateInvSigmaMatrix(node.n);
-//			System.out.println("inv_sigma dims " + inv_sigma.getRowDimension() + " x " + inv_sigma.getColumnDimension());
-//			System.out.println("sigma_inv \n " + generateSigmaMatrix(node.n).inverse().crop(0, 5, 0, 5).toString(2));
-//			System.out.println("sigma_inv as calculated with book \n" + inv_sigma.crop(0, 5, 0, 5).toString(2));
-			
-//			System.out.println("sigma_matrix dims " + sigma_matrix.getRowDimension() + " x " + sigma_matrix.getColumnDimension());
-//			System.out.println("inv_sigma_times_rs dims " + inv_sigma.times(rs).getRowDimension() + " x " + inv_sigma.times(rs).getColumnDimension());
-			DoubleMatrix main_term = rs_min_mu.transpose().times(inv_sigma.times(rs_min_mu));
-//			System.out.println("main_term: " + main_term.get(0, 0));
-			term_b += main_term.get(0, 0); //it should be a scalar
-//			ln_prob -= 0.5 * Math.log(main_term.get(0, 0));
-//			System.out.println("calculateLnProbYGivenTree running total: " + ln_prob);			
+//			else {
+//				ln_prob += node.log_prop_lik;
+//			}
 		}
-		ln_prob -= 0.5 * term_b;
 //		System.out.println("calculateLnProbYGivenTree is prop to: " + ln_prob);
 //		System.out.println("ProbYGivenTree :" + Math.pow(ln_prob, Math.E));
 		
 		//cache this value so we never have to calculate it again
 		T.log_prop_lik = ln_prob;
 		return ln_prob;
+	}
+
+	private double calculcateLnProbOfNode(CGMTreeNode node) {
+		double log_prob_node_ell = 0;
+//		DoubleMatrix sigma = generateSigmaMatrix(node.n);
+//		System.out.println("sigma: \n" + sigma.crop(0, 5, 0, 5).toString(4));
+//		double det = sigma.det();
+//		System.out.println("det(sigma) " + det);
+		double det_by_book = Math.pow(sigsq, node.n - 1) * (hyper_sigsq_mu * node.n + sigsq);
+		//do some corrections to the determinant due to computational limitations of the double storage
+		if (det_by_book == 0){
+			det_by_book = Double.MIN_NORMAL;
+		}
+//		if (det_by_book == Double.NaN || det_by_book == Double.NEGATIVE_INFINITY || det_by_book == Double.POSITIVE_INFINITY){
+//			System.err.println("det: " + det_by_book + " sigsq: " + sigsq + " sigsqmu: " + hyper_sigsq_mu + " n: " + node.n);
+//		}
+		if (det_by_book == Double.POSITIVE_INFINITY){
+			det_by_book = Double.MAX_VALUE;
+		}
+//		System.out.println("det(sigma) as calculated with book " + det_by_book + " ln(det(sigma)) as calculated with book " + Math.log(det_by_book));			
+		log_prob_node_ell += -0.5 * Math.log(det_by_book);
+//		ln_prob -= 0.5 * Math.log(det_by_book);
+//		System.out.println("calculateLnProbYGivenTree running total: " + ln_prob);
+		
+		DoubleMatrix rs = new DoubleMatrix(node.get_ys_in_data());
+		DoubleMatrix mu = new DoubleMatrix(hyper_mu_bar, node.n);
+		DoubleMatrix rs_min_mu = rs.minus(mu);
+//		System.out.println("rs dims " + rs.getRowDimension() + " x " + rs.getColumnDimension() + " rs: \n" + rs.transpose().toString(2));
+//		System.out.println("mu dims " + mu.getRowDimension() + " x " + mu.getColumnDimension() + " mu: \n" + mu.transpose().toString(2));
+//		System.out.println("rs_min_mu dims " + rs_min_mu.getRowDimension() + " x " + rs_min_mu.getColumnDimension() + " rs_min_mu: \n" + rs_min_mu.transpose().toString(2));
+//		System.out.println("rs transpose dims " + rs.transpose().getRowDimension() + " x " + rs.transpose().getColumnDimension() + "  " + rs.transpose().toString(1));
+//		DoubleMatrix sigma = generateSigmaMatrix(node.n);
+		DoubleMatrix inv_sigma = generateInvSigmaMatrix(node.n);
+//		System.out.println("inv_sigma dims " + inv_sigma.getRowDimension() + " x " + inv_sigma.getColumnDimension());
+//		System.out.println("sigma_inv \n " + generateSigmaMatrix(node.n).inverse().crop(0, 5, 0, 5).toString(2));
+//		System.out.println("sigma_inv as calculated with book \n" + inv_sigma.crop(0, 5, 0, 5).toString(2));
+		
+//		System.out.println("sigma_matrix dims " + sigma_matrix.getRowDimension() + " x " + sigma_matrix.getColumnDimension());
+//		System.out.println("inv_sigma_times_rs dims " + inv_sigma.times(rs).getRowDimension() + " x " + inv_sigma.times(rs).getColumnDimension());
+		DoubleMatrix main_term = rs_min_mu.transpose().times(inv_sigma.times(rs_min_mu));
+//		System.out.println("main_term: " + main_term.get(0, 0));
+		log_prob_node_ell +=  -0.5 * main_term.get(0, 0); //it should be a scalar
+//		ln_prob -= 0.5 * Math.log(main_term.get(0, 0));
+//		System.out.println("calculateLnProbYGivenTree running total: " + ln_prob);
+		
+		//cache this for further use
+		node.log_prop_lik = log_prob_node_ell;
+		
+		return log_prob_node_ell;
 	}
 
 	private DoubleMatrix generateInvSigmaMatrix(int n) {

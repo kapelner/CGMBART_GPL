@@ -450,14 +450,15 @@ public abstract class CGMPosteriorBuilder {
 		//now switch its rule
 		internal_node_to_change.splitAttributeM = treePriorBuilder.assignSplitAttribute(internal_node_to_change);
 		internal_node_to_change.splitValue = treePriorBuilder.assignSplitValue(internal_node_to_change.data, internal_node_to_change.splitAttributeM);
-//		System.out.println("internal_node_to_change node: " + internal_node_to_change.stringID() + " rule: " + " X_" + internal_node_to_change.splitAttributeM + " < " + internal_node_to_change.splitValue);		
+		internal_node_to_change.log_prop_lik = null; //release the cache
+		//		System.out.println("internal_node_to_change node: " + internal_node_to_change.stringID() + " rule: " + " X_" + internal_node_to_change.splitAttributeM + " < " + internal_node_to_change.splitValue);		
 		if (DEBUG_ITERATIONS){
 			iteration_info.put("changed_node", internal_node_to_change.stringID());
 			iteration_info.put("split_attribute", internal_node_to_change.splitAttributeM + "");
 			iteration_info.put("split_value", internal_node_to_change.splitValue + "");			
 		}				
 		//now we need to propagate this change all through its children and its children's children
-		CGMTreeNode.propagateRuleChangeOrSwapThroughoutTree(internal_node_to_change);
+		CGMTreeNode.propagateRuleChangeOrSwapThroughoutTree(internal_node_to_change, false);
 	}
 	
 	protected void createTreeProposalViaSwap(CGMTreeNode T) {
@@ -476,6 +477,10 @@ public abstract class CGMPosteriorBuilder {
 		//now get both its children
 		CGMTreeNode left_child = doubly_internal_node_to_swap.left;
 		CGMTreeNode right_child = doubly_internal_node_to_swap.right;
+		//release the cache
+		doubly_internal_node_to_swap.log_prop_lik = null;
+		left_child.log_prop_lik = null;
+		right_child.log_prop_lik = null;
 		//in the off chance that both children have the same rules...
 		if (left_child.splitAttributeM == right_child.splitAttributeM && left_child.splitValue == right_child.splitValue){
 			//swap the parent's rule with the childrens' rule
@@ -506,7 +511,7 @@ public abstract class CGMPosteriorBuilder {
 			iteration_info.put("split_value", doubly_internal_node_to_swap.splitValue + "");			
 		}			
 		//now we need to propagate this change all through its children and its children's children
-		CGMTreeNode.propagateRuleChangeOrSwapThroughoutTree(doubly_internal_node_to_swap);
+		CGMTreeNode.propagateRuleChangeOrSwapThroughoutTree(doubly_internal_node_to_swap, false);
 	}
 
 	public void StopBuilding() {

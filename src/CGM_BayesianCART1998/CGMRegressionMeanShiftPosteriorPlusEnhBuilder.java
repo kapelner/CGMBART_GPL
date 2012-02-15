@@ -72,7 +72,7 @@ public class CGMRegressionMeanShiftPosteriorPlusEnhBuilder extends CGMRegression
 			iteration_info.put("split_value", internal_node_to_change.splitValue + "");			
 		}				
 		//now we need to propagate this change all through its children and its children's children
-		CGMTreeNode.propagateRuleChangeOrSwapThroughoutTree(internal_node_to_change);
+		CGMTreeNode.propagateRuleChangeOrSwapThroughoutTree(internal_node_to_change, false);
 	}
 
 	/**

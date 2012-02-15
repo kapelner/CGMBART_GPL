@@ -17,16 +17,16 @@ run_model_N_times = 6
 
 
 real_regression_data_sets = c(
-	"r_boston", 
-	"r_forestfires", 
-	"r_concretedata"
+	"r_boston"
+#	"r_forestfires", 
+#	"r_concretedata"
 )
 
 simulated_data_sets = c(
 #	"just_noise_linear",
-	"univariate_linear",
-	"bivariate_linear",
-	"friedman",
+#	"univariate_linear",
+#	"bivariate_linear",
+#	"friedman",
 	"simple_tree_structure"
 )
 
@@ -34,18 +34,18 @@ simulated_data_sets = c(
 num_trees_of_interest = c(
 #	100, 
 #	75, 
-	50,
+#	50,
 #	20, 
-	10, 
+#	10, 
 #	5, 
 #	2,
 	1
 )
 
 #run_bakeoff()
-setwd("C:\\Users\\kapelner\\workspace\\CGMBART_GPL\\sweave_reports")
-Sweave("bakeoff_report.Rnw")
-setwd("C:\\Users\\kapelner\\workspace\\CGMBART_GPL")
+#setwd("C:\\Users\\kapelner\\workspace\\CGMBART_GPL\\sweave_reports")
+#Sweave("bakeoff_report.Rnw")
+#setwd("C:\\Users\\kapelner\\workspace\\CGMBART_GPL")
 
 num_burn_ins_of_interest = c(
 	2000

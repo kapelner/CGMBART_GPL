@@ -386,7 +386,7 @@ public class CGMTreeNode extends TreeNode implements Cloneable, Serializable {
 			this.right.flushNodeData();
 	}
 	
-	public static void propagateRuleChangeOrSwapThroughoutTree(CGMTreeNode node) {
+	public static void propagateRuleChangeOrSwapThroughoutTree(CGMTreeNode node, boolean clean_cache) {
 		//only propagate if we are in a split node and NOT a leaf
 		if (node.left == null || node.right == null){
 			return;
@@ -417,8 +417,8 @@ public class CGMTreeNode extends TreeNode implements Cloneable, Serializable {
 //			}
 //			else {
 				//now recursively take care of the children
-				propagateRuleChangeOrSwapThroughoutTree(node.left);
-				propagateRuleChangeOrSwapThroughoutTree(node.right);
+				propagateRuleChangeOrSwapThroughoutTree(node.left, clean_cache);
+				propagateRuleChangeOrSwapThroughoutTree(node.right, clean_cache);
 //			}
 		}
 	}
@@ -427,7 +427,7 @@ public class CGMTreeNode extends TreeNode implements Cloneable, Serializable {
 		//set the root node data
 		this.data = clone_data_matrix_with_new_y_optional(X_y, y_new);
 		//now just propagate away
-		propagateRuleChangeOrSwapThroughoutTree(this);
+		propagateRuleChangeOrSwapThroughoutTree(this, true);
 	}
 	
 	public static ArrayList<double[]> clone_data_matrix_with_new_y_optional(List<double[]> X_y, double[] y_new){
