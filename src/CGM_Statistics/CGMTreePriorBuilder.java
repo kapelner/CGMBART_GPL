@@ -198,6 +198,7 @@ public abstract class CGMTreePriorBuilder {
 		return probabilityOfNode(root);
 	}
 	
+	//POSSIBLE mistake here?
 	private double probabilityOfNode(CGMTreeNode node){
 		double prob_splitting_this_node = calculateProbabilityOfSplitting(node);
 		if (node.left != null && node.right != null){

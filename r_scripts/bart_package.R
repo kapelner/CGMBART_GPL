@@ -11,6 +11,19 @@ NUM_GIGS_RAM_TO_USE = ifelse(.Platform$OS.type == "windows", 4, 8)
 PLOTS_DIR = "output_plots"
 JAR_DEPENDENCIES = c("bart_java.jar", "commons-math-2.1.jar", "jai_codec.jar", "jai_core.jar", "gemident_1_12_12.jar")
 DATA_FILENAME = "datasets/bart_data.csv"
+DEFAULT_ALPHA = 0.01
+DEFAULT_BETA = 10
+
+#set up a logging system
+LOG_DIR = "r_log"
+log_file_name = "bart_log.txt"
+bart_log = matrix(nrow = 0, ncol = 1)
+
+append_to_log = function(text){
+	bart_log = rbind(bart_log, paste(Sys.time(), "\t", text)) #log the time and the actual message
+	assign("bart_log", bart_log, .GlobalEnv)
+	write.table(bart_log, paste(LOG_DIR, "/", log_file_name, sep = ""), quote = FALSE, col.names = FALSE, row.names = FALSE)
+}
 
 #some defaults if you want to run this
 #num_trees = 5
@@ -31,6 +44,8 @@ bart_model = function(training_data,
 		num_trees = 50, 
 		num_burn_in = 1000, 
 		num_iterations_after_burn_in = 1000, 
+		alpha = DEFAULT_ALPHA,
+		beta = DEFAULT_BETA, 
 		class_or_regr = "r", 
 		debug_log = FALSE, 
 		print_tree_illustrations = FALSE, 
@@ -54,6 +69,8 @@ bart_model = function(training_data,
 	.jcall(java_bart_machine, "V", "setNumTrees", as.integer(num_trees))
 	.jcall(java_bart_machine, "V", "setNumGibbsBurnIn", as.integer(num_burn_in))
 	.jcall(java_bart_machine, "V", "setNumGibbsTotalIterations", as.integer(num_gibbs))
+	.jcall(java_bart_machine, "V", "setAlpha", alpha)
+	.jcall(java_bart_machine, "V", "setBeta", beta)
 	
 	#build the bart machine for use later
 	#need http://math.acadiau.ca/ACMMaC/Rmpi/sample.html RMPI here
@@ -67,7 +84,10 @@ bart_model = function(training_data,
 		num_trees = num_trees,
 		num_burn_in = num_burn_in,
 		num_iterations_after_burn_in = num_iterations_after_burn_in, 
-		num_gibbs = num_gibbs)
+		num_gibbs = num_gibbs,
+		alpha = alpha,
+		beta = beta
+	)
 }
 
 ############
@@ -368,12 +388,12 @@ predict_and_calc_ppis = function(bart_machine, test_data, ppi_conf = 0.95){
 #		error = function(exc){return},
 #		finally = function(exc){})		
 		y_hat_posterior_samples[i, ] = samps
-		######## NOT RIGHT!!!
+
 		ppi_a[i] = quantile(sort(samps), (1 - ppi_conf) / 2)
 		ppi_b[i] = quantile(sort(samps), (1 + ppi_conf) / 2)
 	}
 	#to get y_hat.. just take straight mean of posterior samples, alternatively, we can let java do it if we want more bells and whistles
-	y_hat = rowSums(y_hat_posterior_samples) / ncol(y_hat_posterior_samples)
+	y_hat = calc_y_hat_from_gibbs_samples(y_hat_posterior_samples)
 	#did the PPI capture the true y?
 	y_inside_ppi = y >= ppi_a & y <= ppi_b
 	prop_ys_in_ppi = sum(y_inside_ppi) / n
@@ -393,6 +413,10 @@ predict_and_calc_ppis = function(bart_machine, test_data, ppi_conf = 0.95){
 		L1_err = L1_err,
 		L2_err = L2_err,
 		rmse = sqrt(L2_err / n))
+}
+
+calc_y_hat_from_gibbs_samples = function(y_hat_posterior_samples){
+	rowSums(y_hat_posterior_samples) / ncol(y_hat_posterior_samples)
 }
 
 run_other_model_and_plot_y_vs_yhat = function(y_hat, model_name, test_data, extra_text = NULL, data_title = "data_model", save_plot = FALSE, bart_machine = NULL){
@@ -424,15 +448,22 @@ run_random_forests_and_plot_y_vs_yhat = function(training_data, test_data, extra
 
 run_bayes_tree_bart_impl_and_plot_y_vs_yhat = function(training_data, test_data, extra_text = NULL, data_title = "data_model", save_plot = FALSE, bart_machine = NULL){
 	p = ncol(training_data) - 1
+	y = training_data[, p + 1]
 	bayes_tree_bart_mod = bart(x.train = training_data[, 1 : p],
-		y.train = training_data[, p + 1],
+		y.train = y,
+		sigest = sd(y), #we force the sigma estimate to be the std dev of y
 		x.test = test_data[, 1 : p],
 		sigdf = 3, #$\nu = 3$, this is the same value we used in the implementation
-		ntree = bart_machine$num_trees, #keep it the same
-		ndpost = bart_machine$num_iterations_after_burn_in,
+		sigquant = 0.9, 
+		k = 2, #same as we have it
+		power = DEFAULT_BETA, #same as we have it
+		base = DEFAULT_ALPHA, #same as we have it
+		ntree = bart_machine$num_trees, #keep it the same -- default is 200 in BayesTree... interesting...
+		ndpost = bart_machine$num_iterations_after_burn_in, #keep it the same
 		nskip = bart_machine$num_burn_in, #keep it the same --- default is 100 in BayesTree -- huh??
-		usequants = TRUE,
-		verbose = FALSE) #this is how I implemented BART - basically allowing any split point in the data itself
+		usequants = TRUE, #this is a tiny bit different...check with Ed
+		numcut = length(y), #this is a tiny bit different...check with Ed
+		verbose = FALSE)
 		
 	y_hat = bayes_tree_bart_mod$yhat.test.mean
 	run_other_model_and_plot_y_vs_yhat(y_hat, "R_BART", test_data, extra_text, data_title, save_plot, bart_machine)
@@ -474,9 +505,11 @@ save_plot_function = function(bart_machine, identifying_text, data_title){
 		stop("you cannot save a plot unless you pass the bart_machine object", call. = FALSE)
 	}
 	num_iterations_after_burn_in = bart_machine[["num_iterations_after_burn_in"]]
-	num_burn_in = bart_machine[["num_burn_in"]]
-	num_trees = bart_machine[["num_trees"]]	
-	plot_filename = paste(PLOTS_DIR, "/", data_title, "_", identifying_text, "_m_", num_trees, "_n_B_", num_burn_in, "_n_G_a_", num_iterations_after_burn_in, ".pdf", sep = "")
+	num_burn_in = bart_machine$num_burn_in
+	num_trees = bart_machine$num_trees	
+	alpha = bart_machine$alpha
+	beta = bart_machine$beta
+	plot_filename = paste(PLOTS_DIR, "/", data_title, "_", identifying_text, "_m_", num_trees, "_n_B_", num_burn_in, "_n_G_a_", num_iterations_after_burn_in, "_alpha_", alpha, "_beta_", beta, ".pdf", sep = "")
 	pdf(file = plot_filename)
-	cat(paste("plot saved as", plot_filename, "\n"))
+	append_to_log(paste("plot saved as", plot_filename))
 }

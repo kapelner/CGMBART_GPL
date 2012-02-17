@@ -9,11 +9,11 @@
 
 \SweaveOpts{echo=FALSE}
 
-<<load_R_code>>=
-#setwd("C:\\Users\\kapelner\\workspace\\CGMBART_GPL\\sweave_reports")
-#source("../r_scripts/bart_bakeoff.R")
-#setwd("C:\\Users\\kapelner\\workspace\\CGMBART_GPL\\sweave_reports")
-@
+\begin{comment}
+setwd("C:\\Users\\kapelner\\workspace\\CGMBART_GPL\\sweave_reports")
+Sweave("bakeoff_report_beta_vary.Rnw")
+setwd("C:\\Users\\kapelner\\workspace\\CGMBART_GPL")
+\end{comment}
 
 \title{Analysis of BART output}
 \author{Adam Kapelner}
@@ -25,7 +25,71 @@
 \setcounter{tocdepth}{3}
 \tableofcontents
 
-<<whole_doc, results=tex>>=
+<<load_R_code>>=
+source("../r_scripts/bart_bakeoff.R")
+@
+
+<<set_new_log_filename>>=
+log_file_name = "bart_log_beta_vary.txt"
+@
+
+<<set_params_of_simulation>>=
+run_model_N_times = 5
+real_regression_data_sets = c(
+	"r_boston"
+#	"r_forestfires", 
+#	"r_concretedata"
+)
+simulated_data_sets = c(
+#	"just_noise_linear",
+#	"univariate_linear",
+#	"bivariate_linear",
+#	"friedman",
+	"simple_tree_structure"
+)
+#simulation constants... these can be modulated based on what you want to run
+num_trees_of_interest = c(
+#	100, 
+#	75, 
+	50,
+#	20, 
+#	10, 
+	5, 
+#	2,
+	1
+)
+num_burn_ins_of_interest = c(
+	2000
+#	1500
+#	1000
+#	500, 
+#	200,
+#	100
+)
+num_iterations_after_burn_ins_of_interest = c(
+	2000
+#	1500
+#	1000
+#	500, 
+#	200,
+#	100
+)
+alphas_of_interest = c(
+	0.95
+)
+betas_of_interest = c(
+	2,
+	5,
+	10,
+	20
+)
+@
+
+<<run_bakeoff>>=
+	run_bakeoff()
+@
+
+<<print_body_of_latex_doc, results=tex>>=
 
 for (model_name in c(real_regression_data_sets, simulated_data_sets)){
 	cat(paste("\n\n\\chapter{", gsub("_", " ", model_name), "}\n\n", sep = "")) 
@@ -52,7 +116,7 @@ for (model_name in c(real_regression_data_sets, simulated_data_sets)){
 						cat("\\FloatBarrier\n\n")
 					}
 				}				
-				
+
 				#now we can load in the root splits
 #				csv_filename = paste("../", PLOTS_DIR, "/", model_name, "_first_splits_m_", num_trees, "_n_B_", num_burn_in, "_n_G_a_", num_iterations_after_burn_in, ".csv", sep = "")
 #				root_splits = read.csv(csv_filename, header = TRUE)
@@ -72,14 +136,14 @@ for (model_name in c(real_regression_data_sets, simulated_data_sets)){
 %now we should dump the simulation results
 \chapter{Summary of Results}
 
-<<summary_tables, results=tex>>=
+<<print_summary_tables, results=tex>>=
 	print(xtable(simulation_results, caption = "All Simulation Results"), size = "\\tiny", tabular.environment = "longtable", floating = FALSE, include.rownames = FALSE)
 	print(xtable(avg_simulation_results, caption = "Average Simulation Results"), size = "\\footnotesize", include.rownames = FALSE)
 @
 
 \chapter{RMSE comparisons}
 
-<<rmse_plots, results=tex>>=
+<<print_rmse_plots, results=tex>>=
 for (num_burn_in in num_burn_ins_of_interest){
 	for (num_iterations_after_burn_in in num_iterations_after_burn_ins_of_interest){
 		for (num_trees in num_trees_of_interest){				

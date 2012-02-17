@@ -26,7 +26,6 @@ package CGM_BART;
 
 import java.util.ArrayList;
 
-import CGM_Matrices.CGMDoubleMatrix;
 import CGM_BayesianCART1998.*;
 import CGM_Statistics.*;
 import GemIdentTools.Matrices.DoubleMatrix;

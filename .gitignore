@@ -60,3 +60,4 @@ sweave_reports/*.pdf
 sweave_reports/*.tex
 sweave_reports/*.toc
 sweave_reports/auxilary_latex_files/*
+r_log/*.txt

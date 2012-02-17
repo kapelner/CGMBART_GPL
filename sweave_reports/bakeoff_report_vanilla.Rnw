@@ -1,0 +1,164 @@
+\documentclass[12pt, landscape]{report}
+
+\usepackage{subfigure}
+\usepackage[margin=0.3in]{geometry}
+\usepackage{Sweave}
+\usepackage{hyperref}
+\usepackage{placeins}
+\usepackage{longtable}
+
+\SweaveOpts{echo=FALSE}
+
+
+\begin{comment}
+setwd("C:\\Users\\kapelner\\workspace\\CGMBART_GPL\\sweave_reports")
+Sweave("bakeoff_report_vanilla.Rnw", quiet = FALSE)
+setwd("C:\\Users\\kapelner\\workspace\\CGMBART_GPL")
+\end{comment}
+
+\title{Analysis of BART output}
+\author{Adam Kapelner}
+
+\begin{document}
+\maketitle
+
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{3}
+\tableofcontents
+
+<<load_R_code>>=
+source("../r_scripts/bart_bakeoff.R")
+@
+
+<<set_new_log_filename>>=
+log_file_name = "bart_log_vanilla.txt"
+@
+
+<<set_params_of_simulation>>=
+run_model_N_times = 2
+real_regression_data_sets = c(
+	"r_boston"
+#	"r_forestfires", 
+#	"r_concretedata"
+)
+simulated_data_sets = c(
+#	"just_noise_linear",
+#	"univariate_linear",
+#	"bivariate_linear",
+#	"friedman",
+	"simple_tree_structure"
+)
+#simulation constants... these can be modulated based on what you want to run
+num_trees_of_interest = c(
+#	100, 
+#	75, 
+#	50,
+#	20, 
+#	10, 
+#	5, 
+#	2,
+	1
+)
+num_burn_ins_of_interest = c(
+#	2000
+#	1500
+#	1000
+#	500, 
+#	200,
+	100
+)
+num_iterations_after_burn_ins_of_interest = c(
+#	2000
+#	1500
+#	1000
+#	500, 
+#	200,
+	100
+)
+alphas_of_interest = c(
+	0.95
+)
+betas_of_interest = c(
+	2
+)
+@
+
+<<run_bakeoff>>=
+run_bakeoff()
+@
+
+<<print_body_of_latex_doc, results=tex>>=
+for (alpha in alphas_of_interest){
+	for (beta in betas_of_interest){
+		for (model_name in c(real_regression_data_sets, simulated_data_sets)){
+			cat(paste("\n\n\\chapter{", gsub("_", " ", model_name), "}\n\n", sep = "")) 
+			cat("\\pagebreak\n")
+
+			for (num_trees in num_trees_of_interest){
+				cat(paste("\n\n\\section{m = ", num_trees, "}\n\n", sep = "")) 
+				for (num_burn_in in num_burn_ins_of_interest){
+					
+					for (num_iterations_after_burn_in in num_iterations_after_burn_ins_of_interest){
+						cat(paste("\n\n\\subsection{N\\_B = ", num_burn_in, ", N\\_G = ", num_iterations_after_burn_in, "}\n\n", sep = ""))				
+		
+						image_titles = c("sigsqs", "tree_liks", "tree_nodes", "tree_depths", "yvyhat_bart", "yvyhat_R_BART", "yvyhat_RF", "yvyhat_CART")
+						for (i in 1 : length(image_titles)){
+							if (i %% 2 == 1){
+								cat("\\begin{figure}\n")
+								cat("\\centering\n")
+							}
+							cat("\\subfigure{\n")
+							cat(paste("\\includegraphics[width=3.0in]{../output_plots/", model_name, "_", image_titles[i], "_m_", num_trees, "_n_B_", num_burn_in, "_n_G_a_", num_iterations_after_burn_in, "_alpha_", alpha, "_beta_", beta, ".pdf}\n", sep = ""))
+							cat("}\n")
+							if (i %% 2 == 0){
+								cat("\\end{figure}\n")	
+								cat("\\FloatBarrier\n\n")
+							}
+						}
+		
+						#now we can load in the root splits
+		#				csv_filename = paste("../", PLOTS_DIR, "/", model_name, "_first_splits_m_", num_trees, "_n_B_", num_burn_in, "_n_G_a_", num_iterations_after_burn_in, ".csv", sep = "")
+		#				root_splits = read.csv(csv_filename, header = TRUE)
+		#				cat(paste("\n\n\\paragraph{Root Splits}\n\n", sep = ""))
+		#				cat("{\\tiny\\begin{verbatim}\n")
+		#				for (i in 1 : nrow(root_splits)){
+		#					cat(paste(root_splits[i, 1], ": ", root_splits[i, 2], "\n"))
+		#				}
+		#				cat("\\end{verbatim}}\n\n")				
+					}
+				}		
+			}
+		}
+	}
+}
+@
+
+	
+%now we should dump the simulation results
+\chapter{Summary of Results}
+
+<<print_summary_tables, results=tex>>=
+	print(xtable(simulation_results, caption = "All Simulation Results"), size = "\\tiny", tabular.environment = "longtable", floating = FALSE, include.rownames = FALSE)
+	print(xtable(avg_simulation_results, caption = "Average Simulation Results"), size = "\\footnotesize", include.rownames = FALSE)
+@
+
+\chapter{RMSE comparisons}
+
+<<print_rmse_plots, results=tex>>=
+for (num_burn_in in num_burn_ins_of_interest){
+	for (num_iterations_after_burn_in in num_iterations_after_burn_ins_of_interest){
+		for (num_trees in num_trees_of_interest){				
+			for (data_set in c(real_regression_data_sets, simulated_data_sets)){
+				plot_filename = paste(PLOTS_DIR, "/rmse_comp_", data_set, "_m_", num_trees, "_n_B_", num_burn_in, "_n_G_a_", num_iterations_after_burn_in, ".pdf", sep = "")
+				cat("\\begin{figure}\n")
+				cat("\\centering\n")
+				cat(paste("\\includegraphics[width=5.0in]{../", plot_filename, "}\n", sep = ""))
+				cat("\\end{figure}\n")
+				cat("\\FloatBarrier\n\n")							
+			}
+		}
+	}
+}
+@
+
+\end{document}

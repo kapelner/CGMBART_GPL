@@ -196,17 +196,17 @@ public abstract class CGMBART2010 extends CGMBART {
 //			System.out.println("CGMBART create prior on tree: " + (i + 1));
 			CGMTreeNode tree = tree_prior_builder.buildTreeStructureBasedOnPrior();
 			tree.initLogPropLik();
-			modifyTreeForDebugging(tree);
+//			modifyTreeForDebugging(tree);
 			tree.updateWithNewResponsesAndPropagate(X_y, y_trans, p);
 			cgm_trees.add(tree);
 		}
 		return cgm_trees;
 	}
 
-	private void modifyTreeForDebugging(CGMTreeNode tree) {
+//	private void modifyTreeForDebugging(CGMTreeNode tree) {
 		//let's ensure the correct root node
 //		tree.splitAttributeM = 0;
 //		tree.splitValue = (double)30;
 //		tree.isLeaf = false;
-	}	
+//	}	
 }

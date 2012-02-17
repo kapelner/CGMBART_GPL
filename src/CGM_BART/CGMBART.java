@@ -159,6 +159,14 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 	public void setNumGibbsTotalIterations(int num_gibbs_total_iterations){
 		this.num_gibbs_total_iterations = num_gibbs_total_iterations;
 	}	
+	
+	public void setAlpha(double alpha){
+		CGMBARTPriorBuilder.ALPHA = alpha;
+	}
+	
+	public void setBeta(double beta){
+		CGMBARTPriorBuilder.BETA = beta;
+	}	
 
 	@Override
 	public void Build() {
@@ -199,22 +207,22 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 //		System.err.println("err");
 		
 		//now we burn and thin the chains for each param
-		BurnBothChains();
+		BurnTreeAndSigsqChain();
 		//for some reason we don't thin... I don't really understand why... has to do with autocorrelation and stickiness?
 //		ThinBothChains();
 		
 		//make sure you can do stuff from R
-		getGibbsSamplesSigsqs();
-		for (int i = 0; i < num_gibbs_total_iterations; i++){
-			getNumNodesForTreesInGibbsSamp(i);
-			getRootSplits(i);
-			getDepthsForTreesInGibbsSamp(i);
-		}
-		for (int t = 0; t < m; t++){
-			getLikForTree(t);
-		}
-		
-		getGibbsSamplesForPrediction(X_y.get(0));
+//		getGibbsSamplesSigsqs();
+//		for (int i = 0; i < num_gibbs_total_iterations; i++){
+//			getNumNodesForTreesInGibbsSamp(i);
+//			getRootSplits(i);
+//			getDepthsForTreesInGibbsSamp(i);
+//		}
+//		for (int t = 0; t < m; t++){
+//			getLikForTree(t);
+//		}
+//		
+//		getGibbsSamplesForPrediction(X_y.get(0));
 
 	}
 	
@@ -228,7 +236,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 
 	protected abstract void CoreBuild();
 
-	private void BurnBothChains() {		
+	private void BurnTreeAndSigsqChain() {		
 		for (int i = num_gibbs_burn_in; i < num_gibbs_total_iterations; i++){
 			gibbs_samples_of_cgm_trees_after_burn_in.add(gibbs_samples_of_cgm_trees.get(i));
 			gibbs_samples_of_sigsq_after_burn_in.add(gibbs_samples_of_sigsq.get(i));
@@ -238,7 +246,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 	@Override
 	public double Evaluate(double[] record) { //posterior sample average		
 		return StatToolbox.sample_average(getGibbsSamplesForPrediction(record));
-	}
+	}	
 	
 	public int numSamplesAfterBurningAndThinning(){
 		return num_gibbs_total_iterations - num_gibbs_burn_in;
@@ -552,10 +560,10 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 		double q = 0.9;
 		//now we do a simple search for the best value of lambda
 		//if sig_sq ~ \nu\lambda * X where X is Inv chi sq, then sigsq ~ InvGamma(\nu/2, \nu\lambda/2) \neq InvChisq
-		double ssqy = StatToolbox.sample_variance(y_trans);
+		double s_sq_y = StatToolbox.sample_variance(y_trans);
 		double prob_diff = Double.MAX_VALUE;
-		for (double lambda = 0.00001; lambda < ssqy; lambda += (ssqy / 10000)){
-			double p = StatToolbox.cumul_dens_function_inv_gamma(hyper_nu / 2, hyper_nu * lambda / 2, ssqy);			
+		for (double lambda = 0.00001; lambda < s_sq_y; lambda += (s_sq_y / 10000)){
+			double p = StatToolbox.cumul_dens_function_inv_gamma(hyper_nu / 2, hyper_nu * lambda / 2, s_sq_y);			
 			if (Math.abs(p - q) < prob_diff){
 //				System.out.println("hyper_lambda = " + hyper_lambda + " lambda = " + lambda + " p = " + p + " ssq = " + ssq);
 				hyper_lambda = lambda;
