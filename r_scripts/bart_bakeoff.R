@@ -181,7 +181,8 @@ create_avg_sim_results_and_save_as_csv = function(){
 run_bart_model_and_save_diags_and_results = function(training_data, test_data, data_title, num_trees, num_burn_in, num_iterations_after_burn_in, alpha, beta){
 	append_to_log(paste("starting model \"", data_title, "\", m = ", num_trees, ", n_B = ", num_burn_in, ", n_G_a = ", num_iterations_after_burn_in, " alpha = ", alpha, " beta = ", beta, sep = ""))
 	
-	extra_text = paste("on model \"", gsub("_", " ", data_title), "\" m = ", num_trees, " n_B = ", num_burn_in, ", n_G_a = ", num_iterations_after_burn_in, " alpha = ", alpha, " beta = ", beta, sep = "")
+	extra_text = paste("on model \"", gsub("_", " ", data_title), "\" m = ", num_trees, " n_B = ", num_burn_in, ", n_G_a = ", 
+			num_iterations_after_burn_in,  expression(alpha), " = ", alpha,  expression(beta), " = ", beta, sep = "")
 	
 	#generate the bart model
 	bart_machine = bart_model(training_data, 

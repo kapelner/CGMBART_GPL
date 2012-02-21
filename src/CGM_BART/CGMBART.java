@@ -245,8 +245,16 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 	
 	@Override
 	public double Evaluate(double[] record) { //posterior sample average		
-		return StatToolbox.sample_average(getGibbsSamplesForPrediction(record));
+		return EvaluateViaSampMed(record);
 	}	
+	
+	public double EvaluateViaSampMed(double[] record) { //posterior sample average		
+		return StatToolbox.sample_median(getGibbsSamplesForPrediction(record));
+	}
+	
+	public double EvaluateViaSampAvg(double[] record) { //posterior sample average		
+		return StatToolbox.sample_average(getGibbsSamplesForPrediction(record));
+	}		
 	
 	public int numSamplesAfterBurningAndThinning(){
 		return num_gibbs_total_iterations - num_gibbs_burn_in;
@@ -557,20 +565,27 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 		
 		//we fix nu and q		
 		hyper_nu = 3.0;
-		double q = 0.9;
+		
 		//now we do a simple search for the best value of lambda
 		//if sig_sq ~ \nu\lambda * X where X is Inv chi sq, then sigsq ~ InvGamma(\nu/2, \nu\lambda/2) \neq InvChisq
 		double s_sq_y = StatToolbox.sample_variance(y_trans);
-		double prob_diff = Double.MAX_VALUE;
-		for (double lambda = 0.00001; lambda < s_sq_y; lambda += (s_sq_y / 10000)){
-			double p = StatToolbox.cumul_dens_function_inv_gamma(hyper_nu / 2, hyper_nu * lambda / 2, s_sq_y);			
-			if (Math.abs(p - q) < prob_diff){
-//				System.out.println("hyper_lambda = " + hyper_lambda + " lambda = " + lambda + " p = " + p + " ssq = " + ssq);
-				hyper_lambda = lambda;
-				prob_diff = Math.abs(p - q);
-			}
-		}
-//		System.out.println("hyperparams:  k = " + k + " hyper_mu_mu = " + hyper_mu_mu + " sigsq_mu = " + hyper_sigsq_mu + " hyper_lambda = " + hyper_lambda + " hyper_nu = " + hyper_nu + " s_y_trans^2 = " + ssqy + " R_y = " + Math.sqrt(y_range_sq));
+//		double prob_diff = Double.MAX_VALUE;
+		
+//		double q = 0.9;
+		double ten_pctile_chisq_df_3 = 0.5843744; //we need q=0.9 for this to work
+		
+		hyper_lambda = ten_pctile_chisq_df_3 / 3 * s_sq_y;
+//		System.out.println("lambda: " + lambda);
+//		
+//		for (lambda = 0.00001; lambda < 10 * s_sq_y; lambda += (s_sq_y / 10000)){
+//			double p = StatToolbox.cumul_dens_function_inv_gamma(hyper_nu / 2, hyper_nu * lambda / 2, s_sq_y);			
+//			if (Math.abs(p - q) < prob_diff){
+////				System.out.println("hyper_lambda = " + hyper_lambda + " lambda = " + lambda + " p = " + p + " ssq = " + ssq);
+//				hyper_lambda = lambda;
+//				prob_diff = Math.abs(p - q);
+//			}
+//		}
+		System.out.println("hyperparams:  k = " + k + " hyper_mu_mu = " + hyper_mu_mu + " sigsq_mu = " + hyper_sigsq_mu + " hyper_lambda = " + hyper_lambda + " hyper_nu = " + hyper_nu + " s_y_trans^2 = " + s_sq_y + " R_y = " + Math.sqrt(y_range_sq));
 	}
 
 	
@@ -609,12 +624,12 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 			}
 		}
 		//debug stuff
-		y_and_y_trans.println("y,y_trans");
-		for (int i = 0; i < n; i++){
+//		y_and_y_trans.println("y,y_trans");
+//		for (int i = 0; i < n; i++){
 //			System.out.println("y_trans[i] = " + y_trans[i] + " y[i] = " + y[i] + " y_untransform = " + un_transform_y(y_trans[i]));
-			y_and_y_trans.println(y[i] + "," + y_trans[i]);
-		}
-		y_and_y_trans.close();
+//			y_and_y_trans.println(y[i] + "," + y_trans[i]);
+//		}
+//		y_and_y_trans.close();
 	}
 
 	protected double un_transform_y(double yt_i){

@@ -24,6 +24,8 @@
 
 package CGM_Statistics;
 
+import java.util.Arrays;
+
 import org.apache.commons.math.MathException;
 import org.apache.commons.math.distribution.GammaDistributionImpl;
 import org.apache.commons.math.distribution.NormalDistributionImpl;
@@ -130,14 +132,14 @@ public class StatToolbox {
 		return ILLEGAL_FLAG;
 	}	
 	
-	public static final double inverse_cumul_dens_function_inv_gamma(double nu, double lambda, double p){
+//	public static final double inverse_cumul_dens_function_inv_gamma(double nu, double lambda, double p){
 //		try {
-			return nu * lambda / (nu - 2);
+//			return nu * lambda / (nu - 2);
 //		} catch (MathException e) {
 //			e.printStackTrace();
 //		}
 //		return ILLEGAL_FLAG;
-	}	
+//	}	
 
 	public static double sample_minimum(int[] y) {
 		int min = Integer.MAX_VALUE;
@@ -194,5 +196,19 @@ public class StatToolbox {
 			}				
 		}
 		return index;
+	}
+
+	public static double sample_median(double[] gibbsSamplesForPrediction) {
+		int n = gibbsSamplesForPrediction.length;
+		Arrays.sort(gibbsSamplesForPrediction);
+		if (n % 2 == 0){
+			double a = gibbsSamplesForPrediction[n / 2];
+			double b = gibbsSamplesForPrediction[n / 2 - 1];
+			return (a + b) / 2;
+		}
+		else {
+			return gibbsSamplesForPrediction[(n - 1) / 2];
+		}
+		
 	}	
 }

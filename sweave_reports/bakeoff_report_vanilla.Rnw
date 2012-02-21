@@ -6,6 +6,7 @@
 \usepackage{hyperref}
 \usepackage{placeins}
 \usepackage{longtable}
+\usepackage{verbatim}
 
 \SweaveOpts{echo=FALSE}
 
@@ -88,17 +89,17 @@ run_bakeoff()
 @
 
 <<print_body_of_latex_doc, results=tex>>=
-for (alpha in alphas_of_interest){
-	for (beta in betas_of_interest){
-		for (model_name in c(real_regression_data_sets, simulated_data_sets)){
-			cat(paste("\n\n\\chapter{", gsub("_", " ", model_name), "}\n\n", sep = "")) 
-			cat("\\pagebreak\n")
+for (model_name in c(real_regression_data_sets, simulated_data_sets)){
+	cat(paste("\n\n\\chapter{", gsub("_", " ", model_name), "}\n\n", sep = "")) 
+	cat("\\pagebreak\n")
 
-			for (num_trees in num_trees_of_interest){
-				cat(paste("\n\n\\section{m = ", num_trees, "}\n\n", sep = "")) 
-				for (num_burn_in in num_burn_ins_of_interest){
-					
-					for (num_iterations_after_burn_in in num_iterations_after_burn_ins_of_interest){
+	for (num_trees in num_trees_of_interest){
+		cat(paste("\n\n\\section{m = ", num_trees, "}\n\n", sep = "")) 
+		for (num_burn_in in num_burn_ins_of_interest){
+			
+			for (num_iterations_after_burn_in in num_iterations_after_burn_ins_of_interest){
+				for (alpha in alphas_of_interest){
+					for (beta in betas_of_interest){						
 						cat(paste("\n\n\\subsection{N\\_B = ", num_burn_in, ", N\\_G = ", num_iterations_after_burn_in, "}\n\n", sep = ""))				
 		
 						image_titles = c("sigsqs", "tree_liks", "tree_nodes", "tree_depths", "yvyhat_bart", "yvyhat_R_BART", "yvyhat_RF", "yvyhat_CART")

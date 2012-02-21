@@ -7,7 +7,7 @@ tryCatch(library(rpart), error = function(e){install.packages("rpart")}, finally
 tryCatch(library(xtable), error = function(e){install.packages("xtable")}, finally = library(xtable))
 
 #constants
-NUM_GIGS_RAM_TO_USE = ifelse(.Platform$OS.type == "windows", 4, 8)
+NUM_GIGS_RAM_TO_USE = ifelse(.Platform$OS.type == "windows", 6, 8)
 PLOTS_DIR = "output_plots"
 JAR_DEPENDENCIES = c("bart_java.jar", "commons-math-2.1.jar", "jai_codec.jar", "jai_core.jar", "gemident_1_12_12.jar")
 DATA_FILENAME = "datasets/bart_data.csv"
