@@ -90,8 +90,8 @@ public abstract class CGMTreePriorBuilder {
 
 	public boolean splitNodeAndAssignRule(CGMTreeNode node) {		
 		//first assign a split attribute
-		node.splitAttributeM = assignSplitAttribute(node);
 		
+		node.splitAttributeM = assignSplitAttribute(node);
 		//if 
 		//a) we don't have any attributes left to split on, 
 		//b) there's only one data point left

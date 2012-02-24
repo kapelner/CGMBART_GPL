@@ -33,7 +33,7 @@ colnames(simulation_results) = c(
 		"CART_rmse"
 )
 
-avg_simulation_results = matrix(NA, nrow = 0, ncol = 14)
+avg_simulation_results = matrix(NA, nrow = 0, ncol = 13)
 colnames(avg_simulation_results) = c(
 		"data_model", 
 		"m",
@@ -45,15 +45,17 @@ colnames(avg_simulation_results) = c(
 		"A_BART_rmse_se", 
 		"R_BART_rmse_avg",
 		"R_BART_rmse_se",
+		"pval",		
 		"RF_rmse_avg",
-		"RF_rmse_se",
-		"CART_rmse_avg",
-		"CART_rmse_se"
+		"RF_rmse_se"
 )
+
+
 
 #avg_simulation_results_pretty
 
 run_bakeoff = function(){
+	current_run = 0
 	for (alpha in alphas_of_interest){
 		for (beta in betas_of_interest){
 			for (num_burn_in in num_burn_ins_of_interest){
@@ -62,21 +64,25 @@ run_bakeoff = function(){
 						graphics.off() #make sure to shut graphics off otherwise it eventually overloads the console
 						
 						for (real_regression_data_set in real_regression_data_sets){
+							raw_data = read.csv(paste("datasets//", real_regression_data_set, ".csv", sep = ""))				
+							#now pull out half training and half test *randomly*			
+							training_indices = sort(sample(1 : nrow(raw_data), nrow(raw_data) / 2))
+							test_indices = setdiff(1 : nrow(raw_data), training_indices)
+							training_data = raw_data[training_indices, ]
+							test_data = raw_data[test_indices, ]							
 							for (mod in 1 : run_model_N_times){
-								raw_data = read.csv(paste("datasets//", real_regression_data_set, ".csv", sep = ""))				
-								#now pull out half training and half test *randomly*			
-								training_indices = sort(sample(1 : nrow(raw_data), nrow(raw_data) / 2))
-								test_indices = setdiff(1 : nrow(raw_data), training_indices)
-								training_data = raw_data[training_indices, ]
-								test_data = raw_data[test_indices, ]
+								current_run = current_run + 1
+								append_to_log(paste("starting model ", current_run, "\\", total_num_runs, "  \"", real_regression_data_set, "\", m = ", num_trees, ", n_B = ", num_burn_in, ", n_G_a = ", num_iterations_after_burn_in, " alpha = ", alpha, " beta = ", beta, sep = ""))
 								run_bart_model_and_save_diags_and_results(training_data, test_data, real_regression_data_set, num_trees, num_burn_in, num_iterations_after_burn_in, alpha, beta)
 							}
 						}
 		
 						for (simulated_data_set in simulated_data_sets){
+							training_data = simulate_data_from_simulation_name(simulated_data_set)
+							test_data = simulate_data_from_simulation_name(simulated_data_set)							
 							for (mod in 1 : run_model_N_times){
-								training_data = simulate_data_from_simulation_name(simulated_data_set)
-								test_data = simulate_data_from_simulation_name(simulated_data_set)
+								current_run = current_run + 1
+								append_to_log(paste("starting model ", current_run, "\\", total_num_runs, "  \"", simulated_data_set, "\", m = ", num_trees, ", n_B = ", num_burn_in, ", n_G_a = ", num_iterations_after_burn_in, " alpha = ", alpha, " beta = ", beta, sep = ""))
 								run_bart_model_and_save_diags_and_results(training_data, test_data, simulated_data_set, num_trees, num_burn_in, num_iterations_after_burn_in, alpha, beta)
 							}
 						}
@@ -88,6 +94,13 @@ run_bakeoff = function(){
 	prettify_simulation_results_and_save_as_csv()
 	create_avg_sim_results_and_save_as_csv()
 	draw_boxplots_of_sim_results()
+	calculate_cochran_global_pval()
+}
+
+calculate_cochran_global_pval = function(){
+	n = nrow(avg_simulation_results)
+	chi_sq = sum(-2 * log(avg_simulation_results$pval))
+	1 - pchisq(chi_sq, 2 * n)
 }
 
 prettify_simulation_results_and_save_as_csv = function(){
@@ -115,7 +128,7 @@ draw_boxplots_of_sim_results = function(){
 						}
 					}
 				}
-			}	
+			}
 		}
 	}
 }
@@ -124,11 +137,11 @@ draw_one_boxplot_and_save = function(data_set, num_trees, num_iterations_after_b
 	all_results = simulation_results_pretty[simulation_results_pretty$data_model == data_set & simulation_results_pretty$m == num_trees & simulation_results_pretty$N_B == num_burn_in & simulation_results_pretty$N_G == num_iterations_after_burn_in, ]
 	plot_filename = paste(PLOTS_DIR, "/rmse_comp_", data_set, "_m_", num_trees, "_n_B_", num_burn_in, "_n_G_a_", num_iterations_after_burn_in, "_alpha_", alpha, "_beta_", beta, ".pdf", sep = "")
 	pdf(file = plot_filename)
-	boxplot(all_results$A_BART_rmse, all_results$R_BART_rmse, all_results$RF_rmse, all_results$CART_rmse, 
-			names = c("my BART", "Rob's BART", "RF", "CART"),
-			horizontal = TRUE,
-			main = paste("RMSE comparison for ", data_set, ", m = ", num_trees, ", N_B = ", num_burn_in, ", N_G = ", num_iterations_after_burn_in, " alpha = ", alpha, " beta = ", beta, sep = ""),
-			xlab = paste("RMSE's (n = ", run_model_N_times, " simulations)", sep = ""))
+	boxplot(all_results$A_BART_rmse, all_results$R_BART_rmse, all_results$RF_rmse, 
+		names = c("my BART", "Rob's BART", "RF"),
+		horizontal = TRUE,
+		main = paste("RMSE comparison for ", data_set, ", m = ", num_trees, ", N_B = ", num_burn_in, ", N_G = ", num_iterations_after_burn_in, " alpha = ", alpha, " beta = ", beta, sep = ""),
+		xlab = paste("RMSE's (n = ", run_model_N_times, " simulations)", sep = ""))
 	dev.off()	
 }
 
@@ -141,6 +154,8 @@ create_avg_sim_results_and_save_as_csv = function(){
 					for (num_trees in num_trees_of_interest){				
 						for (data_set in c(real_regression_data_sets, simulated_data_sets)){
 							all_results = simulation_results_pretty[simulation_results_pretty$data_model == data_set & simulation_results_pretty$m == num_trees & simulation_results_pretty$N_B == num_burn_in & simulation_results_pretty$N_G == num_iterations_after_burn_in, ]
+							num_a_bart_beats_r_bart = all_results$A_BART_rmse > all_results$R_BART_rmse
+							pval_sign_test = pbinom(num_a_bart_beats_r_bart, run_model_N_times, 0.5) #we assume we have an equal chance of beating each other
 							new_simul_row = c(
 								data_set, 
 								num_trees, 
@@ -148,14 +163,13 @@ create_avg_sim_results_and_save_as_csv = function(){
 								num_iterations_after_burn_in,
 								alpha,
 								beta,
-								round(mean(all_results$A_BART_rmse), 2),
-								round(sd(all_results$A_BART_rmse), 1),
-								round(mean(all_results$R_BART_rmse), 2),
-								round(sd(all_results$R_BART_rmse), 1),
-								round(mean(all_results$RF_rmse), 2),
-								round(sd(all_results$RF_rmse), 1),					
-								round(mean(all_results$CART_rmse), 2),
-								round(sd(all_results$CART_rmse), 1)				
+								round(mean(all_results$A_BART_rmse), 1),
+								round(sd(all_results$A_BART_rmse), 2),
+								round(mean(all_results$R_BART_rmse), 1),
+								round(sd(all_results$R_BART_rmse), 2),
+								round(pval_sign_test, 3),
+								round(mean(all_results$RF_rmse), 1),
+								round(sd(all_results$RF_rmse), 2)			
 							)
 							avg_simulation_results = rbind(avg_simulation_results, new_simul_row)					
 						}
@@ -163,7 +177,7 @@ create_avg_sim_results_and_save_as_csv = function(){
 				}
 			}
 		}
-}
+	}
 	assign("avg_simulation_results", avg_simulation_results, .GlobalEnv)
 	#make it pretty right away
 	#now update simulation results object
@@ -179,7 +193,6 @@ create_avg_sim_results_and_save_as_csv = function(){
 
 
 run_bart_model_and_save_diags_and_results = function(training_data, test_data, data_title, num_trees, num_burn_in, num_iterations_after_burn_in, alpha, beta){
-	append_to_log(paste("starting model \"", data_title, "\", m = ", num_trees, ", n_B = ", num_burn_in, ", n_G_a = ", num_iterations_after_burn_in, " alpha = ", alpha, " beta = ", beta, sep = ""))
 	
 	extra_text = paste("on model \"", gsub("_", " ", data_title), "\" m = ", num_trees, " n_B = ", num_burn_in, ", n_G_a = ", 
 			num_iterations_after_burn_in,  expression(alpha), " = ", alpha,  expression(beta), " = ", beta, sep = "")
