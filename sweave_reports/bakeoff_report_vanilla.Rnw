@@ -36,17 +36,20 @@ log_file_name = "bart_log_vanilla.txt"
 @
 
 <<set_params_of_simulation>>=
-run_model_N_times = 100
+PRINT_TREE_ILLUS = FALSE
+JAVA_LOG = TRUE
+
+run_model_N_times = 1
 real_regression_data_sets = c(
-	"r_boston"
+#	"r_boston"
 #	"r_forestfires", 
 #	"r_concretedata"
 )
 simulated_data_sets = c(
-	"univariate_linear",
-	"bivariate_linear",
-	"friedman",
-	"simple_tree_structure"
+#	"univariate_linear",
+#	"bivariate_linear",
+#	"friedman",
+	"simple_tree_structure_sigma_10"
 )
 num_trees_of_interest = c(
 #	100, 

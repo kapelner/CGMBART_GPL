@@ -30,6 +30,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
+import GemIdentTools.IOTools;
+
 /**
  * A dumb struct to store information about a 
  * node in the Bayesian decision tree.
@@ -59,7 +61,9 @@ public class CGMTreeNode extends TreeNode implements Cloneable, Serializable {
 	public CGMTreeNode(CGMTreeNode parent, List<double[]> data){
 		this.parent = parent;
 		this.data = clone_data_matrix_with_new_y_optional(data, null);
-		n = data.size();
+		if (data != null){
+			n = data.size();
+		}
 		if (parent != null){
 			generation = parent.generation + 1;
 		}
@@ -355,16 +359,17 @@ public class CGMTreeNode extends TreeNode implements Cloneable, Serializable {
 
 	public double Evaluate(double[] record) {
 		CGMTreeNode evalNode = this;
+//		System.out.println("Evaluate record: " + IOTools.StringJoin(record, " "));
 		while (true){
 //			System.out.println("evaluate via node: " + evalNode.stringID());
 //			CGMTreeNode.DebugNode((CGMTreeNode)evalNode);
 			if (evalNode.isLeaf){
-//				System.out.println("evalNode.klass: " + evalNode.klass);
 				return evalNode.classification_or_regression_prediction();
 			}
 			//all split rules are less than or equals (this is merely a convention)
 			//it's a convention that makes sense - if X_.j is binary, and the split values can only be 0/1
 			//then it MUST be <= so both values can be considered
+//			System.out.println("Rule: X_" + evalNode.splitAttributeM + " < " + evalNode.splitValue + " ie " + record[evalNode.splitAttributeM] + " < " + evalNode.splitValue);
 			if (record[evalNode.splitAttributeM] <= evalNode.splitValue){
 //				System.out.println("went left");
 				evalNode = evalNode.left;
@@ -431,6 +436,9 @@ public class CGMTreeNode extends TreeNode implements Cloneable, Serializable {
 	}
 	
 	public static ArrayList<double[]> clone_data_matrix_with_new_y_optional(List<double[]> X_y, double[] y_new){
+		if (X_y == null){
+			return null;
+		}
 		ArrayList<double[]> X_y_new = new ArrayList<double[]>(X_y.size());
 		for (int i = 0; i < X_y.size(); i++){
 			double[] original_record = X_y.get(i);

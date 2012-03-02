@@ -99,7 +99,7 @@ run_bakeoff = function(){
 
 calculate_cochran_global_pval = function(){
 	n = nrow(avg_simulation_results)
-	chi_sq = sum(-2 * log(avg_simulation_results$pval))
+	chi_sq = sum(-2 * log(avg_simulation_results_pretty$pval))
 	1 - pchisq(chi_sq, 2 * n)
 }
 
@@ -191,11 +191,20 @@ create_avg_sim_results_and_save_as_csv = function(){
 	assign("avg_simulation_results_pretty", avg_simulation_results, .GlobalEnv)
 }
 
+data_title = "simple_tree_structure_sigma_half"
+training_data = simulate_data_from_simulation_name(data_title)
+test_data = simulate_data_from_simulation_name(data_title)
 
+num_trees = 1
+num_burn_in = 2000
+num_iterations_after_burn_in = 2000
+alpha = 0.95
+beta = -2
+save_plot = FALSE
 run_bart_model_and_save_diags_and_results = function(training_data, test_data, data_title, num_trees, num_burn_in, num_iterations_after_burn_in, alpha, beta){
-	
+
 	extra_text = paste("on model \"", gsub("_", " ", data_title), "\" m = ", num_trees, " n_B = ", num_burn_in, ", n_G_a = ", 
-			num_iterations_after_burn_in,  expression(alpha), " = ", alpha,  expression(beta), " = ", beta, sep = "")
+			num_iterations_after_burn_in, " ", expression(alpha), " = ", alpha,  " ", expression(beta), " = ", beta, sep = "")
 	
 	#generate the bart model
 	bart_machine = bart_model(training_data, 
@@ -203,44 +212,29 @@ run_bart_model_and_save_diags_and_results = function(training_data, test_data, d
 		num_burn_in = num_burn_in, 
 		alpha = alpha, 
 		beta = beta,
-#		print_tree_illustrations = TRUE,
-#		debug_log = TRUE,
+		print_tree_illustrations = PRINT_TREE_ILLUS,
+		debug_log = JAVA_LOG,
 		num_iterations_after_burn_in = num_iterations_after_burn_in)
 
-#	tryCatch({
 		ensure_bart_is_done_in_java(bart_machine$java_bart_machine)
-#	}, error = function(e){
-#		print("this run didn't work because of that bug I can't figure out.")		
 		
 		#now use the bart model to predict y_hat's for the test data
 		a_bart_predictions = predict_and_calc_ppis(bart_machine, test_data)
 		#diagnose how good the y_hat's from the bart model are
-		plot_y_vs_yhat(a_bart_predictions, extra_text = extra_text, data_title = data_title, save_plot = TRUE, bart_machine = bart_machine)
+		plot_y_vs_yhat(a_bart_predictions, extra_text = extra_text, data_title = data_title, save_plot = save_plot, bart_machine = bart_machine)
 		
 		#now see how Rob's algorithm does
-		r_bart_predictions = run_bayes_tree_bart_impl_and_plot_y_vs_yhat(training_data, test_data, extra_text = extra_text, data_title = data_title, save_plot = TRUE, bart_machine = bart_machine)
+		r_bart_predictions = run_bayes_tree_bart_impl_and_plot_y_vs_yhat(training_data, test_data, extra_text = extra_text, data_title = data_title, save_plot = save_plot, bart_machine = bart_machine)
 		
 		#now see how good random forests and CART does in comparison
-		rf_predictions = run_random_forests_and_plot_y_vs_yhat(training_data, test_data, extra_text = extra_text, data_title = data_title, save_plot = TRUE, bart_machine = bart_machine)
-		cart_predictions = run_cart_and_plot_y_vs_yhat(training_data, test_data, extra_text = extra_text, data_title = data_title, save_plot = TRUE, bart_machine = bart_machine)
-		
+		rf_predictions = run_random_forests_and_plot_y_vs_yhat(training_data, test_data, extra_text = extra_text, data_title = data_title, save_plot = save_plot, bart_machine = bart_machine)
+		cart_predictions = run_cart_and_plot_y_vs_yhat(training_data, test_data, extra_text = extra_text, data_title = data_title, save_plot = save_plot, bart_machine = bart_machine)
 		
 		#do some plots to diagnose convergence
-#		tryCatch({
-					plot_sigsqs_convergence_diagnostics(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = TRUE)
-#				}, error = function(e){}, finally = function(){})
-#		tryCatch({
-					plot_tree_liks_convergence_diagnostics(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = TRUE)	
-#				}, error = function(e){}, finally = function(){})
-#		tryCatch({
-					plot_tree_num_nodes(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = TRUE)	
-#				}, error = function(e){}, finally = function(){})
-#		tryCatch({
-					plot_tree_depths(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = TRUE)
-#				}, error = function(e){}, finally = function(){})
-#		tryCatch({
-#					get_root_splits_of_trees(bart_machine, data_title = data_title, save_as_csv = TRUE)				
-#				}, error = function(e){}, finally = function(){})
+		plot_sigsqs_convergence_diagnostics(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)
+		plot_tree_liks_convergence_diagnostics(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)	
+		plot_tree_num_nodes(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)	
+		plot_tree_depths(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)
 		
 		new_simul_row = c(
 			data_title, 

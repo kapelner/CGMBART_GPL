@@ -43,6 +43,7 @@ public class StatToolbox {
 	public static final double ILLEGAL_FLAG = -999999999;
 
 	public static double sample_from_inv_gamma(double k, double theta){
+		System.out.println("sample_from_inv_gamma k = " + k + " theta = " + theta);
 		return 1 / sample_from_gamma(k, theta);
 	}
 	

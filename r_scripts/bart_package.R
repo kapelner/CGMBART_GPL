@@ -128,6 +128,7 @@ init_jvm_and_bart_object = function(debug_log, print_tree_illustrations, print_o
 plot_sigsqs_convergence_diagnostics = function(bart_machine, extra_text = NULL, data_title = "data_model", save_plot = FALSE){
 #	tryCatch({
 	sigsqs = .jcall(bart_machine$java_bart_machine, "[D", "getGibbsSamplesSigsqs")
+	assign("sigsqs", sigsqs, .GlobalEnv)
 #	},
 #	error = function(exc){return},
 #	finally = function(exc){})
@@ -138,7 +139,9 @@ plot_sigsqs_convergence_diagnostics = function(bart_machine, extra_text = NULL, 
 	num_trees = bart_machine$num_trees
 	
 	#first look at sigsqs
-	avg_sigsqs = mean(sigsqs[(length(sigsqs) - num_iterations_after_burn_in) : length(sigsqs)], na.rm = TRUE)
+	sigsqs_after_burnin = sigsqs[(length(sigsqs) - num_iterations_after_burn_in) : length(sigsqs)]
+	assign("sigsqs_after_burnin", sigsqs_after_burnin, .GlobalEnv)
+	avg_sigsqs = mean(sigsqs_after_burnin, na.rm = TRUE)
 	 
 	if (save_plot){
 		save_plot_function(bart_machine, "sigsqs", data_title)
@@ -159,8 +162,22 @@ plot_sigsqs_convergence_diagnostics = function(bart_machine, extra_text = NULL, 
 	abline(a = ppi_sigsqs[2], b = 0, col = "yellow")	
 	abline(v = num_burn_in, col = "gray")
 	
-	dev.off()
+	if (save_plot){	
+		dev.off()
+	}
 	
+	if (save_plot){
+		save_plot_function(bart_machine, "sigsqs_hist", data_title)
+	}	
+	else {
+		dev.new()
+	}
+	hist(sigsqs_after_burnin, br = 100, main = "Sigsq after burn-in")
+#	abline(v = 1, col = "blue", lwd = 3)
+	
+	if (save_plot){	
+		dev.off()
+	}
 }
 
 plot_tree_num_nodes = function(bart_machine, extra_text = NULL, data_title = "data_model", save_plot = FALSE){
@@ -177,6 +194,7 @@ plot_tree_num_nodes = function(bart_machine, extra_text = NULL, data_title = "da
 #		error = function(exc){return},
 #		finally = function(exc){})
 	}
+	assign("all_tree_num_nodes", all_tree_num_nodes, .GlobalEnv)
 	
 	if (save_plot){
 		save_plot_function(bart_machine, "tree_nodes", data_title)
@@ -200,7 +218,9 @@ plot_tree_num_nodes = function(bart_machine, extra_text = NULL, data_title = "da
 	}
 	abline(v = num_burn_in, col = "gray")
 	
-	dev.off()
+	if (save_plot){	
+		dev.off()
+	}
 }
 
 get_root_splits_of_trees = function(bart_machine, data_title = "data_model", save_as_csv = FALSE){
@@ -216,6 +236,7 @@ get_root_splits_of_trees = function(bart_machine, data_title = "data_model", sav
 		root_splits[n, 1] = n - 1
 		root_splits[n, 2] = .jcall(java_bart_machine, "S", "getRootSplits", as.integer(n - 1))
 	}	
+	assign("root_splits", root_splits, .GlobalEnv)
 	if (save_as_csv){
 		csv_filename = paste(PLOTS_DIR, "/", data_title, "_first_splits_m_", num_trees, "_n_B_", num_burn_in, "_n_G_a_", num_iterations_after_burn_in, ".csv", sep = "")
 		write.csv(root_splits, csv_filename, row.names = FALSE)
@@ -230,14 +251,11 @@ plot_tree_depths = function(bart_machine, extra_text = NULL, data_title = "data_
 	num_trees = bart_machine$num_trees
 	
 	all_tree_depths = matrix(NA, nrow = num_trees, ncol = num_gibbs + 1)
+	
 	for (n in 1 : (num_gibbs + 1)){
-#		tryCatch({
 		all_tree_depths[, n] = .jcall(java_bart_machine, "[I", "getDepthsForTreesInGibbsSamp", as.integer(n - 1))
-#		},
-#		error = function(exc){return},
-#		finally = function(exc){})		
-		
 	}
+	assign("all_tree_depths", all_tree_depths, .GlobalEnv)
 	
 	if (save_plot){
 		save_plot_function(bart_machine, "tree_depths", data_title)
@@ -261,7 +279,9 @@ plot_tree_depths = function(bart_machine, extra_text = NULL, data_title = "data_
 	}
 	abline(v = num_burn_in, col = "gray")
 	
-	dev.off()
+	if (save_plot){	
+		dev.off()
+	}
 }
 
 plot_tree_liks_convergence_diagnostics = function(bart_machine, extra_text = NULL, data_title = "data_model", save_plot = FALSE){
@@ -270,7 +290,7 @@ plot_tree_liks_convergence_diagnostics = function(bart_machine, extra_text = NUL
 	num_gibbs = bart_machine$num_gibbs
 	num_trees = bart_machine$num_trees
 	
-	all_tree_liks = matrix(NA, nrow = num_trees, ncol = num_gibbs + 1)
+	all_tree_liks = matrix(NA, nrow = num_trees, ncol = num_gibbs + 1)	
 	for (t in 1 : num_trees){		
 #		tryCatch({
 		all_tree_liks[t, ] = .jcall(java_bart_machine, "[D", "getLikForTree", as.integer(t - 1))
@@ -278,8 +298,9 @@ plot_tree_liks_convergence_diagnostics = function(bart_machine, extra_text = NUL
 #		error = function(exc){return},
 #		finally = function(exc){})			
 	}	
+	assign("all_tree_liks", all_tree_liks, .GlobalEnv)
 	
-	treeliks_scale = (max(all_tree_liks) - min(all_tree_liks)) * 0.05
+	treeliks_scale = (max(all_tree_liks, na.rm = TRUE) - min(all_tree_liks, na.rm = TRUE)) * 0.5
 	
 	if (save_plot){
 		save_plot_function(bart_machine, "tree_liks", data_title)
@@ -292,7 +313,7 @@ plot_tree_liks_convergence_diagnostics = function(bart_machine, extra_text = NUL
 			col = sample(colors(), 1),
 			pch = ".",
 			main = paste("Tree ln(prop Lik) by Iteration", ifelse(is.null(extra_text), "", paste("\n", extra_text))), 
-			ylim = c(max(all_tree_liks) - treeliks_scale, max(all_tree_liks) + 200),
+			ylim = quantile(all_tree_liks[1, ], c(0, .999), na.rm = TRUE),
 			xlab = "Gibbs sample # (gray line indicates burn in)", 
 			ylab = "log proportional likelihood")
 	if (num_trees > 1){
@@ -301,8 +322,9 @@ plot_tree_liks_convergence_diagnostics = function(bart_machine, extra_text = NUL
 		}
 	}
 	abline(v = num_burn_in, col = "gray")
-	
-	dev.off()
+	if (save_plot){	
+		dev.off()
+	}
 }
 
 plot_y_vs_yhat = function(bart_predictions, extra_text = NULL, data_title = "data_model", save_plot = FALSE, bart_machine = NULL){
@@ -340,8 +362,9 @@ plot_y_vs_yhat = function(bart_predictions, extra_text = NULL, data_title = "dat
 		points(y[i], y_hat[i], col = ifelse(y_inside_ppi[i], "green", "red"), cex = 0.3, pch = 16)	
 	}
 	abline(a = 0, b = 1, col = "blue")
-
-	dev.off()
+	if (save_plot){	
+		dev.off()
+	}	
 }
 
 look_at_sample_of_test_data = function(bart_predictions, grid_len = 3, extra_text = NULL){
@@ -394,6 +417,7 @@ predict_and_calc_ppis = function(bart_machine, test_data, ppi_conf = 0.95){
 	}
 	#to get y_hat.. just take straight mean of posterior samples, alternatively, we can let java do it if we want more bells and whistles
 	y_hat = calc_y_hat_from_gibbs_samples(y_hat_posterior_samples)
+	assign("y_hat", y_hat, .GlobalEnv)
 	#did the PPI capture the true y?
 	y_inside_ppi = y >= ppi_a & y <= ppi_b
 	prop_ys_in_ppi = sum(y_inside_ppi) / n
@@ -415,8 +439,9 @@ predict_and_calc_ppis = function(bart_machine, test_data, ppi_conf = 0.95){
 		rmse = sqrt(L2_err / n))
 }
 
+#let's do sample medians like Rob
 calc_y_hat_from_gibbs_samples = function(y_hat_posterior_samples){
-	rowSums(y_hat_posterior_samples) / ncol(y_hat_posterior_samples)
+	apply(y_hat_posterior_samples, 1, function(row){median(row)})
 }
 
 run_other_model_and_plot_y_vs_yhat = function(y_hat, model_name, test_data, extra_text = NULL, data_title = "data_model", save_plot = FALSE, bart_machine = NULL){
@@ -435,7 +460,9 @@ run_other_model_and_plot_y_vs_yhat = function(y_hat, model_name, test_data, extr
 			main = paste("y/yhat ", model_name, " model L1/2 = ", L1_err, "/", L2_err, " rmse = ", round(rmse, 2), ifelse(is.null(extra_text), "", paste("\n", extra_text)), sep = ""), 
 			xlab = "y", 
 			ylab = "y_hat")	
-	dev.off()
+	if (save_plot){	
+		dev.off()
+	}
 	
 	list(y_hat = y_hat, L1_err = L1_err, L2_err = L2_err, rmse = rmse)		
 }

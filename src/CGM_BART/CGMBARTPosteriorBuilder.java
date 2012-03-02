@@ -47,10 +47,6 @@ public final class CGMBARTPosteriorBuilder extends CGMRegressionMeanShiftPosteri
 	public CGMBARTPosteriorBuilder(CGMTreePriorBuilder tree_prior_builder) {
 		super(tree_prior_builder);
 	}
-
-	public CGMBARTPosteriorBuilder(CGMTreePriorBuilder tree_prior_builder, double[] y) {
-		super(tree_prior_builder, y);
-	}
 	
 	public void setHyperparameters(double hyper_mu_bar, double hyper_a, double hyper_nu, double hyper_lambda, double hyper_sigsq_mu){
 		this.hyper_mu_bar = hyper_mu_bar;
@@ -113,7 +109,7 @@ public final class CGMBARTPosteriorBuilder extends CGMRegressionMeanShiftPosteri
 		if (det_by_book == Double.POSITIVE_INFINITY){
 			det_by_book = Double.MAX_VALUE;
 		}
-//		System.out.println("det(sigma) as calculated with book " + det_by_book + " ln(det(sigma)) as calculated with book " + Math.log(det_by_book));			
+//		System.out.println("det(sigma) as   calculated with book " + det_by_book + " ln(det(sigma)) as calculated with book " + Math.log(det_by_book));			
 		log_prob_node_ell += -0.5 * Math.log(det_by_book);
 //		ln_prob -= 0.5 * Math.log(det_by_book);
 //		System.out.println("calculateLnProbYGivenTree running total: " + ln_prob);
@@ -137,7 +133,7 @@ public final class CGMBARTPosteriorBuilder extends CGMRegressionMeanShiftPosteri
 //		System.out.println("main_term: " + main_term.get(0, 0));
 		log_prob_node_ell +=  -0.5 * main_term.get(0, 0); //it should be a scalar
 //		ln_prob -= 0.5 * Math.log(main_term.get(0, 0));
-//		System.out.println("calculateLnProbYGivenTree running total: " + ln_prob);
+//		System.out.println("calculateLnProbYGivenTree log_prob_node_ell: " + log_prob_node_ell);
 		
 		//cache this for further use
 		node.log_prop_lik = log_prob_node_ell;
@@ -208,7 +204,6 @@ public final class CGMBARTPosteriorBuilder extends CGMRegressionMeanShiftPosteri
 	}
 
 	public void setCurrentSigsqValue(double sigsq) {
-//		System.out.println("setCurrentSigsqValue sigsq = " + sigsq + " sigsq_mu = " + hyper_sigsq_mu);
 		this.sigsq = sigsq;
 	}
 

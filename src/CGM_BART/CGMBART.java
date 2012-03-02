@@ -46,8 +46,8 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 	protected static final boolean TRANSFORM_Y = true;
 	protected static final int DEFAULT_NUM_TREES = 20;
 	//this burn in number needs to be computed via some sort of moving average or time series calculation
-	protected static final int DEFAULT_NUM_GIBBS_BURN_IN = 500;
-	protected static final int DEFAULT_NUM_GIBBS_TOTAL_ITERATIONS = 500; //this must be larger than the number of burn in!!!
+	protected static final int DEFAULT_NUM_GIBBS_BURN_IN = 2000;
+	protected static final int DEFAULT_NUM_GIBBS_TOTAL_ITERATIONS = 4000; //this must be larger than the number of burn in!!!
 	
 //	protected static final double GIBBS_THIN_RATIO = 0.1;
 	
@@ -58,7 +58,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 	protected static PrintWriter tree_liks;
 	protected static PrintWriter remainings;
 	protected static PrintWriter evaluations;
-	protected static boolean TREE_ILLUST = false;
+	protected static boolean TREE_ILLUST = true;
 	protected static final boolean WRITE_DETAILED_DEBUG_FILES = false;
 	
 //	static {
@@ -241,6 +241,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 			gibbs_samples_of_cgm_trees_after_burn_in.add(gibbs_samples_of_cgm_trees.get(i));
 			gibbs_samples_of_sigsq_after_burn_in.add(gibbs_samples_of_sigsq.get(i));
 		}	
+		System.out.println("BurnTreeAndSigsqChain gibbs_samples_of_sigsq_after_burn_in length = " + gibbs_samples_of_sigsq_after_burn_in.size());
 	}	
 	
 	@Override
@@ -449,7 +450,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 		return IOTools.StringJoin(root_splits, "   ||   ");		
 	}
 	
-	private static void CloseDebugFiles(){
+	protected static void CloseDebugFiles(){
 		tree_liks.close();
 		remainings.close();
 		sigsqs.close();
@@ -458,7 +459,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 		other_debug.close();
 	}
 	
-	private static void OpenDebugFiles(){		
+	protected static void OpenDebugFiles(){		
 		try {
 			sigsqs = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "sigsqs" + DEBUG_EXT, true)));
 			other_debug = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "other_debug" + DEBUG_EXT, true)));
@@ -518,9 +519,9 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 			evaluations.println((sample_num) + ",,e," + IOTools.StringJoin(es, ","));
 		}
 		for (double e : es){
-			sum_sq_errors += Math.pow(e, 2);
+			sum_sq_errors += Math.pow(e, 2); 
 		}
-//		System.out.println("sample: " + sample_num + " sse = " + sum_sq_errors);
+		System.out.println("sample: " + sample_num + " sse = " + sum_sq_errors);
 		//we're sampling from sigsq ~ InvGamma((nu + n) / 2, 1/2 * (sum_i error^2_i + lambda * nu))
 		//which is equivalent to sampling (1 / sigsq) ~ Gamma((nu + n) / 2, 2 / (sum_i error^2_i + lambda * nu))
 		double sigsq = StatToolbox.sample_from_inv_gamma((hyper_nu + n) / 2, 2 / (sum_sq_errors + hyper_nu * hyper_lambda));
@@ -585,6 +586,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 //				prob_diff = Math.abs(p - q);
 //			}
 //		}
+		System.out.println("y_min = " + y_min + " y_max = " + y_max + " R_y = " + Math.sqrt(y_range_sq));
 		System.out.println("hyperparams:  k = " + k + " hyper_mu_mu = " + hyper_mu_mu + " sigsq_mu = " + hyper_sigsq_mu + " hyper_lambda = " + hyper_lambda + " hyper_nu = " + hyper_nu + " s_y_trans^2 = " + s_sq_y + " R_y = " + Math.sqrt(y_range_sq));
 	}
 
@@ -608,9 +610,9 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 //	}
 	
 	//make sure you get the prior correct if you don't transform
-	private static final double YminAndYmaxHalfDiff = 0.5;
+	protected static final double YminAndYmaxHalfDiff = 0.5;
 	protected void transformResponseVariable() {
-		
+		System.out.println("CGMBART transformResponseVariable");
 		//make sure to initialize the y_trans to be y first
 		super.transformResponseVariable();
 		//make data we need later
@@ -669,10 +671,12 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 		for (int i = 0; i < n; i++){
 			sum_ys[i] = 0; //initialize at zero, then add it up over all trees except the jth
 			for (int t = 0; t < m; t++){
+//				System.out.println("getErrorsForAllTrees m = " + m);
 				//obviously y_vec - \sum_i g_i = \sum_i y_i - g_i
 				CGMTreeNode tree = gibbs_samples_of_cgm_trees.get(sample_num).get(t);
-//				System.out.println("tree " + tree.stringID() + " y: " + y_trans[i] + " eval: " + tree.Evaluate(X_y.get(i)) + " e: " + (y_trans[i] - tree.Evaluate(X_y.get(i))));
-				sum_ys[i] += tree.Evaluate(X_y.get(i)); //first tree for now
+				double y_hat = tree.Evaluate(X_y.get(i));
+//				System.out.println("i = " + (i + 1) + " y: " + y_trans[i] + " y_hat: " + y_hat + " e: " + (y_trans[i] - y_hat)+ " tree " + tree.stringID());
+				sum_ys[i] += y_hat;
 			}
 		}
 		//now we need to subtract this from y

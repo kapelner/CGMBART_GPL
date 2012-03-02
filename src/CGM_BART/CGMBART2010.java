@@ -31,6 +31,11 @@ import GemIdentClassificationEngine.DatumSetupForEntireRun;
 import GemIdentTools.IOTools;
 import GemIdentView.JProgressBarAndLabel;
 
+/**
+ * This class is a faithful representation of the CGM 2010 paper
+ * @author kapelner
+ *
+ */
 @SuppressWarnings("serial")
 public abstract class CGMBART2010 extends CGMBART {
 	
@@ -50,7 +55,7 @@ public abstract class CGMBART2010 extends CGMBART {
 		}
 	}
 	
-	private void InitiateGibbsChain() {
+	protected void InitiateGibbsChain() {
 		
 		//assign the first batch of trees by drawing from the prior and add it to the master list
 		ArrayList<CGMTreeNode> initial_trees = createInitialTreesByDrawingFromThePrior();

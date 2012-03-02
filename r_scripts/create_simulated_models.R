@@ -39,6 +39,14 @@ simu_data_mod__bivariate_linear = function(N = DEFAULT_N, sigma = DEFAULT_SIGMA)
 	Xy	
 }
 
+simu_data_mod__simple_tree_structure_sigma_sqrt_pi = function(N = DEFAULT_N){
+	simu_data_mod__simple_tree_structure(N, sqrt(pi))
+}
+
+simu_data_mod__simple_tree_structure_sigma_half = function(N = DEFAULT_N){
+	simu_data_mod__simple_tree_structure(N, sqrt(0.5))
+}
+
 simu_data_mod__simple_tree_structure = function(N = DEFAULT_N, sigma = DEFAULT_SIGMA){
 	#create a tree model
 	X1 = runif(N, 0, 100)
