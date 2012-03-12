@@ -191,7 +191,7 @@ create_avg_sim_results_and_save_as_csv = function(){
 	assign("avg_simulation_results_pretty", avg_simulation_results, .GlobalEnv)
 }
 
-data_title = "simple_tree_structure_sigma_half"
+data_title = "simple_tree_structure_sigsq_half"
 training_data = simulate_data_from_simulation_name(data_title)
 test_data = simulate_data_from_simulation_name(data_title)
 
@@ -200,9 +200,9 @@ num_burn_in = 2000
 num_iterations_after_burn_in = 2000
 alpha = 0.95
 beta = -2
-save_plot = FALSE
-run_bart_model_and_save_diags_and_results = function(training_data, test_data, data_title, num_trees, num_burn_in, num_iterations_after_burn_in, alpha, beta){
 
+run_bart_model_and_save_diags_and_results = function(training_data, test_data, data_title, num_trees, num_burn_in, num_iterations_after_burn_in, alpha, beta){
+	save_plot = TRUE
 	extra_text = paste("on model \"", gsub("_", " ", data_title), "\" m = ", num_trees, " n_B = ", num_burn_in, ", n_G_a = ", 
 			num_iterations_after_burn_in, " ", expression(alpha), " = ", alpha,  " ", expression(beta), " = ", beta, sep = "")
 	

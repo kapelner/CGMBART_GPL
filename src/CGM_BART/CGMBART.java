@@ -58,7 +58,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 	protected static PrintWriter tree_liks;
 	protected static PrintWriter remainings;
 	protected static PrintWriter evaluations;
-	protected static boolean TREE_ILLUST = true;
+	protected static boolean TREE_ILLUST = false;
 	protected static final boolean WRITE_DETAILED_DEBUG_FILES = false;
 	
 //	static {
