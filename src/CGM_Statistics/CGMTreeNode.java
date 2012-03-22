@@ -30,8 +30,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
-import GemIdentTools.IOTools;
-
 /**
  * A dumb struct to store information about a 
  * node in the Bayesian decision tree.

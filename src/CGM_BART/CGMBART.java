@@ -41,7 +41,7 @@ import GemIdentView.JProgressBarAndLabel;
 
 @SuppressWarnings("serial")
 public abstract class CGMBART extends Classifier implements Serializable  {
-	
+
 	//do not set this to FALSE!!! The whole thing will break...
 	protected static final boolean TRANSFORM_Y = true;
 	protected static final int DEFAULT_NUM_TREES = 20;
@@ -118,10 +118,10 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 	protected int gibb_sample_i;
 	protected double[][] all_tree_liks;
 	/** if the user pressed stop, we can cancel the Gibbs Sampling to unlock the CPU */
-	protected boolean stop_bit;
-	
+	protected boolean stop_bit;	
 	protected static Integer PrintOutEvery = null;
-	
+	/** during debugging, we may want to fix sigsq */
+	protected double fixed_sigsq;
 	
 	/** Serializable happy */
 	public CGMBART(){}
@@ -142,6 +142,10 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 	
 	public void setNumTrees(int m){
 		this.m = m;
+	}
+	
+	public void setSigsq(double fixed_sigsq){
+		this.fixed_sigsq = fixed_sigsq;
 	}
 	
 	public void printTreeIllustations(){
@@ -481,6 +485,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 	}
 	
 	protected void assignLeafValsUsingPosteriorMeanAndCurrentSigsq(CGMTreeNode node, double sigsq) {
+//		System.out.println("assignLeafValsUsingPosteriorMeanAndCurrentSigsq sigsq: " + sigsq);
 		if (node.isLeaf){
 			double posterior_sigsq = leafPosteriorVar(node, sigsq);
 			//draw from posterior distribution

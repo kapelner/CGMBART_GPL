@@ -64,17 +64,17 @@ num_trees_of_interest = c(
 	1
 )
 num_burn_ins_of_interest = c(
-	2000
+#	2000
 #	1500
-#	1000
+	1000
 #	500, 
 #	200,
 #	100
 )
 num_iterations_after_burn_ins_of_interest = c(
-	2000
+#	2000
 #	1500
-#	1000
+	1000
 #	500, 
 #	200,
 #	100

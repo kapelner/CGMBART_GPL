@@ -50,3 +50,12 @@ library(pscl)
 hist(rigamma(10000, alpha_sim, beta_sim), br = 100)
 abline(v = 1, col = "blue", lwd = 2)
 
+
+lambda = 0.00000000001
+xs = rigamma(10000, 1.5, lambda)
+hist(xs, br = 10000, xlim = c(0, 0.0000000005))
+
+mean(xs)
+sd(xs)
+
+
