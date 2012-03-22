@@ -48,9 +48,8 @@ public final class CGMBARTPosteriorBuilder extends CGMRegressionMeanShiftPosteri
 		super(tree_prior_builder);
 	}
 	
-	public void setHyperparameters(double hyper_mu_bar, double hyper_a, double hyper_nu, double hyper_lambda, double hyper_sigsq_mu){
+	public void setHyperparameters(double hyper_mu_bar, double hyper_nu, double hyper_lambda, double hyper_sigsq_mu){
 		this.hyper_mu_bar = hyper_mu_bar;
-		this.hyper_a = hyper_a;
 		this.hyper_nu = hyper_nu;
 		this.hyper_lambda = hyper_lambda;
 		this.hyper_sigsq_mu = hyper_sigsq_mu;

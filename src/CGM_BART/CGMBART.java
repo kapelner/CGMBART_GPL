@@ -58,7 +58,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 	protected static PrintWriter tree_liks;
 	protected static PrintWriter remainings;
 	protected static PrintWriter evaluations;
-	protected static boolean TREE_ILLUST = false;
+	protected static boolean TREE_ILLUST = true;
 	protected static final boolean WRITE_DETAILED_DEBUG_FILES = false;
 	
 //	static {
@@ -487,16 +487,16 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 	protected void assignLeafValsUsingPosteriorMeanAndCurrentSigsq(CGMTreeNode node, double sigsq) {
 //		System.out.println("assignLeafValsUsingPosteriorMeanAndCurrentSigsq sigsq: " + sigsq);
 		if (node.isLeaf){
-			double posterior_sigsq = leafPosteriorVar(node, sigsq);
+			double posterior_sigsq = calcLeafPosteriorVar(node, sigsq);
 			//draw from posterior distribution
-			double posterior_mean = leafPosteriorMean(node, sigsq, posterior_sigsq);
+			double posterior_mean = calcLeafPosteriorMean(node, sigsq, posterior_sigsq);
 //			System.out.println("posterior_mean = " + posterior_mean + " node.avg_response = " + node.avg_response());
 			node.y_prediction = StatToolbox.sample_from_norm_dist(posterior_mean, posterior_sigsq);
 			if (node.y_prediction == StatToolbox.ILLEGAL_FLAG){				
 				node.y_prediction = 0.0; //this could happen on an empty node
 //				System.out.println("ERROR assignLeafFINAL " + node.y_prediction + " (sigsq = " + sigsq + ")");
 			}
-//			System.out.println("assignLeafFINAL " + node.y_prediction + " (sigsq = " + sigsq + ")");
+			System.out.println("assignLeafFINAL " + node.y_prediction + " (sigsq = " + sigsq + ")");
 		}
 		else {
 			assignLeafValsUsingPosteriorMeanAndCurrentSigsq(node.left, sigsq);
@@ -504,12 +504,12 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 		}
 	}
 
-	private double leafPosteriorMean(CGMTreeNode node, double sigsq, double posterior_var) {
+	private double calcLeafPosteriorMean(CGMTreeNode node, double sigsq, double posterior_var) {
 //		System.out.println("leafPosteriorMean hyper_sigsq_mu " + hyper_sigsq_mu + " node.n " + node.n + " sigsq " + sigsq + " node.avg_response() " + node.avg_response() + " posterior_var " + posterior_var);
 		return (hyper_mu_mu / hyper_sigsq_mu + node.n / sigsq * node.avg_response()) / (1 / posterior_var);
 	}
 
-	private double leafPosteriorVar(CGMTreeNode node, double sigsq) {
+	private double calcLeafPosteriorVar(CGMTreeNode node, double sigsq) {
 //		System.out.println("leafPosteriorVar sigsq " + sigsq + " var " + 1 / (1 / hyper_sigsq_mu + node.n * m / sigsq));
 		return 1 / (1 / hyper_sigsq_mu + node.n / sigsq);
 	}

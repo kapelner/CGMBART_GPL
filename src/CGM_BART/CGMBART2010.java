@@ -170,7 +170,7 @@ public abstract class CGMBART2010 extends CGMBART {
 		//we first have to initialize the posterior builder in order to iterate
 		CGMBARTPosteriorBuilder posterior_builder = new CGMBARTPosteriorBuilder(tree_prior_builder);
 		//we have to set the CGM98 hyperparameters as well as the hyperparameter sigsq_mu
-		posterior_builder.setHyperparameters(hyper_mu_mu, 1 / 3.0, hyper_nu, hyper_lambda, hyper_sigsq_mu);
+		posterior_builder.setHyperparameters(hyper_mu_mu, hyper_nu, hyper_lambda, hyper_sigsq_mu);
 		//we also need to set the current value of sigsq since we're conditioning on it
 		posterior_builder.setCurrentSigsqValue(gibbs_samples_of_sigsq.get(prev_sample_num));
 		//we name this iteration for better debugging
@@ -214,4 +214,54 @@ public abstract class CGMBART2010 extends CGMBART {
 //		tree.splitValue = (double)30;
 //		tree.isLeaf = false;
 //	}	
+	
+
+	protected CGMTreeNode CreateTheSimpleTreeModel() {
+
+		CGMTreeNode root = new CGMTreeNode(null, null);
+		CGMTreeNode left = new CGMTreeNode(null, null);
+		CGMTreeNode leftleft = new CGMTreeNode(null, null);
+		CGMTreeNode leftright = new CGMTreeNode(null, null);
+		CGMTreeNode right = new CGMTreeNode(null, null);
+		CGMTreeNode rightleft = new CGMTreeNode(null, null);
+		CGMTreeNode rightright = new CGMTreeNode(null, null);
+		
+		root.isLeaf = false;
+		root.splitAttributeM = 0;
+		root.splitValue = 30.0;
+		root.left = left;
+		root.right = right;	
+		
+		left.parent = root;
+		left.isLeaf = false;
+		left.splitAttributeM = 2;
+		left.splitValue = 10.0;	
+		left.left = leftleft;
+		left.right = leftright;
+		
+		leftleft.parent = left;
+		leftleft.isLeaf = true;
+		leftleft.y_prediction = (10.0 - y_min) / (y_max - y_min) - YminAndYmaxHalfDiff;		
+				
+		leftright.parent = left;
+		leftright.isLeaf = true;
+		leftright.y_prediction = (30.0 - y_min) / (y_max - y_min) - YminAndYmaxHalfDiff;
+		
+		right.parent = root;
+		right.isLeaf = false;
+		right.splitAttributeM = 1;
+		right.splitValue = 80.0;	
+		right.left = rightleft;
+		right.right = rightright;
+		
+		rightleft.parent = right;
+		rightleft.isLeaf = true;
+		rightleft.y_prediction = (50.0 - y_min) / (y_max - y_min) - YminAndYmaxHalfDiff;		
+				
+		rightright.parent = right;
+		rightright.isLeaf = true;
+		rightright.y_prediction = (70.0 - y_min) / (y_max - y_min) - YminAndYmaxHalfDiff;
+
+		return root;
+	}	
 }

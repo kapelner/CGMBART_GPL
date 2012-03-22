@@ -76,22 +76,7 @@ simu_data_mod__simple_tree_structure = function(N = DEFAULT_N, sigma = DEFAULT_S
 	y = array(NA, N)
 	
 	for (i in 1 : N){
-		if (X1[i] < 30){
-			if (X3[i] < 10){
-				y[i] = 10
-			}
-			else {
-				y[i] = 30
-			}
-		}
-		else {
-			if (X2[i] < 80){
-				y[i] = 50
-			}
-			else {
-				y[i] = 70
-			}		
-		}
+		y[i] = simple_tree_tag(c(X1[i], X2[i], X3[i]))
 	}
 	#now add the noise
 	y = y + rnorm(N, 0, sigma)
@@ -99,6 +84,25 @@ simu_data_mod__simple_tree_structure = function(N = DEFAULT_N, sigma = DEFAULT_S
 	Xy = as.data.frame(cbind(X1, X2, X3, y))
 	colnames(Xy) = c(paste("x_", 1 : p, sep = ""), "y")
 	Xy
+}
+
+simple_tree_tag = function(x_vec){
+	if (x_vec[1] < 30){
+		if (x_vec[3] < 10){
+			return(10)
+		}
+		else {
+			return(30)
+		}
+	}
+	else {
+		if (x_vec[2] < 80){
+			return(50)
+		}
+		else {
+			return(70)
+		}		
+	}	
 }
 
 #create Friedman model

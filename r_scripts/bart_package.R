@@ -19,6 +19,7 @@ LOG_DIR = "r_log"
 log_file_name = "bart_log.txt"
 bart_log = matrix(nrow = 0, ncol = 1)
 
+
 append_to_log = function(text){
 	bart_log = rbind(bart_log, paste(Sys.time(), "\t", text)) #log the time and the actual message
 	assign("bart_log", bart_log, .GlobalEnv)
@@ -26,15 +27,17 @@ append_to_log = function(text){
 }
 
 #some defaults if you want to run this
-#num_trees = 5
-#num_burn_in = 100
-#num_iterations_after_burn_in = 100
-#num_gibbs = num_burn_in + num_iterations_after_burn_in
-#
-#class_or_regr = "r"
-#debug_log = TRUE
-#print_tree_illustrations = FALSE
-#print_out_every = NULL
+num_trees = 1
+num_burn_in = 1000
+num_iterations_after_burn_in = 1000
+num_gibbs = num_burn_in + num_iterations_after_burn_in
+
+class_or_regr = "r"
+debug_log = TRUE
+print_tree_illustrations = FALSE
+PRINT_TREE_ILLUS = FALSE
+print_out_every = NULL
+JAVA_LOG = TRUE #to be overwritten later
 #source("r_scripts/create_simulated_models.R")
 #simulated_data_model_name = simulated_data_sets[1]
 #training_data = simulate_data_from_simulation_name(simulated_data_model_name)

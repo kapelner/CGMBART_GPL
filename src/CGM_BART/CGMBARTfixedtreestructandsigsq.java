@@ -12,20 +12,24 @@ public class CGMBARTfixedtreestructandsigsq extends CGMBART2010 {
 	
 	public CGMBARTfixedtreestructandsigsq(DatumSetupForEntireRun datumSetupForEntireRun, JProgressBarAndLabel buildProgress) {
 		super(datumSetupForEntireRun, buildProgress);
-		System.out.println("CGMBARTfixedtree init\n");
+		System.out.println("CGMBARTfixedtreestructandsigsq init\n");
 		setNumTrees(1); //in this DEBUG model, there's only one tree
-		fixed_sigsq = 1; //until we're otherwise informed
 	}
 	
 	public void setNumTrees(int m){
 		this.m = 1; //in this DEBUG model, there's only one tree, so make sure it can't be anything else
 	}
 	
+	public void setData(ArrayList<double[]> X_y){
+		super.setData(X_y);
+		fixed_sigsq = 1 / y_range_sq; //until we're otherwise informed
+	}
+	
 	protected void InitiateGibbsChain() {
 		
 		posterior_builder = new CGMBARTPosteriorBuilder(tree_prior_builder);
 		//we have to set the CGM98 hyperparameters as well as the hyperparameter sigsq_mu
-		posterior_builder.setHyperparameters(hyper_mu_mu, 1 / 3.0, hyper_nu, hyper_lambda, hyper_sigsq_mu);		
+		posterior_builder.setHyperparameters(hyper_mu_mu, hyper_nu, hyper_lambda, hyper_sigsq_mu);		
 		
 		//assign the first batch of trees by drawing from the prior and add it to the master list
 		ArrayList<CGMTreeNode> initial_trees = new ArrayList<CGMTreeNode>(1);
@@ -73,7 +77,7 @@ public class CGMBARTfixedtreestructandsigsq extends CGMBART2010 {
 		//fix the sigma again...
 		gibbs_samples_of_sigsq.add(sample_num, fixed_sigsq);
 		posterior_builder.setCurrentSigsqValue(fixed_sigsq);
-		System.out.println("setCurrentSigsqValue sigsq = " + fixed_sigsq * y_range_sq + " sigsq_mu = " + hyper_sigsq_mu);
+//		System.out.println("setCurrentSigsqValue sigsq = " + fixed_sigsq * y_range_sq + " sigsq_mu = " + hyper_sigsq_mu);
 		
 		sigsqs.println(sample_num + "," + gibbs_samples_of_sigsq.get(sample_num) * y_range_sq);
 		
@@ -91,52 +95,4 @@ public class CGMBARTfixedtreestructandsigsq extends CGMBART2010 {
 	
 	}	
 
-	private CGMTreeNode CreateTheSimpleTreeModel() {
-
-		CGMTreeNode root = new CGMTreeNode(null, null);
-		CGMTreeNode left = new CGMTreeNode(null, null);
-		CGMTreeNode leftleft = new CGMTreeNode(null, null);
-		CGMTreeNode leftright = new CGMTreeNode(null, null);
-		CGMTreeNode right = new CGMTreeNode(null, null);
-		CGMTreeNode rightleft = new CGMTreeNode(null, null);
-		CGMTreeNode rightright = new CGMTreeNode(null, null);
-		
-		root.isLeaf = false;
-		root.splitAttributeM = 0;
-		root.splitValue = 30.0;
-		root.left = left;
-		root.right = right;	
-		
-		left.parent = root;
-		left.isLeaf = false;
-		left.splitAttributeM = 2;
-		left.splitValue = 10.0;	
-		left.left = leftleft;
-		left.right = leftright;
-		
-		leftleft.parent = left;
-		leftleft.isLeaf = true;
-		leftleft.y_prediction = (10.0 - y_min) / (y_max - y_min) - YminAndYmaxHalfDiff;		
-				
-		leftright.parent = left;
-		leftright.isLeaf = true;
-		leftright.y_prediction = (30.0 - y_min) / (y_max - y_min) - YminAndYmaxHalfDiff;
-		
-		right.parent = root;
-		right.isLeaf = false;
-		right.splitAttributeM = 1;
-		right.splitValue = 80.0;	
-		right.left = rightleft;
-		right.right = rightright;
-		
-		rightleft.parent = right;
-		rightleft.isLeaf = true;
-		rightleft.y_prediction = (50.0 - y_min) / (y_max - y_min) - YminAndYmaxHalfDiff;		
-				
-		rightright.parent = right;
-		rightright.isLeaf = true;
-		rightright.y_prediction = (70.0 - y_min) / (y_max - y_min) - YminAndYmaxHalfDiff;
-
-		return root;
-	}	
 }

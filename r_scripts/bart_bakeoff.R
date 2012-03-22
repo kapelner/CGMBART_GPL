@@ -216,50 +216,50 @@ run_bart_model_and_save_diags_and_results = function(training_data, test_data, d
 		debug_log = JAVA_LOG,
 		num_iterations_after_burn_in = num_iterations_after_burn_in)
 
-		ensure_bart_is_done_in_java(bart_machine$java_bart_machine)
-		
-		#now use the bart model to predict y_hat's for the test data
-		a_bart_predictions = predict_and_calc_ppis(bart_machine, test_data)
-		#diagnose how good the y_hat's from the bart model are
-		plot_y_vs_yhat(a_bart_predictions, extra_text = extra_text, data_title = data_title, save_plot = save_plot, bart_machine = bart_machine)
-		
-		#now see how Rob's algorithm does
-		r_bart_predictions = run_bayes_tree_bart_impl_and_plot_y_vs_yhat(training_data, test_data, extra_text = extra_text, data_title = data_title, save_plot = save_plot, bart_machine = bart_machine)
-		
-		#now see how good random forests and CART does in comparison
-		rf_predictions = run_random_forests_and_plot_y_vs_yhat(training_data, test_data, extra_text = extra_text, data_title = data_title, save_plot = save_plot, bart_machine = bart_machine)
-		cart_predictions = run_cart_and_plot_y_vs_yhat(training_data, test_data, extra_text = extra_text, data_title = data_title, save_plot = save_plot, bart_machine = bart_machine)
-		
-		#do some plots to diagnose convergence
-		plot_sigsqs_convergence_diagnostics(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)
-		plot_tree_liks_convergence_diagnostics(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)	
-		plot_tree_num_nodes(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)	
-		plot_tree_depths(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)
-		
-		new_simul_row = c(
-			data_title, 
-			num_trees, 
-			num_burn_in, 
-			num_iterations_after_burn_in,
-			alpha,
-			beta,			
-			round(a_bart_predictions$L1_err, 0),
-			round(a_bart_predictions$L2_err, 0),
-			round(a_bart_predictions$rmse, 2),
-			round(r_bart_predictions$L1_err, 0),
-			round(r_bart_predictions$L2_err, 0),
-			round(r_bart_predictions$rmse, 2),	
-			round(rf_predictions$L1_err, 0),
-			round(rf_predictions$L2_err, 0),
-			round(rf_predictions$rmse, 2),
-			round(cart_predictions$L1_err, 0),
-			round(cart_predictions$L2_err, 0),
-			round(cart_predictions$rmse, 2)		
-		)
+	ensure_bart_is_done_in_java(bart_machine$java_bart_machine)
+	
+	#now use the bart model to predict y_hat's for the test data
+	a_bart_predictions = predict_and_calc_ppis(bart_machine, test_data)
+	#diagnose how good the y_hat's from the bart model are
+	plot_y_vs_yhat(a_bart_predictions, extra_text = extra_text, data_title = data_title, save_plot = save_plot, bart_machine = bart_machine)
+	
+	#now see how Rob's algorithm does
+	r_bart_predictions = run_bayes_tree_bart_impl_and_plot_y_vs_yhat(training_data, test_data, extra_text = extra_text, data_title = data_title, save_plot = save_plot, bart_machine = bart_machine)
+	
+	#now see how good random forests and CART does in comparison
+	rf_predictions = run_random_forests_and_plot_y_vs_yhat(training_data, test_data, extra_text = extra_text, data_title = data_title, save_plot = save_plot, bart_machine = bart_machine)
+	cart_predictions = run_cart_and_plot_y_vs_yhat(training_data, test_data, extra_text = extra_text, data_title = data_title, save_plot = save_plot, bart_machine = bart_machine)
+	
+	#do some plots to diagnose convergence
+	plot_sigsqs_convergence_diagnostics(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)
+	plot_tree_liks_convergence_diagnostics(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)	
+	plot_tree_num_nodes(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)	
+	plot_tree_depths(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)
+	
+	new_simul_row = c(
+		data_title, 
+		num_trees, 
+		num_burn_in, 
+		num_iterations_after_burn_in,
+		alpha,
+		beta,			
+		round(a_bart_predictions$L1_err, 0),
+		round(a_bart_predictions$L2_err, 0),
+		round(a_bart_predictions$rmse, 2),
+		round(r_bart_predictions$L1_err, 0),
+		round(r_bart_predictions$L2_err, 0),
+		round(r_bart_predictions$rmse, 2),	
+		round(rf_predictions$L1_err, 0),
+		round(rf_predictions$L2_err, 0),
+		round(rf_predictions$rmse, 2),
+		round(cart_predictions$L1_err, 0),
+		round(cart_predictions$L2_err, 0),
+		round(cart_predictions$rmse, 2)		
+	)
 #		print(new_simul_row)
-		simulation_results = rbind(simulation_results, new_simul_row)	
+	simulation_results = rbind(simulation_results, new_simul_row)	
 #		print(paste("simulation results updated n =", nrow(simulation_results), " p =", ncol(simulation_results), " class =", class(simulation_results), " class =", class(new_simul_row)))
-		assign("simulation_results", simulation_results, .GlobalEnv)
+	assign("simulation_results", simulation_results, .GlobalEnv)
 #	}, finally = function(){})
 
 }
