@@ -58,7 +58,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 	protected static PrintWriter tree_liks;
 	protected static PrintWriter remainings;
 	protected static PrintWriter evaluations;
-	protected static boolean TREE_ILLUST = true;
+	protected static boolean TREE_ILLUST = false;
 	protected static final boolean WRITE_DETAILED_DEBUG_FILES = false;
 	
 //	static {
@@ -328,7 +328,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 			if (t + 1 == 1){
 				System.out.println("Sampling M_" + (t + 1) + "/" + m + " iter " + sample_num + "/" + num_gibbs_total_iterations);
 			}
-			assignLeafValsUsingPosteriorMeanAndCurrentSigsq(tree, gibbs_samples_of_sigsq.get(sample_num - 1));
+			assignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsq(tree, gibbs_samples_of_sigsq.get(sample_num - 1));
 			
 			if (stop_bit){
 				return;
@@ -484,7 +484,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 		return StatToolbox.sample_from_inv_gamma(hyper_nu / 2, 2 / (hyper_nu * hyper_lambda)); 
 	}
 	
-	protected void assignLeafValsUsingPosteriorMeanAndCurrentSigsq(CGMTreeNode node, double sigsq) {
+	protected void assignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsq(CGMTreeNode node, double sigsq) {
 //		System.out.println("assignLeafValsUsingPosteriorMeanAndCurrentSigsq sigsq: " + sigsq);
 		if (node.isLeaf){
 			double posterior_sigsq = calcLeafPosteriorVar(node, sigsq);
@@ -496,11 +496,11 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 				node.y_prediction = 0.0; //this could happen on an empty node
 //				System.out.println("ERROR assignLeafFINAL " + node.y_prediction + " (sigsq = " + sigsq + ")");
 			}
-			System.out.println("assignLeafFINAL " + node.y_prediction + " (sigsq = " + sigsq + ")");
+//			System.out.println("assignLeafFINAL " + node.y_prediction + " (sigsq = " + sigsq + ")");
 		}
 		else {
-			assignLeafValsUsingPosteriorMeanAndCurrentSigsq(node.left, sigsq);
-			assignLeafValsUsingPosteriorMeanAndCurrentSigsq(node.right, sigsq);
+			assignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsq(node.left, sigsq);
+			assignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsq(node.right, sigsq);
 		}
 	}
 
@@ -526,7 +526,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 		for (double e : es){
 			sum_sq_errors += Math.pow(e, 2); 
 		}
-		System.out.println("sample: " + sample_num + " sse = " + sum_sq_errors);
+//		System.out.println("sample: " + sample_num + " sse = " + sum_sq_errors);
 		//we're sampling from sigsq ~ InvGamma((nu + n) / 2, 1/2 * (sum_i error^2_i + lambda * nu))
 		//which is equivalent to sampling (1 / sigsq) ~ Gamma((nu + n) / 2, 2 / (sum_i error^2_i + lambda * nu))
 		double sigsq = StatToolbox.sample_from_inv_gamma((hyper_nu + n) / 2, 2 / (sum_sq_errors + hyper_nu * hyper_lambda));

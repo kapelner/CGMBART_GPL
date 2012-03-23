@@ -155,7 +155,7 @@ plot_sigsqs_convergence_diagnostics = function(bart_machine, extra_text = NULL, 
 	plot(sigsqs, 
 			main = paste("Sigsq throughout entire project  sigsq after burn in ~ ", round(avg_sigsqs, 2), ifelse(is.null(extra_text), "", paste("\n", extra_text))), 
 			xlab = "Gibbs sample # (gray line indicates burn-in, yellow lines are the 95% PPI after burn-in)", 
-			ylim = c(max(min(sigsqs) - 0.1, 0), min(sigsqs) + 7.5 * min(sigsqs)),
+			ylim = c(max(min(sigsqs) - 0.1, 0), quantile(sigsqs, 0.99)),
 			pch = ".", 
 			cex = 3,
 			col = "gray")

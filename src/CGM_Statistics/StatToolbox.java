@@ -43,7 +43,7 @@ public class StatToolbox {
 	public static final double ILLEGAL_FLAG = -999999999;
 
 	public static double sample_from_inv_gamma(double k, double theta){
-		System.out.println("sample_from_inv_gamma k = " + k + " theta = " + theta);
+//		System.out.println("sample_from_inv_gamma k = " + k + " theta = " + theta);
 		return 1 / sample_from_gamma(k, theta);
 	}
 	
@@ -67,16 +67,23 @@ public class StatToolbox {
 		return ILLEGAL_FLAG;
 	}
 	
-	public static double sample_from_norm_dist(double mu, double sigma){
-//		System.out.println("sample_from_norm_dist mu=" + mu + " sigsq=" + sigma);
+	public static double sample_from_norm_dist(double mu, double sigsq){
+//		System.out.println("sample_from_norm_dist mu=" + mu + " sigsq=" + sigsq);
 		try {
-			return new NormalDistributionImpl(mu, sigma).inverseCumulativeProbability(Math.random());
+			return new NormalDistributionImpl(mu, Math.sqrt(sigsq)).inverseCumulativeProbability(Math.random());
 		} catch (MathException e) {
 //			System.err.println("ERROR sample_from_norm_dist mu=" + mu + " sigsq=" + sigma);
 //			e.printStackTrace();
 		}
 		return ILLEGAL_FLAG;		
 	}
+	
+	// test the sampling of the normal
+//	static {
+//		for (int i = 0; i < 1000; i++){
+//			System.out.println(sample_from_norm_dist(0, 2));
+//		}
+//	}
 	
 	public static final double sample_average(double[] y){
 		double y_bar = 0;

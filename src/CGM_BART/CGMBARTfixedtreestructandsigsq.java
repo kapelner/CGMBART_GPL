@@ -50,12 +50,12 @@ public class CGMBARTfixedtreestructandsigsq extends CGMBART2010 {
 		cgm_trees.add(tree);
 		
 		//Now do the sole function
-		assignLeafValsUsingPosteriorMeanAndCurrentSigsq(tree, fixed_sigsq);
+		assignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsq(tree, fixed_sigsq);
 		
 		//The rest is all debug
 		double lik = posterior_builder.calculateLnProbYGivenTree(tree);
 		System.out.println("Running BART Gibbs sampler fixed tree, iteration " + sample_num + " lik = " + lik);
-		tree_liks.print(lik + "," + tree.stringID() + ",");;
+		tree_liks.print(lik + "," + tree.stringID() + ",");
 		all_tree_liks[0][sample_num] = lik;
 		
 		

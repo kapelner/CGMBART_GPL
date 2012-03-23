@@ -78,7 +78,7 @@ public abstract class CGMBART2010 extends CGMBART {
 		
 		//the structure is there (ie the T's) but the M's are not, so do that now:
 		for (CGMTreeNode tree : initial_trees){
-			assignLeafValsUsingPosteriorMeanAndCurrentSigsq(tree, initial_sigsq); //again, incorrect for the same reason as the first line of the function
+			assignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsq(tree, initial_sigsq); //again, incorrect for the same reason as the first line of the function
 		}		
 
 		//DEBUG
