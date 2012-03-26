@@ -85,7 +85,7 @@ public class CGMTreeNode extends TreeNode implements Cloneable, Serializable {
 	
 	/** clones this node (if you clone the root, you clone the entire tree) */
 	public CGMTreeNode clone(boolean clone_data){ //"data" element always null in clone
-		List<double[]> new_data = new ArrayList<double[]>(data.size());
+		List<double[]> new_data = new ArrayList<double[]>(data == null ? 0 : data.size());
 		//first clone the data
 		if (clone_data){
 			for (double[] record : data){
@@ -207,7 +207,7 @@ public class CGMTreeNode extends TreeNode implements Cloneable, Serializable {
 	}
 	
 	private static void findTerminalNodesDataAboveN(CGMTreeNode node, ArrayList<CGMTreeNode> terminal_nodes, int n_rule) {
-		if (node.isLeaf && node.data.size() > n_rule){ //strict greater than!!
+		if (node.isLeaf && node.data.size() >= n_rule){
 			terminal_nodes.add(node);
 		}
 		else if (!node.isLeaf){ //as long as we're not in a leaf we should recurse

@@ -39,9 +39,6 @@ simu_data_mod__bivariate_linear = function(N = DEFAULT_N, sigma = DEFAULT_SIGMA)
 	Xy	
 }
 
-simu_data_mod__simple_tree_structure_sigsq_pi = function(N = DEFAULT_N){
-	simu_data_mod__simple_tree_structure(N, sqrt(pi))
-}
 
 simu_data_mod__simple_tree_structure_sigsq_tenth = function(N = DEFAULT_N){
 	simu_data_mod__simple_tree_structure(N, sqrt(0.1))
@@ -65,6 +62,10 @@ simu_data_mod__simple_tree_structure_sigsq_5 = function(N = DEFAULT_N){
 
 simu_data_mod__simple_tree_structure_sigsq_10 = function(N = DEFAULT_N){
 	simu_data_mod__simple_tree_structure(N, sqrt(10))
+}
+
+simu_data_mod__simple_tree_structure_sigsq_50 = function(N = DEFAULT_N){
+	simu_data_mod__simple_tree_structure(N, sqrt(50))
 }
 
 simu_data_mod__simple_tree_structure = function(N = DEFAULT_N, sigma = DEFAULT_SIGMA){

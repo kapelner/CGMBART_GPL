@@ -1,5 +1,6 @@
 
 #libraries and dependencies
+options(repos = "http://lib.stat.cmu.edu/R/CRAN")
 tryCatch(library(randomForest), error = function(e){install.packages("randomForest")}, finally = library(randomForest))
 tryCatch(library(rJava), error = function(e){install.packages("rJava")}, finally = library(rJava))
 tryCatch(library(BayesTree), error = function(e){install.packages("BayesTree")}, finally = library(BayesTree))
@@ -147,13 +148,13 @@ plot_sigsqs_convergence_diagnostics = function(bart_machine, extra_text = NULL, 
 	avg_sigsqs = mean(sigsqs_after_burnin, na.rm = TRUE)
 	 
 	if (save_plot){
-		save_plot_function(bart_machine, "sigsqs", data_title)
+		save_plot_function(bart_machine, "sigsqs_by_gibbs", data_title)
 	}	
 	else {
 		dev.new()
 	}
 	plot(sigsqs, 
-			main = paste("Sigsq throughout entire project  sigsq after burn in ~ ", round(avg_sigsqs, 2), ifelse(is.null(extra_text), "", paste("\n", extra_text))), 
+			main = paste("Sigsq throughout entire project  sigsq after burn in ~ ", round(avg_sigsqs, 3), ifelse(is.null(extra_text), "", paste("\n", extra_text))), 
 			xlab = "Gibbs sample # (gray line indicates burn-in, yellow lines are the 95% PPI after burn-in)", 
 			ylim = c(max(min(sigsqs) - 0.1, 0), quantile(sigsqs, 0.99)),
 			pch = ".", 
@@ -175,7 +176,7 @@ plot_sigsqs_convergence_diagnostics = function(bart_machine, extra_text = NULL, 
 	else {
 		dev.new()
 	}
-	hist(sigsqs_after_burnin, br = 100, main = "Sigsq after burn-in")
+	hist(sigsqs_after_burnin, br = 100, main = "Histogram of sigsqs after burn-in")
 #	abline(v = 1, col = "blue", lwd = 3)
 	
 	if (save_plot){	
@@ -287,6 +288,8 @@ plot_tree_depths = function(bart_machine, extra_text = NULL, data_title = "data_
 	}
 }
 
+ALPHA = 0.5
+
 plot_tree_liks_convergence_diagnostics = function(bart_machine, extra_text = NULL, data_title = "data_model", save_plot = FALSE){
 	java_bart_machine = bart_machine$java_bart_machine
 	num_burn_in = bart_machine$num_burn_in
@@ -306,7 +309,7 @@ plot_tree_liks_convergence_diagnostics = function(bart_machine, extra_text = NUL
 	treeliks_scale = (max(all_tree_liks, na.rm = TRUE) - min(all_tree_liks, na.rm = TRUE)) * 0.5
 	
 	if (save_plot){
-		save_plot_function(bart_machine, "tree_liks", data_title)
+		save_plot_function(bart_machine, "tree_liks_by_gibbs", data_title)
 	}	
 	else {
 		dev.new()
@@ -328,6 +331,37 @@ plot_tree_liks_convergence_diagnostics = function(bart_machine, extra_text = NUL
 	if (save_plot){	
 		dev.off()
 	}
+	
+	
+	if (save_plot){
+		save_plot_function(bart_machine, "tree_liks_hist", data_title)
+	}	
+	else {
+		dev.new()
+	}
+
+	
+	all_liks_after_burn_in = as.vector(all_tree_liks[, (num_burn_in + 1) : (num_gibbs + 1)])
+	min_lik = min(all_liks_after_burn_in)
+	max_lik = max(all_liks_after_burn_in)	
+	hist(all_liks_after_burn_in, 
+		col = "white", 
+		br = seq(from = min_lik, to = max_lik, by = (max_lik - min_lik) / 100), 
+		border = NA, 
+		main = "Histogram of tree prop likelihoods after burn-in")
+#	shapiro.test(all_liks_after_burn_in)
+	for (t in 1 : num_trees){
+		hist(all_tree_liks[t, (num_burn_in + 1) : (num_gibbs + 1)], 
+			col = rgb(runif(1, 0, 0.8), runif(1, 0, 0.8), runif(1, 0, 0.8), ALPHA), 
+			border = NA, 
+			br = seq(from = min_lik, to = max_lik, by = (max_lik - min_lik) / 100), 
+			add = TRUE)
+		
+	}
+	
+	if (save_plot){	
+		dev.off()
+	}	
 }
 
 plot_y_vs_yhat = function(bart_predictions, extra_text = NULL, data_title = "data_model", save_plot = FALSE, bart_machine = NULL){

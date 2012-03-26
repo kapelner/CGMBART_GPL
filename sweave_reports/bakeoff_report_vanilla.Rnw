@@ -49,10 +49,13 @@ simulated_data_sets = c(
 #	"univariate_linear",
 #	"bivariate_linear",
 #	"friedman",
-#	"simple_tree_structure_sigsq_tenth",
-	"simple_tree_structure"
-#	"simple_tree_structure_sigsq_10"
+	"simple_tree_structure_sigsq_tenth",
+	"simple_tree_structure",
+	"simple_tree_structure_sigsq_3",
+	"simple_tree_structure_sigsq_5",
+	"simple_tree_structure_sigsq_10"
 )
+
 num_trees_of_interest = c(
 #	100, 
 #	75, 

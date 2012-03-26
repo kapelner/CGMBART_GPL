@@ -122,7 +122,7 @@ public abstract class CGMBART2010 extends CGMBART {
 	}	
 	
 	protected CGMTreeNode SampleTreeByCalculatingRemainingsAndDrawingFromTreeDist(final int prev_sample_num, final int t, TreeArrayIllustration tree_array_illustration) {
-		final CGMTreeNode tree = gibbs_samples_of_cgm_trees.get(prev_sample_num).get(t);
+		final CGMTreeNode copy_of_old_jth_tree = gibbs_samples_of_cgm_trees.get(prev_sample_num).get(t).clone();
 //		System.out.println("SampleTreeByCalculatingRemainingsAndDrawingFromTreeDist t:" + t + " of m:" + m);
 //		ArrayList<CGMTreeNode> leaves = tree.getTerminalNodes();
 //		for (int b = 0; b < leaves.size(); b++){
@@ -157,13 +157,13 @@ public abstract class CGMBART2010 extends CGMBART {
 		if (WRITE_DETAILED_DEBUG_FILES){
 	//		new Thread(){
 	//			public void run(){					
-					remainings.println(prev_sample_num + "," + t + "," + tree.stringID() + "," + IOTools.StringJoin(R_j, ","));			
+					remainings.println(prev_sample_num + "," + t + "," + copy_of_old_jth_tree.stringID() + "," + IOTools.StringJoin(R_j, ","));			
 	//			}
 	//		}.start();
 		}
 		
 		//now, (important!) set the R_j's as this tree's data.
-		tree.updateWithNewResponsesAndPropagate(X_y, R_j, p);
+		copy_of_old_jth_tree.updateWithNewResponsesAndPropagate(X_y, R_j, p);
 		
 		//sample from T_j | R_j, \sigma
 		//now we will run one M-H step on this tree with the y as the R_j
@@ -178,7 +178,8 @@ public abstract class CGMBART2010 extends CGMBART {
 		//now we iterate one step
 //		System.out.println("posterior_builder.calculateLnProbYGivenTree FIRST");
 //		posterior_builder.calculateLnProbYGivenTree(tree);
-		CGMTreeNode tree_star = posterior_builder.iterateMHPosteriorTreeSpaceSearch(tree, false);
+		//sample a new tree, if the MH step rejects, it's just the copy of the old tree which remains
+		CGMTreeNode tree_star = posterior_builder.iterateMHPosteriorTreeSpaceSearch(copy_of_old_jth_tree, false);
 		
 		//DEBUG
 //		System.err.println("tree star: " + tree_star.stringID());
@@ -262,6 +263,8 @@ public abstract class CGMBART2010 extends CGMBART {
 		rightright.isLeaf = true;
 		rightright.y_prediction = (70.0 - y_min) / (y_max - y_min) - YminAndYmaxHalfDiff;
 
+		//make sure there's data in there
+		root.updateWithNewResponsesAndPropagate(X_y, y_trans, p);
 		return root;
 	}	
 }

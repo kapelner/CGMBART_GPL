@@ -10,7 +10,18 @@ for (model_name in c(real_regression_data_sets, simulated_data_sets)){
 				cat(paste("\n\n\\subsection{N\\_B = ", num_burn_in, ", N\\_G = ", num_iterations_after_burn_in, "}\n\n", sep = ""))	
 				for (alpha in alphas_of_interest){
 					for (beta in betas_of_interest){		
-						image_titles = c("sigsqs", "tree_liks", "tree_nodes", "tree_depths", "yvyhat_bart", "yvyhat_R_BART", "yvyhat_RF", "yvyhat_CART")
+						image_titles = c(
+							"sigsqs_by_gibbs", 
+							"sigsqs_hist",
+							"tree_liks_by_gibbs",
+							"tree_liks_hist",
+							"tree_nodes", 
+							"tree_depths", 
+							"yvyhat_bart", 
+							"yvyhat_R_BART", 
+							"yvyhat_RF", 
+							"yvyhat_CART"
+						)
 						for (i in 1 : length(image_titles)){
 							if (i %% 2 == 1){
 								cat("\\begin{figure}\n")

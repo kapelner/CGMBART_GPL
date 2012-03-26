@@ -496,7 +496,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 				node.y_prediction = 0.0; //this could happen on an empty node
 //				System.out.println("ERROR assignLeafFINAL " + node.y_prediction + " (sigsq = " + sigsq + ")");
 			}
-//			System.out.println("assignLeafFINAL " + node.y_prediction + " (sigsq = " + sigsq + ")");
+			System.out.println("assignLeafFINAL " + un_transform_y(node.y_prediction) + " (sigsq = " + sigsq * y_range_sq + ")");
 		}
 		else {
 			assignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsq(node.left, sigsq);
