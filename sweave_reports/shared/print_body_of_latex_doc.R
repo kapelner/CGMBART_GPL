@@ -17,6 +17,7 @@ for (model_name in c(real_regression_data_sets, simulated_data_sets)){
 							"tree_liks_hist",
 							"tree_nodes", 
 							"tree_depths", 
+							"mu_vals_t_0",
 							"yvyhat_bart", 
 							"yvyhat_R_BART", 
 							"yvyhat_RF", 

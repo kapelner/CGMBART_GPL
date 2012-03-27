@@ -44,10 +44,10 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 
 	//do not set this to FALSE!!! The whole thing will break...
 	protected static final boolean TRANSFORM_Y = true;
-	protected static final int DEFAULT_NUM_TREES = 20;
+	protected static final int DEFAULT_NUM_TREES = 1;
 	//this burn in number needs to be computed via some sort of moving average or time series calculation
-	protected static final int DEFAULT_NUM_GIBBS_BURN_IN = 2000;
-	protected static final int DEFAULT_NUM_GIBBS_TOTAL_ITERATIONS = 4000; //this must be larger than the number of burn in!!!
+	protected static final int DEFAULT_NUM_GIBBS_BURN_IN = 200;
+	protected static final int DEFAULT_NUM_GIBBS_TOTAL_ITERATIONS = 400; //this must be larger than the number of burn in!!!
 	
 //	protected static final double GIBBS_THIN_RATIO = 0.1;
 	
@@ -191,6 +191,14 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 		//this section is different for the different BART implementations
 		//but it basically does all the Gibbs sampling
 		CoreBuild();
+		
+
+//		for (int n_g = 0; n_g < num_gibbs_total_iterations; n_g++){
+//			System.out.println("n_g: " + n_g + " name " + gibbs_samples_of_cgm_trees.get(n_g));
+//		}
+		for (int b = 1; b <= 7; b++){
+			System.out.println("all vals of mu1: " + getMuValuesForAllItersByTreeAndLeaf(0, b));
+		}
 
 		//make sure debug files are closed
 		CloseDebugFiles();
@@ -249,7 +257,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 	}	
 	
 	@Override
-	public double Evaluate(double[] record) { //posterior sample average		
+	public double Evaluate(double[] record) { //posterior sample median (it's what Rob uses)		
 		return EvaluateViaSampMed(record);
 	}	
 	
@@ -371,8 +379,6 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 //		System.out.println("current_sigsq = " + current_sigsq);
 		
 		
-				
-		
 		gibbs_samples_of_sigsq.add(sample_num, current_sigsq);
 		if (TRANSFORM_Y){
 			sigsqs.println(sample_num + "," + gibbs_samples_of_sigsq.get(sample_num) * y_range_sq);	
@@ -380,7 +386,6 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 		else {
 			sigsqs.println(sample_num + "," + gibbs_samples_of_sigsq.get(sample_num));
 		}
-		
 		
 		//note: after we've made the predictions and the image, we can flush the data
 //		new Thread(){
@@ -410,17 +415,48 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 	}
 	
 	public double[] getGibbsSamplesSigsqs(){
-		other_debug.println("gibbs_samples_of_sigsq.size()," + gibbs_samples_of_sigsq.size());
-		CloseDebugFiles();
-		OpenDebugFiles();
-		System.out.println("getGibbsSamplesSigsqs() gibbs_samples_of_sigsq.size() = " + gibbs_samples_of_sigsq.size());
 		double[] sigsqs_to_export = new double[gibbs_samples_of_sigsq.size()];
-		for (int i = 0; i < gibbs_samples_of_sigsq.size(); i++){
-			
-				sigsqs_to_export[i] = gibbs_samples_of_sigsq.get(i) * (TRANSFORM_Y ? y_range_sq : 1);
-			
+		for (int n_g = 0; n_g < gibbs_samples_of_sigsq.size(); n_g++){			
+			sigsqs_to_export[n_g] = gibbs_samples_of_sigsq.get(n_g) * (TRANSFORM_Y ? y_range_sq : 1);			
 		}
 		return sigsqs_to_export;
+	}
+	
+	public double[] getMuValuesForAllItersByTreeAndLeaf(int t, int leaf_num){
+		double[] mu_vals = new double[num_gibbs_total_iterations];
+		for (int n_g = 0; n_g < num_gibbs_total_iterations; n_g++){
+//			System.out.println("n_g: " + n_g + "length of tree vec: " + gibbs_samples_of_cgm_trees.get(n_g).size());
+			CGMTreeNode tree = gibbs_samples_of_cgm_trees.get(n_g).get(t);
+			
+			Double pred_y = tree.get_pred_for_nth_leaf(leaf_num);
+			System.out.println("t: " + t + " leaf: " + leaf_num + " pred_y: " + pred_y);
+			mu_vals[n_g] = un_transform_y(pred_y);
+		}
+		return mu_vals;
+	}	
+	
+	private int maximalTreeGeneration(){
+		int max_gen = Integer.MIN_VALUE;
+		for (ArrayList<CGMTreeNode> cgm_trees : gibbs_samples_of_cgm_trees){
+			if (cgm_trees != null){				
+				for (CGMTreeNode tree : cgm_trees){					
+					int gen = tree.deepestNode();
+					if (gen >= max_gen){
+						max_gen = gen;
+					}
+				}
+			}
+		}
+		return max_gen;
+	}
+	
+	public int maximalNodeNumber(){screwed up
+		int max_gen = maximalTreeGeneration();
+		int node_num = 0;
+		for (int g = 0; g < max_gen; g++){
+			node_num += (int)Math.pow(g, 2);
+		}
+		return node_num + 1;
 	}
 	
 	public double[] getLikForTree(int t){
@@ -516,6 +552,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 
 
 	protected double samplePosteriorSigsq(int sample_num) {
+		System.out.println("max tree node number: " + maximalNodeNumber());
 		//first calculate the SSE
 		double sum_sq_errors = 0;
 		double[] es = getErrorsForAllTrees(sample_num);
@@ -639,7 +676,10 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 //		y_and_y_trans.close();
 	}
 
-	protected double un_transform_y(double yt_i){
+	protected double un_transform_y(Double yt_i){
+		if (yt_i == null){
+			return -9999999;
+		}
 		if (TRANSFORM_Y){
 			return (yt_i + YminAndYmaxHalfDiff) * (y_max - y_min) + y_min;
 		}

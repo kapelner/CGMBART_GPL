@@ -230,9 +230,12 @@ run_bart_model_and_save_diags_and_results = function(training_data, test_data, d
 	rf_predictions = run_random_forests_and_plot_y_vs_yhat(training_data, test_data, extra_text = extra_text, data_title = data_title, save_plot = save_plot, bart_machine = bart_machine)
 	cart_predictions = run_cart_and_plot_y_vs_yhat(training_data, test_data, extra_text = extra_text, data_title = data_title, save_plot = save_plot, bart_machine = bart_machine)
 	
-	#do some plots to diagnose convergence
+	#do some plots and histograms to diagnose convergence
+	plot_mu_values_for_tree(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)
 	plot_sigsqs_convergence_diagnostics(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)
-	plot_tree_liks_convergence_diagnostics(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)	
+	hist_sigsqs(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)
+	plot_tree_liks_convergence_diagnostics(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)
+	hist_tree_liks(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)
 	plot_tree_num_nodes(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)	
 	plot_tree_depths(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)
 	

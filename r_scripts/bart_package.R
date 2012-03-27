@@ -14,6 +14,11 @@ JAR_DEPENDENCIES = c("bart_java.jar", "commons-math-2.1.jar", "jai_codec.jar", "
 DATA_FILENAME = "datasets/bart_data.csv"
 DEFAULT_ALPHA = 0.01
 DEFAULT_BETA = 10
+COLORS = array(NA, 500)
+for (i in 1 : 500){
+	COLORS[i] = rgb(runif(1, 0, 0.7), runif(1, 0, 0.7), runif(1, 0, 0.7))
+}
+
 
 #set up a logging system
 LOG_DIR = "r_log"
@@ -94,19 +99,10 @@ bart_model = function(training_data,
 	)
 }
 
-############
-#for (i in 1 : 100){
-#	.jcall(java_bart_machine, "V", "Build")
-#	print(java_bart_machine)
-#	#now once it's done, let's extract things that are related to diagnosing the build of the BART model
-#	ensure_bart_is_done_in_java(java_bart_machine)
-#	sigsqs = .jcall(java_bart_machine, "[D", "getGibbsSamplesSigsqs")	
-#}
-
 ensure_bart_is_done_in_java = function(java_bart_machine){
 	if (!.jcall(java_bart_machine, "Z", "gibbsFinished")){
 		stop("BART model not finished building yet", call. = FALSE)
-	}	
+	}
 }
 
 init_jvm_and_bart_object = function(debug_log, print_tree_illustrations, print_out_every){
@@ -130,12 +126,8 @@ init_jvm_and_bart_object = function(debug_log, print_tree_illustrations, print_o
 }
 
 plot_sigsqs_convergence_diagnostics = function(bart_machine, extra_text = NULL, data_title = "data_model", save_plot = FALSE){
-#	tryCatch({
 	sigsqs = .jcall(bart_machine$java_bart_machine, "[D", "getGibbsSamplesSigsqs")
 	assign("sigsqs", sigsqs, .GlobalEnv)
-#	},
-#	error = function(exc){return},
-#	finally = function(exc){})
 	
 	num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in
 	num_burn_in = bart_machine$num_burn_in
@@ -154,21 +146,37 @@ plot_sigsqs_convergence_diagnostics = function(bart_machine, extra_text = NULL, 
 		dev.new()
 	}
 	plot(sigsqs, 
-			main = paste("Sigsq throughout entire project  sigsq after burn in ~ ", round(avg_sigsqs, 3), ifelse(is.null(extra_text), "", paste("\n", extra_text))), 
+			main = paste("Sigsq throughout entire project  sigsq after burn in", ifelse(is.null(extra_text), "", paste("\n", extra_text))), 
 			xlab = "Gibbs sample # (gray line indicates burn-in, yellow lines are the 95% PPI after burn-in)", 
-			ylim = c(max(min(sigsqs) - 0.1, 0), quantile(sigsqs, 0.99)),
+			ylab = paste("Sigsq by iteration, avg after burn-in =", round(avg_sigsqs, 3)),
+			ylim = c(quantile(sigsqs, 0.01), quantile(sigsqs, 0.99)),
 			pch = ".", 
 			cex = 3,
 			col = "gray")
 	points(sigsqs, pch = ".", col = "red")
 	ppi_sigsqs = quantile(sigsqs[(length(sigsqs) - num_gibbs) : length(sigsqs)], c(.025, .975))
 	abline(a = ppi_sigsqs[1], b = 0, col = "yellow")
-	abline(a = ppi_sigsqs[2], b = 0, col = "yellow")	
+	abline(a = ppi_sigsqs[2], b = 0, col = "yellow")
+	abline(a = avg_sigsqs, b = 0, col = "blue")
 	abline(v = num_burn_in, col = "gray")
 	
 	if (save_plot){	
 		dev.off()
 	}
+}
+
+hist_sigsqs = function(bart_machine, extra_text = NULL, data_title = "data_model", save_plot = FALSE){
+	sigsqs = .jcall(bart_machine$java_bart_machine, "[D", "getGibbsSamplesSigsqs")
+	assign("sigsqs", sigsqs, .GlobalEnv)
+	
+	num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in
+	num_burn_in = bart_machine$num_burn_in
+	num_gibbs = bart_machine$num_gibbs
+	num_trees = bart_machine$num_trees
+	
+	sigsqs_after_burnin = sigsqs[(length(sigsqs) - num_iterations_after_burn_in) : length(sigsqs)]
+	assign("sigsqs_after_burnin", sigsqs_after_burnin, .GlobalEnv)
+	avg_sigsqs = mean(sigsqs_after_burnin, na.rm = TRUE)
 	
 	if (save_plot){
 		save_plot_function(bart_machine, "sigsqs_hist", data_title)
@@ -176,10 +184,50 @@ plot_sigsqs_convergence_diagnostics = function(bart_machine, extra_text = NULL, 
 	else {
 		dev.new()
 	}
-	hist(sigsqs_after_burnin, br = 100, main = "Histogram of sigsqs after burn-in")
-#	abline(v = 1, col = "blue", lwd = 3)
+	hist(sigsqs_after_burnin, br = 100, main = "Histogram of sigsqs after burn-in", xlab = "sigsq")
+	abline(v = avg_sigsqs, col = "blue")
 	
 	if (save_plot){	
+		dev.off()
+	}
+}
+
+plot_mu_values_for_tree = function(bart_machine, extra_text = NULL, data_title = "data_model", save_plot = FALSE, tree_num = 0){
+	java_bart_machine = bart_machine$java_bart_machine
+	num_burn_in = bart_machine$num_burn_in
+	num_gibbs = bart_machine$num_gibbs
+	num_trees = bart_machine$num_trees
+	
+	max_b = .jcall(java_bart_machine, "I", "maximalNodeNumber") ####should be 7 fix tomorrow
+	
+	all_mu_vals_for_tree = matrix(NA, nrow = max_b, ncol = num_gibbs)
+	for (b in 1 : max_b){
+		doubles = .jcall(java_bart_machine, "[D", "getMuValuesForAllItersByTreeAndLeaf", as.integer(tree_num), as.integer(b))
+		doubles[doubles == -9999999] = NA #stupid RJava
+#		hist(doubles, br = 100, main = paste("all mu values for b =", b), xlab = "mu value")
+		all_mu_vals_for_tree[b, ] = doubles
+	}
+	assign("all_mu_vals_for_tree", all_mu_vals_for_tree, .GlobalEnv)
+	
+	if (save_plot){
+		save_plot_function(bart_machine, paste("mu_vals_t_", tree_num, sep = ""), data_title)
+	}	
+	else {
+		dev.new()
+	}
+	plot(1 : num_gibbs, 
+			NULL,  # + 1 for the prior
+			type = "n", 
+			main = paste("Mu Values for all leaves", ifelse(is.null(extra_text), "", paste("\n", extra_text))), 
+			ylim = c(min(all_mu_vals_for_tree, na.rm = TRUE), max(all_mu_vals_for_tree, na.rm = TRUE)),
+			xlab = "Gibbs sample # (gray line indicates burn in)", 
+			ylab = "value")
+	for (b in 1 : max_b){
+		points(1 : num_gibbs, all_mu_vals_for_tree[b, ], col = COLORS[b], pch = ".", type = "l", cex = 2)
+	}
+	abline(v = num_burn_in, col = "gray")
+	
+	if (save_plot){
 		dev.off()
 	}
 }
@@ -192,11 +240,7 @@ plot_tree_num_nodes = function(bart_machine, extra_text = NULL, data_title = "da
 	
 	all_tree_num_nodes = matrix(NA, nrow = num_trees, ncol = num_gibbs + 1)
 	for (n in 1 : (num_gibbs + 1)){
-#		tryCatch({
 		all_tree_num_nodes[, n] = .jcall(java_bart_machine, "[I", "getNumNodesForTreesInGibbsSamp", as.integer(n - 1))
-#		},
-#		error = function(exc){return},
-#		finally = function(exc){})
 	}
 	assign("all_tree_num_nodes", all_tree_num_nodes, .GlobalEnv)
 	
@@ -208,7 +252,7 @@ plot_tree_num_nodes = function(bart_machine, extra_text = NULL, data_title = "da
 	}	
 	plot(1 : (num_gibbs + 1),  # + 1 for the prior
 			all_tree_num_nodes[1, ], 
-			col = sample(colors(), 1),
+			col = sample(COLORS, 1),
 			pch = ".",
 			type = "l", 
 			main = paste("Num Nodes by Iteration", ifelse(is.null(extra_text), "", paste("\n", extra_text))), 
@@ -217,7 +261,7 @@ plot_tree_num_nodes = function(bart_machine, extra_text = NULL, data_title = "da
 			ylab = "num nodes")
 	if (num_trees > 1){
 		for (t in 2 : nrow(all_tree_num_nodes)){
-			points(1 : (num_gibbs + 1), all_tree_num_nodes[t, ], col = sample(colors(), 1), pch = ".", type = "l", cex = 2)
+			points(1 : (num_gibbs + 1), all_tree_num_nodes[t, ], col = sample(COLORS, 1), pch = ".", type = "l", cex = 2)
 		}
 	}
 	abline(v = num_burn_in, col = "gray")
@@ -269,7 +313,7 @@ plot_tree_depths = function(bart_machine, extra_text = NULL, data_title = "data_
 	}	
 	plot(1 : (num_gibbs + 1),  # + 1 for the prior
 			all_tree_depths[1, ], 
-			col = sample(colors(), 1),
+			col = rgb(runif(1, 0, 0.7), runif(1, 0, 0.7), runif(1, 0, 0.7)),
 			pch = ".",
 			type = "l", 
 			main = paste("Depth by Iteration", ifelse(is.null(extra_text), "", paste("\n", extra_text))), 
@@ -278,7 +322,7 @@ plot_tree_depths = function(bart_machine, extra_text = NULL, data_title = "data_
 			ylab = "depth")
 	if (num_trees > 1){
 		for (t in 2 : nrow(all_tree_depths)){
-			points(1 : (num_gibbs + 1), all_tree_depths[t, ], col = sample(colors(), 1), pch = ".", type = "l", cex = 2)
+			points(1 : (num_gibbs + 1), all_tree_depths[t, ], col = sample(COLORS, 1), pch = ".", type = "l", cex = 2)
 		}
 	}
 	abline(v = num_burn_in, col = "gray")
@@ -316,7 +360,7 @@ plot_tree_liks_convergence_diagnostics = function(bart_machine, extra_text = NUL
 	}	
 	plot(1 : (num_gibbs + 1),  # + 1 for the prior
 			all_tree_liks[1, ], 
-			col = sample(colors(), 1),
+			col = sample(COLORS, 1),
 			pch = ".",
 			main = paste("Tree ln(prop Lik) by Iteration", ifelse(is.null(extra_text), "", paste("\n", extra_text))), 
 			ylim = quantile(all_tree_liks[1, ], c(0, .999), na.rm = TRUE),
@@ -324,38 +368,49 @@ plot_tree_liks_convergence_diagnostics = function(bart_machine, extra_text = NUL
 			ylab = "log proportional likelihood")
 	if (num_trees > 1){
 		for (t in 2 : nrow(all_tree_liks)){
-			points(1 : (num_gibbs + 1), all_tree_liks[t, ], col = sample(colors(), 1), pch = ".", cex = 2)
+			points(1 : (num_gibbs + 1), all_tree_liks[t, ], col = sample(COLORS, 1), pch = ".", cex = 2)
 		}
 	}
 	abline(v = num_burn_in, col = "gray")
 	if (save_plot){	
 		dev.off()
-	}
+	}	
+}
+
+hist_tree_liks = function(bart_machine, extra_text = NULL, data_title = "data_model", save_plot = FALSE){
+	java_bart_machine = bart_machine$java_bart_machine
+	num_burn_in = bart_machine$num_burn_in
+	num_gibbs = bart_machine$num_gibbs
+	num_trees = bart_machine$num_trees
 	
+	all_tree_liks = matrix(NA, nrow = num_trees, ncol = num_gibbs + 1)	
+	for (t in 1 : num_trees){
+		all_tree_liks[t, ] = .jcall(java_bart_machine, "[D", "getLikForTree", as.integer(t - 1))
+	}	
+	assign("all_tree_liks", all_tree_liks, .GlobalEnv)
 	
 	if (save_plot){
 		save_plot_function(bart_machine, "tree_liks_hist", data_title)
 	}	
 	else {
 		dev.new()
-	}
-
+	}	
 	
 	all_liks_after_burn_in = as.vector(all_tree_liks[, (num_burn_in + 1) : (num_gibbs + 1)])
 	min_lik = min(all_liks_after_burn_in)
 	max_lik = max(all_liks_after_burn_in)	
 	hist(all_liks_after_burn_in, 
-		col = "white", 
-		br = seq(from = min_lik, to = max_lik, by = (max_lik - min_lik) / 100), 
-		border = NA, 
-		main = "Histogram of tree prop likelihoods after burn-in")
+			col = "white", 
+			br = seq(from = min_lik, to = max_lik, by = (max_lik - min_lik) / 100), 
+			border = NA, 
+			main = "Histogram of tree prop likelihoods after burn-in")
 #	shapiro.test(all_liks_after_burn_in)
 	for (t in 1 : num_trees){
 		hist(all_tree_liks[t, (num_burn_in + 1) : (num_gibbs + 1)], 
-			col = rgb(runif(1, 0, 0.8), runif(1, 0, 0.8), runif(1, 0, 0.8), ALPHA), 
-			border = NA, 
-			br = seq(from = min_lik, to = max_lik, by = (max_lik - min_lik) / 100), 
-			add = TRUE)
+				col = rgb(runif(1, 0, 0.8), runif(1, 0, 0.8), runif(1, 0, 0.8), ALPHA), 
+				border = NA, 
+				br = seq(from = min_lik, to = max_lik, by = (max_lik - min_lik) / 100), 
+				add = TRUE)
 		
 	}
 	
