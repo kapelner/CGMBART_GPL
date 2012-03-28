@@ -59,6 +59,8 @@ bart_model = function(training_data,
 		debug_log = FALSE, 
 		print_tree_illustrations = FALSE, 
 		print_out_every = NULL){
+	
+#	clean_previous_bart_data()
 
 	num_gibbs = num_burn_in + num_iterations_after_burn_in
 	#check for errors in data
@@ -97,6 +99,24 @@ bart_model = function(training_data,
 		alpha = alpha,
 		beta = beta
 	)
+}
+
+clean_previous_bart_data = function(){
+	if (exists("sigsqs_after_burnin")){
+		rm(sigsqs_after_burnin)
+	}
+	if (exists("all_tree_num_nodes")){
+		rm(all_tree_num_nodes)
+	}
+	if (exists("all_tree_liks")){
+		rm(all_tree_liks)
+	}
+	if (exists("y_hat")){
+		rm(y_hat)
+	}
+	if (exists("all_mu_vals_for_all_trees")){
+		rm(all_mu_vals_for_all_trees)
+	}
 }
 
 ensure_bart_is_done_in_java = function(java_bart_machine){
@@ -184,30 +204,96 @@ hist_sigsqs = function(bart_machine, extra_text = NULL, data_title = "data_model
 	else {
 		dev.new()
 	}
-	hist(sigsqs_after_burnin, br = 100, main = "Histogram of sigsqs after burn-in", xlab = "sigsq")
+	
+	ppi_a = quantile(sigsqs_after_burnin, 0.025)
+	ppi_b = quantile(sigsqs_after_burnin, 0.975)
+	hist(sigsqs_after_burnin, 
+		br = 100, 
+		main = "Histogram of sigsqs after burn-in", 
+		xlab = paste("sigsq  avg = ", round(avg_sigsqs, 1), ",  95% PPI = [", round(ppi_a, 1), ", ", round(ppi_b, 1), "]", sep = ""))
 	abline(v = avg_sigsqs, col = "blue")
+	abline(v = ppi_a, col = "yellow")
+	abline(v = ppi_b, col = "yellow")
 	
 	if (save_plot){	
 		dev.off()
 	}
 }
 
-plot_mu_values_for_tree = function(bart_machine, extra_text = NULL, data_title = "data_model", save_plot = FALSE, tree_num = 0){
-	java_bart_machine = bart_machine$java_bart_machine
+maximum_nodes_over_all_trees = function(bart_machine){
+	.jcall(bart_machine$java_bart_machine, "I", "maximalNodeNumber")
+}
+
+get_mu_values_for_all_trees = function(bart_machine){ #cache and decomp function	
+#	if (!exists("all_mu_vals_for_all_trees")){
+		java_bart_machine = bart_machine$java_bart_machine
+		num_gibbs = bart_machine$num_gibbs
+		num_trees = bart_machine$num_trees
+		
+		max_b = maximum_nodes_over_all_trees(bart_machine)
+		
+		all_mu_vals_for_all_trees = array(NA, c(max_b, num_gibbs, num_trees))
+		for (t in 1 : num_trees){
+			for (b in 1 : max_b){
+				doubles = .jcall(java_bart_machine, "[D", "getMuValuesForAllItersByTreeAndLeaf", as.integer(t - 1), as.integer(b))
+				doubles[doubles == -9999999] = NA #stupid RJava
+				all_mu_vals_for_all_trees[b, , t] = doubles
+			}
+		}
+		assign("all_mu_vals_for_all_trees", all_mu_vals_for_all_trees, .GlobalEnv)
+#	}
+}
+
+hist_mu_values_by_tree_and_leaf_after_burn_in = function(bart_machine, extra_text = NULL, data_title = "data_model", save_plot = FALSE, tree_num, leaf_num){
+	get_mu_values_for_all_trees(bart_machine)
 	num_burn_in = bart_machine$num_burn_in
-	num_gibbs = bart_machine$num_gibbs
-	num_trees = bart_machine$num_trees
+	num_gibbs = bart_machine$num_gibbs	
 	
-	max_b = .jcall(java_bart_machine, "I", "maximalNodeNumber") ####should be 7 fix tomorrow
+	all_mu_vals_for_tree_and_leaf = all_mu_vals_for_all_trees[leaf_num, , tree_num]
+	#only after num_burn_in
+	all_mu_vals_for_tree_and_leaf = all_mu_vals_for_tree_and_leaf[(num_burn_in + 1) : num_gibbs]
 	
-	all_mu_vals_for_tree = matrix(NA, nrow = max_b, ncol = num_gibbs)
-	for (b in 1 : max_b){
-		doubles = .jcall(java_bart_machine, "[D", "getMuValuesForAllItersByTreeAndLeaf", as.integer(tree_num), as.integer(b))
-		doubles[doubles == -9999999] = NA #stupid RJava
-#		hist(doubles, br = 100, main = paste("all mu values for b =", b), xlab = "mu value")
-		all_mu_vals_for_tree[b, ] = doubles
+	
+	num_not_nas = length(all_mu_vals_for_tree_and_leaf) - sum(is.na(all_mu_vals_for_tree_and_leaf))
+	
+	if (num_not_nas == 0){
+		cat("WARNING: This node was never a leaf\n")
+		return()
 	}
-	assign("all_mu_vals_for_tree", all_mu_vals_for_tree, .GlobalEnv)
+	
+	if (save_plot){
+		save_plot_function(bart_machine, paste("mu_vals_t_", tree_num, "_b_", leaf_num, sep = ""), data_title)
+	}	
+	else {
+		dev.new()
+	}
+	avg_mu_for_leaf = mean(all_mu_vals_for_tree_and_leaf)
+	ppi_a = quantile(all_mu_vals_for_tree_and_leaf, 0.025, na.rm = TRUE)
+	ppi_b = quantile(all_mu_vals_for_tree_and_leaf, 0.975, na.rm = TRUE)
+	
+	hist(all_mu_vals_for_tree_and_leaf,
+		br = 100, 
+		main = paste("Mu Values for tree ", tree_num, " leaf ", leaf_num, " for the ", num_not_nas, " mu's after burn in (when a leaf)", ifelse(is.null(extra_text), "", paste("\n", extra_text)), sep = ""), 
+		xlab = paste("Mu values avg = ", round(avg_mu_for_leaf, 2), ",  95% PPI = [", round(ppi_a, 2), ",", round(ppi_b, 2), "]", sep = ""), 
+		ylab = "value",
+		col = COLORS[leaf_num],
+		border = NA)
+	abline(v = avg_mu_for_leaf, col = "blue", lwd = 4)
+	abline(v = ppi_a, col = "yellow", lwd = 3)
+	abline(v = ppi_b, col = "yellow", lwd = 3)
+	
+	if (save_plot){
+		dev.off()
+	}
+}
+
+plot_all_mu_values_for_tree = function(bart_machine, extra_text = NULL, data_title = "data_model", save_plot = FALSE, tree_num){
+	num_burn_in = bart_machine$num_burn_in
+	num_gibbs = bart_machine$num_gibbs	
+	
+	get_mu_values_for_all_trees(bart_machine)
+	
+	all_mu_vals_for_tree = all_mu_vals_for_all_trees[, , tree_num]
 	
 	if (save_plot){
 		save_plot_function(bart_machine, paste("mu_vals_t_", tree_num, sep = ""), data_title)
@@ -218,11 +304,11 @@ plot_mu_values_for_tree = function(bart_machine, extra_text = NULL, data_title =
 	plot(1 : num_gibbs, 
 			NULL,  # + 1 for the prior
 			type = "n", 
-			main = paste("Mu Values for all leaves", ifelse(is.null(extra_text), "", paste("\n", extra_text))), 
+			main = paste("Mu Values for all leaves in tree ", tree_num, ifelse(is.null(extra_text), "", paste("\n", extra_text)), sep = ""), 
 			ylim = c(min(all_mu_vals_for_tree, na.rm = TRUE), max(all_mu_vals_for_tree, na.rm = TRUE)),
 			xlab = "Gibbs sample # (gray line indicates burn in)", 
 			ylab = "value")
-	for (b in 1 : max_b){
+	for (b in 1 : maximum_nodes_over_all_trees(bart_machine)){
 		points(1 : num_gibbs, all_mu_vals_for_tree[b, ], col = COLORS[b], pch = ".", type = "l", cex = 2)
 	}
 	abline(v = num_burn_in, col = "gray")
@@ -256,7 +342,7 @@ plot_tree_num_nodes = function(bart_machine, extra_text = NULL, data_title = "da
 			pch = ".",
 			type = "l", 
 			main = paste("Num Nodes by Iteration", ifelse(is.null(extra_text), "", paste("\n", extra_text))), 
-			ylim = c(min(all_tree_num_nodes), max(all_tree_num_nodes)),
+			ylim = c(1, max(all_tree_num_nodes)),
 			xlab = "Gibbs sample # (gray line indicates burn in)", 
 			ylab = "num nodes")
 	if (num_trees > 1){
@@ -317,7 +403,7 @@ plot_tree_depths = function(bart_machine, extra_text = NULL, data_title = "data_
 			pch = ".",
 			type = "l", 
 			main = paste("Depth by Iteration", ifelse(is.null(extra_text), "", paste("\n", extra_text))), 
-			ylim = c(min(all_tree_depths), max(all_tree_depths)),
+			ylim = c(1, max(all_tree_depths)),
 			xlab = "Gibbs sample # (gray line indicates burn in)", 
 			ylab = "depth")
 	if (num_trees > 1){

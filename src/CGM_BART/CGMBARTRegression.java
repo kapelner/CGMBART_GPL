@@ -76,6 +76,7 @@ public class CGMBARTRegression extends CGMBART_FixedTree {
 			double[] samples = getGibbsSamplesForPrediction(record);
 			int inside = (y >= ppi[0] && y <= ppi[1]) ? 1 : 0;
 			output.println(y + "," + yhat + "," + ppi[0] + "," + ppi[1] + "," + inside + "," + IOTools.StringJoin(samples, ","));
+//			System.out.println(y + "," + yhat + "," + ppi[0] + "," + ppi[1] + "," + inside);
 		}		
 		output.close();
 	}

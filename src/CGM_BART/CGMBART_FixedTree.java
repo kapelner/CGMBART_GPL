@@ -71,8 +71,8 @@ public class CGMBART_FixedTree extends CGMBART2010 {
 		
 		gibbs_samples_of_sigsq.add(sample_num, current_sigsq);
 		posterior_builder.setCurrentSigsqValue(current_sigsq);
-		System.out.println("setCurrentSigsqValue transformed_sigsq = " + current_sigsq * y_range_sq + " sigsq_mu = " + hyper_sigsq_mu);
-		
+//		System.out.println("setCurrentSigsqValue transformed_sigsq = " + current_sigsq * y_range_sq + " sigsq_mu = " + hyper_sigsq_mu);
+
 		sigsqs.println(sample_num + "," + gibbs_samples_of_sigsq.get(sample_num) * y_range_sq);	
 		
 		for (CGMTreeNode tree_it : cgm_trees){

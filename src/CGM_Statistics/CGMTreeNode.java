@@ -487,46 +487,8 @@ public class CGMTreeNode extends TreeNode implements Cloneable, Serializable {
 		String leaf_num_binary = Integer.toBinaryString(leaf_num);
 		//now hack off first digit
 		leaf_num_binary = leaf_num_binary.substring(1, leaf_num_binary.length());
-		
-		
-//		//first step: get generation
-//		int leaf_num_copy = leaf_num;
-//		int gen = 0;
-//		while (true){			
-//			leaf_num_copy -= (int)Math.pow(2, gen);			
-//			if (leaf_num_copy < 0){
-//				break;
-//			}
-//			gen++;
-//		}
-//		//add it back on
-//		leaf_num_copy += (int)Math.pow(2, gen);
-//		//now save the real generation number
-////		gen--;
-//		//now get the offset
-//		int offset = leaf_num - leaf_num_copy - 1;
-//		if (offset < 0){
-//			offset = 0;
-//		}
-//		
-//		//with the gen and offset, we're in business, we just need to know which directions to go:
-//		char[] directions = new char[gen];
-//		for (int g = 0; g < gen; g++){
-//			directions[g] = 'L';
-//		}
-//		//convert offset into base two. The 1's are "go to the right" in the reverse generation order
-//		String binary_offset = Integer.toBinaryString(offset);
-//		String reverse_binary_offset = new StringBuffer(binary_offset).reverse().toString();
-//
-//		for (int g = 0; g < gen; g++){
-//			if (reverse_binary_offset.toCharArray()[g] == '1'){
-//				directions[g] = 'R';
-//			}			
-//		}
-		
-//		System.out.println("get_pred_for_nth_leaf gen: " + gen + " offset: " + offset + " directions: " + new String(directions));
-		System.out.println("get_pred_for_nth_leaf gen: directions: " + new String(leaf_num_binary));
-		
+
+//		System.out.println("get_pred_for_nth_leaf gen: directions: " + new String(leaf_num_binary));
 		
 		//now that we have our direction array, now we just iterate down the line, begin right where we are
 		CGMTreeNode node = this;
