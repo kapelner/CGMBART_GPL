@@ -252,8 +252,7 @@ hist_mu_values_by_tree_and_leaf_after_burn_in = function(bart_machine, extra_tex
 	all_mu_vals_for_tree_and_leaf = all_mu_vals_for_all_trees[leaf_num, , tree_num]
 	#only after num_burn_in
 	all_mu_vals_for_tree_and_leaf = all_mu_vals_for_tree_and_leaf[(num_burn_in + 1) : num_gibbs]
-	
-	
+
 	num_not_nas = length(all_mu_vals_for_tree_and_leaf) - sum(is.na(all_mu_vals_for_tree_and_leaf))
 	
 	if (num_not_nas == 0){
@@ -487,7 +486,7 @@ hist_tree_liks = function(bart_machine, extra_text = NULL, data_title = "data_mo
 	max_lik = max(all_liks_after_burn_in)	
 	hist(all_liks_after_burn_in, 
 			col = "white", 
-			br = seq(from = min_lik, to = max_lik, by = (max_lik - min_lik) / 100), 
+			br = seq(from = min_lik, to = max_lik, by = (max_lik - min_lik + 0.01) / 100), 
 			border = NA, 
 			main = "Histogram of tree prop likelihoods after burn-in")
 #	shapiro.test(all_liks_after_burn_in)

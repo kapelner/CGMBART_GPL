@@ -27,12 +27,13 @@ package CGM_BART;
 import java.io.File;
 
 import AlgorithmTesting.DataSetupForCSVFile;
+import CGM_BART_DEBUG.*;
 
 import GemIdentClassificationEngine.DatumSetupForEntireRun;
 import GemIdentTools.IOTools;
 import GemIdentView.JProgressBarAndLabel;
 
-public class CGMBARTRegression extends CGMBART_FixedTree {
+public class CGMBARTRegression extends CGMBART_FixedTreeInitially {
 	private static final long serialVersionUID = 6418127647567343927L;
 	
 	

@@ -61,7 +61,7 @@ public final class CGMBARTPosteriorBuilder extends CGMRegressionMeanShiftPosteri
 	 * Note this is not the probability of Y given the tree, this is the probability
 	 * of the r_i's that are in this tree, since each tree only fits the *remaining* data
 	 */
-	protected double calculateLnProbYGivenTree(CGMTreeNode T) {
+	public double calculateLnProbYGivenTree(CGMTreeNode T) {
 //		System.out.println("hyper_sigsq_mu: " + hyper_sigsq_mu);
 		
 		//first get the leaves

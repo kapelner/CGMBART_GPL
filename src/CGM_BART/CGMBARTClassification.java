@@ -77,7 +77,7 @@ public final class CGMBARTClassification extends CGMBART {
 	}
 
 	@Override
-	protected void CoreBuild() {
+	protected void DoGibbsSampling() {
 		// TODO Auto-generated method stub
 		
 	}
