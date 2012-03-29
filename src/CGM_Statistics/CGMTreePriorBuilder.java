@@ -27,6 +27,8 @@ package CGM_Statistics;
 import java.util.ArrayList;
 import java.util.List;
 
+import CGM_BART.CGMBART;
+
 public abstract class CGMTreePriorBuilder {
 	
 	protected ArrayList<double[]> X_y;
@@ -52,10 +54,10 @@ public abstract class CGMTreePriorBuilder {
 	}		
 
 
-	public CGMTreeNode buildTreeStructureBasedOnPrior() {
+	public CGMTreeNode buildTreeStructureBasedOnPrior(CGMBART bart) {
 		//we're going to build this exactly like CGM 938-9
 		//first build the root (by definition the root is parentless)
-		CGMTreeNode root = new CGMTreeNode(null, X_y);
+		CGMTreeNode root = new CGMTreeNode(null, X_y, bart);
 		//now determine recursively the size and shape of tree
 		constructSizeAndShape(root);
 		//return the tree by sending back the root

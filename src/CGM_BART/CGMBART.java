@@ -274,12 +274,15 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 			final TreeArrayIllustration tree_array_illustration = new TreeArrayIllustration(gibb_sample_i);			
 			//we cycle over each tree and update it according to formulas 15, 16 on p274
 			for (int t = 0; t < num_trees; t++){
+				if (t == 0){
+					System.out.println("Sampling M_" + (t + 1) + "/" + num_trees + " iter " + gibb_sample_i + "/" + num_gibbs_total_iterations);
+				}				
 				SampleTree(gibb_sample_i, t, cgm_trees, tree_array_illustration);
 				SampleMu(gibb_sample_i, t);
 				gibbs_samples_of_cgm_trees.add(gibb_sample_i, cgm_trees);
 				if (stop_bit){
 					return;
-				}
+				}				
 			}
 			SampleSigsq(gibb_sample_i);
 			DebugSample(gibb_sample_i, tree_array_illustration);
@@ -347,48 +350,13 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 	}
 
 	protected void SampleMu(int sample_num, int t) {
-		System.out.println("SampleMu sample_num " +  sample_num + " t " + t + " gibbs array " + gibbs_samples_of_cgm_trees.get(sample_num));
+//		System.out.println("SampleMu sample_num " +  sample_num + " t " + t + " gibbs array " + gibbs_samples_of_cgm_trees.get(sample_num));
 		CGMTreeNode tree = gibbs_samples_of_cgm_trees.get(sample_num).get(t);
 		assignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsq(tree, gibbs_samples_of_sigsq.get(sample_num - 1));
 	}
 
 	protected void SampleTree(int sample_num, int t, ArrayList<CGMTreeNode> cgm_trees, TreeArrayIllustration tree_array_illustration) {
-		CGMTreeNode tree = SampleTreeByCalculatingRemainingsAndDrawingFromTreeDist(sample_num - 1, t, tree_array_illustration);
-		
-		//we gotta use the previous crop of trees
-		cgm_trees.add(tree);
-		//now set the new trees in the gibbs sample pantheon, keep updating it...
-		gibbs_samples_of_cgm_trees.set(sample_num, cgm_trees);
-		System.out.println("SampleTree sample_num " + sample_num + " cgm_trees " + cgm_trees);
-		
-		tree_array_illustration.AddTree(tree);
-		
-		//now sample from M_j | T_j, R_j, \sigma by just assigning leaves a draw from the leaf posterior
-		if (t + 1 == 1){
-			System.out.println("Sampling M_" + (t + 1) + "/" + num_trees + " iter " + sample_num + "/" + num_gibbs_total_iterations);
-		}		
-	}
-	
-	private double[] getResidualsBySubtractingTrees(ArrayList<CGMTreeNode> other_trees) {
-		double[] sum_ys_without_jth_tree = new double[n];
-
-		for (int i = 0; i < n; i++){
-			sum_ys_without_jth_tree[i] = 0; //initialize at zero, then add it up over all trees except the jth
-			for (int t = 0; t < other_trees.size(); t++){
-				sum_ys_without_jth_tree[i] += other_trees.get(t).Evaluate(X_y.get(i)); //first tree for now
-			}
-		}
-		//now we need to subtract this from y
-		double[] Rjs = new double[n];
-		for (int i = 0; i < n; i++){
-			Rjs[i] = y_trans[i] - sum_ys_without_jth_tree[i];
-		}
-//		System.out.println("getResidualsForAllTreesExcept one " +  new DoubleMatrix(Rjs).transpose().toString(2));
-		return Rjs;
-	}	
-	
-	protected CGMTreeNode SampleTreeByCalculatingRemainingsAndDrawingFromTreeDist(final int prev_sample_num, final int t, TreeArrayIllustration tree_array_illustration) {
-		final CGMTreeNode copy_of_old_jth_tree = gibbs_samples_of_cgm_trees.get(prev_sample_num).get(t).clone();
+		final CGMTreeNode copy_of_old_jth_tree = gibbs_samples_of_cgm_trees.get(sample_num - 1).get(t).clone();
 //		System.out.println("SampleTreeByCalculatingRemainingsAndDrawingFromTreeDist t:" + t + " of m:" + m);
 //		ArrayList<CGMTreeNode> leaves = tree.getTerminalNodes();
 //		for (int b = 0; b < leaves.size(); b++){
@@ -411,10 +379,10 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 		
 		ArrayList<CGMTreeNode> other_trees = new ArrayList<CGMTreeNode>(num_trees - 1);
 		for (int j = 0; j < t; j++){
-			other_trees.add(gibbs_samples_of_cgm_trees.get(prev_sample_num + 1).get(j));
+			other_trees.add(gibbs_samples_of_cgm_trees.get(sample_num).get(j));
 		}
 		for (int j = t + 1; j < num_trees; j++){
-			other_trees.add(gibbs_samples_of_cgm_trees.get(prev_sample_num).get(j));
+			other_trees.add(gibbs_samples_of_cgm_trees.get(sample_num - 1).get(j));
 		}		
 		
 		final double[] R_j = getResidualsBySubtractingTrees(other_trees);
@@ -423,7 +391,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 		if (WRITE_DETAILED_DEBUG_FILES){
 	//		new Thread(){
 	//			public void run(){					
-					remainings.println(prev_sample_num + "," + t + "," + copy_of_old_jth_tree.stringID() + "," + IOTools.StringJoin(R_j, ","));			
+					remainings.println((sample_num - 1) + "," + t + "," + copy_of_old_jth_tree.stringID() + "," + IOTools.StringJoin(R_j, ","));			
 	//			}
 	//		}.start();
 		}
@@ -433,18 +401,6 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 		
 		//sample from T_j | R_j, \sigma
 		//now we will run one M-H step on this tree with the y as the R_j
-		//we first have to initialize the posterior builder in order to iterate
-		CGMBARTPosteriorBuilder posterior_builder = new CGMBARTPosteriorBuilder(tree_prior_builder);
-		//we have to set the CGM98 hyperparameters as well as the hyperparameter sigsq_mu
-		posterior_builder.setHyperparameters(hyper_mu_mu, hyper_nu, hyper_lambda, hyper_sigsq_mu);
-		//we also need to set the current value of sigsq since we're conditioning on it
-		
-		//we name this iteration for better debugging
-//			String iteration_name = "tree_" + CGMPosteriorBuilder.LeadingZeroes(t + 1, 4) + "_iter_" + CGMPosteriorBuilder.LeadingZeroes(i + 1, 6);
-		//now we iterate one step
-//		System.out.println("posterior_builder.calculateLnProbYGivenTree FIRST");
-//		posterior_builder.calculateLnProbYGivenTree(tree);
-		//sample a new tree, if the MH step rejects, it's just the copy of the old tree which remains
 		CGMTreeNode tree_star = posterior_builder.iterateMHPosteriorTreeSpaceSearch(copy_of_old_jth_tree, false);
 		
 		//DEBUG
@@ -452,10 +408,16 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 		double lik = tree_star.log_prop_lik;
 		tree_liks.print(lik + "," + tree_star.stringID() + ",");
 		tree_array_illustration.addLikelihood(lik);
-		all_tree_liks[t][prev_sample_num + 1] = lik;
+		all_tree_liks[t][sample_num] = lik;
 		
-		return tree_star;
-	}		
+		//we gotta use the previous crop of trees
+		cgm_trees.add(tree_star);
+		//now set the new trees in the gibbs sample pantheon, keep updating it...
+		gibbs_samples_of_cgm_trees.set(sample_num, cgm_trees);
+		System.out.println("SampleTree sample_num " + sample_num + " cgm_trees " + cgm_trees);
+		
+		tree_array_illustration.AddTree(tree_star);
+	}	
 
 	protected void DebugInitialization() {
 		ArrayList<CGMTreeNode> initial_trees = gibbs_samples_of_cgm_trees.get(0);
@@ -480,6 +442,24 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 			}
 		}
 	}
+	
+	private double[] getResidualsBySubtractingTrees(ArrayList<CGMTreeNode> other_trees) {
+		double[] sum_ys_without_jth_tree = new double[n];
+
+		for (int i = 0; i < n; i++){
+			sum_ys_without_jth_tree[i] = 0; //initialize at zero, then add it up over all trees except the jth
+			for (int t = 0; t < other_trees.size(); t++){
+				sum_ys_without_jth_tree[i] += other_trees.get(t).Evaluate(X_y.get(i)); //first tree for now
+			}
+		}
+		//now we need to subtract this from y
+		double[] Rjs = new double[n];
+		for (int i = 0; i < n; i++){
+			Rjs[i] = y_trans[i] - sum_ys_without_jth_tree[i];
+		}
+//		System.out.println("getResidualsForAllTreesExcept one " +  new DoubleMatrix(Rjs).transpose().toString(2));
+		return Rjs;
+	}		
 
 	protected void InitiatizeTrees() {
 		ArrayList<CGMTreeNode> cgm_trees = new ArrayList<CGMTreeNode>(num_trees);
@@ -488,7 +468,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 		
 		for (int i = 0; i < num_trees; i++){
 //			System.out.println("CGMBART create prior on tree: " + (i + 1));
-			CGMTreeNode tree = tree_prior_builder.buildTreeStructureBasedOnPrior();
+			CGMTreeNode tree = tree_prior_builder.buildTreeStructureBasedOnPrior(this);
 			tree.initLogPropLik();
 //			modifyTreeForDebugging(tree);
 			tree.updateWithNewResponsesAndPropagate(X_y, y_trans, p);
@@ -848,7 +828,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 		return (y_i - y_min) / (y_max - y_min) - YminAndYmaxHalfDiff;
 	}
 	
-	protected double un_transform_y(double yt_i){
+	public double un_transform_y(double yt_i){
 		if (TRANSFORM_Y){
 //			System.out.println("un_transform_y TRANSFORM_Y");
 			return (yt_i + YminAndYmaxHalfDiff) * (y_max - y_min) + y_min;
@@ -858,7 +838,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 		}
 	}
 
-	protected double un_transform_y(Double yt_i){
+	public double un_transform_y(Double yt_i){
 		if (yt_i == null){
 			return -9999999;
 		}
@@ -928,13 +908,13 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 	}
 	
 	protected CGMTreeNode CreateTheSimpleTreeModel() {
-		CGMTreeNode root = new CGMTreeNode(null, null);
-		CGMTreeNode left = new CGMTreeNode(null, null);
-		CGMTreeNode leftleft = new CGMTreeNode(null, null);
-		CGMTreeNode leftright = new CGMTreeNode(null, null);
-		CGMTreeNode right = new CGMTreeNode(null, null);
-		CGMTreeNode rightleft = new CGMTreeNode(null, null);
-		CGMTreeNode rightright = new CGMTreeNode(null, null);
+		CGMTreeNode root = new CGMTreeNode(null, null, this);
+		CGMTreeNode left = new CGMTreeNode(null, null, this);
+		CGMTreeNode leftleft = new CGMTreeNode(null, null, this);
+		CGMTreeNode leftright = new CGMTreeNode(null, null, this);
+		CGMTreeNode right = new CGMTreeNode(null, null, this);
+		CGMTreeNode rightleft = new CGMTreeNode(null, null, this);
+		CGMTreeNode rightright = new CGMTreeNode(null, null, this);
 
 		root.isLeaf = false;
 		root.splitAttributeM = 0;

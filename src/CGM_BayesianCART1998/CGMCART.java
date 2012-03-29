@@ -100,7 +100,7 @@ public abstract class CGMCART extends ClassificationAndRegressionTree implements
 		//run each block and save the cream of that block
 		CGMTreeNode[] best_tree_by_restart = new CGMTreeNode[num_restarts];
 		for (int num_restart = 0; num_restart < num_restarts; num_restart++){
-			CGMTreeNode prior_tree = tree_prior_builder.buildTreeStructureBasedOnPrior();
+			CGMTreeNode prior_tree = tree_prior_builder.buildTreeStructureBasedOnPrior(null);
 //			System.out.println("convergePosteriorMultipleTimesAndTakeMax  node:" + prior_tree.stringID() + " leaf:" + prior_tree.isLeaf + " left: " + prior_tree.left + " right:" + prior_tree.right);
 //			System.out.println("likelihood of " + i + "th prior tree: " + tree_posterior_builder.calculateLnProbYGivenTree(prior_tree));
 			best_tree_by_restart[num_restart] = tree_posterior_builder.convergePosteriorAndFindMostLikelyTree(prior_tree, num_iterations, num_restart + 1);

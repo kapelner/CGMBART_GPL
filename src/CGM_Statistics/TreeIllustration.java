@@ -170,7 +170,7 @@ public class TreeIllustration {
 //		System.out.println("node:" + node.stringID() + " leaf:" + node.isLeaf + " left: " + node.left + " right:" + node.right);
 		Graphics g = canvas.getGraphics();
 		if (node.isLeaf && node.y_prediction != null){
-			String pred = two_digit_format.format(node.y_prediction);//;
+			String pred = two_digit_format.format(node.prediction_untransformed());//;
 			int draw_x = (int)Math.round(x - pred.length() / 2.0 * character_width_in_px);
 			g.drawString(pred + " (" + node.n + ") ", draw_x, y + 16);
 		}

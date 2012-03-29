@@ -81,10 +81,4 @@ public final class CGMBARTClassification extends CGMBART {
 		// TODO Auto-generated method stub
 		
 	}
-
-	@Override
-	protected CGMTreeNode SampleTreeByCalculatingRemainingsAndDrawingFromTreeDist(int i, int t, TreeArrayIllustration tree_array_illustration) {
-		// TODO Auto-generated method stub
-		return null;
-	}	
 }

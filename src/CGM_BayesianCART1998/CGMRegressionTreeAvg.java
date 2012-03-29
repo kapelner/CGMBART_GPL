@@ -132,7 +132,7 @@ public class CGMRegressionTreeAvg extends CGMCART {
 	private void runAllChainsAndBurnAndThinAndFlush() {
 		for (int c = 1; c <= num_separate_chains; c++){
 			ArrayList<CGMTreeNode> chain = new ArrayList<CGMTreeNode>(num_iterations_per_chain + 1);
-			CGMTreeNode prior_tree = tree_prior_builder.buildTreeStructureBasedOnPrior();
+			CGMTreeNode prior_tree = tree_prior_builder.buildTreeStructureBasedOnPrior(null);
 			chain.add(prior_tree);
 			for (int i = 0; i < num_iterations_per_chain; i++){
 				chain.add(tree_posterior_builder.iterateMHPosteriorTreeSpaceSearch(chain.get(i), false));

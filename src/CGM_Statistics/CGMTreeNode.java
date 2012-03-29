@@ -30,6 +30,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
+import CGM_BART.CGMBART;
+
 /**
  * A dumb struct to store information about a 
  * node in the Bayesian decision tree.
@@ -42,6 +44,8 @@ import java.util.List;
 public class CGMTreeNode extends TreeNode implements Cloneable, Serializable {
 	private static final long serialVersionUID = -5584590448078741112L;
 
+	/** a link back to the overall bart model */
+	private CGMBART bart;
 	/** the parent node */
 	public CGMTreeNode parent;
 	/** the left daughter node */
@@ -56,9 +60,10 @@ public class CGMTreeNode extends TreeNode implements Cloneable, Serializable {
 	public Double log_prop_lik;
 
 
-	public CGMTreeNode(CGMTreeNode parent, List<double[]> data){
+	public CGMTreeNode(CGMTreeNode parent, List<double[]> data, CGMBART bart){
 		this.parent = parent;
 		this.data = clone_data_matrix_with_new_y_optional(data, null);
+		this.bart = bart;
 		if (data != null){
 			n = data.size();
 		}
@@ -67,6 +72,10 @@ public class CGMTreeNode extends TreeNode implements Cloneable, Serializable {
 		}
 		isLeaf = true; //default is that it is a leaf
 	}
+	
+	public CGMTreeNode(CGMTreeNode parent, List<double[]> data){
+		this(parent, data, parent.bart);
+	}	
 	
 	public CGMTreeNode clone(){
 		return clone(false);
@@ -99,7 +108,7 @@ public class CGMTreeNode extends TreeNode implements Cloneable, Serializable {
 		else {
 			new_data = data;
 		}
-		CGMTreeNode copy = new CGMTreeNode(parent, new_data);
+		CGMTreeNode copy = new CGMTreeNode(parent, new_data, bart);
 		copy.isLeaf = isLeaf;
 		if (left != null){ //we need to clone the child and mark parent correctly
 			copy.left = left.clone(clone_data);
@@ -505,6 +514,13 @@ public class CGMTreeNode extends TreeNode implements Cloneable, Serializable {
 			}
 		}
 		return node.y_prediction;
+	}
+	
+	public Double prediction_untransformed(){
+		if (y_prediction == null){
+			return null;
+		}
+		return bart.un_transform_y(y_prediction);
 	}
 	
 }

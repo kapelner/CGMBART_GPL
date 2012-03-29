@@ -14,9 +14,10 @@ public class CGMBART_FixedTreeInitially extends CGMBART {
 		super(datumSetupForEntireRun, buildProgress);
 		System.out.println("CGMBART_FixedTreeInitially init\n");
 		setNumTrees(1); //in this DEBUG model, there's only one tree
+//		printTreeIllustations();
 	}
 
-	//only the simple tree
+	//only the simple tree as the initial seed
 	protected void InitiatizeTrees() {
 		ArrayList<CGMTreeNode> cgm_trees = new ArrayList<CGMTreeNode>(num_trees);
 		cgm_trees.add(CreateTheSimpleTreeModel());	

@@ -14,6 +14,7 @@ public class CGMBART_FixedTree extends CGMBART {
 		super(datumSetupForEntireRun, buildProgress);
 		System.out.println("CGMBART_FixedTree init\n");
 		setNumTrees(1); //in this DEBUG model, there's only one tree
+		
 	}
 
 	//only the simple tree
