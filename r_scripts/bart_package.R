@@ -321,7 +321,7 @@ hist_all_mu_values_for_tree = function(bart_machine, extra_text = NULL, data_tit
 	
 	get_mu_values_for_all_trees(bart_machine)
 	
-	all_mu_vals_for_tree = all_mu_vals_for_all_trees[, , tree_num]
+	all_mu_vals_for_tree_after_burn_in = all_mu_vals_for_all_trees[, num_burn_in : num_gibbs, tree_num]
 	
 	if (save_plot){
 		save_plot_function(bart_machine, paste("hist_mu_vals_t_", tree_num, sep = ""), data_title)
@@ -330,18 +330,18 @@ hist_all_mu_values_for_tree = function(bart_machine, extra_text = NULL, data_tit
 		dev.new()
 	}
 	
-	all_mu_vals_for_tree_vec = as.vector(all_mu_vals_for_tree)
-	min_mu = min(all_mu_vals_for_tree_vec, na.rm = TRUE)
-	max_mu = max(all_mu_vals_for_tree_vec, na.rm = TRUE)
+	all_mu_vals_for_tree_vec_after_burn_in = as.vector(all_mu_vals_for_tree_after_burn_in)
+	min_mu = min(all_mu_vals_for_tree_vec_after_burn_in, na.rm = TRUE)
+	max_mu = max(all_mu_vals_for_tree_vec_after_burn_in, na.rm = TRUE)
 	
-	hist(all_mu_vals_for_tree_vec, 
+	hist(all_mu_vals_for_tree_vec_after_burn_in, 
 			col = "white",
 			border = NA, 
 			br = seq(from = min_mu - 0.01, to = max_mu + 0.01, by = (max_mu - min_mu + 0.01) / 5000),
 			xlab = "Leaf value",
-			main = paste("Hist of all mu values for all leaves in tree ", tree_num, ifelse(is.null(extra_text), "", paste("\n", extra_text)), sep = ""))
+			main = paste("Hist of all mu values for all leaves in tree ", tree_num, " after burn-in", ifelse(is.null(extra_text), "", paste("\n", extra_text)), sep = ""))
 	for (b in 1 : maximum_nodes_over_all_trees(bart_machine)){
-		hist(all_mu_vals_for_tree[b, ], 
+		hist(all_mu_vals_for_tree_after_burn_in[b, ], 
 			col = COLORS[b], 
 			border = NA, 
 			br = seq(from = min_mu - 0.01, to = max_mu + 0.01, by = (max_mu - min_mu + 0.01) / 2000), 

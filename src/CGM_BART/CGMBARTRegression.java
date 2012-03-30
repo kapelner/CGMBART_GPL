@@ -33,7 +33,7 @@ import GemIdentClassificationEngine.DatumSetupForEntireRun;
 import GemIdentTools.IOTools;
 import GemIdentView.JProgressBarAndLabel;
 
-public class CGMBARTRegression extends CGMBART_FixedTreeInitially {
+public class CGMBARTRegression extends CGMBART_Alt {
 	private static final long serialVersionUID = 6418127647567343927L;
 	
 	
@@ -45,7 +45,7 @@ public class CGMBARTRegression extends CGMBART_FixedTreeInitially {
 	 */
 	public CGMBARTRegression(DatumSetupForEntireRun datumSetupForEntireRun, JProgressBarAndLabel buildProgress) {
 		super(datumSetupForEntireRun, buildProgress);
-		System.out.println("CGMBARTRegression init\n");
+//		System.out.println("CGMBARTRegression init\n");
 	}
 	 
 	/** Default constructor for R package

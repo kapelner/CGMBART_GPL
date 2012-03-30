@@ -186,7 +186,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 		//this posterior builder will be shared throughout the entire process
 		posterior_builder = new CGMBARTPosteriorBuilder(tree_prior_builder);
 		//we have to set the CGM98 hyperparameters as well as the hyperparameter sigsq_mu
-		posterior_builder.setHyperparameters(hyper_mu_mu, hyper_nu, hyper_lambda, hyper_sigsq_mu);	
+		posterior_builder.setHyperparameters(hyper_mu_mu, hyper_sigsq_mu);	
 	}
 
 	@Override
@@ -311,7 +311,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 				ArrayList<String> all_results = new ArrayList<String>(n);
 				for (int i = 0; i < n; i++){
 					all_results.add("" + tree.Evaluate(X_y.get(i)));
-				} 
+				}
 				evaluations.println(sample_num + "," + t + "," + tree.stringID() + "," + IOTools.StringJoin(all_results, ","));
 			}	
 			evaluations.println((sample_num) + ",,y," + IOTools.StringJoin(y_trans, ","));
@@ -319,9 +319,9 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 //		final Thread illustrator_thread = new Thread(){
 //			public void run(){
 //		if (Math.random() < 0.0333){
-			if (TREE_ILLUST){
+//			if (TREE_ILLUST){
 				tree_array_illustration.CreateIllustrationAndSaveImage();
-			}
+//			}
 //		}
 //			}
 //		};
@@ -389,11 +389,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 		
 //		System.out.println("SampleTreeByDrawingFromTreeDist rs = " + IOTools.StringJoin(R_j, ","));
 		if (WRITE_DETAILED_DEBUG_FILES){
-	//		new Thread(){
-	//			public void run(){					
-					remainings.println((sample_num - 1) + "," + t + "," + copy_of_old_jth_tree.stringID() + "," + IOTools.StringJoin(R_j, ","));			
-	//			}
-	//		}.start();
+			remainings.println((sample_num - 1) + "," + t + "," + copy_of_old_jth_tree.stringID() + "," + IOTools.StringJoin(R_j, ","));			
 		}
 		
 		//now, (important!) set the R_j's as this tree's data.
@@ -410,7 +406,6 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 		tree_array_illustration.addLikelihood(lik);
 		all_tree_liks[t][sample_num] = lik;
 		
-		//we gotta use the previous crop of trees
 		cgm_trees.add(tree_star);
 		//now set the new trees in the gibbs sample pantheon, keep updating it...
 		gibbs_samples_of_cgm_trees.set(sample_num, cgm_trees);

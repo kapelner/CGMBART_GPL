@@ -249,7 +249,7 @@ public abstract class CGMPosteriorBuilder {
 	}
 
 	/** The number of data points in a node that we can split on */
-	protected static final int N_RULE = 5;
+	protected static final int N_RULE = 0;
 	
 	/**
 	 * See notes. We need to pick a random terminal node that has greater than N_RULE
@@ -438,11 +438,11 @@ public abstract class CGMPosteriorBuilder {
 		if (DEBUG_ITERATIONS){
 			iteration_info.put("change_step", "CHANGE");
 		}		
-//		System.out.println("proposal via CHANGE  " + T.stringID());
+		System.out.println("proposal via CHANGE  " + T.stringID());
 		//get all the internal nodes
 		ArrayList<CGMTreeNode> internal_nodes = CGMTreeNode.findInternalNodes(T);
 		if (internal_nodes.isEmpty()){
-//			System.out.println("no internal nodes");
+			System.out.println("no internal nodes");
 			return;
 		}
 		//pick one internal node at random
@@ -451,7 +451,7 @@ public abstract class CGMPosteriorBuilder {
 		internal_node_to_change.splitAttributeM = treePriorBuilder.assignSplitAttribute(internal_node_to_change);
 		internal_node_to_change.splitValue = treePriorBuilder.assignSplitValue(internal_node_to_change.data, internal_node_to_change.splitAttributeM);
 		internal_node_to_change.log_prop_lik = null; //release the cache
-		//		System.out.println("internal_node_to_change node: " + internal_node_to_change.stringID() + " rule: " + " X_" + internal_node_to_change.splitAttributeM + " < " + internal_node_to_change.splitValue);		
+		System.out.println("internal_node_to_change node: " + internal_node_to_change.stringID() + " rule: " + " X_" + internal_node_to_change.splitAttributeM + " < " + internal_node_to_change.splitValue + "   total num int nodes: " + internal_nodes.size());		
 		if (DEBUG_ITERATIONS){
 			iteration_info.put("changed_node", internal_node_to_change.stringID());
 			iteration_info.put("split_attribute", internal_node_to_change.splitAttributeM + "");

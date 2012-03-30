@@ -275,10 +275,7 @@ public class CGMTreeNode extends TreeNode implements Cloneable, Serializable {
 		if (node.isLeaf){
 			return;
 		}
-		//as long as we are not the root, we're internal
-		if (node.parent != null){
-			internal_nodes.add(node);
-		}
+		internal_nodes.add(node);
 		//recurse to find others
 		findInternalNodesRecursively(node.left, internal_nodes);
 		findInternalNodesRecursively(node.right, internal_nodes);
@@ -522,5 +519,9 @@ public class CGMTreeNode extends TreeNode implements Cloneable, Serializable {
 		}
 		return bart.un_transform_y(y_prediction);
 	}
+	
+	public double avg_response_untransformed(){
+		return bart.un_transform_y(avg_response());
+	}	
 	
 }

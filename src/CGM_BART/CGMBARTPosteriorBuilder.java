@@ -38,20 +38,19 @@ import GemIdentTools.Matrices.DoubleMatrix;
  * @author kapelner
  *
  */
-public final class CGMBARTPosteriorBuilder extends CGMRegressionMeanShiftPosteriorBuilder {
+public class CGMBARTPosteriorBuilder extends CGMPosteriorBuilder {
 
 	private double hyper_sigsq_mu;
 	private double sigsq;
+	private double hyper_mu_bar;
 	
 	
 	public CGMBARTPosteriorBuilder(CGMTreePriorBuilder tree_prior_builder) {
 		super(tree_prior_builder);
 	}
 	
-	public void setHyperparameters(double hyper_mu_bar, double hyper_nu, double hyper_lambda, double hyper_sigsq_mu){
+	public void setHyperparameters(double hyper_mu_bar, double hyper_sigsq_mu){
 		this.hyper_mu_bar = hyper_mu_bar;
-		this.hyper_nu = hyper_nu;
-		this.hyper_lambda = hyper_lambda;
 		this.hyper_sigsq_mu = hyper_sigsq_mu;
 	}
 	
@@ -66,10 +65,11 @@ public final class CGMBARTPosteriorBuilder extends CGMRegressionMeanShiftPosteri
 		
 		//first get the leaves
 		ArrayList<CGMTreeNode> terminal_nodes = CGMTreeNode.getTerminalNodesWithDataAboveN(T, 0);
-//		int b = terminal_nodes.size();
+		System.out.println("calculateLnProbYGivenTree num terminal_nodes: " + terminal_nodes.size());
+		
 		int n = treePriorBuilder.getN();
 		
-		//calculate term zero:
+		//calculate the constant term:
 		double ln_prob = -n * ln_two_pi;
 //		System.out.println("calculateLnProbYGivenTree after term 0: " + ln_prob);
 		
@@ -141,12 +141,6 @@ public final class CGMBARTPosteriorBuilder extends CGMRegressionMeanShiftPosteri
 	}
 
 	private DoubleMatrix generateInvSigmaMatrix(int n) {
-//		DoubleMatrix jn_over_n = CGMDoubleMatrix.CachedJnOverN(n);
-//		DoubleMatrix in = DoubleMatrix.In(n);
-//		DoubleMatrix first_term = jn_over_n.times(1 / (hyper_sigsq_mu * n + sigsq));
-//		DoubleMatrix second_term = (in.minus(jn_over_n)).times(1 / sigsq);
-//		return first_term.plus(second_term);
-
 		double shared_term = 1 / (n * (hyper_sigsq_mu * n + sigsq));
 		double on_diag = shared_term + 1 / sigsq * (1 - 1 / (double)n);
 		double off_diag = shared_term - 1 / (n * sigsq);
