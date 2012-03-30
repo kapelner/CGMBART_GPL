@@ -234,15 +234,15 @@ run_bart_model_and_save_diags_and_results = function(training_data, test_data, d
 	plot_sigsqs_convergence_diagnostics(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)
 	hist_sigsqs(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)
 	plot_tree_liks_convergence_diagnostics(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)
-#	hist_tree_liks(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)
+	hist_tree_liks(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)
 	plot_tree_num_nodes(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)	
 	plot_tree_depths(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)
 	for (t in 1 : num_trees){
 		plot_all_mu_values_for_tree(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot, t)
 		hist_all_mu_values_for_tree(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot, t)
-		for (b in 1 : maximum_nodes_over_all_trees(bart_machine)){
-			hist_mu_values_by_tree_and_leaf_after_burn_in(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot, t, b)
-		}
+#		for (b in 1 : maximum_nodes_over_all_trees(bart_machine)){
+#			hist_mu_values_by_tree_and_leaf_after_burn_in(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot, t, b)
+#		}
 	}
 	
 	new_simul_row = c(

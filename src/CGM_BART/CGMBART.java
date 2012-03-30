@@ -414,7 +414,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 		cgm_trees.add(tree_star);
 		//now set the new trees in the gibbs sample pantheon, keep updating it...
 		gibbs_samples_of_cgm_trees.set(sample_num, cgm_trees);
-		System.out.println("SampleTree sample_num " + sample_num + " cgm_trees " + cgm_trees);
+//		System.out.println("SampleTree sample_num " + sample_num + " cgm_trees " + cgm_trees);
 		
 		tree_array_illustration.AddTree(tree_star);
 	}	
@@ -468,7 +468,8 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 		
 		for (int i = 0; i < num_trees; i++){
 //			System.out.println("CGMBART create prior on tree: " + (i + 1));
-			CGMTreeNode tree = tree_prior_builder.buildTreeStructureBasedOnPrior(this);
+			CGMTreeNode tree = new CGMTreeNode(null, X_y, this);
+			tree.y_prediction = 0.0; //default
 			tree.initLogPropLik();
 //			modifyTreeForDebugging(tree);
 			tree.updateWithNewResponsesAndPropagate(X_y, y_trans, p);

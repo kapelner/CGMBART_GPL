@@ -14,16 +14,17 @@ for (model_name in c(real_regression_data_sets, simulated_data_sets)){
 							"sigsqs_by_gibbs", 
 							"sigsqs_hist",
 							"tree_liks_by_gibbs",
-#							"tree_liks_hist",
-							"tree_nodes", 
+							"tree_liks_hist",
+							"tree_nodes",
 							"tree_depths"
 						)
 						#now... this if for debugging only the tree model						
-						image_titles = c(image_titles, "mu_vals_t_1")
-						image_titles = c(image_titles, "mu_vals_t_1_b_4")
-						image_titles = c(image_titles, "mu_vals_t_1_b_5")
-						image_titles = c(image_titles, "mu_vals_t_1_b_6")
-						image_titles = c(image_titles, "mu_vals_t_1_b_7")
+						image_titles = c(image_titles, "plot_mu_vals_t_1")
+						image_titles = c(image_titles, "hist_mu_vals_t_1")
+#						image_titles = c(image_titles, "mu_vals_t_1_b_4")
+#						image_titles = c(image_titles, "mu_vals_t_1_b_5")
+#						image_titles = c(image_titles, "mu_vals_t_1_b_6")
+#						image_titles = c(image_titles, "mu_vals_t_1_b_7")
 						#now the comparisons
 						image_titles = c(image_titles, "yvyhat_bart", 
 								"yvyhat_R_BART", 
