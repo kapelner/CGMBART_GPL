@@ -49,7 +49,9 @@ public class TreeIllustration {
 	public static NumberFormat two_digit_format = NumberFormat.getInstance();
 	static {
 		one_digit_format.setMaximumFractionDigits(1);
+		one_digit_format.setGroupingUsed(false);
 		two_digit_format.setMaximumFractionDigits(2);
+		two_digit_format.setGroupingUsed(false);
 	}
 	
 	/** the root of the tree we're illustrating */

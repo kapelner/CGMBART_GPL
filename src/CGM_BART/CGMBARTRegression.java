@@ -33,9 +33,8 @@ import GemIdentClassificationEngine.DatumSetupForEntireRun;
 import GemIdentTools.IOTools;
 import GemIdentView.JProgressBarAndLabel;
 
-public class CGMBARTRegression extends CGMBART_Alt {
+public class CGMBARTRegression extends CGMBART_FixedSigsqAndTreeStructureJustChanges {
 	private static final long serialVersionUID = 6418127647567343927L;
-	
 	
 	/**
 	 * Constructs the BART classifier for regression.

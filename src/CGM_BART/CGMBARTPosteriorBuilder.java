@@ -65,12 +65,12 @@ public class CGMBARTPosteriorBuilder extends CGMPosteriorBuilder {
 		
 		//first get the leaves
 		ArrayList<CGMTreeNode> terminal_nodes = CGMTreeNode.getTerminalNodesWithDataAboveN(T, 0);
-		System.out.println("calculateLnProbYGivenTree num terminal_nodes: " + terminal_nodes.size());
+//		System.out.println("calculateLnProbYGivenTree num terminal_nodes: " + terminal_nodes.size());
 		
-		int n = treePriorBuilder.getN();
+//		int n = treePriorBuilder.getN();
 		
 		//calculate the constant term:
-		double ln_prob = -n * ln_two_pi;
+		double ln_prob = 0;//-n / 2 * ln_two_pi;
 //		System.out.println("calculateLnProbYGivenTree after term 0: " + ln_prob);
 		
 		//now loop over all nodes and calculate term a
@@ -96,7 +96,7 @@ public class CGMBARTPosteriorBuilder extends CGMPosteriorBuilder {
 //		DoubleMatrix sigma = generateSigmaMatrix(node.n);
 //		System.out.println("sigma: \n" + sigma.crop(0, 5, 0, 5).toString(4));
 //		double det = sigma.det();
-//		System.out.println("det(sigma) " + det);
+//		System.out.println("sigsq " + sigsq);
 		double det_by_book = Math.pow(sigsq, node.n - 1) * (hyper_sigsq_mu * node.n + sigsq);
 		//do some corrections to the determinant due to computational limitations of the double storage
 		if (det_by_book == 0){

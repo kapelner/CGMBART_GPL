@@ -46,8 +46,8 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 	protected static final boolean TRANSFORM_Y = true;
 	protected static final int DEFAULT_NUM_TREES = 1;
 	//this burn in number needs to be computed via some sort of moving average or time series calculation
-	protected static final int DEFAULT_NUM_GIBBS_BURN_IN = 2000;
-	protected static final int DEFAULT_NUM_GIBBS_TOTAL_ITERATIONS = 4000; //this must be larger than the number of burn in!!!
+	protected static final int DEFAULT_NUM_GIBBS_BURN_IN = 250;
+	protected static final int DEFAULT_NUM_GIBBS_TOTAL_ITERATIONS = 500; //this must be larger than the number of burn in!!!
 	
 //	protected static final double GIBBS_THIN_RATIO = 0.1;
 	
@@ -58,7 +58,9 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 	protected static PrintWriter tree_liks;
 	protected static PrintWriter remainings;
 	protected static PrintWriter evaluations;
-	protected static boolean TREE_ILLUST = false;
+	public static PrintWriter mh_iterations_full_record;
+	
+	protected static boolean TREE_ILLUST = true;
 	protected static final boolean WRITE_DETAILED_DEBUG_FILES = false;
 	
 //	static {
@@ -68,7 +70,6 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 	static {
 		try {			
 			output = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "output" + DEBUG_EXT)));
-			TreeIllustration.DeletePreviousTreeIllustrations();
 			other_debug = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "other_debug" + DEBUG_EXT)));
 			y_and_y_trans = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "y_and_y_trans" + DEBUG_EXT)));
 			sigsqs = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "sigsqs" + DEBUG_EXT)));
@@ -87,6 +88,19 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 				tree_liks.print("t_" + t + "_lik,t_" + t + "_id,");
 			}
 			tree_liks.print("\n");
+			mh_iterations_full_record = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "mh_iterations_full_record" + DEBUG_EXT)));
+			mh_iterations_full_record.println(
+					"step" + "," + 
+					"node_to_change" + "," + 
+					"location_of_node_to_change" + "," +
+					"prior_split_rule" + "," +					
+					"attempted_split_rule" + "," +
+					"accept_or_reject" + "," +  
+					"tree_likelihood_before" + "," + 
+					"tree_likelihood_after" + "," + 
+					"ln_r" + "," +
+					"ln_u_0_1"
+				);			
 			TreeIllustration.DeletePreviousTreeIllustrations();
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -319,9 +333,9 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 //		final Thread illustrator_thread = new Thread(){
 //			public void run(){
 //		if (Math.random() < 0.0333){
-//			if (TREE_ILLUST){
+			if (TREE_ILLUST){
 				tree_array_illustration.CreateIllustrationAndSaveImage();
-//			}
+			}
 //		}
 //			}
 //		};
@@ -643,7 +657,8 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 		sigsqs.close();
 		sigsqs_draws.close();
 		evaluations.close();
-		other_debug.close();
+		other_debug.close();		
+		mh_iterations_full_record.close();
 	}
 	
 	protected static void OpenDebugFiles(){		
@@ -654,6 +669,8 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 			tree_liks = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "tree_liks" + DEBUG_EXT, true)));
 			evaluations = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "evaluations" + DEBUG_EXT, true)));
 			remainings = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "remainings" + DEBUG_EXT, true)));	
+			mh_iterations_full_record = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "mh_iterations_full_record" + DEBUG_EXT, true)));
+			
 		} catch (IOException e) {
 			e.printStackTrace();
 		}			

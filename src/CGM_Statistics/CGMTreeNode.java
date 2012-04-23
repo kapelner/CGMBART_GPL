@@ -522,6 +522,18 @@ public class CGMTreeNode extends TreeNode implements Cloneable, Serializable {
 	
 	public double avg_response_untransformed(){
 		return bart.un_transform_y(avg_response());
+	}
+
+	public String stringLocation(boolean show_parent) {
+		if (this.parent == null){
+			return show_parent ? "P" : "";
+		}
+		else if (this.parent.left == this){
+			return this.parent.stringLocation(false) + "L";
+		}
+		else {
+			return this.parent.stringLocation(false) + "R";
+		}
 	}	
 	
 }
