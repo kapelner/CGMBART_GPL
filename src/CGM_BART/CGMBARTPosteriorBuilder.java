@@ -55,7 +55,7 @@ public class CGMBARTPosteriorBuilder extends CGMPosteriorBuilder {
 	}
 	
 //	private static final double ln_one_over_sqrt_two_pi = Math.log(1 / Math.sqrt(2 * Math.PI));
-	private static final double ln_two_pi = Math.log(2 * Math.PI);
+//	private static final double ln_two_pi = Math.log(2 * Math.PI);
 	/**
 	 * Note this is not the probability of Y given the tree, this is the probability
 	 * of the r_i's that are in this tree, since each tree only fits the *remaining* data
@@ -87,6 +87,10 @@ public class CGMBARTPosteriorBuilder extends CGMPosteriorBuilder {
 //		System.out.println("ProbYGivenTree :" + Math.pow(ln_prob, Math.E));
 		
 		//cache this value so we never have to calculate it again
+		
+		CGMBART.mh_iterations_full_record.print(
+			TreeIllustration.two_digit_format.format(ln_prob) + ","
+		);
 		T.log_prop_lik = ln_prob;
 		return ln_prob;
 	}
@@ -134,6 +138,9 @@ public class CGMBARTPosteriorBuilder extends CGMPosteriorBuilder {
 //		ln_prob -= 0.5 * Math.log(main_term.get(0, 0));
 //		System.out.println("calculateLnProbYGivenTree log_prob_node_ell: " + log_prob_node_ell);
 		
+		CGMBART.mh_iterations_full_record.print(
+			TreeIllustration.two_digit_format.format(log_prob_node_ell) + ","
+		);		
 		//cache this for further use
 		node.log_prop_lik = log_prob_node_ell;
 		

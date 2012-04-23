@@ -217,8 +217,6 @@ public abstract class CGMPosteriorBuilder {
 		//ACCEPT/REJECT,STEP_name,log_prop_lik_o,log_prop_lik_f,log_r 
 		CGMBART.mh_iterations_full_record.println(
 			(ln_u_0_1 < log_r ? "A" : "R") + "," +  
-			TreeIllustration.one_digit_format.format(calculateLnProbYGivenTree(T_i)) + "," + 
-			TreeIllustration.one_digit_format.format(calculateLnProbYGivenTree(T_star)) + "," +
 			TreeIllustration.one_digit_format.format(log_r) + "," +
 			TreeIllustration.two_digit_format.format(ln_u_0_1)
 		);		
@@ -422,13 +420,11 @@ public abstract class CGMPosteriorBuilder {
 	private double calculateLogRatioForChangeOrSwap(CGMTreeNode T_i, CGMTreeNode T_star) {
 		double ln_prob_y_proposal = calculateLnProbYGivenTree(T_star);
 		double ln_prob_y_original = calculateLnProbYGivenTree(T_i);
-		System.out.println("prop ln(P(R|T*)) = " + ln_prob_y_proposal);
-		System.out.println("prop ln(P(R|Ti)) = " + ln_prob_y_original);
-		System.out.println("calculateLogRatioForChangeOrSwap p(y|T*) / p(y|Ti) = " + Math.pow(Math.E, ln_prob_y_proposal - ln_prob_y_original));
+//		System.out.println("prop ln(P(R|T*)) = " + ln_prob_y_proposal);
+//		System.out.println("prop ln(P(R|Ti)) = " + ln_prob_y_original);
+//		System.out.println("calculateLogRatioForChangeOrSwap p(y|T*) / p(y|Ti) = " + Math.pow(Math.E, ln_prob_y_proposal - ln_prob_y_original));
 		return ln_prob_y_proposal - ln_prob_y_original;
 	}
-
-
 
 	/**
 	 * Take an internal node, then switch its rule
@@ -493,6 +489,9 @@ public abstract class CGMPosteriorBuilder {
 		doubly_internal_node_to_swap.log_prop_lik = null;
 		left_child.log_prop_lik = null;
 		right_child.log_prop_lik = null;
+		
+		Integer prevsplitAttributeM = doubly_internal_node_to_swap.splitAttributeM;
+		Double presplitValue = doubly_internal_node_to_swap.splitValue;		
 		//in the off chance that both children have the same rules...
 		if (left_child.splitAttributeM == right_child.splitAttributeM && left_child.splitValue == right_child.splitValue){
 			//swap the parent's rule with the childrens' rule
@@ -520,7 +519,16 @@ public abstract class CGMPosteriorBuilder {
 		if (DEBUG_ITERATIONS){
 			iteration_info.put("changed_node", doubly_internal_node_to_swap.stringID());
 			iteration_info.put("split_attribute", doubly_internal_node_to_swap.splitAttributeM + "");
-			iteration_info.put("split_value", doubly_internal_node_to_swap.splitValue + "");			
+			iteration_info.put("split_value", doubly_internal_node_to_swap.splitValue + "");
+			CGMBART.mh_iterations_full_record.print(
+				"SWAP" + "," + 
+				doubly_internal_node_to_swap.stringID() + "," + 
+				doubly_internal_node_to_swap.stringLocation(true) + "," +
+				"X_" + (prevsplitAttributeM + 1) + " < " + 
+				TreeIllustration.one_digit_format.format(presplitValue) + "," +					
+				"X_" + (doubly_internal_node_to_swap.splitAttributeM + 1) + " < " + 
+				TreeIllustration.one_digit_format.format(doubly_internal_node_to_swap.splitValue) + ","		
+			);			
 		}			
 		//now we need to propagate this change all through its children and its children's children
 		CGMTreeNode.propagateRuleChangeOrSwapThroughoutTree(doubly_internal_node_to_swap, false);

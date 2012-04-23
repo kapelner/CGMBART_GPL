@@ -22,7 +22,7 @@ public class CGMBARTPosteriorBuilder_Alt extends CGMBARTPosteriorBuilder {
 //			return Steps.GROW;
 //		else if (roll < 0.02)
 //			return Steps.PRUNE;
-//		else if (roll <= 1)
+//		if (roll <= 1)
 //			return Steps.CHANGE;
 //		return Steps.SWAP;
 		

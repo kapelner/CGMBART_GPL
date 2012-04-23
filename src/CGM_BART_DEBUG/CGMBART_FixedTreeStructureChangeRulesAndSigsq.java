@@ -7,15 +7,15 @@ import GemIdentView.JProgressBarAndLabel;
 import CGM_BART.*;
 import CGM_Statistics.CGMTreeNode;
 
-public class CGMBART_FixedTreeStructureJustChanges extends CGMBART {
+public class CGMBART_FixedTreeStructureChangeRulesAndSigsq extends CGMBART {
 	private static final long serialVersionUID = 3460935328647793073L;
 	
-	public CGMBART_FixedTreeStructureJustChanges(DatumSetupForEntireRun datumSetupForEntireRun, JProgressBarAndLabel buildProgress) {
+	public CGMBART_FixedTreeStructureChangeRulesAndSigsq(DatumSetupForEntireRun datumSetupForEntireRun, JProgressBarAndLabel buildProgress) {
 		super(datumSetupForEntireRun, buildProgress);
 		System.out.println("CGMBART_Alt init\n");
 		setNumTrees(1); //in this DEBUG model, there's only one tree
 //		printTreeIllustations();
-	}	
+	}
 	
 	public void setData(ArrayList<double[]> X_y){
 		super.setData(X_y);

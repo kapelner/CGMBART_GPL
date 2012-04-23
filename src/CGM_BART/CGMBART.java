@@ -46,8 +46,8 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 	protected static final boolean TRANSFORM_Y = true;
 	protected static final int DEFAULT_NUM_TREES = 1;
 	//this burn in number needs to be computed via some sort of moving average or time series calculation
-	protected static final int DEFAULT_NUM_GIBBS_BURN_IN = 250;
-	protected static final int DEFAULT_NUM_GIBBS_TOTAL_ITERATIONS = 500; //this must be larger than the number of burn in!!!
+	protected static final int DEFAULT_NUM_GIBBS_BURN_IN = 500;
+	protected static final int DEFAULT_NUM_GIBBS_TOTAL_ITERATIONS = 3000000; //this must be larger than the number of burn in!!!
 	
 //	protected static final double GIBBS_THIN_RATIO = 0.1;
 	
@@ -60,7 +60,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 	protected static PrintWriter evaluations;
 	public static PrintWriter mh_iterations_full_record;
 	
-	protected static boolean TREE_ILLUST = true;
+	protected static boolean TREE_ILLUST = false;
 	protected static final boolean WRITE_DETAILED_DEBUG_FILES = false;
 	
 //	static {
@@ -92,12 +92,20 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 			mh_iterations_full_record.println(
 					"step" + "," + 
 					"node_to_change" + "," + 
-					"location_of_node_to_change" + "," +
+					"loc" + "," +
 					"prior_split_rule" + "," +					
-					"attempted_split_rule" + "," +
-					"accept_or_reject" + "," +  
-					"tree_likelihood_before" + "," + 
-					"tree_likelihood_after" + "," + 
+					"attempted_split_rule" + "," +										
+					"leaf_1_*" + "," + 
+					"leaf_2_*" + "," + 
+					"leaf_3_*" + "," + 
+					"leaf_4_*" + "," + 
+					"tree_*_likelihood" + "," + 
+					"leaf_1_i" + "," + 
+					"leaf_2_i" + "," + 
+					"leaf_3_i" + "," + 
+					"leaf_4_i" + "," + 
+					"tree_i_likelihood" + "," + 	
+					"accept_or_reject" + "," + 
 					"ln_r" + "," +
 					"ln_u_0_1"
 				);			

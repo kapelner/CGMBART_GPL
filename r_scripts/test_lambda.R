@@ -40,7 +40,7 @@ abline(v = 1, col = "blue", lwd = 3)
 
 n = 1000
 nu = 3
-lambda = 0.011729011314217372
+lambda = 4.834109966488992E-5
 sse = 0.002913120622673349
 alpha_sim = (nu + n) / 2
 beta_sim = (nu * lambda + sse) / 2
@@ -51,9 +51,9 @@ hist(rigamma(10000, alpha_sim, beta_sim), br = 100)
 abline(v = 1, col = "blue", lwd = 2)
 
 
-lambda = 0.00000000001
-xs = rigamma(10000, 1.5, lambda)
-hist(xs, br = 10000, xlim = c(0, 0.0000000005))
+lambda = 4.834109966488992E-5
+xs = rigamma(10000, 1.5, 1.5 * lambda) * 63.478^2
+hist(xs, br = 100000, xlim = c(0, 5))
 
 mean(xs)
 sd(xs)
