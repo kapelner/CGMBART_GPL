@@ -47,9 +47,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 	protected static final int DEFAULT_NUM_TREES = 1;
 	//this burn in number needs to be computed via some sort of moving average or time series calculation
 	protected static final int DEFAULT_NUM_GIBBS_BURN_IN = 500;
-	protected static final int DEFAULT_NUM_GIBBS_TOTAL_ITERATIONS = 3000000; //this must be larger than the number of burn in!!!
-	
-//	protected static final double GIBBS_THIN_RATIO = 0.1;
+	protected static final int DEFAULT_NUM_GIBBS_TOTAL_ITERATIONS = 20000; //this must be larger than the number of burn in!!!
 	
 	protected static PrintWriter y_and_y_trans;
 	protected static PrintWriter sigsqs;
@@ -60,7 +58,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 	protected static PrintWriter evaluations;
 	public static PrintWriter mh_iterations_full_record;
 	
-	protected static boolean TREE_ILLUST = false;
+	protected static boolean TREE_ILLUST = true;
 	protected static final boolean WRITE_DETAILED_DEBUG_FILES = false;
 	
 //	static {
@@ -93,8 +91,10 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 					"step" + "," + 
 					"node_to_change" + "," + 
 					"loc" + "," +
-					"prior_split_rule" + "," +					
-					"attempted_split_rule" + "," +										
+					"a_i" + "," +
+					"v_i" + "," +
+					"a_*" + "," +	
+					"v_*" + "," +
 					"leaf_1_*" + "," + 
 					"leaf_2_*" + "," + 
 					"leaf_3_*" + "," + 
@@ -800,7 +800,6 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 		System.out.println("y_min = " + y_min + " y_max = " + y_max + " R_y = " + Math.sqrt(y_range_sq));
 		System.out.println("hyperparams:  k = " + k + " hyper_mu_mu = " + hyper_mu_mu + " sigsq_mu = " + hyper_sigsq_mu + " hyper_lambda = " + hyper_lambda + " hyper_nu = " + hyper_nu + " s_y_trans^2 = " + s_sq_y + " R_y = " + Math.sqrt(y_range_sq));
 	}
-
 	
 	/**
 	 * We call then override the setData function. we need to ensure y is properly transformed pursuant to 

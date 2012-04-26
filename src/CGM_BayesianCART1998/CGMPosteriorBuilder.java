@@ -134,7 +134,7 @@ public abstract class CGMPosteriorBuilder {
 	}
 
 	private static final String ZEROES = "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
-	public static String LeadingZeroes(int num, int num_digits) {
+	public static String LeadingZeroes(double num, int num_digits) {
 		if (num < 10 && num_digits >= 2){
 			return ZEROES.substring(0, num_digits - 1) + num;
 		}
@@ -158,6 +158,30 @@ public abstract class CGMPosteriorBuilder {
 		}
 		return String.valueOf(num);
 	}
+	public static String LeadingZeroes(int num, int num_digits) {
+		if (num < 10 && num_digits >= 2){
+			return ZEROES.substring(0, num_digits - 1) + num;
+		}
+		else if (num < 100 && num_digits >= 3){
+			return ZEROES.substring(0, num_digits - 2) + num;
+		}
+		else if (num < 1000 && num_digits >= 4){
+			return ZEROES.substring(0, num_digits - 3) + num;
+		}
+		else if (num < 10000 && num_digits >= 5){
+			return ZEROES.substring(0, num_digits - 4) + num;
+		}
+		else if (num < 100000 && num_digits >= 6){
+			return ZEROES.substring(0, num_digits - 5) + num;
+		}
+		else if (num < 1000000 && num_digits >= 7){
+			return ZEROES.substring(0, num_digits - 6) + num;
+		}
+		else if (num < 10000000 && num_digits >= 8){
+			return ZEROES.substring(0, num_digits - 7) + num;
+		}
+		return String.valueOf(num);
+	}	
 
 	/** a convenience to make the proposal steps look pretty */
 	public enum Steps {GROW, PRUNE, CHANGE, SWAP};
@@ -180,8 +204,7 @@ public abstract class CGMPosteriorBuilder {
 		//each proposal will calculate its own value, but this has to be initialized atop		
 		double log_r = 0;
 		//now pick between GROW, PRUNE, CHANGE, SWAP
-		Steps proposal_step = randomlyPickAmongTheFourProposalSteps();
-		switch (proposal_step){
+		switch (randomlyPickAmongTheFourProposalSteps()){
 			case GROW:
 				Double prob_split_grow = createTreeProposalViaGrow(T_star);
 //				System.out.println("prob_split on grow: " + prob_split_grow);
@@ -216,12 +239,12 @@ public abstract class CGMPosteriorBuilder {
 		double ln_u_0_1 = Math.log(Math.random());
 		//ACCEPT/REJECT,STEP_name,log_prop_lik_o,log_prop_lik_f,log_r 
 		CGMBART.mh_iterations_full_record.println(
-			(ln_u_0_1 < log_r ? "A" : "R") + "," +  
+			(acceptOrRejectProposal(ln_u_0_1, log_r) ? "A" : "R") + "," +  
 			TreeIllustration.one_digit_format.format(log_r) + "," +
 			TreeIllustration.two_digit_format.format(ln_u_0_1)
 		);		
 //		System.out.println("ln_u_0_1: " + ln_u_0_1 + " ln_r: " + log_r);
-		if (ln_u_0_1 < log_r){ //accept proposal
+		if (acceptOrRejectProposal(ln_u_0_1, log_r)){ //accept proposal
 			num_acceptances++;
 			System.out.println("proposal ACCEPTED\n\n");
 			if (DEBUG_ITERATIONS){
@@ -239,6 +262,10 @@ public abstract class CGMPosteriorBuilder {
 			iteration_info.put("acc_or_rej", "REJECTED");
 		}
 		return T_i;
+	}
+	
+	protected boolean acceptOrRejectProposal(double ln_u_0_1, double log_r){
+		return ln_u_0_1 < log_r ? true : false;
 	}
 
 	//can be overwritten to allow for more flexibility
@@ -425,6 +452,11 @@ public abstract class CGMPosteriorBuilder {
 //		System.out.println("calculateLogRatioForChangeOrSwap p(y|T*) / p(y|Ti) = " + Math.pow(Math.E, ln_prob_y_proposal - ln_prob_y_original));
 		return ln_prob_y_proposal - ln_prob_y_original;
 	}
+	
+	protected CGMTreeNode pickChangeNode(ArrayList<CGMTreeNode> internal_nodes) {
+		//return a random one
+		return internal_nodes.get(((int)Math.floor(Math.random() * internal_nodes.size())));
+	}
 
 	/**
 	 * Take an internal node, then switch its rule
@@ -432,18 +464,20 @@ public abstract class CGMPosteriorBuilder {
 	 * @param T_star	the tree to alter
 	 */
 	protected void createTreeProposalViaChange(CGMTreeNode T) {
+		System.out.println("proposal via CHANGE  " + T.stringID());
+		
 		if (DEBUG_ITERATIONS){
 			iteration_info.put("change_step", "CHANGE");
 		}		
-		System.out.println("proposal via CHANGE  " + T.stringID());
-		//get all the internal nodes
+
+		//pick one internal node at random
 		ArrayList<CGMTreeNode> internal_nodes = CGMTreeNode.findInternalNodes(T);
 		if (internal_nodes.isEmpty()){
 			System.out.println("no internal nodes");
 			return;
-		}
-		//pick one internal node at random
-		CGMTreeNode internal_node_to_change = internal_nodes.get(((int)Math.floor(Math.random() * internal_nodes.size())));
+		}		
+		CGMTreeNode internal_node_to_change = pickChangeNode(internal_nodes); 
+
 		//now switch its rule
 		Integer prevsplitAttributeM = internal_node_to_change.splitAttributeM;
 		Double presplitValue = internal_node_to_change.splitValue;
@@ -459,10 +493,10 @@ public abstract class CGMPosteriorBuilder {
 				"CHANGE" + "," + 
 				internal_node_to_change.stringID() + "," + 
 				internal_node_to_change.stringLocation(true) + "," +
-				"X_" + (prevsplitAttributeM + 1) + " < " + 
-				TreeIllustration.one_digit_format.format(presplitValue) + "," +					
-				"X_" + (internal_node_to_change.splitAttributeM + 1) + " < " + 
-				TreeIllustration.one_digit_format.format(internal_node_to_change.splitValue) + ","		
+				"X_" + (prevsplitAttributeM + 1) + "," + 
+				LeadingZeroes(Double.parseDouble(TreeIllustration.one_digit_format.format(presplitValue)), 4) + "," +					
+				"X_" + (internal_node_to_change.splitAttributeM + 1) + "," + 
+				LeadingZeroes(Double.parseDouble(TreeIllustration.one_digit_format.format(internal_node_to_change.splitValue)), 4) + ","		
 			);
 		}				
 		//now we need to propagate this change all through its children and its children's children

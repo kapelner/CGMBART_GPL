@@ -35,9 +35,6 @@ import GemIdentView.JProgressBarAndLabel;
 public class DataAnalysis {
 	
 	/** this is a file that is in CSV format (csv extension) with/out a header named c_<name> or r_<name> for classification or regression respectively */
-	
-	//NEED TO IMPLEMENT: http://www.simonwhatley.co.uk/using-ant-with-eclipse
-	
 //	private static final String DataSetFilename = "r_simple";
 	private static final String DataSetFilename = "r_treemodel";
 //	private static final String DataSetFilename = "r_friedman";
