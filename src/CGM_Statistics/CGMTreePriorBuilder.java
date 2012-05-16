@@ -32,7 +32,8 @@ import CGM_BART.CGMBART;
 public abstract class CGMTreePriorBuilder {
 	
 	protected ArrayList<double[]> X_y;
-	private int p;	
+	protected int p;
+	protected int n;	
 	
 
 
@@ -40,6 +41,7 @@ public abstract class CGMTreePriorBuilder {
 	public CGMTreePriorBuilder(ArrayList<double[]> X_y, int p){
 		this.X_y = X_y;
 		this.p = p;
+		this.n = X_y.size();
 	}
 	
 	public abstract double getAlpha();
@@ -47,12 +49,7 @@ public abstract class CGMTreePriorBuilder {
 	
 	public int getP() {
 		return p;
-	}	
-	
-	public int getN() {
-		return X_y.size();
-	}		
-
+	}
 
 	public CGMTreeNode buildTreeStructureBasedOnPrior(CGMBART bart) {
 		//we're going to build this exactly like CGM 938-9
@@ -120,7 +117,7 @@ public abstract class CGMTreePriorBuilder {
 	}
 
 
-	private void markNodeAsLeaf(CGMTreeNode node) {
+	protected void markNodeAsLeaf(CGMTreeNode node) {
 		node.isLeaf = true;
 //		System.out.println("marked " + node.stringID() + " as leaf");
 		

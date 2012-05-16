@@ -204,7 +204,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 		//first establish the hyperparams sigsq_mu, nu, lambda
 		calculateHyperparameters();	
 		//now generate a prior builder... used in any implementation
-		tree_prior_builder = new CGMBARTPriorBuilder(X_y, p); //this is technically incorrect since we should create the initial trees by dividing y by m... but who cares, it won't make a difference anyway
+		tree_prior_builder = new CGMBARTPriorBuilder(X_y, p);
 		//this posterior builder will be shared throughout the entire process
 		posterior_builder = new CGMBARTPosteriorBuilder(tree_prior_builder);
 		//we have to set the CGM98 hyperparameters as well as the hyperparameter sigsq_mu
@@ -213,54 +213,15 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 
 	@Override
 	public void Build() {
-
+		//this can be different for any BART implementation
 		SetupGibbsSampling();
 		//this section is different for the different BART implementations
 		//but it basically does all the Gibbs sampling
 		DoGibbsSampling();
-		
-
-//		for (int n_g = 0; n_g < num_gibbs_total_iterations; n_g++){
-//			System.out.println("n_g: " + n_g + " name " + gibbs_samples_of_cgm_trees.get(n_g));
-//		}
-//		for (int b = 1; b <= 7; b++){
-//			System.out.println("all vals of mu1: " + getMuValuesForAllItersByTreeAndLeaf(0, b));
-//		}
-
-
-//		System.err.println("num gibbs samples of cgm trees: " + gibbs_samples_of_cgm_trees.size());
-//		for (int i = 1; i <= gibbs_samples_of_cgm_trees.size(); i++){
-//			ArrayList<CGMTreeNode> trees = gibbs_samples_of_cgm_trees.get(i - 1);
-//			if (trees == null){
-//				System.out.println("gibbs sample " + i + " null trees");
-//			}
-//			else {
-//				for (int t = 1; t <= trees.size(); t++){
-//					CGMTreeNode tree = trees.get(t - 1);
-//					System.out.println("gibbs sample " + i + " tree " + t + " depth=" + tree.deepestNode() + " b=" + tree.numLeaves());
-//				}
-//			}
-//		}		
-//		System.err.println("err");
-		
 		//now we burn and thin the chains for each param
 		BurnTreeAndSigsqChain();
 		//for some reason we don't thin... I don't really understand why... has to do with autocorrelation and stickiness?
 //		ThinBothChains();
-		
-		//make sure you can do stuff from R
-//		getGibbsSamplesSigsqs();
-//		for (int i = 0; i < num_gibbs_total_iterations; i++){
-//			getNumNodesForTreesInGibbsSamp(i);
-//			getRootSplits(i);
-//			getDepthsForTreesInGibbsSamp(i);
-//		}
-//		for (int t = 0; t < m; t++){
-//			getLikForTree(t);
-//		}
-//		
-//		getGibbsSamplesForPrediction(X_y.get(0));
-
 		//make sure debug files are closed
 		CloseDebugFiles();
 	}
@@ -300,7 +261,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 					System.out.println("Sampling M_" + (t + 1) + "/" + num_trees + " iter " + gibb_sample_i + "/" + num_gibbs_total_iterations);
 				}				
 				SampleTree(gibb_sample_i, t, cgm_trees, tree_array_illustration);
-				SampleMu(gibb_sample_i, t);
+				SampleMus(gibb_sample_i, t);
 				gibbs_samples_of_cgm_trees.add(gibb_sample_i, cgm_trees);
 				if (stop_bit){
 					return;
@@ -371,7 +332,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 		posterior_builder.setCurrentSigsqValue(sigsq);
 	}
 
-	protected void SampleMu(int sample_num, int t) {
+	protected void SampleMus(int sample_num, int t) {
 //		System.out.println("SampleMu sample_num " +  sample_num + " t " + t + " gibbs array " + gibbs_samples_of_cgm_trees.get(sample_num));
 		CGMTreeNode tree = gibbs_samples_of_cgm_trees.get(sample_num).get(t);
 		assignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsq(tree, gibbs_samples_of_sigsq.get(sample_num - 1));
@@ -466,7 +427,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 		for (int i = 0; i < n; i++){
 			sum_ys_without_jth_tree[i] = 0; //initialize at zero, then add it up over all trees except the jth
 			for (int t = 0; t < other_trees.size(); t++){
-				sum_ys_without_jth_tree[i] += other_trees.get(t).Evaluate(X_y.get(i)); //first tree for now
+				sum_ys_without_jth_tree[i] += other_trees.get(t).Evaluate(X_y.get(i));
 			}
 		}
 		//now we need to subtract this from y

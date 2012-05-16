@@ -166,28 +166,38 @@ public class CGMBARTPosteriorBuilder extends CGMPosteriorBuilder {
 		return inv_sigma;
 	}
 
-//	private DoubleMatrix generateSigmaMatrix(int n) {
-//		DoubleMatrix sigma = new DoubleMatrix(n, n);
-//		for (int i = 0; i < n; i++){
-//			for (int j = 0; j < n; j++){
-//				if (i == j){
-//					sigma.set(i, j, hyper_sigsq_mu + sigsq);
-//				}
-//				else {
-//					sigma.set(i, j, hyper_sigsq_mu);
-//				}
-//			}
+	/** This grow step is different
+	 * 
+	 */
+	protected Double createTreeProposalViaGrow(CGMTreeNode T) {
+//		System.out.println("proposal via GROW  " + T.stringID());
+		//find all terminals nodes that have **more** than N_RULE data
+ 
+		ArrayList<CGMTreeNode> growth_nodes = CGMTreeNode.getTerminalNodesWithDataAboveN(T, N_RULE);
+//		System.out.print("num growth nodes: " + growth_nodes.size() +":");
+//		for (CGMTreeNode node : growth_nodes){
+//			System.out.print(" " + node.stringID());
 //		}
-//		return sigma;
-//	}
-//
-//	private double calculate_sse_from_leaf_data(double[] rs) {
-//		double sse = 0;
-//		for (double r : rs){
-//			sse += Math.pow(r, 2);
-//		}
-//		return sse;
-//	}
+//		System.out.print("\n");
+		//if there are no growth nodes at all, we need to get out with our skin intact,
+		//we return a probability of null
+		if (growth_nodes.size() == 0){
+//			System.out.println("no growth nodes in GROW step!");
+			return null;
+		}
+		//now we pick one of these nodes with enough data points randomly
+		CGMTreeNode growth_node = growth_nodes.get((int)Math.floor(Math.random() * growth_nodes.size()));
+		//now we give it a split attribute and value and assign the children data
+		treePriorBuilder.splitNodeAndAssignRule(growth_node);
+//		System.out.println("growth node: " + growth_node.stringID() + " rule: " + " X_" + growth_node.splitAttributeM + " < " + growth_node.splitValue);
+		if (DEBUG_ITERATIONS){
+			iteration_info.put("changed_node", growth_node.stringID());
+			iteration_info.put("split_attribute", growth_node.splitAttributeM + "");
+			iteration_info.put("split_value", growth_node.splitValue + "");
+		}		
+		//and now we need to return the probability that the growth node split
+		return treePriorBuilder.calculateProbabilityOfSplitting(growth_node);
+	}
 
 	/** 
 	 * we also make sure we use the new distribution of tree-space moves

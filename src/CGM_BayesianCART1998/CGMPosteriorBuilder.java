@@ -281,7 +281,7 @@ public abstract class CGMPosteriorBuilder {
 	}
 
 	/** The number of data points in a node that we can split on */
-	protected static final int N_RULE = 0;
+	protected static final int N_RULE = 5;
 	
 	/**
 	 * See notes. We need to pick a random terminal node that has greater than N_RULE

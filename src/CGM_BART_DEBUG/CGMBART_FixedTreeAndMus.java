@@ -38,7 +38,7 @@ public class CGMBART_FixedTreeAndMus extends CGMBART {
 		all_tree_liks[0][sample_num] = lik;		
 	}	
 
-	protected void SampleMu(int sample_num, int t){
+	protected void SampleMus(int sample_num, int t){
 		//do nothing -- the structure is in the sample of the tree
 	}
 	
