@@ -202,16 +202,23 @@ public class CGMBARTPosteriorBuilder extends CGMPosteriorBuilder {
 	/** 
 	 * we also make sure we use the new distribution of tree-space moves
 	 */
+//	protected Steps randomlyPickAmongTheFourProposalSteps() {
+//		double roll = Math.random();
+//		if (roll < 0.25)
+//			return Steps.GROW;
+//		else if (roll < 0.5)
+//			return Steps.PRUNE;
+//		else if (roll < 0.9)
+//			return Steps.CHANGE;
+//		return Steps.SWAP;
+//	}
+	
 	protected Steps randomlyPickAmongTheFourProposalSteps() {
 		double roll = Math.random();
-		if (roll < 0.25)
+		if (roll < 0.5)
 			return Steps.GROW;
-		else if (roll < 0.5)
-			return Steps.PRUNE;
-		else if (roll < 0.9)
-			return Steps.CHANGE;
-		return Steps.SWAP;
-	}
+		return Steps.PRUNE;
+	}	
 
 	public void setCurrentSigsqValue(double sigsq) {
 		this.sigsq = sigsq;

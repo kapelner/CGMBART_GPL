@@ -1,0 +1,78 @@
+\include{preamble}
+
+\title{Some notes on likelihood of fits}
+
+\date{}
+
+\begin{document}
+\maketitle
+
+Consider the case with one tree with $b$ leaves (aka bottom notes) and responses $\yoneton$. A certain subset of the $y$'s wind up in the first node, say $y_{k_{1,1}}, y_{k_{1,2}}, \ldots y_{k_{1,n_1}}$, a certain subset of the $y$'s wind up in the second node, say $y_{k_{2,1}}, y_{k_{2,2}}, \ldots y_{k_{2,n_2}}$, etc. Of course the number of data points in all the leaves must keep to $n = n_1 + \ldots + n_b$.
+
+Now consider the first leaf. We consider this data to be realizations of independent and identically distributed normals with common mean, $\mu_1$, and common variance which is the variance of the error distribution (remember, $\berrordist \sim \multnormnot{n}{\bv{0}}{\sigsq \I_n}$). Thus we have:
+
+\beqn
+Y_{k_{1,1}}, Y_{k_{1,2}}, \ldots Y_{k_{1,n_1}} \iid \normnot{\mu_1}{\sigsq}
+\eeqn
+
+In our Bayesisan setup, we have the following prior on $\mu_1$:
+
+\beqn
+\mu_1 \sim \normnot{0}{\sigsq_\mu}
+\eeqn
+
+We can think of the $Y$'s as the sum of their mean and their disturbance like so for \eg the first $Y$ in the first node looks like:
+
+\beqn
+Y_{k_{1,1}} = \mu_1 + \errordist_{k_{1,1}}
+\eeqn
+
+Since the mean and the errors are independent, we can do the marginalization pretty easily via:
+
+\beqn
+Y_{k_{1,1}} \sim \normnot{0}{\sigsq_\mu} * \normnot{0}{\sigsq} = \normnot{0}{\sigsq_\mu + \sigsq}
+\eeqn
+
+However, the $Y$'s are no longer independent. If we've margined out the mean, then each of the realizations $y$ will tell us something about the mean. This can be seen in the following calculation:
+
+\beqn
+\cov{Y_{k_{1,1}}}{Y_{k_{1,2}}} &=& \cov{\mu_1 + \errordist_{k_{1,1}}}{\mu_1 + \errordist_{k_{1,2}}} \\
+&=& \cov{\mu_1}{\mu_1} + \underbrace{\cov{\mu_1}{\errordist_{k_{1,2}}}}_0 + \underbrace{\cov{\errordist_{k_{1,1}}}{\mu_1}}_0 + \underbrace{\cov{\errordist_{k_{1,1}}}{\errordist_{k_{1,2}}}}_0 \\
+&=& \var{\mu_1} \\
+&=& \sigsq_\mu
+\eeqn
+
+Where each of the above zeroes are due to assumed independence. 
+
+Thus, the joint distribution of all the $Y$'s looks like the following:
+
+\beqn
+\Y := \threevec{Y_{k_{1,1}}}{\vdots}{Y_{k_{1,n_1}}} \sim \multnormnot{n_1}{\bv{0}}{\bracks{
+\begin{array}{cccc} 
+\sigsq_\mu + \sigsq & \sigsq_\mu & \ldots & \sigsq_\mu \\
+\sigsq_\mu & \sigsq_\mu + \sigsq & \ldots & \sigsq_\mu \\
+\vdots & & \ddots & \vdots \\
+\sigsq_\mu & \ldots & \ldots & \sigsq_\mu + \sigsq
+\end{array}}}
+\eeqn
+
+Let's denote the above variance matrix as $\bSigma$ which is called an ``equicorrelation'' matrix.
+
+Thus the joint density looks like the following:
+
+\beqn
+f_{\Y} (\y) = \oneover{\tothepow{2\pi}{n_1} \abss{\bSigma}^\half} \exp{-\half \y^\top \bSigmainv \y}
+\eeqn
+
+Looking in a standard text on matrix algebra, we can find formulas for the inverse and the determinant of an equicorrelation matrix:
+
+\beqn
+\abss{\bSigma} &=& \tothepow{\sigsq}{n-1} \parens{\sigsq_\mu n_1 + \sigsq} \\
+\bSigmainv &=& \oneover{\sigsq_\mu n_1 + \sigsq} \oneover{n_1} \bv{J}_{n_1} + \oneover{\sigsq} \parens{\I_{n_1} - \oneover{n_1}\J_{n_1}}
+\eeqn
+
+These are the formulas I use to compute the proportional log likelihoods $\prob{Y | T}$ in my implementation. Note that I still do the matrix algebra inside of the $\exp{\cdot}$. I couldn't figure out a way around that.\\
+
+Please let me know if you both agree with this. Thanks!
+
+\end{document}

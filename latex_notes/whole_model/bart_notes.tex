@@ -1,0 +1,523 @@
+\documentclass[12pt]{article}
+
+\input{preamble}
+
+%title preamble
+\title{Notes on BART}
+\author{Adam Kapelner}
+
+\begin{document}
+\maketitle
+%this allows eqnarrays to split over multiple pages
+\allowdisplaybreaks
+
+
+%\section{Bayesian Classification Trees} \label{sec:bayesian_class_trees}
+%
+%A classification tree is specified by choosing a tree structure which is denoted $T$ and a set of $b$ node values $\thetavec = \bracks{\theta_1, \ldots, \theta_i, \ldots \theta_b}$. Each $y_{ij}$ is associated with a node $\theta_i$ because we partition the space into $b$ subspaces.
+%
+%The CART model is completely specified by $(\thetavec, T)$. In the Bayesian world, we need to create a prior on what we think the model looks like. We will use the following construction:
+%
+%\beqn
+%\prob{\thetavec, T | \X} = \prob{\thetavec | T, \X}\prob{T | \X}
+%\eeqn
+%
+%This way our choice of the prior on the tree structure, $T$ is independent of the parameterization of the nodes. We do not model the prior on $T$ in a functional form, but use a stochastic process to generate priors.
+%
+%\subsection{The prior on $T$}
+%
+%We use the following algorithm:
+%
+%\begin{enumerate}
+%\item  We begin with a root (\ie a single terminal node) $\eta$ drawn from prior (see next subsection)
+%\item Split node $\eta$ with $\probsub{SPLIT}{\eta, T}$
+%\item If we split the node in the previous step, then assign a split $\rho$ by drawing from $\probsub{RULE}{\rho | \eta, T}$
+%\end{enumerate}
+%
+%Note that all subtrees stemming from a node are independent.
+%
+%\subsubsection{The splitting rule}
+%
+%If we make the simple $\probsub{SPLIT}{\eta, T} = \alpha$, then any tree with $b$ nodes will have a probability of $\alpha^{b-1} (1-\alpha)^{b}$. We can control the size AND shape of the tree via the following:
+%
+%\beqn
+%\probsub{SPLIT}{\eta, T} = \alpha (1 + d_\eta)^{-\beta}
+%\eeqn
+%
+%Where $d_\eta$ is the depth (in terms of splits) at the node $\eta$ and both $\alpha$ and $\beta \geq 0$ are shape parameters. These parameters are chosen by looking at the marginal distributions of $b$ and choosing something reasonable.
+%
+%Could it be we can make this fully Bayesian too?
+%
+%\subsubsection{The assignment rule}
+%
+%It would be nice to specify $\probsub{RULE}{\rho | \eta, T}$ based on all available predictors in $\X$. Available means those predictors will yield non-empty terminal nodes with the following restrictions:
+%
+%\begin{itemize}
+%\item the splits only use predictors \textit{not} used in the above hierarchy.
+%\item the splits only use values that are observed in the actual predictor $\x_i$. This ensures the probability distribution to be discrete.
+%\end{itemize}
+%
+%As a simple first-pass which seems to work well, we choose a predictor uniformly from the set of all predictors $\in \braces{\x_1, \ldots, \x_p}$ and then from there, choose a split point uniformly from all observations $\in \braces{x_{1i}, \ldots x_{ni}}$ which we denote the \textit{uniform specification} rule. This is nice because it is immune to $h(\x_i)$ when $h$ is a monotone transformation of a predictor. The downside is that the rule can over-emphasize useless variables, but that's okay. Other, non-uniform, rules are of interest, but as a first-order pass, we can forget them.
+%
+%
+%\subsection{The prior on $\thetavec$}
+%
+%\subsubsection{For regression trees}
+%
+%We focus on analytical priors that minimize computational burden. Although we could look into others as well? A really nice goal would be to analytically margin out:
+%
+%\beqn
+%\prob{\y | \X, T} = \int \ldots \int \prob{\y | \X, T, \thetavec} \prob{\thetavec | T} d\thetavec
+%\eeqn
+%
+%We can do this by putting conjugate priors on the $\theta_i$'s via:
+%
+%\beqn
+%\mu_1, \ldots, \mu_b | \sigsq, T &\iid& \normnot{\mubar}{\frac{\sigsq}{a}} \\
+%\sigsq | T &\sim& \invgammanot{\overtwo{\nu}}{\overtwo{\nu\lambda}} \\
+%\Rightarrow \prob{\y | \X, T} &=& \frac{ca^{\overtwo{b}}}{\prod_{i=1}^b \sqrt{n_i + a}} \parens{\nu\lambda + \sum_{i=1}^b (s_i + t_i)}^{-\overtwo{n+\nu}} \eqncomment{via known simplifications} \\
+%\text{where}~~s_i &=& (n_i - 1)s^2_{y_i} \\
+%t_i &=& \frac{n_i a}{n_i + a}(\ybar_i - \mubar)^2
+%\eeqn
+%
+%This can also be extended to allow for different variances:
+%
+%\beqn
+%\mu_i | \sigsq_i &\sim& \normnot{\mubar}{\frac{\sigsq_i}{a}} \\
+%\sigsq_i &\sim& \invgammanot{\overtwo{\nu}}{\overtwo{\nu\lambda}} \\
+%\Rightarrow \prob{\y | \X, T} &=& \prod_{i=1}^b \pi^{\overtwo{n_i}} (\lambda\nu)^{\overtwo{\nu}} \frac{\sqrt{a}}{\sqrt{n_i + a}} \frac{\Gamma\parens{\overtwo{n_i + \nu}}}{\Gamma\parens{\overtwo{\nu}}} \parens{s_i + t_i + \nu\lambda}^{-\frac{n_i + \nu}{2}}
+%\eeqn
+%
+%The $s_i$ and $t_i$ are the same as before. We can use $\y$ to help us determine the hyperparameters $\nu, \lambda, \mubar, a$.
+%
+%
+%\subsubsection{For classification trees}
+%
+%In classification trees, $y_{ij} \in \braces{C_1, \ldots, C_K}$ \ie $K$ discrete categories where $y_{ij}$ denotes the $j$th observation in the $i$th node. We assume that the distrubution of these $y_{ij}$'s is multinomial:
+%
+%\beqn
+%y_{ij} | \theta_i \sim \multinomial{n_i}{\thetavec_i} \mathst \thetavec_i \equiv \bracks{p_{i1}, \ldots, p_{iK}}
+%\eeqn
+%
+%The simplest prior would probably be the conjugate Dirichlet. Pay close attention to the notation since $\thetavec_i$ and the vector of $p_{i\cdot}$'s is the same exact thing:
+%
+%\beqn
+%\thetavec_{\cdot} | T &\iid& \dirichlet{\alphavec} \mathst \alphavec > 0 \\
+%\thetavec_i | T &\sim& \dirichlet{\alpha_1, \ldots, \alpha_K} \\
+%\thetavec_i | T &\propto& p_{i1}^{\alpha_1 - 1} \cdots p_{iK}^{\alpha_K - 1} \\
+%p_{i1}, \ldots, p_{iK} | T &\propto& p_{i1}^{\alpha_1 - 1} \cdots p_{iK}^{\alpha_K - 1} \\
+%\eeqn
+%
+%Under the assumption that the distribution of $y_{ij}$ is a multinomial, let $n_{ik} = \sum_j I(y_{ij} \in C_k)$ with $\bv{n_i} = \bracks{n_{i1}, \ldots, n_{iK}}$ and $n_i = \sum_k n_{ik}$ \ie the total number of data points at that given node. Thereby the posterior will be:
+%
+%\beqn
+%p_{i1}, \ldots, p_{iK} | n_{i1}, \ldots, n_{iK}, T &\sim& p_{i1}^{n_{i1} + \alpha_1 - 1} \cdots p_{iK}^{n_{iK} + \alpha_K - 1} \\
+%\thetavec_i | \bv{n_i}, T &\sim& \dirichlet{\alphavec + \bv{n_i}} \eqncomment{\ie Dirichlet is conjugate}\\
+%\eeqn
+%
+%From this, it can be shown via known analytical simplification that:
+%
+%\begin{changemargin}{-0.75in}{0in}
+%\beqn
+%\prob{\y | \X, T} &=& \parens{\frac{\Gamma\parens{\sum_k \alpha_k}}{\prod_k \Gamma(\alpha_k)}}^b \prod_{i=1}^b  \frac{\prod_k \Gamma(n_{ik} + \alpha_k)}{\Gamma(n_i + \underbrace{\sum_k \alpha_k}_{\alpha_{sum}})} \\
+%\Rightarrow \natlog{\prob{\y | \X, T}} &=& b \parens{\underbrace{\lnGamma{\alpha_{sum}} - \sum_k \lnGamma{\alpha_k}}_{\alpha_{\text{const}}}} + \sum_i \parens{\sum_k \lnGamma{n_{ik} + \alpha_k}} - \lnGamma{n_i + \alpha_{sum}}
+%\eeqn
+%\end{changemargin}
+%
+%As a first pass, we can let $\alphavec = \bracks{1, \ldots, 1}^T$ in which case the prior becomes uniform. We can change this in order for classification to be more sensitive for different categories.\\
+%
+%We need a review of the Dirichlet distribution:\\
+%
+%
+%
+%\subsection{Finding the posterior}
+%
+%
+%Once again, since we've chosen computationally simple priors, we can analytically margin out $\thetavec$ via:
+%
+%\beqn
+%\prob{\y | \X, T} = \int \ldots \int \prob{\y | \X, T, \thetavec} \prob{\thetavec | T} d\thetavec
+%\eeqn
+%
+%Thereby, we can calculate the posterior up to a norming constant:
+%
+%\beqn
+%\prob{T | \X, \y} \propto \prob{\y | T, \X} \prob{T | \X}
+%\eeqn
+%
+%We cannot do this over all trees, so we use the Metropolis-Hastings algorithm to explore the posterior. This algorithm creates a Marvov chain of trees $T_0, T_1, T_2, \ldots$ that converge in distribution to the posterior, $\prob{T | \X, \y}$. Since everything is conditioned on $\X$, we're just going to leave it out in the notation going forward.
+%
+%\subsubsection{The Metropolis-Hastings Algorithm}
+%
+%Begin with an initial tree $T_0$ and transition from tree $T_i$ to $T_{i+1}$ via the the algorithm described below:
+%
+%\begin{enumerate}
+%\item Generate a candidate tree $T_*$ from the prob distribution $q(T_i, T_*)$ which can be read as the ``probability of transitioning from tree $T_i \rightarrow T_*$''
+%\item Set $T_{i+1} = T_*$ with probability:
+%
+%\beqn
+%r &\equiv& \frac{q(T_*, T_i)}{q(T_i, T_*)} \frac{\prob{\y | T_*}}{\prob{\y | T_i}}\frac{\prob{T_*}}{\prob{T_i}}\\
+%p &=& \min\braces{r, 1}
+%\eeqn
+%
+%Otherwise keep $T_i$
+%\end{enumerate}
+%
+%Computationally, it can be simpler to use $U \sim \stduniform$ and compare $\natlog{U} < \natlog{r}$; if true, then accept instead of $\min\braces{r, 1}$.
+%
+%\subsubsection{Specification of the Proposal Distribution, $q$}
+%
+%How do we generate $T_*$ from $T_i$? We randomly choose from among the following four choices:
+%
+%\begin{itemize}
+%\item \textbf{GROW} Randomly pick a terminal node. We do restrict growth to nodes that can support at least 5 data points in their offspring. Split it into two new ones by randomly assigning it a splitting rule according to $\probsub{RULE}{\cdot}$. Note that when growing, the probability of the new tree is related to the old tree via:
+%
+%\beqn
+%\prob{T_*} = \prob{T_i} \probsub{SPLIT}{\cdot}\probsub{RULE}{\cdot}\\
+%\eeqn
+%
+%We also can see that the transition probabilities are:
+%
+%\beqn
+%q(T_i, T_*) &=& \prob{\text{GROW}} \prob{\text{choose terminal node}} \probsub{RULE}{\cdot}\\
+%q(T_*, T_i) &=& \prob{\text{PRUNE}} \prob{\text{choose intermediate node}}
+%\eeqn
+%
+%Now by definition $\prob{\text{GROW}} = \prob{\text{PRUNE}} = \frac{1}{4}$. It is obvious that:
+%
+%
+%\beqn
+%\prob{\text{choose terminal node}} &=& \frac{1}{b^*} \\
+%\prob{\text{choose intermediate node}} &=& \frac{1}{b/2} = \frac{2}{b}
+%\eeqn
+%
+%since there are $b^*$ terminal nodes who have $> N_{\text{RULE}} = 5$ data points. Further, since there are $b$ terminal total nodes and the ratio of parents to children is 2:1. We can now calculate the ratio as follows:
+%
+%\begin{changemargin}{-0.75in}{0in} 
+%\beqn
+%r &=& \frac{\prob{\text{PRUNE}} \prob{\text{choose intermediate node}}}{\prob{\text{GROW}} \prob{\text{choose terminal node}} \probsub{RULE}{\cdot}} \frac{\prob{T_i} \probsub{SPLIT}{\cdot}\probsub{RULE}{\cdot}}{\prob{T_i}} \frac{\prob{\y | T_*}}{\prob{\y | T_i}}\\
+%&=& \probsub{SPLIT}{\cdot}\frac{b}{2b^*} \frac{\prob{\y | T_*}}{\prob{\y | T_i}} \\
+%\natlog{r} &=& \natlog{\probsub{SPLIT}{\cdot}} + \natlog{b} - \natlog{2b^*} + \natlog{\prob{\y | T_*}} - \natlog{\prob{\y | T_i}}
+%\eeqn
+%\end{changemargin}
+%
+%\item \textbf{PRUNE} Randomly pick a parent of two terminal nodes and turn it into a terminal node by collapsing the nodes below it. Since this is the opposite of GROW, it is obvious that:
+%
+%\beqn
+%q(T_i, T_*) &=& \prob{\text{PRUNE}} \prob{\text{choose intermediate node}} \\
+%q(T_*, T_i) &=& \prob{\text{GROW}} \prob{\text{choose terminal node}} \probsub{RULE}{\cdot} \\
+%\prob{T_*} &=& \frac{\prob{T_i}}{\probsub{SPLIT}{\cdot}\probsub{RULE}{\cdot}}\\
+%\eeqn
+%
+%which makes the ratio:
+%
+%\beqn
+%r &=& \frac{\prob{\text{GROW}} \prob{\text{choose terminal node}} \probsub{RULE}{\cdot}}{\prob{\text{PRUNE}} \prob{\text{choose intermediate node}}} \frac{\prob{\y | T_*}}{\prob{\y | T_i}} \frac{\frac{\prob{T_i}}{\probsub{SPLIT}{\cdot}\probsub{RULE}{\cdot}}}{\prob{T_i}} \\
+%&=& \frac{1}{\probsub{SPLIT}{\cdot}} \frac{b^*}{2b} \frac{\prob{\y | T_*}}{\prob{\y | T_i}} \\
+%\natlog{r} &=& - \natlog{\probsub{SPLIT}{\cdot}} + \natlog{b^*} - \natlog{2b} + \natlog{\prob{\y | T_*}} - \natlog{\prob{\y | T_i}}
+%\eeqn
+%
+%
+%\item \textbf{CHANGE} Randomly pick an internal node and randomly reassign a splitting rule according to $\probsub{RULE}{\cdot}$. This yields the same probability going either direction so $q(T_*, T_i) = q(T_i, T_*)$ as well as the same probabilities of the trees. Hence, $r$ becomes simply:
+%
+%\beqn
+%r &=& \frac{\prob{\y | T_*}}{\prob{\y | T_i}}\\
+%\eeqn
+%
+%\item \textbf{SWAP} Randomly pick a parent-child pair that are both internal nodes. Swap the splitting rules. If on the off-chance that both children have the same exact rule, then switch the parent with both children and vice versa. It is clear that the configuration is the same with CHANGE.
+%
+%\end{itemize}
+%
+%This proposal method has a lot of good properties. First of all, it yields a reversible Markov Chain since GROW is the reverse of PRUNE and CHANGE is the reverse of SWAP.
+%
+%\subsection{Evaluating Good Trees}
+%
+%It's clear that some trees are worse than others and it doesn't make sense to just randomly select a tree from the tree posterior after the M-H algorithm ``converged''. Plots of posterior probability $\prob{\y | T}$ can be plotted against the number of terminal nodes $b$ and that could provide insight.
+
+
+\section{Bayesian Additive Regression Trees (BART) Model}
+
+\subsection{The Basics}
+
+We use the same notation as above where $T_j$ represents a binary tree and $M_j = \braces{\mu_{1j}, \ldots, \mu_{bj}}$ represents the expected values of $y$ given the data. We now introduce the sum of $m$ trees model as follows where $g$ represents the tree function:
+
+\beqn
+y_i = \parens{\mysum{j}{1}{m}{g(\x_i, T_j, M_j)}} + \epsilon_i, \quad \epsilon_i \sim \normnot{0}{\sigsq}
+\eeqn
+
+Since the tree function evaluates $\x$ by a bunch of if-else statements and arrives at a leaf, it is clear that:
+
+\beqn
+y_i = \parens{\mysum{j}{1}{m}{\muij}} + \epsilon_i, \quad \epsilon_i \sim \normnot{0}{\sigsq}
+\eeqn
+
+
+Here each tree only explains a piece of the expected value of $y$. Now, given a fixed number of trees $m$, this model is completely parameterized by $\braces{\braces{T_1, M_1}, \ldots, \braces{T_m, M_m}, \sigsq}$. We choose a fixed $m$ in this implementation. \\
+
+Now we impose a prior on all the parameters. Keep in mind, we need to keep individual tree effects small.
+
+\subsection{The prior}
+
+Similar to the prior for the Bayesian Decision trees, the prior has the following symmetry (all probabilities are given the data $\X$ and we leave it out for notational simplicity)
+
+\beqn
+\prob{{\braces{T_1, M_1}, \ldots, \braces{T_m, M_m}, \sigsq}} &=& \bracks{\prod_{j=1}^m \prob{T_j, M_j}} \prob{\sigsq} = \parens{\prod_{j=1}^m \prob{M_j | T_j} \prob{T_j}} \prob{\sigsq} \\
+&=& \parens{\prod_{j=1}^m \parens{\prod_{i=1}^b \prob{\muij | T_j}} \prob{T_j}} \prob{\sigsq}
+\eeqn
+
+Let's look closely at each prior.
+
+\subsubsection{$\cprob{\muij}{T_j}$}
+
+First of all, we rescale each response as follows:
+
+\beqn
+y_i' = \frac{y_i - y_{min}}{y_{max}} - 0.5
+\eeqn
+
+which means that the response is constrained to live within $\bracks{-0.5,0.5}$. We want to design a prior that assigns substantial probability to this region. The default pick is normal, centered at 0, with some variance, call it $\sigsqmu$:
+
+\bneqn\label{eq:prior_for_leaf_values}
+\mu_{1j}, \ldots, \mu_{b_j j} \iid \normnot{0}{\sigsqmu} \quad \text{\ie for all leaves on all trees}
+\eneqn
+
+
+How do we pick this variance $\sigsqmu$? First, select a value a percentage of the distribution you want to cover, let's say 95\%, then \textit{a la} Stat 101, calculate the inverse $z$ value that corresponding to that probability being within $\bracks{-z,z}$, then solve for $\sigma_\mu$:
+
+\beqn
+z = \frac{X-\mu}{\sigma} \mathimplies 1.96 = \frac{0.5 - 0}{\sigma_\mu} \mathimplies \sigma_\mu^2 = \squared{\frac{0.5}{1.96}} = 0.255^2
+\eeqn
+
+This would be the case if there were one tree. Because there are many trees, we want the variance to break up this way:
+
+\beqn
+\var{Y_i} = \var{g_1} + \ldots + \var{g_m} = m\sigsqmu \mathimplies 1.96 = \frac{0.5 - 0}{\sigma_\mu \sqrt{m}} \mathimplies \sigma_\mu^2 = \squared{\frac{0.5}{1.96\sqrt{m}}}
+\eeqn
+
+\subsubsection{$\prob{\sigsq}$}
+
+Remember $\sigsq$ is the variance of the normally-distributed $\iid$ errors centered at 0. The standard conjugate normal prior on the variance is the inverse gamma:
+
+\beqn
+\prob{\sigsq} = \invgammanot{\overtwo{\nu}}{\overtwo{\nu\lambda}}
+\eeqn
+
+We use a naive point estimate of $\sigma^2$ by calculating just the sample standard deviation of the transformed responses, $s_{y'}^2$. Now we pick a coverage percentage similar to before, let's say $q=90\%$. So we set:
+
+\beqn
+0.90 = \prob{\sigsq \leq s_{y'}^2}
+\eeqn
+
+We then pick a $\nu \in \bracks{3,10}$ to get an appropriate shape, and then we just use a quick grid search to calculated $\lambda$. In my implementation, I chose a $\nu=3$.
+
+\subsubsection{$\prob{T_j}$}
+
+This is the exact same as the prior trees in CGM98.
+
+\subsection{Sampling from the posterior}
+
+We create a Gibbs sampler which samples for each tree and then $\sigma^2$. For the $j$th tree, we're sampling, denote all other trees as $(j)$. The posterior sampling for each tree looks like:
+
+\beqn
+T_j, M_j ~|~ T_{(j)}, M_{(j)}, \y ', \sigsq
+\eeqn
+
+Why do $T_j, M_j$ depend on $T_{(j)}, M_{(j)}$? Because those other trees fit part of the data. Let's subtract out their fit and define the residuals below:
+
+\beqn
+\Rj &:=& \y ' - \sum_{k \neq j} g_k \\
+&=& \parens{\sum_k g_k + \beps} - \sum_{k \neq j} g_k \\
+&=& g_j + \beps
+\eeqn
+
+We can immediately find the distribution of the residuals:
+
+\bneqn\label{eq:residual_dist}
+\Rj = g_j + \beps \mathimplies \Rj \sim \normnot{\threevec{\mu_{k_1 j}}{\vdots}{\mu_{k_n j}}}{\parens{\sigsqmu + \sigsq}\I_n} \eqncomment{via independence}
+\eneqn
+
+Note that $k_1, \ldots, k_n$ represent the indices of the leaves that correspond to where $\x_i, \ldots, \x_n$ get classified to. $\Rj$ encapsulates the dependencies of $T_{(j)}, M_{(j)}, \y$ so now the sampling for each tree becomes:
+
+\beqn
+T_j, M_j ~|~ \Rj, \sigsq
+\eeqn
+
+We can further split this up below:
+
+\bneqn\label{eq:trees_and_leaves_posterior}
+\cprob{T_j, M_j}{\Rj, \sigsq} = \cprob{M_j}{T_j, \Rj, \sigsq} \cprob{T_j}{\Rj, \sigsq}
+\eneqn
+
+%Since we used a conjugate prior for $M_j$, we can sample this in two stages:
+%
+%\beqn
+%&& T_j ~|~ \Rj, \sigsq \\
+%&& M_j ~|~ T_j, \Rj, \sigsq
+%\eeqn
+
+\subsubsection{Sampling $M_j$}
+
+A sampling of $M_j$ is actually $b$ samplings --- one for each of the $b$ leaves. They are all equivalent and independent of $T_j$. Based on equation \ref{eq:trees_and_leaves_posterior}, we have:
+
+\beqn
+&& \mu_{1j} ~|~ \Rj, \sigsq \\
+&& \mu_{2j} ~|~ \Rj, \sigsq \\
+&& \vdots  \\
+&& \mu_{bj} ~|~ \Rj, \sigsq \\
+\eeqn
+
+What is the sampling distribution? Using the Bayesian machinery we have:
+
+\beqn
+\cprob{\muij}{\Rj, \sigsq} &\propto& \lik{\Rj, \sigsq; \muij}
+\prob{\muij} \\
+\cprob{\muij}{\Rj, \sigsq} &\propto& \lik{\Rj; \muij, \sigsq} \underbrace{\lik{\sigsq; \muij}}_{\text{constant}} \prob{\muij} \\
+\cprob{\muij}{\Rj, \sigsq} &\propto& \underbrace{\lik{\Rj; \muij, {\sigsq}}}_{\text{likelihood}} \underbrace{\prob{\muij}}_{\text{prior}}
+\eeqn
+
+
+This prior is just a sampling from the prior for leaf values (see equation \ref{eq:prior_for_leaf_values}). For the likelihood, we know the distribution of $\Rj$ from equation \ref{eq:residual_dist} so now we can compute the posterior via the nice conjugate properties:
+
+\beqn
+&\propto& \lik{\Rj; \muij, {\sigsq}} \prob{\muij} \\
+&=& \parens{\oneoversqrt{2\pi (\sigsqmu + \sigsq)}\prodonen{k}{\exp{-\oneover{2\parens{\sigsqmu + \sigsq}}\squared{r_{kj}-\muij}}}}\parens{\oneoversqrt{2\pi (\sigsqmu)}\exp{-\oneover{2\sigsqmu}\muij^2}} \\
+&\propto& \prodonen{k}{\exp{-\oneover{2\parens{\sigsqmu + \sigsq}}\squared{r_{kj}-\muij}}}\exp{-\oneover{2\sigsqmu}\muij^2} \\
+&=& \exp{-\oneover{2\parens{\sigsqmu + \sigsq}}\parens{\underbrace{\sumonen{k}{r_{kj}^2}}_{\text{const}}-2\sumonen{k}{r_{kj}}\muij + \muij^2}}\exp{-\oneover{2\sigsqmu}\muij^2} \\
+&\propto& \exp{\underbrace{\frac{\sumonen{k}{r_{kj}}}{\sigsqmu + \sigsq}}_B \muij \underbrace{- \parens{\oneover{2\parens{\sigsqmu + \sigsq}} + \oneover{2\sigsqmu}}}_A \muij^2} = \exp{B\muij + A\muij^2}\\
+&=& \exp{A\parens{\frac{B}{A}\muij + \muij^2}} \\
+&\propto& \exp{A\squared{-\frac{B}{2A} - \muij}} \eqncomment{completed the square}\\
+&\propto& \normnot{-\frac{B}{2A}}{-\oneover{2A}} = \normnot{\frac{\sumonen{k}{r_{kj}}}{2 + \dfrac{\sigsq}{\sigsqmu}}}{\frac{\sigsqmu + \sigsq}{2 + \dfrac{\sigsq}{\sigsqmu}}}
+\eeqn
+
+%But $\Rj$ is a vector? Would this mean that you build the tree, see which $R_{ij}$'s get classified into certain leaves, and then pick a random $R_{ij}$ for each of the $b$ leaves, then sample from the posterior based on the above to assign the $b$ $\muij$'s?
+
+\subsubsection{Sampling $T_j$}
+
+Let's examine $T_j ~|~ M_j, \Rj, \sigsq$ from equation \ref{eq:trees_and_leaves_posterior}. We know via the standard Bayes machinery that:
+
+\beqn
+\cprob{T_j}{M_j, \Rj, \sigsq} &\propto& \underbrace{\cprob{\Rj}{T_j, M_j, \sigsq}}_{\text{likelihood}} \underbrace{\prob{T_j}}_{\text{prior}} \\
+%&=& \prob{T_j} \prodonen{i}{\underbrace{\cprob{R_{ij}}{T_j, M_j, \sigsq}}_{\text{likelihood}}}
+\eeqn
+
+And we can explore the posterior using the Metropolis-Hastings iteration in CGM98 using $\Rj$ as the response. Hence the sampling is \textit{one} iteration of the M-H algorithm.\\
+
+In order to do this, we need to find the likelihood. Recall the mean-shift model in CGM98 p939 section 4.1:
+
+\beqn
+\mu_1, \ldots, \mu_b ~|~ \sigsq, T &\iid& \normnot{\mubar}{\frac{\sigsq}{a}} \\
+\sigsq ~|~ T &\iid& \invgammanot{\overtwo{\nu}}{\overtwo{\nu\lambda}}
+\eeqn
+
+Under this prior, both $\sigsq$ and the $\mu_i$'s were margined out and a likelihood could be computed (up to a norming constant) as a function of the $y_i$'s, their locations among the leaves, and the four hyperparameters, $\mubar, a, \nu, \lambda$.\\
+
+What has changed in the BART implementation? For starters, the leaves have to account for both variance in the leaf values and all the residual error left over. Additionally, with the transformation of the $\y$ response we assume the distribution is centered at zero which is a big win:
+
+\beqn
+\mu_{1j}, \ldots, \mu_{b_j j} ~|~ \sigsq, \sigsqmu, T_j &\iid& \normnot{0}{\sigsqmu + \sigsq} \\
+\eeqn
+
+Now, we don't have to worry about the prior on the terms in the variance because they're given exogenously. Hence, forget about all the hyperparameters. Our goal now is to obtain just $\Rj | T_j$ by margining out:
+
+\beqn
+\cprob{\Rj}{T_j, \sigsq, \sigsqmu} \propto \underbrace{\int \ldots \int}_{\text{for the $M_j$}} \cprob{\Rj}{T_j, M_j, \sigsq, \sigsqmu} \cprob{M_j}{T_j, \sigsq, \sigsqmu} dM_j
+\eeqn
+
+I feel like the likelihood of the residuals term above should just be normal with mean 0 and variance $\sigsq$ and the likelihood of the $M_j$ should just be normal with mean 0 and variance of $\sigsqmu$. But no doubt I am very confused.
+
+%Let's try to map the BART parameters onto the CGM98 tree parameters.\\
+%\begin{itemize}
+%\item What is $\sigsq$ in the 1998 implementation? \\
+%
+%Writing equation 3 on p937 a little bit differently:
+%
+%\beqn
+%y_i = g(\x_i) + \epsilon, \quad \epsilon \sim \normnot{0}{\sigsq} \eqncomment{where $g$ is the tree evaluation}
+%\eeqn
+%
+%Hence, $\sigsq$ is the error in $y_i$ that is not explained by hopping through the tree's if-else structure. According to equation \ref{eq:residual_dist}, we can replace $\sigsq$ from the 98 paper with BART's $\sigsqmu + \sigsq$.\\
+%
+%\item What is $\mubar$? \\
+%
+%That previously was the best guess as to the center of the response variable. In my CGM98 implementation, I used $\ybar$. Since we transformed $\y$ in BART to be between $\bracks{-0.5,0.5}$, it is not too much of a leap of faith to let $\mubar = 0$.
+%
+%\item What is $a$? \\
+%
+%I think this should be the same as the 1998 implementation, where we let $a=\third$.
+%
+%\item What are $\nu, \lambda$?\\
+%
+%Once again these are the shape parameters for the prior on $\sigsq$ from the 98 paper. Because we now have $\sigsqmu + \sigsq$, I have a feeling these are going to be a little bit different from BART's $\nu, \lambda$.
+%
+%\end{itemize}
+
+
+
+
+\subsubsection{Sampling $\sigsq$}
+
+The sampling for $\sigsq$ is just a draw from the inverse gamma distribution. 
+
+\section{Likelihood of Leaves}
+
+Some notation. We call the $y_i$'s in a particular tree the $r_i$'s (since they are remaining when the other tree evaluations are subtracted off). Now let's say this tree has $b$ leaves. If we examine leaf number 1, we denote the number of data points in that leaf as $n_1$. We notate the responses in that leaf $r_{1_1}, \ldots, r_{1_{n_1}}$. We need the first subindex $1$ to indicate a subindex of the first leaf out of the original $r_1, \ldots, r_n$ since they don't necessary sort into the leave in order.
+
+Now, we would like to find the likelihood of these responses for the whole tree given the true means of the leaves: 
+
+\beqn
+\prob{r_1, \ldots, r_n ~|~ T, \sigsq, \mu_1, \ldots \mu_b} &=& \prod_{\ell=1}^b \prob{r_{\ell_1}, \ldots r_{\ell_{n_\ell}} ~|~ \sigsq, \mu_\ell} \\ 
+&& \eqncomment{leaves are independent} \\
+&=& \prod_{\ell=1}^b \prod_{i=1}^{n_\ell} \prob{r_{\ell_i} ~|~ \sigsq, \mu_\ell} \\
+&& \eqncomment{Since the responses are independent} \\ 
+&=& \prod_{\ell=1}^b \prod_{i=1}^{n_\ell} \normpdf{r_{\ell_i}}{\mu_\ell}{\sigsq} \\
+&& \eqncomment{Since the responses are normally distributed around $\mu_\ell$} \\ 
+\eeqn
+
+So if we want to margin out the $\mu_\ell$'s, the likelihood becomes for each leaf:
+
+\beqn
+r_{\ell_1}, \ldots, r_{\ell_{n_\ell}} ~|~ T, \sigsq, \sigsqmu &\sim& \multnormnot{n_\ell}{0}{\bSigmanell}\\
+\prob{r_{\ell_1}, \ldots, r_{\ell_{n_\ell}} ~|~ T, \sigsq, \sigsqmu} &=& \oneoverpow{2\pi}{n_\ell} \oneover{ \abss{\bSigmanell}^{\half}} \exp{-\half \bracks{r_{\ell_1} \ldots r_{\ell_{n_\ell}}} \bSigmanellinv \threevec{r_{\ell_1}}{\vdots}{r_{\ell_{n_\ell}}}}
+\eeqn
+%http://books.google.com/books?id=N871f_bp810C&pg=PA241&lpg=PA241&dq=inverse+of+equicorrelation+matrix&source=bl&ots=ssZbo4zWuX&sig=qEgSNLd4RJkWAyqY7oqgCWaVqgc&hl=en&ei=wZx8TqO5N-nZ0QGSlaUP&sa=X&oi=book_result&ct=result&resnum=5&ved=0CD0Q6AEwBDgK#v=onepage&q=inverse%20of%20equicorrelation%20matrix&f=false
+
+And for the whole tree the probability is, due to independence of the leaves, just the product of the probabilities of all the leaves together:
+
+\beqn
+\prob{r_1, \ldots, r_n ~|~ T, \sigsq, \sigsqmu} &=& \prod_{\ell=1}^b \oneoverpow{2\pi}{n_\ell} \oneover{ \abss{\bSigmanell}^{\half}} \exp{-\half \bracks{r_{\ell_1} \ldots r_{\ell_{n_\ell}}} \bSigmanellinv \threevec{r_{\ell_1}}{\vdots}{r_{\ell_{n_\ell}}}} \\
+&=& \oneoverpow{2\pi}{n} \oneover{\prod_{\ell=1}^b \abss{\bSigmanell}^{\half}} \exp{-\half \sum_{\ell=1}^b \bracks{r_{\ell_1} \ldots r_{\ell_{n_\ell}}} \bSigmanellinv \threevec{r_{\ell_1}}{\vdots}{r_{\ell_{n_\ell}}}} \\
+\eeqn
+
+Now, to get the log likelihood, just use some algebra:
+
+\begin{changemargin}{-1in}{0in}
+\beqn
+\natlog{\prob{r_1, \ldots, r_n ~|~ T, \sigsq, \sigsqmu}} &=& -n\natlog{2\pi} - \natlog{\prod_{\ell=1}^b \abss{\bSigmanell}^{\half}} - \half \sum_{\ell=1}^b \bracks{r_{\ell_1} \ldots r_{\ell_{n_\ell}}} \bSigmanellinv \threevec{r_{\ell_1}}{\vdots}{r_{\ell_{n_\ell}}} \\
+&=& -n\natlog{2\pi} - \half \sum_{\ell=1}^b \natlog{\abss{\bSigmanell}} - \half \sum_{\ell=1}^b \bracks{r_{\ell_1} \ldots r_{\ell_{n_\ell}}} \bSigmanellinv \threevec{r_{\ell_1}}{\vdots}{r_{\ell_{n_\ell}}} \\
+\eeqn
+\end{changemargin}
+
+
+Now, to simplify a little bit: note that $\bSigmanell$ is a $n_\ell \times n_\ell$ equicorrelation matrix with $\sigsq + \sigsqmu$ on the diagonal and $\sigsqmu$ everywhere else. Now, we have figured out using some tricks from the book Matrix Algebra, that:
+
+\beqn
+\abss{\bSigmanell} = \tothepow{\sigsq}{n-1}\parens{\sigsqmu n + \sigsq} \mathimplies \natlog{\abss{\bSigmanell}} = (n-1) \natlog{\sigsq} + \natlog{\sigsqmu n + \sigsq}
+\eeqn
+
+which then makes the log likelihood of the whole tree:
+
+\beqn
+&=& -n\natlog{2\pi} - \half \parens{\sum_{\ell=1}^b (n_\ell-1) \natlog{\sigsq} + \sum_{\ell=1}^b \natlog{\sigsqmu n_\ell + \sigsq} + \sum_{\ell=1}^b \bracks{r_{\ell_1} \ldots r_{\ell_{n_\ell}}} \bSigmanellinv \threevec{r_{\ell_1}}{\vdots}{r_{\ell_{n_\ell}}}} \\
+&=& -n\natlog{2\pi} - \half \parens{\natlog{\sigsq} \sum_{\ell=1}^b (n_\ell-1)  + \sum_{\ell=1}^b \natlog{\sigsqmu n_\ell + \sigsq} + \sum_{\ell=1}^b \bracks{r_{\ell_1} \ldots r_{\ell_{n_\ell}}} \bSigmanellinv\threevec{r_{\ell_1}}{\vdots}{r_{\ell_{n_\ell}}}} \\
+&=& \underbrace{-n\natlog{2\pi} - \half (n-b)\natlog{\sigsq}}_{\text{Term 0}} - \half \underbrace{\sum_{\ell=1}^b \natlog{\sigsqmu n_\ell + \sigsq}}_{\text{Term A}} - \half \underbrace{ \sum_{\ell=1}^b \bracks{r_{\ell_1} \ldots r_{\ell_{n_\ell}}} \bSigmanellinv \threevec{r_{\ell_1}}{\vdots}{r_{\ell_{n_\ell}}}}_{\text{term B}} \\
+\eeqn
+
+Also note that by a similar trick we used to compute the determinant above, we have a formula for the inverse:
+
+\beqn
+\bSigmanellinv = \oneover{\sigsqmu n + \sigsq} \oneover{n} \bv{J}_n + \oneover{\sigsq} \parens{\bv{I}_n - \oneover{n} \bv{J}_n}
+\eeqn
+
+where $\bv{J}_n$ is a $n \times n$ matrix of all 1's and $\bv{I}_n$ is the $n \times n$ identity matrix.
+
+\end{document}

@@ -40,10 +40,10 @@ public class CGMBARTPriorBuilder extends CGMTreePriorBuilder {
 	public CGMBARTPriorBuilder(ArrayList<double[]> X_y, int p) {
 		super(X_y, p);
 		//now let's go through and keep some more records
-		recordMinAttrValues();
+		recordMinimumAttributeValues();
 	}
 	
-	private void recordMinAttrValues() {
+	private void recordMinimumAttributeValues() {
 		minimum_values_by_attribute = new double[p];
 		for (int j = 0; j < p; j++){
 			double min = Double.MAX_VALUE;
@@ -55,29 +55,58 @@ public class CGMBARTPriorBuilder extends CGMTreePriorBuilder {
 			minimum_values_by_attribute[j] = min;
 		}
 	}
+	
+	public ArrayList<Integer> predictorsThatCouldBeUsedToSplitAtNode(CGMTreeNode node){
+		ArrayList<Integer> predictors = new ArrayList<Integer>();
+		for (int j = 0; j < p; j++){
+			//okay we can only add a predictor here if we don't see the minimum 
+			//value in any of the nodes above split rules
+			boolean can_use = true;
+			
+			for (CGMTreeNode father : node.get_lineage()){
+				if (father.splitAttributeM == j && father.splitValue == minimum_values_by_attribute[j]){
+					can_use = false;
+					break;
+				}
+			}
+			if (can_use){
+				predictors.add(j);
+			}
+		}		
+		return predictors;
+	}
+	
+	public double assignSplitValue(CGMTreeNode node, int j) {
+		
+		//we need to look above in the lineage and get the minimum value that was previously split on
+		ArrayList<Double> previous_split_points = new ArrayList<Double>();
+		for (CGMTreeNode father : node.get_lineage()){
+			if (father.splitAttributeM == j){
+				previous_split_points.add(father.splitValue);				
+			}
+		}
+		
+		double min_split_value = Double.MAX_VALUE;
+		for (int i = 0; i < n; i++){
+			if (previous_split_points.get(i) < min_split_value){
+				min_split_value = previous_split_points.get(i);
+			}
+		}
+		
+		//now we need to look in the design matrix and see what values are available
+		ArrayList<Double> possible_values = new ArrayList<Double>();
+		for (int i = 0; i < n; i++){
+			if (X_y.get(i)[j] < min_split_value){
+				possible_values.add(X_y.get(i)[j]);
+			}
+		}		
+		//now we return a random draw from the discrete uniform (with multiplicity)
+		return possible_values.get((int) Math.floor(Math.random() * possible_values.size()));
+	}	
 
 	public Integer assignSplitAttribute(CGMTreeNode node) {
-		////////////////WRONG!!!!! see 3.2 of CGM98... although I can't imagine this matters too much
-		//we're just building the skeleton of an initial tree that will change,
-		//what we do here does not affect the MH / Gibbs sampling that comes later
-		
-		//create a set of possibilities
-//		HashSet<Integer> already_used_predictors = node.getAlreadyUsedPredictors();
-		ArrayList<Integer> could_be_used = new ArrayList<Integer>();
-		for (int j = 0; j < p; j++){
-//			//remove those that have already been used
-//			if (!already_used_predictors.contains(j)){
-				could_be_used.add(j);
-//			}
-		}		
-//		if (could_be_used.size() == 0){
-//			//if we got none, let the function know
-//			return null;
-//		}
-//		else {
-			//now choose one at random
-			return could_be_used.get((int) Math.floor(Math.random() * could_be_used.size()));
-//		}
+		ArrayList<Integer> could_be_used = predictorsThatCouldBeUsedToSplitAtNode(node);
+		return could_be_used.get((int) Math.floor(Math.random() * could_be_used.size()));
 	}	
 	
 	public boolean splitNodeAndAssignRule(CGMTreeNode node) {		
@@ -97,7 +126,7 @@ public class CGMBARTPriorBuilder extends CGMTreePriorBuilder {
 			node.isLeaf = false;
 			node.klass = null;
 			//assign a splitting value
-			node.splitValue = assignSplitValue(node.data, node.splitAttributeM);			
+			node.splitValue = assignSplitValue(node, node.splitAttributeM);			
 			//split the data correctly
 			ClassificationAndRegressionTree.SortAtAttribute(node.data, node.splitAttributeM);
 			int n_split = ClassificationAndRegressionTree.getSplitPoint(node.data, node.splitAttributeM, node.splitValue);

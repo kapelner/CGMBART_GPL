@@ -534,6 +534,19 @@ public class CGMTreeNode extends TreeNode implements Cloneable, Serializable {
 		else {
 			return this.parent.stringLocation(false) + "R";
 		}
+	}
+
+	public ArrayList<CGMTreeNode> get_lineage() {
+		ArrayList<CGMTreeNode> lineage = new ArrayList<CGMTreeNode>();
+		CGMTreeNode node = this;
+		while (true){
+			node = node.parent;
+			if (node == null){
+				break;
+			}			
+			lineage.add(node);
+		}
+		return lineage;
 	}	
 	
 }

@@ -46,7 +46,6 @@ bin/*
 simulation_results.csv
 r_scripts/debug_only/*
 mathematica_scripts/*
-latex_notes/*
 debug_output/*.csv
 debug_output/*.png
 output_plots/*.pdf
@@ -61,3 +60,7 @@ sweave_reports/*.tex
 sweave_reports/*.toc
 sweave_reports/auxilary_latex_files/*
 r_log/*.txt
+latex_notes/**.aux
+latex_notes/**.pdf
+latex_notes/**.log
+latex_notes/**.out
