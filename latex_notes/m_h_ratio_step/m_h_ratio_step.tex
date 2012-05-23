@@ -7,71 +7,78 @@
 \begin{document}
 \maketitle
 
+\section*{MCMC for BART}
+
 According to Gelman p.291, the Metropolis-Hastings algorithm differs from the Metropolis algorithm because you need to consider the ratio of ratios:
 
 \beqn
-r = \frac{\dfrac{\prob{\theta^* | Y}}{J_t(\theta^* | \theta^{t-1})}}{\dfrac{\prob{\theta^{t-1} | Y}}{J_t(\theta^{t-1} | \theta^*)}} = \frac{J_t(\theta^{t-1} | \theta^*)}{J_t(\theta^* | \theta^{t-1})}\frac{\prob{\theta^* | Y}}{\prob{\theta^{t-1} | Y}}
+r = \frac{\dfrac{\cprob{\theta^*}{Y}}{J_t(\theta^* ~|~ \theta^{t-1})}}{\dfrac{\cprob{\theta^{t-1}}{Y}}{J_t(\theta^{t-1} ~|~ \theta^*)}} = \frac{J_t(\theta^{t-1} ~|~ \theta^*)}{J_t(\theta^* ~|~ \theta^{t-1})}\frac{\prob{\theta^* ~|~ Y}}{\prob{\theta^{t-1} ~|~ Y}}
 \eeqn
 
-Where we accept if a random draw from a uniform is less than the ratio above \ie $\uniform{0}{1} \leadsto x < r$. \\
+Where we accept if a random draw from a uniform is less than the ratio above \ie $X \sim \uniform{0}{1} \leadsto x < r$. \\
 
-The parameters of interest in our case are the new tree, which we denote $T^*$, and the old tree, denoted by $T$. The jump notation, we denote with just the regular probability symbol to be boring. We denote the residual left over $Y$ random variables as $R$ and $\sigsq$ is the random variable which is sampled after all the trees are sampled. We do not add in hyperparameters to avoid notational messiness:
+The parameters of interest in our case are the new tree (which is created from one of three types of proposals), which we denote $T^*$, and the original tree, denoted by $T$. For jump notation which is $J$, we denote this just using the regular probability symbol (to be boring). We denote the residual left over from $Y$, the vector of random variables, as $R$ (we do not place an arrow or embolden to indicate a vector). We denote $\sigsq$ as the random variable estimating the homoskedastic noise in the model which is sampled after all the trees are sampled. We do not notate all the hyperparameters to avoid notational messiness. The M-H ratio then becomes:
 
 \beqn
 r = \frac{\cprob{T}{T^*}}{\cprob{T^*}{T}} \frac{\cprob{T^*}{R, \sigsq}}{\cprob{T}{R, \sigsq}}
 \eeqn
 
-We then use Bayes Rule to obtain the following which I partition into three interpretable terms:
+We then use Bayes Rule to obtain the following which I partition form. We partition the ratio into three interpretable terms:
 
 \beqn
 r = \underbrace{\frac{\cprob{T}{T^*}}{\cprob{T^*}{T}}}_{\text{transitioning ratio}} \times \overbrace{\frac{\cprob{R}{T^*, \sigsq}}{\cprob{R}{T, \sigsq}}}^{\text{proportional likelihood ratio}} \times \underbrace{\frac{\prob{T^*}}{\prob{T}}}_{\text{tree structure ratio}}
 \eeqn
 
-My goal is to come up with an exact way of calculating $r$.\footnote{since I have to write the code to do it!} \\
+My goal is to come up with an exact way of calculating $r$ for all possible tree proposals.\footnote{since I have to write the code to do it!} \pagebreak
 
-Let's pretend we're transitioning from $T \rightarrow T^*$ using a GROW step and let's analyze each of the above expressions one-by-one. \pagebreak
-
-We use the following notation:
+Throughout this document, we use the following notation:
 
 \begin{itemize}
 \item $H$ ---  the collection of \textit{all} nodes in tree $T$, not just the terminal nodes
 \item $\eta$ --- a node $\in H$.
 \item $d_\eta$ --- the depth of the $\eta$th node.
-\item $b$ --- the number of terminal nodes in the tree $T$. These are the nodes that can potentially be ``grown.'' It is clear that the number of terminal nodes in the $T^*$ tree is $b+1$.
-\item $w$ --- the number of 2nd generation internal nodes in tree $T$ \ie the number of nodes who only have two children. These are the nodes that can potentially be ``pruned.''
-\item $w^*$ --- the number of 2nd generation internal nodes in tree $T^*$. This can be equal to $w$ or $w+1$ so it has to be recalculated. Draw a few pictures of trees and grow steps and you'll see why this is.
+\item $b$ --- the number of terminal nodes in the tree $T$. These are the nodes that can potentially be ``grown.'' It is clear that the number of terminal nodes in the $T^*$ tree is $b+1$ if $T^*$ was grown and $b-1$ if $T^*$ was pruned.
+\item $w_2$ --- the number of 2nd generation internal nodes in tree $T$ \ie the number of nodes who only have two children. These are the nodes that can potentially be ``pruned.''
+\item $w_2^*$ --- the number of 2nd generation internal nodes in tree $T^*$. This can be equal to $w$ or $w+1$ so it has to be recalculated. Draw a few pictures of trees and grow steps and you'll see why this unfortunate fact is so.
+%\item $w$ --- the number of internal nodes regardless of generation (even the root is included in this count).
 \item  $\ell$ --- the index of the terminal node which we've ``picked'' to grow from it is a number $\in \braces{1, \ldots, b}$.
 \item $\ell_L$ and $\ell_R$ --- represent the new left and right node indices in tree $T^*$ which are ``grown'' from the $\ell$th node of tree $T$
 \end{itemize}
 
-So $\cprob{T^*}{T}$ means the probability of transitioning from $T$ into the new tree proposal $T^*$. This would have to be equal to the following:
+\subsection*{Grow Proposal}
+
+Let's pretend we're transitioning from $T \rightarrow T^*$ using a GROW step and let's analyze each of the above expressions one-by-one.
+
+
+
+So $\prob{T \rightarrow T^*} = \cprob{T^*}{T}$ means the probability of transitioning from $T$ into the new tree proposal $T^*$. This would have to be equal to the following:
 
 \beqn
 \cprob{T^*}{T} &=& \prob{\text{GROW}} \prob{\text{selecting the $\ell$th node to grow from}} \times \\
 && \prob{\text{selecting the $j$th attribute to split on}} \prob{\text{selecting the $i$th value to split on}}
 \eeqn
 
-Since we have equal probabilities of growing and splitting, we're picking from on of the terminal nodes, and then we're picking an attribute and split point, this becomes:
+We're picking from on of the terminal nodes, and then we're picking an attribute and split point, this becomes:
 
 \beqn
-\cprob{T^*}{T} &=& \half \oneover{b} \oneover{p_{adj}} \oneover{n_{adj}}
+\cprob{T^*}{T} &=& \prob{\text{GROW}} \oneover{b} \oneover{p_{adj}} \oneover{n_{adj}}
 \eeqn
 
 Now, $p_{adj}$ is the number of predictors left available to split on. This is \textit{from the perspective} of the $\ell$th node in tree $T$. Why would this be less than $p$? Because if you look up into the node's lineage, you may have already used all available split values for some attributes. Those would no longer be available to split from.
 
 Then, $n_{adj}$ is the number of split values left available considering we picked attribute $j$. We can obtain this by looking at the node's lineage for any splits on $j$ and then taking the minimum of those split values, and then finding the subset of the design matrix whose values are less than that minimum for column $j$.\\
 
-So now $\cprob{T}{T^*}$ is the probability of transitioning from the new tree back to the old tree which would be:
+So now $\prob{T^* \rightarrow T} = \cprob{T}{T^*}$ is the probability of transitioning from the new tree back to the old tree which would be:
 
 \beqn
 \cprob{T}{T^*} &=& \prob{\text{PRUNE}} \prob{\text{selecting the $\ell$th node to prune from}} \\
-&=& \half \oneover{w^*}
+&=& \prob{\text{PRUNE}}\oneover{w_2^*}
 \eeqn
 
-Thus, the transitioning ratio will be:
+Since we have equal probabilities of growing and pruning, the transitioning ratio will be:
 
 \beqn
-\frac{\cprob{T}{T^*}}{\cprob{T^*}{T}} = \frac{\half \oneover{w^*}}{\half \oneover{b} \oneover{p_{adj}} \oneover{n_{adj}}} = \frac{b ~ p_{adj} ~ n_{adj}}{w^*}
+\frac{\cprob{T}{T^*}}{\cprob{T^*}{T}} = \frac{\oneover{w_2^*}}{\oneover{b} \oneover{p_{adj}} \oneover{n_{adj}}} = \frac{b ~ p_{adj} ~ n_{adj}}{w_2^*}
 \eeqn
 
 Okay now, let's examine the likelihoods. $\cprob{R}{T^*, \sigsq}$ represents the likelihood of all the responses (adjusted by the other trees) to wind up in the nodes they've wound up in. As we've shown in the previous writeup, that is equal to:
@@ -86,14 +93,13 @@ Since the likelihoods are solely determined by the terminal nodes, the proposal 
 \frac{\cprob{R}{T^*, \sigsq}}{\cprob{R}{T, \sigsq}} = \frac{\abss{\bSigma_{\ell_L}}^{-\half} \exp{-\half R_{\ell_L}^\top \bSigmainv_{\ell_L} R_{\ell_L}} \abss{\bSigma_{\ell_R}}^{-\half} \exp{-\half R_{\ell_R}^\top \bSigmainv_{\ell_R} R_{\ell_R}}}{\abss{\bSigma_\ell}^{-\half} \exp{-\half R_\ell^\top \bSigmainv_\ell R_\ell}}
 \eeqn
 
-
 Now we move on to the probabilities of the tree structures themselves.
 
 \beqn
 \prob{T^*} &=& \prod_{\eta \in H} \prob{\text{splitting~} \eta} \prod_{\eta \in H} \prob{\text{assigning a rule to~} \eta} \\
 \eeqn
 
-Remember from CGM98 that the probability of splitting on a given node $\eta$ is driven by two hyperparameters:
+Remember from CGM98 that the probability of splitting on a given node $\eta$ is driven by two hyperparameters, $\alpha$ and $\beta$ in the following way where $d_\eta$ is the depth of the $\eta$ node:
 
 \beqn
 \prob{\text{splitting~} \eta} = \frac{\alpha}{\tothepow{1 + d_\eta}{\beta}}
@@ -113,6 +119,108 @@ We know the depth of the child nodes is just the depth of the parent node increm
 
 Now we have a way of calculating $r$ for grow proposals by multiplying all three above results.\\
 
-For prune proposals... (to be done by Monday)
+\subsection*{Prune Proposal}
+
+For prune proposals, we move in the opposite direction. Consider $\prob{T \rightarrow T^*} = \cprob{T^*}{T}$. We need to hack off a node:
+
+\beqn
+\cprob{T^*}{T} &=& \prob{\text{PRUNE}} \prob{\text{selecting the $\ell$th node to prune from}} \\
+&=& \prob{\text{PRUNE}}\oneover{w_2}
+\eeqn
+
+To go the opposite direction, we need to make sure we grow the exact same node so $p_{adj}, n_{adj}$ need to be calculated based on whatever the $\ell$th node originally was:
+
+\beqn
+\cprob{T}{T^*} &=& \prob{\text{GROW}} \prob{\text{selecting the $\ell$th node to grow from}} \times \\
+&& \prob{\text{selecting the original attribute to split on}} \times \\
+&& \prob{\text{selecting the original value to split on}} \\
+&=& \prob{\text{GROW}} \oneover{b-1} \oneover{p_{adj}} \oneover{n_{adj}}
+\eeqn
+
+We're using $b-1$ here because the proposed tree has one less terminal node due to the pruning than the original tree $T$ had.
+
+Thus, the transition ratio becomes:
+
+\beqn
+\frac{\cprob{T}{T^*}}{\cprob{T^*}{T}} = \frac{\oneover{b-1}\oneover{p_{adj}} \oneover{n_{adj}}}{\oneover{w_2}} = \frac{w_2}{(b-1) p_{adj} n_{adj}}
+\eeqn
+
+For the proportional likelihood ratio, it is pretty obvious this is the inverse of the grow step's proportional likelihood ratio. Now the tree proposal has just one collapsed node where the original has a left and right component:
+
+\beqn
+\frac{\cprob{R}{T^*, \sigsq}}{\cprob{R}{T, \sigsq}} = \frac{\abss{\bSigma_\ell}^{-\half} \exp{-\half R_\ell^\top \bSigmainv_\ell R_\ell}}{\abss{\bSigma_{\ell_L}}^{-\half} \exp{-\half R_{\ell_L}^\top \bSigmainv_{\ell_L} R_{\ell_L}} \abss{\bSigma_{\ell_R}}^{-\half} \exp{-\half R_{\ell_R}^\top \bSigmainv_{\ell_R} R_{\ell_R}}}
+\eeqn
+
+And ditto for the tree structure ratio:
+
+\beqn
+\frac{\prob{T^*}}{\prob{T}} = \oneover{\alpha} \frac{\tothepow{2 + d_\eta}{2\beta}}{\tothepow{1 + d_\eta}{\beta}} \frac{p_{\eta_L} p_{\eta_R} n_{\eta_L} n_{\eta_R}}{p_\eta n_\eta}
+\eeqn
+
+Putting all three together gives us $r$ for the prune step.
+
+\subsection*{Change Proposal}
+
+The change proposal is quite different from the grow and prune. This is taking an internal node (any of the $v$ internal nodes where the root itself is included) and changing the rule by switching both the split attribute and the split rule value.\\
+
+Consider $\prob{T \rightarrow T^*} = \cprob{T^*}{T}$ during a change:
+
+\beqn
+\cprob{T^*}{T} &=& \prob{\text{CHANGE}} \prob{\text{selecting the $\ell$th node to change}} \times \\
+&& \prob{\text{selecting the $j$th attribute to split on}} \times \\
+&& \prob{\text{selecting the $i$th value to split on}} \\
+\eeqn
+
+Then going backwards have the same thing but we need to get back to the original node:
+
+\beqn
+\cprob{T}{T^*} &=& \prob{\text{CHANGE}} \prob{\text{selecting the $\ell$th node to change}} \times \\
+&& \prob{\text{selecting the original attribute to split on}} \times \\
+&& \prob{\text{selecting the original value to split on}} \\
+\eeqn
+
+The transition ratio will have many cancellations. The probability of picking a change proposal is obviously the same. The probability of picking the $\ell$th node is the same. Since there are only a certain number of attributes available to the $\ell$th node, that will be the same. This leaves us with:
+
+\beqn
+\frac{\cprob{T}{T^*}}{\cprob{T^*}{T}} = \frac{n_{\text{original}}}{n_{\text{proposal}}}
+\eeqn
+
+where $n_{\text{original}}$ is the number of split points available if the $\ell$th node's split attribute is the original attribute and $n_{\text{proposal}}$ is the number of split points available if the proposal split attribute is used instead.
+
+We now move on to the proportional likelihood ratio. We note that if we make a change, all daughter nodes are affected all the way down the lineage. Hence, we need to compare the likelihoods of all the daughter nodes underneath the $\ell$th node. There is no clean way to denote this, so I just spell it out:
+
+\beqn
+\frac{\cprob{R}{T^*, \sigsq}}{\cprob{R}{T, \sigsq}} = \frac{\prod_{\ell^* \in \text{all leaf nodes under the $\ell$th node}} { \abss{\bSigma_{\ell^*}}^{-\half} \exp{-\half R_{\ell^*}^\top \bSigmainv_{\ell^*} R_{\ell^*}}}}{\prod_{\ell \in \text{all leaf nodes under the $\ell$th node}} { \abss{\bSigma_\ell}^{-\half} \exp{-\half R_\ell^\top \bSigmainv_\ell R_\ell}}}
+\eeqn
+
+I leave out the $2\pi^{n_\cdot}$ terms because the total number $n$ at any given node will have to remain the same regardless as how it's apportioned in the nodes below it. \\
+
+\textbf{Question}: how is $R_\ell$ defined if the node is empty? \\
+
+Now we move on to the tree structure ratio. Recall that:
+
+\beqn
+\prob{T^*} &=& \prod_{\eta \in H} \prob{\text{splitting~} \eta} \prod_{\eta \in H} \prob{\text{assigning a rule to~} \eta} \\
+\eeqn
+
+Since both the proposal and original trees have the same structure, we can ignore the $\prob{\text{splitting~} \eta}$ terms when we form the ratio. And once again, only the nodes below the changed node need to be considered since all other nodes are the same for both the proposal and original. Thus we're left with:
+
+\beqn
+\frac{\prob{T^*}}{\prob{T}} = \frac{\prod_{h \in \text{all nodes under $\eta$}} \prob{\text{assigning a rule to~} h ~|~ T^*}}{\prod_{h \in \text{all nodes under $\eta$}} \prob{\text{assigning a rule to~} h ~|~ T}} \equalsquestion \frac{\prob{\text{assigning a rule to~}  \eta ~|~ T^*}}{\prob{\text{assigning a rule to~} \eta ~|~ T}}
+\eeqn
+
+The question is does is the $\equalsquestion$ above a true equality? I doubt it. Let's say your original split is $x_{37} < 89.2$ and the proposed change split is $x_{49} < 23.8$. It's possible that other $x_{49}$ rules are present underneath node $\eta$. These rule assignment probabilities will now change because the number of available split values will change. \\
+
+\textbf{Question}: what happens if the proposed change is a minimum value on an attribute, and there are nodes below with the same split attribute, that will force the numerator to be zero and the step should always be rejected? \\
+
+It seems that change steps are quite complicated when there is all this bookkeeping. This may be the reason Rob's new BART implementation only does GROWs and PRUNEs. \\
+
+I really would like to nail down this spec before I go ahead and implement these features, so if both of you could comment, that would be fantastic.
+
+
+
+
+
+
 
 \end{document}
