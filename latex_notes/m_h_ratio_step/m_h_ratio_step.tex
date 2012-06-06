@@ -17,27 +17,27 @@ r = \frac{\dfrac{\cprob{\theta^*}{Y}}{J_t(\theta^* ~|~ \theta^{t-1})}}{\dfrac{\c
 
 Where we accept if a random draw from a uniform is less than the ratio above \ie $X \sim \uniform{0}{1} \leadsto x < r$. \\
 
-The parameters of interest in our case are the new tree (which is created from one of three types of proposals), which we denote $T^*$, and the original tree, denoted by $T$. For jump notation which is $J$, we denote this just using the regular probability symbol (to be boring). We denote the residual left over from $Y$, the vector of random variables, as $R$ (we do not place an arrow or embolden to indicate a vector). We denote $\sigsq$ as the random variable estimating the homoskedastic noise in the model which is sampled after all the trees are sampled. We do not notate all the hyperparameters to avoid notational messiness. The M-H ratio then becomes:
+The parameters of interest in our case are the new tree (which is created from one of three types of proposals), which we denote $T^*$, and the original tree, denoted by $T$. For jump notation which is $J$, we denote this just using the regular probability symbol (to be boring). We denote the residual left over from $Y$, the vector of random variables, as $\R := \bracks{\Roneton}^\top$. We denote $\sigsq$ as the random variable estimating the homoskedastic noise in the model which is sampled after all the trees are sampled. We do not notate all the hyperparameters to avoid notational messiness. The M-H ratio then becomes:
 
 \beqn
-r = \frac{\cprob{T}{T^*}}{\cprob{T^*}{T}} \frac{\cprob{T^*}{R, \sigsq}}{\cprob{T}{R, \sigsq}}
+r = \frac{\prob{T^* \rightarrow T}}{\prob{T \rightarrow T^*}} \frac{\cprob{T^*}{\R, \sigsq}}{\cprob{T}{\R, \sigsq}}
 \eeqn
 
-We then use Bayes Rule to obtain the following which I partition form. We partition the ratio into three interpretable terms:
+%We then use Bayes Rule to obtain the following which I partition form. We partition the ratio into three interpretable terms:
 
-\beqn
-r = \underbrace{\frac{\cprob{T}{T^*}}{\cprob{T^*}{T}}}_{\text{transitioning ratio}} \times \overbrace{\frac{\cprob{R}{T^*, \sigsq}}{\cprob{R}{T, \sigsq}}}^{\text{proportional likelihood ratio}} \times \underbrace{\frac{\prob{T^*}}{\prob{T}}}_{\text{tree structure ratio}}
-\eeqn
+%\beqn
+%r = \underbrace{\frac{\cprob{T}{T^*}}{\cprob{T^*}{T}}}_{\text{transitioning ratio}} \times \overbrace{\frac{\cprob{R}{T^*, \sigsq}}{\cprob{R}{T, \sigsq}}}^{\text{proportional likelihood ratio}} \times \underbrace{\frac{\prob{T^*}}{\prob{T}}}_{\text{tree structure ratio}}
+%\eeqn
 
-My goal is to come up with an exact way of calculating $r$ for all possible tree proposals.\footnote{since I have to write the code to do it!} \pagebreak
+My goal is to come up with an exact way of calculating $r$ for all possible tree proposals.\\
 
 Throughout this document, we use the following notation:
 
 \begin{itemize}
 \item $H$ ---  the collection of \textit{all} nodes in tree $T$, not just the terminal nodes
 \item $\eta$ --- a node $\in H$.
-\item $d_\eta$ --- the depth of the $\eta$th node.
-\item $b$ --- the number of terminal nodes in the tree $T$. These are the nodes that can potentially be ``grown.'' It is clear that the number of terminal nodes in the $T^*$ tree is $b+1$ if $T^*$ was grown and $b-1$ if $T^*$ was pruned.
+\item $d_\eta$ --- the depth of the $\eta$th node. The root node is defined as having depth 0, its first child has depth 1, etc.
+\item $b$ --- the number of terminal nodes / leaves in the tree $T$. These are the nodes that can potentially be ``grown.'' For example, the number of terminal nodes in the $T^*$ tree is $b+1$ if $T$ was grown and $b-1$ if $T$ was pruned.
 \item $w_2$ --- the number of 2nd generation internal nodes in tree $T$ \ie the number of nodes who only have two children. These are the nodes that can potentially be ``pruned.''
 \item $w_2^*$ --- the number of 2nd generation internal nodes in tree $T^*$. This can be equal to $w$ or $w+1$ so it has to be recalculated. Draw a few pictures of trees and grow steps and you'll see why this unfortunate fact is so.
 %\item $w$ --- the number of internal nodes regardless of generation (even the root is included in this count).
@@ -45,16 +45,116 @@ Throughout this document, we use the following notation:
 \item $\ell_L$ and $\ell_R$ --- represent the new left and right node indices in tree $T^*$ which are ``grown'' from the $\ell$th node of tree $T$
 \end{itemize}
 
+\subsection*{Likelihood Calculation}
+
+It is imperative that we can calculate $\cprob{T}{\R, \sigsq}$ for the calculation of $r$. Let's analyze carefully what it means to get the likelihood of a tree.
+
+First, note that the likelihood for $T$ given the data is not defined in our model, so we use Bayes Rule to obtain something that is tractable in our model:
+
+\beqn
+\cprob{T}{\R, \sigsq} = \frac{\cprob{\R}{T, \sigsq} \cprob{T}{\sigsq}}{\cprob{\R}{\sigsq}}
+\eeqn
+
+What's in the numerator? The likelihood of the data given the tree and the variance times the probability of the tree given the variance. The probability of the tree is based on probabilities of splits and rules and is not dependent on the variance, $\cprob{T}{\sigsq} = \prob{T}$, so we can already simplify to:
+
+\beqn
+\cprob{T}{\R, \sigsq} = \frac{\cprob{\R}{T, \sigsq} \prob{T}}{\cprob{\R}{\sigsq}}
+\eeqn
+
+What about the likelihood given the tree? The only reason you need the $T$ information is so we know which $R$ values fall in which of the leaves:
+
+\beqn
+\cprob{\Roneton}{T, \sigsq} = \prod_{\ell=1}^{b} \cprob{\Rlonetonl}{\sigsq}
+\eeqn
+
+The r.h.s is the likelihoods of each leaf separately which is \textit{not} dependent on $T$ anymore. We can multiply the likelihoods of each leaf because we assume the leaves are independent. The $R_\ell$'s are the data in the $\ell$th leaf and there is $n_\ell$ of them, the portion of $n$ in the leaf where $n = \sum_{\ell=1}^b n_\ell$.
+
+Let's look at the likelihood of a single leaf more carefully. We know that if we knew the mean at the leaf, which we denote $\mu$, we would have:
+
+\beqn
+\Rlonetonl | \mu, \sigsq ~\iid~ \normnot{\mu}{\sigsq}
+\eeqn
+
+This means that if we can margin out $\mu$, we're in good shape. Recall that we put a prior on the average value of $\mu \sim \normnot{0}{\sigsq_\mu}$ and thus:
+
+\beqn
+\cprob{\Rlonetonl}{\sigsq} = \int_\reals \cprob{\Rlonetonl}{\mu, \sigsq} \prob{\mu; \sigsq_\mu} d\mu
+\eeqn
+
+Let's take a more careful look at the non-margined leaf-likelihood expression and recall from basic mathematical statistics the result that the sample average, $\Rbar$, is a sufficient statistic for $\mu$:
+
+\beqn
+\prob{\Rlonetonl | \mu, \sigsq} &=& \oneover{\tothepow{2\pi\sigsq}{n_\ell / 2}} ~\exp{-\oneover{2\sigsq} \sum_{i=1}^{n_\ell} \squared{R_i - \mu}} \\
+&=& \underbrace{\oneover{\tothepow{2\pi\sigsq}{n_\ell / 2}} ~\exp{-\oneover{2\sigsq} \sum_{i=1}^{n_\ell} R_i^2}}_h \underbrace{\exp{-\oneover{2\sigsq} \parens{-2n_\ell \mu \Rbar + n_\ell \musq}}}_g \\
+&=& h(\Rlonetonl ~|~ \sigsq) \cdot g(\Rbar ~|~ \mu, \sigsq) \propto g(\Rbar ~|~ \mu, \sigsq)\\
+\eeqn
+
+So when we margin, we don't need all the data, only the sample average:
+
+\beqn
+\cprob{\Rlonetonl}{\sigsq} = h(\Rlonetonl ~|~ \sigsq) \int_\reals g(\Rbar ~|~ \mu, \sigsq) \prob{\mu; \sigsq_\mu} d\mu
+\eeqn
+
+The problem here is that $g$ is not a likelihood. So I don't know how to do that margining trick with $\normnot{0}{\overn{\sigsq}} \star \normnot{0}{\sigsq_\mu} = \normnot{0}{\overn{\sigsq} + \sigsq_\mu}$. So I think I have to do the integral manually using Mathematica:
+
+\beqn
+\int_\reals g(\Rbar ~|~ \mu, \sigsq) \prob{\mu; \sigsq_\mu} d\mu &=& \int_\reals \exp{-\oneover{2\sigsq} \parens{-2n_\ell \mu \Rbar + n_\ell \musq}} \oneoversqrt{2\pi\sigsq_\mu} \exp{-\oneover{2\sigsq_\mu} \musq} d\mu \\
+&=& \oneoversqrt{\sigsq_\mu \parens{\frac{n_\ell}{\sigsq} + 1}} \exp{\frac{n_\ell^2 \Rbar^2 \sigsq_\mu}{2\parens{\sigma^4 + n_\ell\sigsq \sigsq_\mu}}}
+\eeqn
+
+\begin{figure}
+\begin{center}
+\includegraphics[width=6in]{integrate_out_mu2.eps}
+\end{center}
+\end{figure}
+\FloatBarrier
+
+And this result does not appear to be equal to $\normnot{0}{\overn{\sigsq} + \sigsq_\mu}$. \\
+
+Let's finish this off by returning to the probability of the tree which was:
+
+\beqn
+\cprob{T}{\R, \sigsq} = \frac{\cprob{\R}{T, \sigsq} \prob{T}}{\cprob{\R}{\sigsq}}
+\eeqn
+
+What about the denominator --- the probability of the data? The probability of the data is weighted over every possible tree configuration:
+
+\beqn
+\cprob{\R}{\sigsq} = \int_{T \in \mathcal{T}} \cprob{\R}{T, \sigsq} \prob{T} dT
+\eeqn
+
+and removing the dependency on $T$ becomes:
+
+\beqn
+\cprob{\R}{\sigsq} = \int_{T \in \mathcal{T}} \prod_{\ell=1}^{b_T} \cprob{\Rlonetonl}{\sigsq} \prob{T} dT
+\eeqn
+
+which of course is arrived at via the margining out of the means of each leaf:
+
+\beqn
+\cprob{\R}{\sigsq} = \int_{T \in \mathcal{T}} \parens{\prod_{\ell=1}^{b_T} \int_\reals \cprob{\Rlonetonl}{\mu, \sigsq} \prob{\mu; \sigsq_\mu} d\mu} \prob{T} dT
+\eeqn
+
+The point being is that this quantity is the same for all data $\R$. This is useful since we're creating ratios where we're using the same data, and this quantity will cancel.
+
+Now let's look at the ratio of the likelihoods which is what we care about for the calculation of $r$. I identify three pieces which we will use for the next couple of sections:
+
+\beqn
+r &=& \frac{\prob{T^* \rightarrow T}}{\prob{T \rightarrow T^*}} \underbrace{\frac{\cprob{T^*}{\R, \sigsq}}{\cprob{T}{\R, \sigsq}}} \\
+&& \quad\quad\quad\quad~~ \frac{\dfrac{\cprob{\R}{T^*, \sigsq} \prob{T^*}}{\cancel{\cprob{\R}{\sigsq}}}}{\dfrac{\cprob{\R}{T, \sigsq} \prob{T}}{\cancel{\cprob{\R}{\sigsq}}}} \\
+&=& \underbrace{\frac{\prob{T^* \rightarrow T}}{\prob{T \rightarrow T^*}}}_{\text{transition ratio}} \times \overbrace{\frac{\cprob{\R}{T^*, \sigsq}}{\cprob{\R}{T, \sigsq}}}^{\text{proportional likelihood ratio}} \times \underbrace{\frac{\prob{T^*}}{\prob{T}}}_{\text{tree structure ratio}}
+\eeqn
+
 \subsection*{Grow Proposal}
 
 Let's pretend we're transitioning from $T \rightarrow T^*$ using a GROW step and let's analyze each of the above expressions one-by-one.
 
+\subsubsection*{Transition Ratio}
 
-
-So $\prob{T \rightarrow T^*} = \cprob{T^*}{T}$ means the probability of transitioning from $T$ into the new tree proposal $T^*$. This would have to be equal to the following:
+So $\prob{T \rightarrow T^*}$ means the probability of transitioning from $T$ into the new tree proposal $T^*$. This would have to be equal to the following:
 
 \beqn
-\cprob{T^*}{T} &=& \prob{\text{GROW}} \prob{\text{selecting the $\ell$th node to grow from}} \times \\
+\prob{T \rightarrow T^*} &=& \prob{\text{GROW}} \prob{\text{selecting the $\ell$th node to grow from}} \times \\
 && \prob{\text{selecting the $j$th attribute to split on}} \prob{\text{selecting the $i$th value to split on}}
 \eeqn
 
@@ -68,32 +168,61 @@ Now, $p_{adj}$ is the number of predictors left available to split on. This is \
 
 Then, $n_{adj}$ is the number of split values left available considering we picked attribute $j$. We can obtain this by looking at the node's lineage for any splits on $j$ and then taking the minimum of those split values, and then finding the subset of the design matrix whose values are less than that minimum for column $j$.\\
 
-So now $\prob{T^* \rightarrow T} = \cprob{T}{T^*}$ is the probability of transitioning from the new tree back to the old tree which would be:
+So now $\prob{T^* \rightarrow T}$ is the probability of transitioning from the new tree back to the old tree which would be:
 
 \beqn
-\cprob{T}{T^*} &=& \prob{\text{PRUNE}} \prob{\text{selecting the $\ell$th node to prune from}} \\
+\prob{T^* \rightarrow T} &=& \prob{\text{PRUNE}} \prob{\text{selecting the $\ell$th node to prune from}} \\
 &=& \prob{\text{PRUNE}}\oneover{w_2^*}
 \eeqn
 
-Since we have equal probabilities of growing and pruning, the transitioning ratio will be:
+Thus, the transition ratio will be:
 
 \beqn
-\frac{\cprob{T}{T^*}}{\cprob{T^*}{T}} = \frac{\oneover{w_2^*}}{\oneover{b} \oneover{p_{adj}} \oneover{n_{adj}}} = \frac{b ~ p_{adj} ~ n_{adj}}{w_2^*}
+\frac{\prob{T^* \rightarrow T}}{\prob{T \rightarrow T^*}} = \frac{\prob{\text{PRUNE}}\oneover{w_2^*}}{\prob{\text{GROW}}\oneover{b} \oneover{p_{adj}} \oneover{n_{adj}}} = \frac{\prob{\text{PRUNE}}}{\prob{\text{GROW}}} \frac{b ~ p_{adj} ~ n_{adj}}{w_2^*}
 \eeqn
 
-Okay now, let's examine the likelihoods. $\cprob{R}{T^*, \sigsq}$ represents the likelihood of all the responses (adjusted by the other trees) to wind up in the nodes they've wound up in. As we've shown in the previous writeup, that is equal to:
+Why don't the probabilities of prune and grow cancel? Well, under the case where we cannot grow anymore (if we use all split variables), the probability of growth will be 0. Thus, those steps \textit{cannot} be considered since the ratio would be undefined.
+
+\subsubsection*{Proportional Likelihood Ratio}
+
+$\cprob{\R}{T^*, \sigsq}$ represents the likelihood of all the responses (adjusted by the other trees) to wind up in the nodes they've wound up in. As we've shown in the previous section that the likelihood for any node is:
 
 \beqn
-\cprob{R}{T^*, \sigsq} = \prod_{\ell = 1}^b {\tothepow{2\pi}{-n_1} \abss{\bSigma_\ell}^{-\half} \exp{-\half R_\ell^\top \bSigmainv_\ell R_\ell}}
+\cprob{\Rlonetonl}{\sigsq} = h(\Rlonetonl ~|~ \sigsq) \oneoversqrt{\sigsq_\mu \parens{\frac{n_\ell}{\sigsq} + 1}} \exp{\frac{n_\ell^2 \Rbar^2 \sigsq_\mu}{2\parens{\sigma^4 + n_\ell\sigsq \sigsq_\mu}}}
 \eeqn
 
 Since the likelihoods are solely determined by the terminal nodes, the proposal tree differs from the original tree by only the $\ell$th node in the original becoming the $\ell_L$ and $\ell_R$ nodes in the proposal. Hence, the proportional likelihood ratio becomes only:
 
 \beqn
-\frac{\cprob{R}{T^*, \sigsq}}{\cprob{R}{T, \sigsq}} = \frac{\abss{\bSigma_{\ell_L}}^{-\half} \exp{-\half R_{\ell_L}^\top \bSigmainv_{\ell_L} R_{\ell_L}} \abss{\bSigma_{\ell_R}}^{-\half} \exp{-\half R_{\ell_R}^\top \bSigmainv_{\ell_R} R_{\ell_R}}}{\abss{\bSigma_\ell}^{-\half} \exp{-\half R_\ell^\top \bSigmainv_\ell R_\ell}}
+\frac{\cprob{\R}{T^*, \sigsq}}{\cprob{\R}{T, \sigsq}} &=& h\parens{\RLlonetonlL ~|~ \sigsq} \oneoversqrt{\sigsq_\mu \parens{\frac{n_{\ell_L}}{\sigsq} + 1}} ~~\exp{\frac{n_{\ell_L}^2 \Rbar_L^2 \sigsq_\mu}{2\parens{\sigma^4 + n_{\ell_L}\sigsq \sigsq_\mu}}} \\
+&& ~~\times h\parens{\RRlonetonlR ~|~ \sigsq} \oneoversqrt{\sigsq_\mu \parens{\frac{n_{\ell_R}}{\sigsq} + 1}} ~~\exp{\frac{n_{\ell_R}^2 \Rbar_R^2 \sigsq_\mu}{2\parens{\sigma^4 + n_{\ell_R}\sigsq \sigsq_\mu}}} \\
+&& ~~\times \oneover{h\parens{\Rlonetonl ~|~ \sigsq} \oneoversqrt{\sigsq_\mu \parens{\frac{n_\ell}{\sigsq} + 1}} ~~\exp{\dfrac{n_\ell^2 \Rbar^2 \sigsq_\mu}{2\parens{\sigma^4 + n_\ell\sigsq \sigsq_\mu}}}} \\
 \eeqn
 
-Now we move on to the probabilities of the tree structures themselves.
+Note that the ratio of the $h$ functions cancel:
+
+\beqn
+&& \frac{h\parens{\RLlonetonlL ~|~ \sigsq}h\parens{\RRlonetonlR ~|~ \sigsq}}{h\parens{\Rlonetonl ~|~ \sigsq}} \\
+&=& \frac{\doneover{\tothepow{2\pi\sigsq}{n_{\ell_L} / 2}} ~\exp{-\doneover{2\sigsq} \sum_{i=1}^{n_{\ell_L}} R_i^2} \doneover{\tothepow{2\pi\sigsq}{n_{\ell_R} / 2}} ~\exp{-\doneover{2\sigsq} \sum_{i=1}^{n_{\ell_R}} R_i^2}}{\doneover{\tothepow{2\pi\sigsq}{n_\ell / 2}} ~\exp{-\doneover{2\sigsq} \sum_{i=1}^{n_\ell} R_i^2}} \\
+&=& \frac{\doneover{\tothepow{2\pi\sigsq}{n_\ell / 2}} ~\exp{-\doneover{2\sigsq} \sum_{i=1}^{n_\ell} R_i^2}}{\doneover{\tothepow{2\pi\sigsq}{n_\ell / 2}} ~\exp{-\doneover{2\sigsq} \sum_{i=1}^{n_\ell} R_i^2}} = 1 \eqncomment{since $n_\ell = n_{\ell_R} + n_{\ell_L}$}
+\eeqn
+
+Hence, we simplify to:
+
+
+\begin{changemargin}{-0.5in}{0in}
+\beqn
+\frac{\cprob{\R}{T^*, \sigsq}}{\cprob{\R}{T, \sigsq}} &=& \frac{\oneoversqrt{\sigsq_\mu \parens{\frac{n_{\ell_L}}{\sigsq} + 1}} \oneoversqrt{\sigsq_\mu \parens{\frac{n_{\ell_R}}{\sigsq} + 1}} ~~\exp{\dfrac{n_{\ell_L}^2 \Rbar_L^2 \sigsq_\mu}{2\parens{\sigma^4 + n_{\ell_L}\sigsq \sigsq_\mu}}} ~~\exp{\dfrac{n_{\ell_R}^2 \Rbar_R^2 \sigsq_\mu}{2\parens{\sigma^4 + n_{\ell_R}\sigsq \sigsq_\mu}}}       }{\oneoversqrt{\sigsq_\mu \parens{\frac{n_\ell}{\sigsq} + 1}} ~~\exp{\dfrac{n_\ell^2 \Rbar^2 \sigsq_\mu}{2\parens{\sigma^4 + n_\ell\sigsq \sigsq_\mu}}}} \\
+&=& \sqrt{\frac{\sigsq \parens{n_\ell + \sigsq}}{\sigsq_\mu \parens{n_{\ell_L} + \sigsq}\parens{n_{\ell_R} + \sigsq}}} ~~\exp{\frac{\sigsq_\mu}{2\sigsq} \parens{\frac{n_{\ell_L}^2 \Rbar_L^2}{\sigsq + n_{\ell_L}\sigsq_\mu} + \frac{n_{\ell_R}^2 \Rbar_R^2}{\sigsq + n_{\ell_R}\sigsq_\mu} - \frac{n_\ell^2 \Rbar^2}{\sigsq + n_\ell \sigsq_\mu}}}
+\eeqn
+\end{changemargin}
+
+Note how this is only a function of $\sum R_i$ which makes calculations efficient.
+
+
+\subsubsection*{Tree Structure Ratio}
+
+We consider each tree separately.
 
 \beqn
 \prob{T^*} &=& \prod_{\eta \in H} \prob{\text{splitting~} \eta} \prod_{\eta \in H} \prob{\text{assigning a rule to~} \eta} \\
@@ -121,45 +250,60 @@ Now we have a way of calculating $r$ for grow proposals by multiplying all three
 
 \subsection*{Prune Proposal}
 
-For prune proposals, we move in the opposite direction. Consider $\prob{T \rightarrow T^*} = \cprob{T^*}{T}$. We need to hack off a node:
+\subsubsection*{Transition Ratio}
+
+For prune proposals, we move in the opposite direction.  We need to hack off a node:
 
 \beqn
-\cprob{T^*}{T} &=& \prob{\text{PRUNE}} \prob{\text{selecting the $\ell$th node to prune from}} \\
+\prob{T \rightarrow T^*} &=& \prob{\text{PRUNE}} \prob{\text{selecting the $\ell$th node to prune from}} \\
 &=& \prob{\text{PRUNE}}\oneover{w_2}
 \eeqn
 
 To go the opposite direction, we need to make sure we grow the exact same node so $p_{adj}, n_{adj}$ need to be calculated based on whatever the $\ell$th node originally was:
 
 \beqn
-\cprob{T}{T^*} &=& \prob{\text{GROW}} \prob{\text{selecting the $\ell$th node to grow from}} \times \\
+\prob{T^* \rightarrow T} &=& \prob{\text{GROW}} \prob{\text{selecting the $\ell$th node to grow from}} \times \\
 && \prob{\text{selecting the original attribute to split on}} \times \\
 && \prob{\text{selecting the original value to split on}} \\
 &=& \prob{\text{GROW}} \oneover{b-1} \oneover{p_{adj}} \oneover{n_{adj}}
 \eeqn
 
-We're using $b-1$ here because the proposed tree has one less terminal node due to the pruning than the original tree $T$ had.
+We're using $b-1$ here because the proposed tree has one less terminal node due to the pruning than the original tree $T$ had.\\
 
 Thus, the transition ratio becomes:
 
 \beqn
-\frac{\cprob{T}{T^*}}{\cprob{T^*}{T}} = \frac{\oneover{b-1}\oneover{p_{adj}} \oneover{n_{adj}}}{\oneover{w_2}} = \frac{w_2}{(b-1) p_{adj} n_{adj}}
+\frac{\prob{T^* \rightarrow T}}{\prob{T \rightarrow T^*}} = \frac{\prob{\text{GROW}}  \oneover{b-1}\oneover{p_{adj}} \oneover{n_{adj}}}{ \prob{\text{PRUNE}}\oneover{w_2}} = \frac{\prob{\text{GROW}}}{\prob{\text{PRUNE}}}\frac{w_2}{(b-1) p_{adj} n_{adj}}
 \eeqn
 
-For the proportional likelihood ratio, it is pretty obvious this is the inverse of the grow step's proportional likelihood ratio. Now the tree proposal has just one collapsed node where the original has a left and right component:
+Once again, we need to bookkeep and make sure we can actually prune this node. If it's just a root node, then we can't even consider this step at all.
+
+\subsubsection*{Proportional Likelihood Ratio}
+
+It is pretty obvious this is the inverse of the grow step's proportional likelihood ratio. Now the tree proposal has just one collapsed node where the original has a left and right component:
+
+\begin{changemargin}{-0.5in}{0in}
+\beqn
+\frac{\cprob{\R}{T^*, \sigsq}}{\cprob{\R}{T, \sigsq}} &=& \inverse{\sqrt{\frac{\sigsq \parens{n_\ell + \sigsq}}{\sigsq_\mu \parens{n_{\ell_L} + \sigsq}\parens{n_{\ell_R} + \sigsq}}} ~~\exp{\frac{\sigsq_\mu}{2\sigsq} \parens{\frac{n_{\ell_L}^2 \Rbar_L^2}{\sigsq + n_{\ell_L}\sigsq_\mu} + \frac{n_{\ell_R}^2 \Rbar_R^2}{\sigsq + n_{\ell_R}\sigsq_\mu} - \frac{n_\ell^2 \Rbar^2}{\sigsq + n_\ell \sigsq_\mu}}}} \\
+&=& \sqrt{\frac{\sigsq_\mu \parens{n_{\ell_L} + \sigsq}\parens{n_{\ell_R} + \sigsq}}{\sigsq \parens{n_\ell + \sigsq}}} ~~\exp{\frac{\sigsq_\mu}{2\sigsq} \parens{\frac{n_\ell^2 \Rbar^2}{\sigsq + n_\ell \sigsq_\mu} - \frac{n_{\ell_L}^2 \Rbar_L^2}{\sigsq + n_{\ell_L}\sigsq_\mu} - \frac{n_{\ell_R}^2 \Rbar_R^2}{\sigsq + n_{\ell_R}\sigsq_\mu}}} \\
+\eeqn
+\end{changemargin}
+
+\subsubsection*{Tree Structure Ratio}
+
+It is also clear this is just the inverse of the tree structure ratio for the grow step.
 
 \beqn
-\frac{\cprob{R}{T^*, \sigsq}}{\cprob{R}{T, \sigsq}} = \frac{\abss{\bSigma_\ell}^{-\half} \exp{-\half R_\ell^\top \bSigmainv_\ell R_\ell}}{\abss{\bSigma_{\ell_L}}^{-\half} \exp{-\half R_{\ell_L}^\top \bSigmainv_{\ell_L} R_{\ell_L}} \abss{\bSigma_{\ell_R}}^{-\half} \exp{-\half R_{\ell_R}^\top \bSigmainv_{\ell_R} R_{\ell_R}}}
+\frac{\prob{T^*}}{\prob{T}} &=& \inverse{\alpha \frac{\tothepow{1 + d_\eta}{\beta}}{\tothepow{2 + d_\eta}{2\beta}} \frac{p_\eta n_\eta}{p_{\eta_L} p_{\eta_R} n_{\eta_L} n_{\eta_R}}}\\
+&=& \oneover{\alpha} \frac{\tothepow{2 + d_\eta}{2\beta}}{\tothepow{1 + d_\eta}{\beta}} \frac{p_{\eta_L} p_{\eta_R} n_{\eta_L} n_{\eta_R}}{p_\eta n_\eta}
 \eeqn
 
-And ditto for the tree structure ratio:
 
-\beqn
-\frac{\prob{T^*}}{\prob{T}} = \oneover{\alpha} \frac{\tothepow{2 + d_\eta}{2\beta}}{\tothepow{1 + d_\eta}{\beta}} \frac{p_{\eta_L} p_{\eta_R} n_{\eta_L} n_{\eta_R}}{p_\eta n_\eta}
-\eeqn
+\subsection*{Change and Swap Proposals}
 
-Putting all three together gives us $r$ for the prune step.
+Due to the complexity of the bookkeeping, we do not consider these steps.
 
-\subsection*{Change Proposal}
+\end{document}
 
 The change proposal is quite different from the grow and prune. This is taking an internal node (any of the $v$ internal nodes where the root itself is included) and changing the rule by switching both the split attribute and the split rule value.\\
 

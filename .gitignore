@@ -60,7 +60,7 @@ sweave_reports/*.tex
 sweave_reports/*.toc
 sweave_reports/auxilary_latex_files/*
 r_log/*.txt
-latex_notes/**.aux
-latex_notes/**.pdf
-latex_notes/**.log
-latex_notes/**.out
+*.aux
+*.log
+*.out
+*.dvi
