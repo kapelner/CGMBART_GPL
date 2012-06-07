@@ -36,6 +36,7 @@ import GemIdentView.JProgressBarAndLabel;
 public class CGMBARTRegression extends CGMBART_FixedTreeStructureChangeRulesAndSigsqOnlyParent {
 	private static final long serialVersionUID = 6418127647567343927L;
 	
+	
 	/**
 	 * Constructs the BART classifier for regression.
 	 * 
@@ -47,13 +48,14 @@ public class CGMBARTRegression extends CGMBART_FixedTreeStructureChangeRulesAndS
 //		System.out.println("CGMBARTRegression init\n");
 	}
 	 
-	/** Default constructor for R package
+	/** Default constructor. this is used for the R package.
 	 * 
 	 * @param datumSetupForEntireRun
 	 * @param buildProgress
 	 */
+
 	public CGMBARTRegression() { 
-		super(new DataSetupForCSVFile(new File("datasets", "bart_data.csv"), true), new JProgressBarAndLabel(0, 0, null));
+		super(new DataSetupForCSVFile(new File(CSVFileFromRDirectory, CSVFileFromRName), true), new JProgressBarAndLabel(0, 0, null));
 		//kind of klunky but whatever 
 //		System.err.println("about to do setData on datumsetup: " + this.datumSetupForEntireRun);
 		this.setData(((DataSetupForCSVFile)this.datumSetupForEntireRun).getX_y());

@@ -33,6 +33,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import CGM_BART_DEBUG.CGMBARTPosteriorBuilderOld;
 import CGM_Statistics.*;
 import GemIdentClassificationEngine.DatumSetupForEntireRun;
 import GemIdentStatistics.Classifier;
@@ -137,7 +138,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 	/** we will use the tree prior builder to initally build the trees and later in the gibbs sampler as well */
 	protected CGMTreePriorBuilder tree_prior_builder;
 	/** we will use the tree posterior builder to calculated liks and do the M-H step */
-	protected CGMBARTPosteriorBuilder posterior_builder;
+	protected CGMBARTPosteriorBuilderOld posterior_builder;
 	/** stuff during the build run time that we can access and look at */
 	protected int gibb_sample_i;
 	protected double[][] all_tree_liks;
@@ -206,7 +207,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 		//now generate a prior builder... used in any implementation
 		tree_prior_builder = new CGMBARTPriorBuilder(X_y, p);
 		//this posterior builder will be shared throughout the entire process
-		posterior_builder = new CGMBARTPosteriorBuilder(tree_prior_builder);
+		posterior_builder = new CGMBARTPosteriorBuilderOld(tree_prior_builder);
 		//we have to set the CGM98 hyperparameters as well as the hyperparameter sigsq_mu
 		posterior_builder.setHyperparameters(hyper_mu_mu, hyper_sigsq_mu);	
 	}
@@ -673,7 +674,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 
 	private double calcLeafPosteriorMean(CGMTreeNode node, double sigsq, double posterior_var) {
 //		System.out.println("leafPosteriorMean hyper_sigsq_mu " + hyper_sigsq_mu + " node.n " + node.n + " sigsq " + sigsq + " node.avg_response() " + node.avg_response() + " posterior_var " + posterior_var);
-		return (hyper_mu_mu / hyper_sigsq_mu + node.n / sigsq * node.avg_response()) / (1 / posterior_var);
+		return (hyper_mu_mu / hyper_sigsq_mu + node.n / sigsq * node.avgResponse()) / (1 / posterior_var);
 	}
 
 	private double calcLeafPosteriorVar(CGMTreeNode node, double sigsq) {

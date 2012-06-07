@@ -81,7 +81,7 @@ public class CGMTreeNode extends TreeNode implements Cloneable, Serializable {
 		return clone(false);
 	}
 	
-	public double avg_response(){
+	public double avgResponse(){
 //		System.out.println(this.stringID() + " avg_response n:" + n + " size:" + data.size());
 		//CGMTreeNode.DebugNode(this);
 		double[] ys = new double[n];
@@ -521,7 +521,7 @@ public class CGMTreeNode extends TreeNode implements Cloneable, Serializable {
 	}
 	
 	public double avg_response_untransformed(){
-		return bart.un_transform_y(avg_response());
+		return bart.un_transform_y(avgResponse());
 	}
 
 	public String stringLocation(boolean show_parent) {
@@ -536,7 +536,7 @@ public class CGMTreeNode extends TreeNode implements Cloneable, Serializable {
 		}
 	}
 
-	public ArrayList<CGMTreeNode> get_lineage() {
+	public ArrayList<CGMTreeNode> getLineage() {
 		ArrayList<CGMTreeNode> lineage = new ArrayList<CGMTreeNode>();
 		CGMTreeNode node = this;
 		while (true){
@@ -547,6 +547,16 @@ public class CGMTreeNode extends TreeNode implements Cloneable, Serializable {
 			lineage.add(node);
 		}
 		return lineage;
+	}
+
+	public boolean canBePruned() {
+		//it can be pruned if it's not a leaf
+		return !isLeaf;
+	}
+
+	public boolean cannotGrow() {
+		// TODO Auto-generated method stub
+		return false;
 	}	
 	
 }

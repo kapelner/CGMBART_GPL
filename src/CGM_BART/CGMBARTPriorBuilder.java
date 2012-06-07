@@ -63,7 +63,7 @@ public class CGMBARTPriorBuilder extends CGMTreePriorBuilder {
 			//value in any of the nodes above split rules
 			boolean can_use = true;
 			
-			for (CGMTreeNode father : node.get_lineage()){
+			for (CGMTreeNode father : node.getLineage()){
 				if (father.splitAttributeM == j && father.splitValue == minimum_values_by_attribute[j]){
 					can_use = false;
 					break;
@@ -80,7 +80,7 @@ public class CGMBARTPriorBuilder extends CGMTreePriorBuilder {
 		
 		//we need to look above in the lineage and get the minimum value that was previously split on
 		ArrayList<Double> previous_split_points = new ArrayList<Double>();
-		for (CGMTreeNode father : node.get_lineage()){
+		for (CGMTreeNode father : node.getLineage()){
 			if (father.splitAttributeM == j){
 				previous_split_points.add(father.splitValue);				
 			}

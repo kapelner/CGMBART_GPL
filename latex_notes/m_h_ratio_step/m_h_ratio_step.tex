@@ -69,49 +69,66 @@ What about the likelihood given the tree? The only reason you need the $T$ infor
 
 The r.h.s is the likelihoods of each leaf separately which is \textit{not} dependent on $T$ anymore. We can multiply the likelihoods of each leaf because we assume the leaves are independent. The $R_\ell$'s are the data in the $\ell$th leaf and there is $n_\ell$ of them, the portion of $n$ in the leaf where $n = \sum_{\ell=1}^b n_\ell$.
 
-Let's look at the likelihood of a single leaf more carefully. We know that if we knew the mean at the leaf, which we denote $\mu$, we would have:
+Let's look at the likelihood of a single leaf more carefully. We know that if we knew the mean at the leaf, which we denote $\mu_\ell$, we would have:
 
 \beqn
-\Rlonetonl | \mu, \sigsq ~\iid~ \normnot{\mu}{\sigsq}
+\Rlonetonl | \mu_\ell, \sigsq ~\iid~ \normnot{\mu}{\sigsq}
 \eeqn
 
-This means that if we can margin out $\mu$, we're in good shape. Recall that we put a prior on the average value of $\mu \sim \normnot{0}{\sigsq_\mu}$ and thus:
+This means that if we can margin out $\mu$, we're in good shape. Recall that we put a prior on the average value of $\mu_\ell \sim \normnot{0}{\sigsq_\mu}$ and thus:
 
 \beqn
-\cprob{\Rlonetonl}{\sigsq} = \int_\reals \cprob{\Rlonetonl}{\mu, \sigsq} \prob{\mu; \sigsq_\mu} d\mu
+\cprob{\Rlonetonl}{\sigsq} = \int_\reals \cprob{\Rlonetonl}{\mu_\ell, \sigsq} \prob{\mu_\ell; \sigsq_\mu} d\mu_\ell
 \eeqn
 
-Let's take a more careful look at the non-margined leaf-likelihood expression and recall from basic mathematical statistics the result that the sample average, $\Rbar$, is a sufficient statistic for $\mu$:
+Let's take a more careful look at the non-margined leaf-likelihood expression and recall from basic mathematical statistics the result that the sample average, $\Rbar_\ell$, is a sufficient statistic for $\mu_\ell$ via the factorization theorem:
+
+%\beqn
+%\prob{\Rlonetonl | \mu, \sigsq} &=& \oneover{\tothepow{2\pi\sigsq}{n_\ell / 2}} ~\exp{-\oneover{2\sigsq} \sum_{i=1}^{n_\ell} \squared{R_{\ell_i} - \mu}} \\
+%&=& \underbrace{\oneover{\tothepow{2\pi\sigsq}{n_\ell / 2}} ~\exp{-\oneover{2\sigsq} \sum_{i=1}^{n_\ell} R_{\ell_i}^2}}_h \underbrace{\exp{-\oneover{2\sigsq} \parens{-2n_\ell \mu \Rbar_\ell + n_\ell \musq}}}_g \\
+%&=& h(\Rlonetonl ~|~ \sigsq) \cdot g(\Rbar_\ell ~|~ \mu, \sigsq) \\
+%\eeqn
 
 \beqn
-\prob{\Rlonetonl | \mu, \sigsq} &=& \oneover{\tothepow{2\pi\sigsq}{n_\ell / 2}} ~\exp{-\oneover{2\sigsq} \sum_{i=1}^{n_\ell} \squared{R_i - \mu}} \\
-&=& \underbrace{\oneover{\tothepow{2\pi\sigsq}{n_\ell / 2}} ~\exp{-\oneover{2\sigsq} \sum_{i=1}^{n_\ell} R_i^2}}_h \underbrace{\exp{-\oneover{2\sigsq} \parens{-2n_\ell \mu \Rbar + n_\ell \musq}}}_g \\
-&=& h(\Rlonetonl ~|~ \sigsq) \cdot g(\Rbar ~|~ \mu, \sigsq) \propto g(\Rbar ~|~ \mu, \sigsq)\\
+\prob{\Rlonetonl | \mu_\ell, \sigsq} &=& \oneover{\tothepow{2\pi\sigsq}{n_\ell / 2}} ~\exp{-\oneover{2\sigsq} \sum_{i=1}^{n_\ell} \squared{R_{\ell_i} - \mu_\ell}} \\
+&=& \oneover{\tothepow{2\pi\sigsq}{n_\ell / 2}} ~\exp{-\oneover{2\sigsq} \parens{n_\ell \squared{\Rbar_\ell - \mu_\ell} + \sum_{i=1}^{n_\ell} \squared{R_{\ell_i} - \Rbar_\ell}}} \\
+&=& \oneover{\tothepow{2\pi\sigsq}{n_\ell / 2}} ~\exp{-\oneover{2\frac{\sigsq}{n_\ell}} \parens{ \squared{\Rbar_\ell - \mu_\ell} + \oneover{n_\ell} \sum_{i=1}^{n_\ell} \squared{R_{\ell_i} - \Rbar_\ell}}} \\
+&=& \underbrace{\oneover{\tothepow{2\pi\sigsq}{n_\ell / 2}}  ~\exp{\oneover{n_\ell} \sum_{i=1}^{n_\ell} \squared{R_{\ell_i} - \Rbar_\ell}}}_h ~\underbrace{\exp{-\oneover{2\frac{\sigsq}{n_\ell}} \parens{ \squared{\Rbar_\ell - \mu_\ell}}}}_g \\
 \eeqn
 
-So when we margin, we don't need all the data, only the sample average:
 
+
+So now we margin and notice that the integral is the definition of a convolution:
+
+\begin{changemargin}{-0.5in}{0in}
 \beqn
-\cprob{\Rlonetonl}{\sigsq} = h(\Rlonetonl ~|~ \sigsq) \int_\reals g(\Rbar ~|~ \mu, \sigsq) \prob{\mu; \sigsq_\mu} d\mu
+\cprob{\Rlonetonl}{\sigsq} &=& \int_\reals \prob{\Rlonetonl | \mu_\ell, \sigsq} \prob{\mu_\ell; \sigsq_\mu} d\mu_\ell \\
+&=& h \sqrt{2\pi\frac{\sigsq}{n_\ell}}\int_\reals \sqrt{\frac{1}{2\pi\frac{\sigsq}{n_\ell}}}\exp{-\oneover{2\frac{\sigsq}{n_\ell}} \parens{ \squared{\Rbar_\ell - \mu_\ell}}} \oneoversqrt{2\pi\sigsq_\mu} ~\exp{-\oneover{2\sigsq_\mu} \musq}  d\mu_\ell \\
+&=& h \sqrt{2\pi\frac{\sigsq}{n_\ell}} \normnot{0}{\frac{\sigsq}{n_\ell}} \star \normnot{0}{\sigsq_\mu} \\
+&=& h \sqrt{2\pi\frac{\sigsq}{n_\ell}} \normnot{0}{\frac{\sigsq}{n_\ell} + \sigsq_\mu} \\
+&=& h \sqrt{2\pi\frac{\sigsq}{n_\ell}} \oneoversqrt{2\pi \parens{\frac{\sigsq}{n_\ell} + \sigsq_\mu}} ~\exp{-\oneover{2 \parens{\frac{\sigsq}{n_\ell} + \sigsq_\mu}} \Rbar_\ell^2}\\
+&=& h \sqrt{\frac{\sigsq}{\sigsq n_\ell + \sigsq_\mu}}~\exp{-\oneover{2 \parens{\frac{\sigsq}{n_\ell} + \sigsq_\mu}} \Rbar_\ell^2}\\
 \eeqn
+\end{changemargin}
 
-The problem here is that $g$ is not a likelihood. So I don't know how to do that margining trick with $\normnot{0}{\overn{\sigsq}} \star \normnot{0}{\sigsq_\mu} = \normnot{0}{\overn{\sigsq} + \sigsq_\mu}$. So I think I have to do the integral manually using Mathematica:
+%The problem here is that $g$ is not a likelihood. So I don't know how to do that margining trick with $\normnot{0}{\overn{\sigsq}} \star \normnot{0}{\sigsq_\mu} = \normnot{0}{\overn{\sigsq} + \sigsq_\mu}$. So I think I have to do the integral manually using Mathematica:
+%
+%\beqn
+%\int_\reals g(\Rbar_\ell ~|~ \mu, \sigsq) \prob{\mu; \sigsq_\mu} d\mu &=& \int_\reals \exp{-\oneover{2\sigsq} \parens{-2n_\ell \mu \Rbar_\ell + n_\ell \musq}} \oneoversqrt{2\pi\sigsq_\mu} \exp{-\oneover{2\sigsq_\mu} \musq} d\mu \\
+%&=& \oneoversqrt{\sigsq_\mu \parens{\frac{n_\ell}{\sigsq} + 1}} \exp{\frac{n_\ell^2 \Rbar_\ell^2 \sigsq_\mu}{2\sigsq\parens{\sigsq + n_\ell \sigsq_\mu}}} \\
+%\Rightarrow \cprob{\Rlonetonl}{\sigsq} &\propto& \oneoversqrt{\sigsq_\mu \parens{\frac{n_\ell}{\sigsq} + 1}} \exp{\frac{n_\ell^2 \Rbar_\ell^2 \sigsq_\mu}{2\sigsq\parens{\sigsq + n_\ell \sigsq_\mu}}} \\
+%\eeqn
 
-\beqn
-\int_\reals g(\Rbar ~|~ \mu, \sigsq) \prob{\mu; \sigsq_\mu} d\mu &=& \int_\reals \exp{-\oneover{2\sigsq} \parens{-2n_\ell \mu \Rbar + n_\ell \musq}} \oneoversqrt{2\pi\sigsq_\mu} \exp{-\oneover{2\sigsq_\mu} \musq} d\mu \\
-&=& \oneoversqrt{\sigsq_\mu \parens{\frac{n_\ell}{\sigsq} + 1}} \exp{\frac{n_\ell^2 \Rbar^2 \sigsq_\mu}{2\parens{\sigma^4 + n_\ell\sigsq \sigsq_\mu}}}
-\eeqn
+%\begin{figure}
+%\begin{center}
+%\includegraphics[width=6in]{integrate_out_mu2.eps}
+%\end{center}
+%\end{figure}
+%\FloatBarrier
 
-\begin{figure}
-\begin{center}
-\includegraphics[width=6in]{integrate_out_mu2.eps}
-\end{center}
-\end{figure}
-\FloatBarrier
+%And this result does not appear to be equal to $\normnot{0}{\overn{\sigsq} + \sigsq_\mu}$. \\
 
-And this result does not appear to be equal to $\normnot{0}{\overn{\sigsq} + \sigsq_\mu}$. \\
-
-Let's finish this off by returning to the probability of the tree which was:
+Let's finish this section off by returning to the probability of the tree which was:
 
 \beqn
 \cprob{T}{\R, \sigsq} = \frac{\cprob{\R}{T, \sigsq} \prob{T}}{\cprob{\R}{\sigsq}}
@@ -181,43 +198,60 @@ Thus, the transition ratio will be:
 \frac{\prob{T^* \rightarrow T}}{\prob{T \rightarrow T^*}} = \frac{\prob{\text{PRUNE}}\oneover{w_2^*}}{\prob{\text{GROW}}\oneover{b} \oneover{p_{adj}} \oneover{n_{adj}}} = \frac{\prob{\text{PRUNE}}}{\prob{\text{GROW}}} \frac{b ~ p_{adj} ~ n_{adj}}{w_2^*}
 \eeqn
 
-Why don't the probabilities of prune and grow cancel? Well, under the case where we cannot grow anymore (if we use all split variables), the probability of growth will be 0. Thus, those steps \textit{cannot} be considered since the ratio would be undefined.
+Why don't the probabilities of prune and grow cancel? Well, under the case where we cannot grow anymore (if we use all split variables), the probability of growth will be 0. Thus, those steps \textit{cannot} be considered since the ratio would be undefined. As long as they can be considered, that ratio will cancel.
 
 \subsubsection*{Proportional Likelihood Ratio}
 
 $\cprob{\R}{T^*, \sigsq}$ represents the likelihood of all the responses (adjusted by the other trees) to wind up in the nodes they've wound up in. As we've shown in the previous section that the likelihood for any node is:
 
+%\beqn
+%\cprob{\Rlonetonl}{\sigsq} = h(\Rlonetonl ~|~ \sigsq) \oneoversqrt{\sigsq_\mu \parens{\frac{n_\ell}{\sigsq} + 1}} \exp{\frac{n_\ell^2 \Rbar_\ell^2 \sigsq_\mu}{2\parens{\sigma^4 + n_\ell\sigsq \sigsq_\mu}}}
+%\eeqn
+
+
 \beqn
-\cprob{\Rlonetonl}{\sigsq} = h(\Rlonetonl ~|~ \sigsq) \oneoversqrt{\sigsq_\mu \parens{\frac{n_\ell}{\sigsq} + 1}} \exp{\frac{n_\ell^2 \Rbar^2 \sigsq_\mu}{2\parens{\sigma^4 + n_\ell\sigsq \sigsq_\mu}}}
+\cprob{\Rlonetonl}{\sigsq} = h \sqrt{\frac{\sigsq}{\sigsq n_\ell + \sigsq_\mu}}~\exp{-\oneover{2 \parens{\frac{\sigsq}{n_\ell} + \sigsq_\mu}} \Rbar_\ell^2}\\
 \eeqn
 
 Since the likelihoods are solely determined by the terminal nodes, the proposal tree differs from the original tree by only the $\ell$th node in the original becoming the $\ell_L$ and $\ell_R$ nodes in the proposal. Hence, the proportional likelihood ratio becomes only:
 
 \beqn
-\frac{\cprob{\R}{T^*, \sigsq}}{\cprob{\R}{T, \sigsq}} &=& h\parens{\RLlonetonlL ~|~ \sigsq} \oneoversqrt{\sigsq_\mu \parens{\frac{n_{\ell_L}}{\sigsq} + 1}} ~~\exp{\frac{n_{\ell_L}^2 \Rbar_L^2 \sigsq_\mu}{2\parens{\sigma^4 + n_{\ell_L}\sigsq \sigsq_\mu}}} \\
-&& ~~\times h\parens{\RRlonetonlR ~|~ \sigsq} \oneoversqrt{\sigsq_\mu \parens{\frac{n_{\ell_R}}{\sigsq} + 1}} ~~\exp{\frac{n_{\ell_R}^2 \Rbar_R^2 \sigsq_\mu}{2\parens{\sigma^4 + n_{\ell_R}\sigsq \sigsq_\mu}}} \\
-&& ~~\times \oneover{h\parens{\Rlonetonl ~|~ \sigsq} \oneoversqrt{\sigsq_\mu \parens{\frac{n_\ell}{\sigsq} + 1}} ~~\exp{\dfrac{n_\ell^2 \Rbar^2 \sigsq_\mu}{2\parens{\sigma^4 + n_\ell\sigsq \sigsq_\mu}}}} \\
+\frac{\cprob{\R}{T^*, \sigsq}}{\cprob{\R}{T, \sigsq}} &=& h_L \sqrt{\frac{\sigsq}{\sigsq n_{\ell_L} + \sigsq_\mu}}~\exp{-\oneover{2 \parens{\frac{\sigsq}{n_{\ell_L}} + \sigsq_\mu}} \Rbar_{\ell_L}^2} \\
+&& \times h_R \sqrt{\frac{\sigsq}{\sigsq n_{\ell_R} + \sigsq_\mu}}~\exp{-\oneover{2 \parens{\frac{\sigsq}{n_{\ell_R}} + \sigsq_\mu}} \Rbar_{\ell_R}^2} \times \\
+&& \inverse{h \sqrt{\frac{\sigsq}{\sigsq n_\ell + \sigsq_\mu}}~\exp{-\oneover{2 \parens{\frac{\sigsq}{n_\ell} + \sigsq_\mu}} \Rbar_\ell^2}}
 \eeqn
 
-Note that the ratio of the $h$ functions cancel:
+%\beqn
+%\frac{\cprob{\R}{T^*, \sigsq}}{\cprob{\R}{T, \sigsq}} &=& h\parens{\RLlonetonlL ~|~ \sigsq} \oneoversqrt{\sigsq_\mu \parens{\frac{n_{\ell_L}}{\sigsq} + 1}} ~~\exp{\frac{n_{\ell_L}^2 \Rbar_{\ell_L}^2 \sigsq_\mu}{2\parens{\sigma^4 + n_{\ell_L}\sigsq \sigsq_\mu}}} \\
+%&& ~~\times h\parens{\RRlonetonlR ~|~ \sigsq} \oneoversqrt{\sigsq_\mu \parens{\frac{n_{\ell_R}}{\sigsq} + 1}} ~~\exp{\frac{n_{\ell_R}^2 \Rbar_{\ell_R}^2 \sigsq_\mu}{2\parens{\sigma^4 + n_{\ell_R}\sigsq \sigsq_\mu}}} \\
+%&& ~~\times \inverse{h\parens{\Rlonetonl ~|~ \sigsq} \oneoversqrt{\sigsq_\mu \parens{\frac{n_\ell}{\sigsq} + 1}} ~~\exp{\dfrac{n_\ell^2 \Rbar_\ell^2 \sigsq_\mu}{2\parens{\sigma^4 + n_\ell\sigsq \sigsq_\mu}}}} \\
+%\eeqn
+
+Note that the ratio of the $h$ functions do \textit{not} cancel:
 
 \beqn
-&& \frac{h\parens{\RLlonetonlL ~|~ \sigsq}h\parens{\RRlonetonlR ~|~ \sigsq}}{h\parens{\Rlonetonl ~|~ \sigsq}} \\
-&=& \frac{\doneover{\tothepow{2\pi\sigsq}{n_{\ell_L} / 2}} ~\exp{-\doneover{2\sigsq} \sum_{i=1}^{n_{\ell_L}} R_i^2} \doneover{\tothepow{2\pi\sigsq}{n_{\ell_R} / 2}} ~\exp{-\doneover{2\sigsq} \sum_{i=1}^{n_{\ell_R}} R_i^2}}{\doneover{\tothepow{2\pi\sigsq}{n_\ell / 2}} ~\exp{-\doneover{2\sigsq} \sum_{i=1}^{n_\ell} R_i^2}} \\
-&=& \frac{\doneover{\tothepow{2\pi\sigsq}{n_\ell / 2}} ~\exp{-\doneover{2\sigsq} \sum_{i=1}^{n_\ell} R_i^2}}{\doneover{\tothepow{2\pi\sigsq}{n_\ell / 2}} ~\exp{-\doneover{2\sigsq} \sum_{i=1}^{n_\ell} R_i^2}} = 1 \eqncomment{since $n_\ell = n_{\ell_R} + n_{\ell_L}$}
+&& \frac{h_L h_R}{h} = \frac{h\parens{\RLlonetonlL ~|~ \sigsq}h\parens{\RRlonetonlR ~|~ \sigsq}}{h\parens{\Rlonetonl ~|~ \sigsq}} \\
+&=& \frac{\oneover{\tothepow{2\pi\sigsq}{n_{\ell_L} / 2}}  ~\exp{\oneover{n_{\ell_L}} \sum_{i=1}^{n_{\ell_L}} \squared{R_{\ell_{L,i}} - \Rbar_{\ell_L}}} \oneover{\tothepow{2\pi\sigsq}{n_{\ell_R} / 2}}  ~\exp{\oneover{n_{\ell_R}} \sum_{i=1}^{n_{\ell_R}} \squared{R_{\ell_{R,i}} - \Rbar_{\ell_R}}}}{\oneover{\tothepow{2\pi\sigsq}{n_\ell / 2}}  ~\exp{\oneover{n_\ell} \sum_{i=1}^{n_\ell} \squared{R_{\ell_i} - \Rbar_\ell}}} \\
+&=& \frac{\exp{\oneover{n_{\ell_L}} \sum_{i=1}^{n_{\ell_L}} \squared{R_{\ell_{L,i}} - \Rbar_{\ell_L}} + \oneover{n_{\ell_R}} \sum_{i=1}^{n_{\ell_R}} \squared{R_{\ell_{R,i}} - \Rbar_{\ell_R}}}}{\exp{\oneover{n_\ell} \sum_{i=1}^{n_\ell} \squared{R_{\ell_i} - \Rbar_\ell}}} \eqncomment{since $n_\ell = n_{\ell_R} + n_{\ell_L}$}
 \eeqn
 
-Hence, we simplify to:
+%\beqn
+%&& \frac{h\parens{\RLlonetonlL ~|~ \sigsq}h\parens{\RRlonetonlR ~|~ \sigsq}}{h\parens{\Rlonetonl ~|~ \sigsq}} \\
+%&=& \frac{\doneover{\tothepow{2\pi\sigsq}{n_{\ell_L} / 2}} ~\exp{-\doneover{2\sigsq} \sum_{i=1}^{n_{\ell_L}} R_{\ell_i}^2} \doneover{\tothepow{2\pi\sigsq}{n_{\ell_R} / 2}} ~\exp{-\doneover{2\sigsq} \sum_{i=1}^{n_{\ell_R}} R_{\ell_i}^2}}{\doneover{\tothepow{2\pi\sigsq}{n_\ell / 2}} ~\exp{-\doneover{2\sigsq} \sum_{i=1}^{n_\ell} R_{\ell_i}^2}} \\
+%&=& \frac{\doneover{\tothepow{2\pi\sigsq}{n_\ell / 2}} ~\exp{-\doneover{2\sigsq} \sum_{i=1}^{n_\ell} R_{\ell_i}^2}}{\doneover{\tothepow{2\pi\sigsq}{n_\ell / 2}} ~\exp{-\doneover{2\sigsq} \sum_{i=1}^{n_\ell} R_{\ell_i}^2}} = 1 \eqncomment{since $n_\ell = n_{\ell_R} + n_{\ell_L}$}
+%\eeqn
+
+Hence, we cannot really simplify the above expression for the proportional likelihood ratio.
 
 
-\begin{changemargin}{-0.5in}{0in}
-\beqn
-\frac{\cprob{\R}{T^*, \sigsq}}{\cprob{\R}{T, \sigsq}} &=& \frac{\oneoversqrt{\sigsq_\mu \parens{\frac{n_{\ell_L}}{\sigsq} + 1}} \oneoversqrt{\sigsq_\mu \parens{\frac{n_{\ell_R}}{\sigsq} + 1}} ~~\exp{\dfrac{n_{\ell_L}^2 \Rbar_L^2 \sigsq_\mu}{2\parens{\sigma^4 + n_{\ell_L}\sigsq \sigsq_\mu}}} ~~\exp{\dfrac{n_{\ell_R}^2 \Rbar_R^2 \sigsq_\mu}{2\parens{\sigma^4 + n_{\ell_R}\sigsq \sigsq_\mu}}}       }{\oneoversqrt{\sigsq_\mu \parens{\frac{n_\ell}{\sigsq} + 1}} ~~\exp{\dfrac{n_\ell^2 \Rbar^2 \sigsq_\mu}{2\parens{\sigma^4 + n_\ell\sigsq \sigsq_\mu}}}} \\
-&=& \sqrt{\frac{\sigsq \parens{n_\ell + \sigsq}}{\sigsq_\mu \parens{n_{\ell_L} + \sigsq}\parens{n_{\ell_R} + \sigsq}}} ~~\exp{\frac{\sigsq_\mu}{2\sigsq} \parens{\frac{n_{\ell_L}^2 \Rbar_L^2}{\sigsq + n_{\ell_L}\sigsq_\mu} + \frac{n_{\ell_R}^2 \Rbar_R^2}{\sigsq + n_{\ell_R}\sigsq_\mu} - \frac{n_\ell^2 \Rbar^2}{\sigsq + n_\ell \sigsq_\mu}}}
-\eeqn
-\end{changemargin}
-
-Note how this is only a function of $\sum R_i$ which makes calculations efficient.
+%\begin{changemargin}{-0.5in}{0in}
+%\beqn
+%\frac{\cprob{\R}{T^*, \sigsq}}{\cprob{\R}{T, \sigsq}} &=& \frac{\oneoversqrt{\sigsq_\mu \parens{\frac{n_{\ell_L}}{\sigsq} + 1}} \oneoversqrt{\sigsq_\mu \parens{\frac{n_{\ell_R}}{\sigsq} + 1}} ~~\exp{\dfrac{n_{\ell_L}^2 \Rbar_{\ell_L}^2 \sigsq_\mu}{2\parens{\sigma^4 + n_{\ell_L}\sigsq \sigsq_\mu}}} ~~\exp{\dfrac{n_{\ell_R}^2 \Rbar_{\ell_R}^2 \sigsq_\mu}{2\parens{\sigma^4 + n_{\ell_R}\sigsq \sigsq_\mu}}}}{\oneoversqrt{\sigsq_\mu \parens{\frac{n_\ell}{\sigsq} + 1}} ~~\exp{\dfrac{n_\ell^2 \Rbar_\ell^2 \sigsq_\mu}{2\parens{\sigma^4 + n_\ell\sigsq \sigsq_\mu}}}} \\
+%&=& \sqrt{\frac{\sigsq \parens{n_\ell + \sigsq}}{\sigsq_\mu \parens{n_{\ell_L} + \sigsq}\parens{n_{\ell_R} + \sigsq}}} ~~\exp{\frac{\sigsq_\mu}{2\sigsq} \parens{\frac{\overbrace{n_{\ell_L}^2 \Rbar_{\ell_L}^2}}{\sigsq + n_{\ell_L}\sigsq_\mu} + \frac{\overbrace{n_{\ell_R}^2 \Rbar_{\ell_R}^2}}{\sigsq + n_{\ell_R}\sigsq_\mu} - \frac{\overbrace{n_\ell^2 \Rbar_\ell^2}}{\sigsq + n_\ell \sigsq_\mu}}} \\
+%\eeqn
+%\end{changemargin}
+%
+%Note how the overbraces are only functions of $\sum R_i$ which makes calculations efficient.
 
 
 \subsubsection*{Tree Structure Ratio}
@@ -276,7 +310,7 @@ Thus, the transition ratio becomes:
 \frac{\prob{T^* \rightarrow T}}{\prob{T \rightarrow T^*}} = \frac{\prob{\text{GROW}}  \oneover{b-1}\oneover{p_{adj}} \oneover{n_{adj}}}{ \prob{\text{PRUNE}}\oneover{w_2}} = \frac{\prob{\text{GROW}}}{\prob{\text{PRUNE}}}\frac{w_2}{(b-1) p_{adj} n_{adj}}
 \eeqn
 
-Once again, we need to bookkeep and make sure we can actually prune this node. If it's just a root node, then we can't even consider this step at all.
+Once again, we need to bookkeep and make sure we can actually prune this node. If it's just a root node, then we can't even consider this step at all. Otherwise, they'll cancel.
 
 \subsubsection*{Proportional Likelihood Ratio}
 
@@ -303,68 +337,103 @@ It is also clear this is just the inverse of the tree structure ratio for the gr
 
 Due to the complexity of the bookkeeping, we do not consider these steps.
 
-\end{document}
+\subsection*{Implementation Details}
 
-The change proposal is quite different from the grow and prune. This is taking an internal node (any of the $v$ internal nodes where the root itself is included) and changing the rule by switching both the split attribute and the split rule value.\\
+We use what we have above to calculate $r$ for grow and prune steps. In practice, we just take the log to avoid numerical problems. \\
 
-Consider $\prob{T \rightarrow T^*} = \cprob{T^*}{T}$ during a change:
-
-\beqn
-\cprob{T^*}{T} &=& \prob{\text{CHANGE}} \prob{\text{selecting the $\ell$th node to change}} \times \\
-&& \prob{\text{selecting the $j$th attribute to split on}} \times \\
-&& \prob{\text{selecting the $i$th value to split on}} \\
-\eeqn
-
-Then going backwards have the same thing but we need to get back to the original node:
-
-\beqn
-\cprob{T}{T^*} &=& \prob{\text{CHANGE}} \prob{\text{selecting the $\ell$th node to change}} \times \\
-&& \prob{\text{selecting the original attribute to split on}} \times \\
-&& \prob{\text{selecting the original value to split on}} \\
-\eeqn
-
-The transition ratio will have many cancellations. The probability of picking a change proposal is obviously the same. The probability of picking the $\ell$th node is the same. Since there are only a certain number of attributes available to the $\ell$th node, that will be the same. This leaves us with:
-
-\beqn
-\frac{\cprob{T}{T^*}}{\cprob{T^*}{T}} = \frac{n_{\text{original}}}{n_{\text{proposal}}}
-\eeqn
-
-where $n_{\text{original}}$ is the number of split points available if the $\ell$th node's split attribute is the original attribute and $n_{\text{proposal}}$ is the number of split points available if the proposal split attribute is used instead.
-
-We now move on to the proportional likelihood ratio. We note that if we make a change, all daughter nodes are affected all the way down the lineage. Hence, we need to compare the likelihoods of all the daughter nodes underneath the $\ell$th node. There is no clean way to denote this, so I just spell it out:
-
-\beqn
-\frac{\cprob{R}{T^*, \sigsq}}{\cprob{R}{T, \sigsq}} = \frac{\prod_{\ell^* \in \text{all leaf nodes under the $\ell$th node}} { \abss{\bSigma_{\ell^*}}^{-\half} \exp{-\half R_{\ell^*}^\top \bSigmainv_{\ell^*} R_{\ell^*}}}}{\prod_{\ell \in \text{all leaf nodes under the $\ell$th node}} { \abss{\bSigma_\ell}^{-\half} \exp{-\half R_\ell^\top \bSigmainv_\ell R_\ell}}}
-\eeqn
-
-I leave out the $2\pi^{n_\cdot}$ terms because the total number $n$ at any given node will have to remain the same regardless as how it's apportioned in the nodes below it. \\
-
-\textbf{Question}: how is $R_\ell$ defined if the node is empty? \\
-
-Now we move on to the tree structure ratio. Recall that:
-
-\beqn
-\prob{T^*} &=& \prod_{\eta \in H} \prob{\text{splitting~} \eta} \prod_{\eta \in H} \prob{\text{assigning a rule to~} \eta} \\
-\eeqn
-
-Since both the proposal and original trees have the same structure, we can ignore the $\prob{\text{splitting~} \eta}$ terms when we form the ratio. And once again, only the nodes below the changed node need to be considered since all other nodes are the same for both the proposal and original. Thus we're left with:
-
-\beqn
-\frac{\prob{T^*}}{\prob{T}} = \frac{\prod_{h \in \text{all nodes under $\eta$}} \prob{\text{assigning a rule to~} h ~|~ T^*}}{\prod_{h \in \text{all nodes under $\eta$}} \prob{\text{assigning a rule to~} h ~|~ T}} \equalsquestion \frac{\prob{\text{assigning a rule to~}  \eta ~|~ T^*}}{\prob{\text{assigning a rule to~} \eta ~|~ T}}
-\eeqn
-
-The question is does is the $\equalsquestion$ above a true equality? I doubt it. Let's say your original split is $x_{37} < 89.2$ and the proposed change split is $x_{49} < 23.8$. It's possible that other $x_{49}$ rules are present underneath node $\eta$. These rule assignment probabilities will now change because the number of available split values will change. \\
-
-\textbf{Question}: what happens if the proposed change is a minimum value on an attribute, and there are nodes below with the same split attribute, that will force the numerator to be zero and the step should always be rejected? \\
-
-It seems that change steps are quite complicated when there is all this bookkeeping. This may be the reason Rob's new BART implementation only does GROWs and PRUNEs. \\
-
-I really would like to nail down this spec before I go ahead and implement these features, so if both of you could comment, that would be fantastic.
-
-
-
-
-
+One thing we would like to estimate is the likelihood of the trees over the lifetime of the Gibbs sampler.
 
 
 \end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+%The change proposal is quite different from the grow and prune. This is taking an internal node (any of the $v$ internal nodes where the root itself is included) and changing the rule by switching both the split attribute and the split rule value.\\
+%
+%Consider $\prob{T \rightarrow T^*} = \cprob{T^*}{T}$ during a change:
+%
+%\beqn
+%\cprob{T^*}{T} &=& \prob{\text{CHANGE}} \prob{\text{selecting the $\ell$th node to change}} \times \\
+%&& \prob{\text{selecting the $j$th attribute to split on}} \times \\
+%&& \prob{\text{selecting the $i$th value to split on}} \\
+%\eeqn
+%
+%Then going backwards have the same thing but we need to get back to the original node:
+%
+%\beqn
+%\cprob{T}{T^*} &=& \prob{\text{CHANGE}} \prob{\text{selecting the $\ell$th node to change}} \times \\
+%&& \prob{\text{selecting the original attribute to split on}} \times \\
+%&& \prob{\text{selecting the original value to split on}} \\
+%\eeqn
+%
+%The transition ratio will have many cancellations. The probability of picking a change proposal is obviously the same. The probability of picking the $\ell$th node is the same. Since there are only a certain number of attributes available to the $\ell$th node, that will be the same. This leaves us with:
+%
+%\beqn
+%\frac{\cprob{T}{T^*}}{\cprob{T^*}{T}} = \frac{n_{\text{original}}}{n_{\text{proposal}}}
+%\eeqn
+%
+%where $n_{\text{original}}$ is the number of split points available if the $\ell$th node's split attribute is the original attribute and $n_{\text{proposal}}$ is the number of split points available if the proposal split attribute is used instead.
+%
+%We now move on to the proportional likelihood ratio. We note that if we make a change, all daughter nodes are affected all the way down the lineage. Hence, we need to compare the likelihoods of all the daughter nodes underneath the $\ell$th node. There is no clean way to denote this, so I just spell it out:
+%
+%\beqn
+%\frac{\cprob{R}{T^*, \sigsq}}{\cprob{R}{T, \sigsq}} = \frac{\prod_{\ell^* \in \text{all leaf nodes under the $\ell$th node}} { \abss{\bSigma_{\ell^*}}^{-\half} \exp{-\half R_{\ell^*}^\top \bSigmainv_{\ell^*} R_{\ell^*}}}}{\prod_{\ell \in \text{all leaf nodes under the $\ell$th node}} { \abss{\bSigma_\ell}^{-\half} \exp{-\half R_\ell^\top \bSigmainv_\ell R_\ell}}}
+%\eeqn
+%
+%I leave out the $2\pi^{n_\cdot}$ terms because the total number $n$ at any given node will have to remain the same regardless as how it's apportioned in the nodes below it. \\
+%
+%\textbf{Question}: how is $R_\ell$ defined if the node is empty? \\
+%
+%Now we move on to the tree structure ratio. Recall that:
+%
+%\beqn
+%\prob{T^*} &=& \prod_{\eta \in H} \prob{\text{splitting~} \eta} \prod_{\eta \in H} \prob{\text{assigning a rule to~} \eta} \\
+%\eeqn
+%
+%Since both the proposal and original trees have the same structure, we can ignore the $\prob{\text{splitting~} \eta}$ terms when we form the ratio. And once again, only the nodes below the changed node need to be considered since all other nodes are the same for both the proposal and original. Thus we're left with:
+%
+%\beqn
+%\frac{\prob{T^*}}{\prob{T}} = \frac{\prod_{h \in \text{all nodes under $\eta$}} \prob{\text{assigning a rule to~} h ~|~ T^*}}{\prod_{h \in \text{all nodes under $\eta$}} \prob{\text{assigning a rule to~} h ~|~ T}} \equalsquestion \frac{\prob{\text{assigning a rule to~}  \eta ~|~ T^*}}{\prob{\text{assigning a rule to~} \eta ~|~ T}}
+%\eeqn
+%
+%The question is does is the $\equalsquestion$ above a true equality? I doubt it. Let's say your original split is $x_{37} < 89.2$ and the proposed change split is $x_{49} < 23.8$. It's possible that other $x_{49}$ rules are present underneath node $\eta$. These rule assignment probabilities will now change because the number of available split values will change. \\
+%
+%\textbf{Question}: what happens if the proposed change is a minimum value on an attribute, and there are nodes below with the same split attribute, that will force the numerator to be zero and the step should always be rejected? \\
+%
+%It seems that change steps are quite complicated when there is all this bookkeeping. This may be the reason Rob's new BART implementation only does GROWs and PRUNEs. \\
+%
+%I really would like to nail down this spec before I go ahead and implement these features, so if both of you could comment, that would be fantastic.

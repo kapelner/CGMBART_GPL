@@ -10,7 +10,7 @@ import CGM_Statistics.CGMTreePriorBuilder;
  * @author kapelner
  *
  */
-public class CGMBARTPosteriorBuilder_Alt extends CGMBARTPosteriorBuilder {
+public class CGMBARTPosteriorBuilder_Alt extends CGMBARTPosteriorBuilderOld {
 
 	public CGMBARTPosteriorBuilder_Alt(CGMTreePriorBuilder tree_prior_builder) {
 		super(tree_prior_builder);

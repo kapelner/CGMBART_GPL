@@ -22,10 +22,11 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-package CGM_BART;
+package CGM_BART_DEBUG;
 
 import java.util.ArrayList;
 
+import CGM_BART.CGMBART;
 import CGM_BayesianCART1998.*;
 import CGM_Statistics.*;
 import GemIdentTools.Matrices.DoubleMatrix;
@@ -38,14 +39,14 @@ import GemIdentTools.Matrices.DoubleMatrix;
  * @author kapelner
  *
  */
-public class CGMBARTPosteriorBuilder extends CGMPosteriorBuilder {
+public class CGMBARTPosteriorBuilderOld extends CGMPosteriorBuilder {
 
 	private double hyper_sigsq_mu;
 	private double sigsq;
 	private double hyper_mu_bar;
 	
 	
-	public CGMBARTPosteriorBuilder(CGMTreePriorBuilder tree_prior_builder) {
+	public CGMBARTPosteriorBuilderOld(CGMTreePriorBuilder tree_prior_builder) {
 		super(tree_prior_builder);
 	}
 	
@@ -77,7 +78,7 @@ public class CGMBARTPosteriorBuilder extends CGMPosteriorBuilder {
 		
 		for (CGMTreeNode node : terminal_nodes){
 //			if (node.log_prop_lik == null){
-				ln_prob += calculcateLnPropProbOfNode(node);
+				ln_prob += calculcateLnProbOfNode(node);
 //			}
 //			else {
 //				ln_prob += node.log_prop_lik;
@@ -95,20 +96,48 @@ public class CGMBARTPosteriorBuilder extends CGMPosteriorBuilder {
 		return ln_prob;
 	}
 
-	/**
-	 * This calculates the marginalized ln(P(R_1, \ldots, R_N | \sigsq))
-	 * by calculating g(\Rbar | \sigsq)
-	 * 
-	 * @param node
-	 * @return
-	 */
-	private double calculcateLnPropProbOfNode(CGMTreeNode node) {
+	private double calculcateLnProbOfNode(CGMTreeNode node) {
 		double log_prob_node_ell = 0;
-		log_prob_node_ell -= 0.5 * (Math.log(hyper_sigsq_mu) + Math.log(node.n / sigsq + 1));
-		log_prob_node_ell += 
+//		DoubleMatrix sigma = generateSigmaMatrix(node.n);
+//		System.out.println("sigma: \n" + sigma.crop(0, 5, 0, 5).toString(4));
+//		double det = sigma.det();
+//		System.out.println("sigsq " + sigsq);
+		double det_by_book = Math.pow(sigsq, node.n - 1) * (hyper_sigsq_mu * node.n + sigsq);
+		//do some corrections to the determinant due to computational limitations of the double storage
+		if (det_by_book == 0){
+			det_by_book = Double.MIN_NORMAL;
+		}
+//		if (det_by_book == Double.NaN || det_by_book == Double.NEGATIVE_INFINITY || det_by_book == Double.POSITIVE_INFINITY){
+//			System.err.println("det: " + det_by_book + " sigsq: " + sigsq + " sigsqmu: " + hyper_sigsq_mu + " n: " + node.n);
+//		}
+		if (det_by_book == Double.POSITIVE_INFINITY){
+			det_by_book = Double.MAX_VALUE;
+		}
+//		System.out.println("det(sigma) as   calculated with book " + det_by_book + " ln(det(sigma)) as calculated with book " + Math.log(det_by_book));			
+		log_prob_node_ell += -0.5 * Math.log(det_by_book);
+//		ln_prob -= 0.5 * Math.log(det_by_book);
+//		System.out.println("calculateLnProbYGivenTree running total: " + ln_prob);
 		
 		DoubleMatrix rs = new DoubleMatrix(node.get_ys_in_data());
 		DoubleMatrix mu = new DoubleMatrix(hyper_mu_bar, node.n);
+		DoubleMatrix rs_min_mu = rs.minus(mu);
+//		System.out.println("rs dims " + rs.getRowDimension() + " x " + rs.getColumnDimension() + " rs: \n" + rs.transpose().toString(2));
+//		System.out.println("mu dims " + mu.getRowDimension() + " x " + mu.getColumnDimension() + " mu: \n" + mu.transpose().toString(2));
+//		System.out.println("rs_min_mu dims " + rs_min_mu.getRowDimension() + " x " + rs_min_mu.getColumnDimension() + " rs_min_mu: \n" + rs_min_mu.transpose().toString(2));
+//		System.out.println("rs transpose dims " + rs.transpose().getRowDimension() + " x " + rs.transpose().getColumnDimension() + "  " + rs.transpose().toString(1));
+//		DoubleMatrix sigma = generateSigmaMatrix(node.n);
+		DoubleMatrix inv_sigma = generateInvSigmaMatrix(node.n);
+//		System.out.println("inv_sigma dims " + inv_sigma.getRowDimension() + " x " + inv_sigma.getColumnDimension());
+//		System.out.println("sigma_inv \n " + generateSigmaMatrix(node.n).inverse().crop(0, 5, 0, 5).toString(2));
+//		System.out.println("sigma_inv as calculated with book \n" + inv_sigma.crop(0, 5, 0, 5).toString(2));
+		
+//		System.out.println("sigma_matrix dims " + sigma_matrix.getRowDimension() + " x " + sigma_matrix.getColumnDimension());
+//		System.out.println("inv_sigma_times_rs dims " + inv_sigma.times(rs).getRowDimension() + " x " + inv_sigma.times(rs).getColumnDimension());
+		DoubleMatrix main_term = rs_min_mu.transpose().times(inv_sigma.times(rs_min_mu));
+//		System.out.println("main_term: " + main_term.get(0, 0));
+		log_prob_node_ell +=  -0.5 * main_term.get(0, 0); //it should be a scalar
+//		ln_prob -= 0.5 * Math.log(main_term.get(0, 0));
+//		System.out.println("calculateLnProbYGivenTree log_prob_node_ell: " + log_prob_node_ell);
 		
 		CGMBART.mh_iterations_full_record.print(
 			TreeIllustration.two_digit_format.format(log_prob_node_ell) + ","
@@ -119,11 +148,29 @@ public class CGMBARTPosteriorBuilder extends CGMPosteriorBuilder {
 		return log_prob_node_ell;
 	}
 
+	private DoubleMatrix generateInvSigmaMatrix(int n) {
+		double shared_term = 1 / (n * (hyper_sigsq_mu * n + sigsq));
+		double on_diag = shared_term + 1 / sigsq * (1 - 1 / (double)n);
+		double off_diag = shared_term - 1 / (n * sigsq);
+		
+		DoubleMatrix inv_sigma = new DoubleMatrix(n, n);
+		for (int i = 0; i < n; i++){
+			for (int j = 0; j < n; j++){
+				if (i == j){
+					inv_sigma.set(i, j, on_diag);
+				}
+				else {
+					inv_sigma.set(i, j, off_diag);
+				}
+			}			
+		}
+		return inv_sigma;
+	}
+
 	/** This grow step is different
 	 * 
 	 */
 	protected Double createTreeProposalViaGrow(CGMTreeNode T) {
-		
 //		System.out.println("proposal via GROW  " + T.stringID());
 		//find all terminals nodes that have **more** than N_RULE data
  
@@ -134,26 +181,13 @@ public class CGMBARTPosteriorBuilder extends CGMPosteriorBuilder {
 //		}
 //		System.out.print("\n");
 		//if there are no growth nodes at all, we need to get out with our skin intact,
-		
-		//2 checks
-		//a) If there is no nodes to grow, return null
-		//b) If the node we picked CANNOT grow due to no available predictors, return null as well
 		//we return a probability of null
 		if (growth_nodes.size() == 0){
-			System.out.println("no growth nodes in GROW step!");
+//			System.out.println("no growth nodes in GROW step!");
 			return null;
 		}
-		
-		
 		//now we pick one of these nodes with enough data points randomly
 		CGMTreeNode growth_node = growth_nodes.get((int)Math.floor(Math.random() * growth_nodes.size()));
-		
-		//if we can't grow at all, return null
-		if (growth_node.cannotGrow()){
-			System.out.println("cannot grow node in GROW step!");
-			return null;			
-		}
-		
 		//now we give it a split attribute and value and assign the children data
 		treePriorBuilder.splitNodeAndAssignRule(growth_node);
 //		System.out.println("growth node: " + growth_node.stringID() + " rule: " + " X_" + growth_node.splitAttributeM + " < " + growth_node.splitValue);
@@ -165,16 +199,26 @@ public class CGMBARTPosteriorBuilder extends CGMPosteriorBuilder {
 		//and now we need to return the probability that the growth node split
 		return treePriorBuilder.calculateProbabilityOfSplitting(growth_node);
 	}
+
+	/** 
+	 * we also make sure we use the new distribution of tree-space moves
+	 */
+//	protected Steps randomlyPickAmongTheFourProposalSteps() {
+//		double roll = Math.random();
+//		if (roll < 0.25)
+//			return Steps.GROW;
+//		else if (roll < 0.5)
+//			return Steps.PRUNE;
+//		else if (roll < 0.9)
+//			return Steps.CHANGE;
+//		return Steps.SWAP;
+//	}
 	
-	protected Steps randomlyPickAmongTheFourProposalSteps(CGMTreeNode T) {
-		//the first thing we need to check is if we can prune
-		if (T.canBePruned()){
-			double roll = Math.random();
-			if (roll < 0.5)
-				return Steps.GROW;
-			return Steps.PRUNE;			
-		}
-		return Steps.GROW;
+	protected Steps randomlyPickAmongTheFourProposalSteps() {
+		double roll = Math.random();
+		if (roll < 0.5)
+			return Steps.GROW;
+		return Steps.PRUNE;
 	}	
 
 	public void setCurrentSigsqValue(double sigsq) {
