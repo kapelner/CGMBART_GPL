@@ -83,11 +83,7 @@ This means that if we can margin out $\mu$, we're in good shape. Recall that we 
 
 Let's take a more careful look at the non-margined leaf-likelihood expression and recall from basic mathematical statistics the result that the sample average, $\Rbar_\ell$, is a sufficient statistic for $\mu_\ell$ via the factorization theorem:
 
-%\beqn
-%\prob{\Rlonetonl | \mu, \sigsq} &=& \oneover{\tothepow{2\pi\sigsq}{n_\ell / 2}} ~\exp{-\oneover{2\sigsq} \sum_{i=1}^{n_\ell} \squared{R_{\ell_i} - \mu}} \\
-%&=& \underbrace{\oneover{\tothepow{2\pi\sigsq}{n_\ell / 2}} ~\exp{-\oneover{2\sigsq} \sum_{i=1}^{n_\ell} R_{\ell_i}^2}}_h \underbrace{\exp{-\oneover{2\sigsq} \parens{-2n_\ell \mu \Rbar_\ell + n_\ell \musq}}}_g \\
-%&=& h(\Rlonetonl ~|~ \sigsq) \cdot g(\Rbar_\ell ~|~ \mu, \sigsq) \\
-%\eeqn
+
 
 \beqn
 \prob{\Rlonetonl | \mu_\ell, \sigsq} &=& \oneover{\tothepow{2\pi\sigsq}{n_\ell / 2}} ~\exp{-\oneover{2\sigsq} \sum_{i=1}^{n_\ell} \squared{R_{\ell_i} - \mu_\ell}} \\
@@ -235,13 +231,74 @@ Note that the ratio of the $h$ functions do \textit{not} cancel:
 &=& \frac{\exp{\oneover{n_{\ell_L}} \sum_{i=1}^{n_{\ell_L}} \squared{R_{\ell_{L,i}} - \Rbar_{\ell_L}} + \oneover{n_{\ell_R}} \sum_{i=1}^{n_{\ell_R}} \squared{R_{\ell_{R,i}} - \Rbar_{\ell_R}}}}{\exp{\oneover{n_\ell} \sum_{i=1}^{n_\ell} \squared{R_{\ell_i} - \Rbar_\ell}}} \eqncomment{since $n_\ell = n_{\ell_R} + n_{\ell_L}$}
 \eeqn
 
+
+
+Hence, we cannot really simplify the above expression for the proportional likelihood ratio.
+
+\subsubsection*{Alternative Calculation}
+
+Let's factorize the $\iid$ normal likelihood like the following:
+
+\beqn
+\prob{\Rlonetonl | \mu, \sigsq} &=& \oneover{\tothepow{2\pi\sigsq}{n_\ell / 2}} ~\exp{-\oneover{2\sigsq} \sum_{i=1}^{n_\ell} \squared{R_{\ell_i} - \mu}} \\
+&=& \oneover{\tothepow{2\pi\sigsq}{n_\ell / 2}} ~\exp{-\oneover{2\sigsq} \sum_{i=1}^{n_\ell} R_{\ell_i}^2} \underbrace{\exp{-\oneover{2\sigsq} \parens{-2n_\ell \mu \Rbar_\ell + n_\ell \musq}}}_g \\
+%&=& h(\Rlonetonl ~|~ \sigsq) \cdot g(\Rbar_\ell ~|~ \mu, \sigsq) \\
+\eeqn
+
+Now, let's try to build the ratio:
+
+\small
+\begin{changemargin}{-1in}{0in}
+\beqn
+&& \frac{\cprob{\R}{T^*, \sigsq}}{\cprob{\R}{T, \sigsq}} \\
+&=& \frac{\cprob{\RLlonetonlL}{\sigsq} \cprob{\RRlonetonlR}{\sigsq}}{\cprob{\Rlonetonl}{\sigsq}} \\
+&=& \frac{\myint{\mu}{\reals}{}{\cprob{\RLlonetonlL}{\mu, \sigsq}\prob{\mu}} ~~ \myint{\mu}{\reals}{}{\cprob{\RRlonetonlR}{\mu, \sigsq}\prob{\mu}}}{\myint{\mu}{\reals}{}{\cprob{\Rlonetonl}{\mu, \sigsq}\prob{\mu}}} \\
+&=& \frac{\oneover{\tothepow{2\pi\sigsq}{n_{\ell_L} / 2}} ~\exp{-\oneover{2\sigsq} \sum_{i=1}^{n_{\ell_L}} R_{{\ell_L}_i}^2} \parens{\myint{\mu}{\reals}{}{g_{\ell_L} \prob{\mu}}}~ \oneover{\tothepow{2\pi\sigsq}{n_{\ell_R} / 2}}  ~\exp{-\oneover{2\sigsq} \sum_{i=1}^{n_{\ell_R}} R_{{\ell_R}_i}^2} \parens{\myint{\mu}{\reals}{}{g_{\ell_R} \prob{\mu}}}}{\oneover{\tothepow{2\pi\sigsq}{n_\ell / 2}} ~\exp{-\oneover{2\sigsq} \sum_{i=1}^{n_\ell} R_{\ell_i}^2} \parens{\myint{\mu}{\reals}{}{g_{\ell} \prob{\mu}}}} \\
+&=& \frac{\cancel{\oneover{\tothepow{2\pi\sigsq}{n_{\ell_L} / 2}}} ~\cancel{\exp{-\oneover{2\sigsq} \sum_{i=1}^{n_{\ell_L}} R_{{\ell_L}_i}^2}} \parens{\myint{\mu}{\reals}{}{g_{\ell_L} \prob{\mu}}}~ \cancel{\oneover{\tothepow{2\pi\sigsq}{n_{\ell_R} / 2}}}  ~\cancel{\exp{-\oneover{2\sigsq}} \sum_{i=1}^{n_{\ell_R}} R_{{\ell_R}_i}^2} \parens{\myint{\mu}{\reals}{}{g_{\ell_R} \prob{\mu}}}}{\cancel{\oneover{\tothepow{2\pi\sigsq}{n_\ell / 2}}} ~\cancel{\exp{-\oneover{2\sigsq} \sum_{i=1}^{n_\ell} R_{\ell_i}^2}} \parens{\myint{\mu}{\reals}{}{g_{\ell} \prob{\mu}}}} \\
+&=& \frac{\myint{\mu}{\reals}{}{g_{\ell_L} \prob{\mu}} \myint{\mu}{\reals}{}{g_{\ell_R} \prob{\mu}}}{\myint{\mu}{\reals}{}{g_{\ell} \prob{\mu}}} \\
+&=& \frac{\myint{\mu}{\reals}{}{g_{\ell_L} \cancel{\oneoversqrt{2\pi\sigsqmu}} \exp{-\oneover{2\sigsqmu} \musq}} \myint{\mu}{\reals}{}{g_{\ell_R} \oneoversqrt{2\pi\sigsq_\mu} \exp{-\oneover{2\sigsqmu} \musq}}}{\myint{\mu}{\reals}{}{g_{\ell} \cancel{\oneoversqrt{2\pi\sigsq_\mu}} \exp{-\oneover{2\sigsqmu} \musq}}} \\
+&=& \oneoversqrt{2\pi\sigsq_\mu} \frac{\myint{\mu}{\reals}{}{g_{\ell_L} \exp{-\oneover{2\sigsqmu} \musq}} \myint{\mu}{\reals}{}{g_{\ell_R}  \exp{-\oneover{2\sigsqmu} \musq}}}{\myint{\mu}{\reals}{}{g_{\ell} \exp{-\oneover{2\sigsqmu} \musq}}} \\
+&=& \oneoversqrt{2\pi\sigsq_\mu} \frac{\myint{\mu}{\reals}{}{\exp{-\oneover{2\sigsq} \parens{-2n_{\ell_L} \mu \Rbar_{\ell_L} + n_{\ell_L} \musq}} \exp{-\oneover{2\sigsqmu} \musq}} \myint{\mu}{\reals}{}{\exp{-\oneover{2\sigsq} \parens{-2n_{\ell_L} \mu \Rbar_{\ell_L} + n_{\ell_L} \musq}}  \exp{-\oneover{2\sigsqmu} \musq}}}{\underbrace{\myint{\mu}{\reals}{}{\exp{-\oneover{2\sigsq} \parens{-2n_\ell \mu \Rbar_\ell + n_\ell \musq}} \exp{-\oneover{2\sigsqmu} \musq}}}} \\
+\eeqn
+\end{changemargin}
+\normalsize
+
+Let's evaluate the underbraced integral using Mathematica:
+
+%The problem here is that $g$ is not a likelihood. So I don't know how to do that margining trick with $\normnot{0}{\overn{\sigsq}} \star \normnot{0}{\sigsq_\mu} = \normnot{0}{\overn{\sigsq} + \sigsq_\mu}$. So I think I have to do the integral manually using Mathematica:
+
+\beqn
+\int_\reals g(\Rbar_\ell ~|~ \mu, \sigsq) \prob{\mu; \sigsq_\mu} d\mu &=& \int_\reals \exp{-\oneover{2\sigsq} \parens{-2n_\ell \mu \Rbar_\ell + n_\ell \musq}} \oneoversqrt{2\pi\sigsq_\mu} \exp{-\oneover{2\sigsq_\mu} \musq} d\mu \\
+&=& \sqrt{\frac{2\pi}{\frac{n_\ell}{\sigsq} + \oneover{\sigsqmu}}} \exp{\frac{n_\ell^2 \Rbar_\ell^2 \sigsq_\mu}{2\sigsq\parens{\sigsq + n_\ell \sigsq_\mu}}} \\
+%\Rightarrow \cprob{\Rlonetonl}{\sigsq} &\propto& \oneoversqrt{\sigsq_\mu \parens{\frac{n_\ell}{\sigsq} + 1}} \exp{\frac{n_\ell^2 \Rbar_\ell^2 \sigsq_\mu}{2\sigsq\parens{\sigsq + n_\ell \sigsq_\mu}}} \\
+\eeqn
+
+So now we have:
+
+\small
+\begin{changemargin}{-1in}{0in}
+\beqn
+&& \frac{\cprob{\R}{T^*, \sigsq}}{\cprob{\R}{T, \sigsq}} \\
+&=& \oneoversqrt{2\pi\sigsq_\mu} \frac{\sqrt{\dfrac{2\pi}{\frac{n_{\ell_L}}{\sigsq} + \oneover{\sigsqmu}}} \exp{\dfrac{n_{\ell_L}^2 \Rbar_{\ell_L}^2 \sigsq_\mu}{2\sigsq\parens{\sigsq + n_{\ell_L} \sigsq_\mu}}} \sqrt{\dfrac{2\pi}{\frac{n_{\ell_R}}{\sigsq} + \oneover{\sigsqmu}}} \exp{\dfrac{n_{\ell_R}^2 \Rbar_{\ell_R}^2 \sigsq_\mu}{2\sigsq\parens{\sigsq + n_{\ell_R} \sigsq_\mu}}}}{\sqrt{\dfrac{2\pi}{\frac{n_\ell}{\sigsq} + \oneover{\sigsqmu}}} \exp{\dfrac{n_\ell^2 \Rbar_\ell^2 \sigsq_\mu}{2\sigsq\parens{\sigsq + n_\ell \sigsq_\mu}}}} \\
+&=& \sqrt{\frac{\frac{n_\ell}{\sigsq} + \oneover{\sigsqmu}}{\sigsqmu \parens{\frac{n_{\ell_L}}{\sigsq} + \oneover{\sigsqmu}}\parens{\frac{n_{\ell_R}}{\sigsq} + \oneover{\sigsqmu}}}} ~~\exp{\frac{\sigsq_\mu}{2\sigsq} \parens{\frac{n_{\ell_L}^2 \Rbar_{\ell_L}^2}{\sigsq + n_{\ell_L}\sigsq_\mu} + \frac{n_{\ell_R}^2 \Rbar_{\ell_R}^2}{\sigsq + n_{\ell_R}\sigsq_\mu} - \frac{n_\ell^2 \Rbar_\ell^2}{\sigsq + n_\ell \sigsq_\mu}}} \\
+&=& \sqrt{\frac{\sigsq \parens{\sigsq + n_\ell \sigsqmu}}{\parens{\sigsq + n_{\ell_L} \sigsqmu}\parens{\sigsq + n_{\ell_R} \sigsqmu}}}~~\exp{\frac{\sigsq_\mu}{2\sigsq} \parens{\frac{\squared{\sum_{i=1}^{n_{\ell_L}} R_{\ell_L, i}}}{\sigsq + n_{\ell_L}\sigsq_\mu} + \frac{\squared{\sum_{i=1}^{n_{\ell_L}} R_{\ell_R, i}}}{\sigsq + n_{\ell_R}\sigsq_\mu} - \frac{\squared{\sum_{i=1}^{n_{\ell_L}} R_{\ell, i}}}{\sigsq + n_\ell \sigsq_\mu}}} \\
+\eeqn
+\end{changemargin}
+\normalsize
+
+%\begin{figure}
+%\begin{center}
+%\includegraphics[width=6in]{integrate_out_mu2.eps}
+%\end{center}
+%\end{figure}
+%\FloatBarrier
+
+
 %\beqn
 %&& \frac{h\parens{\RLlonetonlL ~|~ \sigsq}h\parens{\RRlonetonlR ~|~ \sigsq}}{h\parens{\Rlonetonl ~|~ \sigsq}} \\
 %&=& \frac{\doneover{\tothepow{2\pi\sigsq}{n_{\ell_L} / 2}} ~\exp{-\doneover{2\sigsq} \sum_{i=1}^{n_{\ell_L}} R_{\ell_i}^2} \doneover{\tothepow{2\pi\sigsq}{n_{\ell_R} / 2}} ~\exp{-\doneover{2\sigsq} \sum_{i=1}^{n_{\ell_R}} R_{\ell_i}^2}}{\doneover{\tothepow{2\pi\sigsq}{n_\ell / 2}} ~\exp{-\doneover{2\sigsq} \sum_{i=1}^{n_\ell} R_{\ell_i}^2}} \\
 %&=& \frac{\doneover{\tothepow{2\pi\sigsq}{n_\ell / 2}} ~\exp{-\doneover{2\sigsq} \sum_{i=1}^{n_\ell} R_{\ell_i}^2}}{\doneover{\tothepow{2\pi\sigsq}{n_\ell / 2}} ~\exp{-\doneover{2\sigsq} \sum_{i=1}^{n_\ell} R_{\ell_i}^2}} = 1 \eqncomment{since $n_\ell = n_{\ell_R} + n_{\ell_L}$}
 %\eeqn
-
-Hence, we cannot really simplify the above expression for the proportional likelihood ratio.
 
 
 %\begin{changemargin}{-0.5in}{0in}
@@ -250,8 +307,14 @@ Hence, we cannot really simplify the above expression for the proportional likel
 %&=& \sqrt{\frac{\sigsq \parens{n_\ell + \sigsq}}{\sigsq_\mu \parens{n_{\ell_L} + \sigsq}\parens{n_{\ell_R} + \sigsq}}} ~~\exp{\frac{\sigsq_\mu}{2\sigsq} \parens{\frac{\overbrace{n_{\ell_L}^2 \Rbar_{\ell_L}^2}}{\sigsq + n_{\ell_L}\sigsq_\mu} + \frac{\overbrace{n_{\ell_R}^2 \Rbar_{\ell_R}^2}}{\sigsq + n_{\ell_R}\sigsq_\mu} - \frac{\overbrace{n_\ell^2 \Rbar_\ell^2}}{\sigsq + n_\ell \sigsq_\mu}}} \\
 %\eeqn
 %\end{changemargin}
+
+Note how the ratio is only a function of the $\sum R_i$'s which makes calculations efficient.
+
+%Let's think about what's really driving this ratio. Consider $\sigsq = \sigsqmu = 1$ and $n_\ell = 10$ with an equal split in left and right daughter leaves. That would mean that the ratio would be:
 %
-%Note how the overbraces are only functions of $\sum R_i$ which makes calculations efficient.
+%\beqn
+%\sqrt{\frac{11}{36}}~~\exp{\half \parens{\frac{\squared{\sum_{i=1}^{n_{\ell_L}} R_{\ell_L, i}}}{6} + \frac{\squared{\sum_{i=1}^{n_{\ell_L}} R_{\ell_R, i}}}{6} - \frac{\squared{\sum_{i=1}^{n_{\ell_L}} R_{\ell, i}}}{11}}} \\
+%\eeqn
 
 
 \subsubsection*{Tree Structure Ratio}
