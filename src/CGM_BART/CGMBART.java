@@ -62,6 +62,9 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 	protected static boolean TREE_ILLUST = true;
 	protected static final boolean WRITE_DETAILED_DEBUG_FILES = false;
 	
+	protected static final String CSVFileFromRName = "bart_data.csv";
+	protected static final String CSVFileFromRDirectory = "datasets";	
+	
 //	static {
 //		Classifier.writeToDebugLog();
 //	}

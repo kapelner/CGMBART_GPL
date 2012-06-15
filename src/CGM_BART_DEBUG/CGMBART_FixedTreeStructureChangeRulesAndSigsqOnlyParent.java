@@ -9,9 +9,7 @@ import CGM_Statistics.CGMTreeNode;
 
 public class CGMBART_FixedTreeStructureChangeRulesAndSigsqOnlyParent extends CGMBART_FixedTreeStructureChangeRulesAndSigsq {
 	private static final long serialVersionUID = 3460935328647793073L;
-	private static boolean TREE_ILLUST = true;
-	protected static final String CSVFileFromRName = "bart_data.csv";
-	protected static final String CSVFileFromRDirectory = "datasets";	
+	private static boolean TREE_ILLUST = true;	
 		
 	public CGMBART_FixedTreeStructureChangeRulesAndSigsqOnlyParent(DatumSetupForEntireRun datumSetupForEntireRun, JProgressBarAndLabel buildProgress) {
 		super(datumSetupForEntireRun, buildProgress);
