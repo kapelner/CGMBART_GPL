@@ -59,6 +59,8 @@ public class CGMTreeNode extends TreeNode implements Cloneable, Serializable {
 	/** keep the log proportional likelihood of this tree around, if null, must be computed */
 	public Double log_prop_lik;
 
+	public ArrayList<Integer> predictors_that_can_be_assigned;
+
 
 	public CGMTreeNode(CGMTreeNode parent, List<double[]> data, CGMBART bart){
 		this.parent = parent;
@@ -81,15 +83,17 @@ public class CGMTreeNode extends TreeNode implements Cloneable, Serializable {
 		return clone(false);
 	}
 	
-	public double avgResponse(){
-//		System.out.println(this.stringID() + " avg_response n:" + n + " size:" + data.size());
-		//CGMTreeNode.DebugNode(this);
+	public double[] responses(){
 		double[] ys = new double[n];
 		for (int i = 0; i < n; i++){
 			double[] record = data.get(i);
 			ys[i] = record[record.length - 1];
 		}
-		return StatToolbox.sample_average(ys);
+		return ys;
+	}
+	
+	public double avgResponse(){
+		return StatToolbox.sample_average(responses());
 	}
 	
 	/** clones this node (if you clone the root, you clone the entire tree) */
@@ -549,14 +553,21 @@ public class CGMTreeNode extends TreeNode implements Cloneable, Serializable {
 		return lineage;
 	}
 
-	public boolean canBePruned() {
-		//it can be pruned if it's not a leaf
-		return !isLeaf;
+	public double sumResponsesSqd() {
+		return Math.pow(sumResponses(), 2);
 	}
 
-	public boolean cannotGrow() {
-		// TODO Auto-generated method stub
-		return false;
-	}	
+	private double sumResponses() {
+		double sum = 0;
+		for (int i = 0; i < n; i++){
+			double[] record = data.get(i);
+			sum += record[record.length - 1];
+		}
+		return sum;
+	}
+	
+	public int pAdj(){
+		return predictors_that_can_be_assigned.size();
+	}
 	
 }
