@@ -126,10 +126,17 @@ public class CGMBARTPosteriorBuilder {
 		
 	}
 
-	private void growNode(CGMTreeNode grow_node) {
+	private void growNode(CGMTreeNode node) {
 		//we already assume the node can grow, now we just have to pick an attribute and split point
-		
-		
+		node.splitAttributeM = node.pickRandomPredictorThatCanBeAssigned();
+		node.possible_split_values = tree_prior_builder.possibleSplitValues(node);
+		node.splitValue = node.pickRandomSplitValue();
+		//split the data correctly
+		ClassificationAndRegressionTree.SortAtAttribute(node.data, node.splitAttributeM);
+		int n_split = ClassificationAndRegressionTree.getSplitPoint(node.data, node.splitAttributeM, node.splitValue);
+		//now build the node offspring
+		node.left = new CGMTreeNode(node, ClassificationAndRegressionTree.getLowerPortion(node.data, n_split));
+		node.right = new CGMTreeNode(node, ClassificationAndRegressionTree.getUpperPortion(node.data, n_split));		
 	}
 
 	private double calcLnTreeStructureRatioPrune(CGMTreeNode T_i) {
@@ -148,11 +155,19 @@ public class CGMBARTPosteriorBuilder {
 	}
 
 	private double calcLnTreeStructureRatioGrow(CGMTreeNode grow_node) {
+		double alpha = tree_prior_builder.getAlpha();
 		double beta = tree_prior_builder.getBeta();
-		return Math.log(tree_prior_builder.getAlpha()) 
-				+ beta * Math.log(1 + grow_node.generation) - 2 * beta * Math.log(2 + grow_node.generation)
-				+ Math.log(tree_prior_builder.) + Math.log(a)
-				- Math.log(a) - Math.log(a) - Math.log(a) - Math.log(a);
+		int d_eta = grow_node.generation;
+		int p_eta = grow_node.pAdj();
+		int n_eta = grow_node.nAdj();
+		int p_eta_L = grow_node.left.pAdj();
+		int n_eta_L = grow_node.left.nAdj();
+		int p_eta_R = grow_node.right.pAdj();
+		int n_eta_R = grow_node.right.nAdj();
+		return Math.log(alpha) 
+				+ beta * Math.log(1 + d_eta) - 2 * beta * Math.log(2 + d_eta)
+				+ Math.log(p_eta) + Math.log(n_eta)
+				- Math.log(p_eta_L) - Math.log(n_eta_L) - Math.log(p_eta_R) - Math.log(n_eta_R);
 	}
 
 	private double calcLnLikRatioGrow(CGMTreeNode grow_node) {
@@ -179,8 +194,8 @@ public class CGMBARTPosteriorBuilder {
 
 	private double calcLnTransRatioGrow(CGMTreeNode T_i, CGMTreeNode T_star, CGMTreeNode grow_node) {
 		int b = T_i.numLeaves();
-		int p_adj = grow_node.numPredictorsAvailable();
-		int n_adj = grow_node.numSplitPointsAvailableGivenPredictor();
+		int p_adj = grow_node.pAdj();
+		int n_adj = grow_node.nAdj();
 		int w_2_star = T_star.numPruneNodesAvailable();
 		return Math.log(b) + Math.log(p_adj) + Math.log(n_adj) - Math.log(w_2_star); 
 	}
@@ -218,32 +233,14 @@ public class CGMBARTPosteriorBuilder {
 	/** The number of data points in a node that we can split on */
 	protected static final int N_RULE = 5;	
 
-	protected ArrayList<CGMTreeNode> allGrowNodes(CGMTreeNode T){
-		ArrayList<CGMTreeNode> grow_nodes = new ArrayList<CGMTreeNode>();
-//		System.out.println("proposal via GROW  " + T.stringID());
-		//find all terminals nodes that have **more** than N_RULE data 
-		for (CGMTreeNode node : CGMTreeNode.getTerminalNodesWithDataAboveN(T, N_RULE)){
-			//save the predictors that can be assigned
-			node.predictors_that_can_be_assigned = tree_prior_builder.predictorsThatCouldBeUsedToSplitAtNode(node);
-			//this node can be grown if it can be assigned an attribute ONLY
-			if (node.pAdj() > 0){
-				grow_nodes.add(node);
-			}
-		}
-//		System.out.print("num growth nodes: " + growth_nodes.size() +":");
-//		for (CGMTreeNode node : growth_nodes){
-//			System.out.print(" " + node.stringID());
-//		}
-//		System.out.print("\n");	
-		return grow_nodes;
-	}
 	protected CGMTreeNode pickGrowNode(CGMTreeNode T) {
-		ArrayList<CGMTreeNode> growth_nodes = allGrowNodes(T);
+		ArrayList<CGMTreeNode> growth_nodes = CGMTreeNode.getTerminalNodesWithDataAboveN(T, N_RULE);
 		
 		//2 checks
 		//a) If there is no nodes to grow, return null
 		//b) If the node we picked CANNOT grow due to no available predictors, return null as well
-		//we return a probability of null
+		
+		//do check a
 		if (growth_nodes.size() == 0){
 			System.out.println("no growth nodes in GROW step!");
 			return null;
@@ -251,14 +248,17 @@ public class CGMBARTPosteriorBuilder {
 		
 		//now we pick one of these nodes with enough data points randomly
 		CGMTreeNode growth_node = growth_nodes.get((int)Math.floor(Math.random() * growth_nodes.size()));
+		//find which predictors can be used
+		growth_node.predictors_that_can_be_assigned = tree_prior_builder.predictorsThatCouldBeUsedToSplitAtNode(growth_node);
+		//do check b
+		if (growth_node.pAdj() == 0){
+			System.out.println("no attributes available in GROW step!");
+			return null;			
+		}
+		//if we passed, we can use this node
 		return growth_node;
 	}
 	
-	private boolean cannotGrow(CGMTreeNode growth_node) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
 	private boolean cannotPrune(CGMTreeNode T) {
 		return T.parent == null;
 	}

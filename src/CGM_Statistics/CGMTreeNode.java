@@ -60,6 +60,7 @@ public class CGMTreeNode extends TreeNode implements Cloneable, Serializable {
 	public Double log_prop_lik;
 
 	public ArrayList<Integer> predictors_that_can_be_assigned;
+	public ArrayList<Double> possible_split_values;
 
 
 	public CGMTreeNode(CGMTreeNode parent, List<double[]> data, CGMBART bart){
@@ -477,6 +478,15 @@ public class CGMTreeNode extends TreeNode implements Cloneable, Serializable {
 		}
 	}
 
+	public int numPruneNodesAvailable() {
+		if (this.left.isLeaf && this.right.isLeaf){
+			return 1;
+		}
+		else {
+			return this.left.numPruneNodesAvailable() + this.right.numPruneNodesAvailable();
+		}
+	}	
+
 	public String splitToString() {
 		if (this.isLeaf){
 			String klass = this.klass == null ? "null" : TreeIllustration.two_digit_format.format(this.klass);
@@ -569,5 +579,18 @@ public class CGMTreeNode extends TreeNode implements Cloneable, Serializable {
 	public int pAdj(){
 		return predictors_that_can_be_assigned.size();
 	}
+	
+	public int pickRandomPredictorThatCanBeAssigned(){
+		return predictors_that_can_be_assigned.get((int)Math.floor(Math.random() * predictors_that_can_be_assigned.size()));
+	}
+	
+	public int nAdj(){
+		return possible_split_values.size();
+	}	
+
+	public Double pickRandomSplitValue() {
+		return possible_split_values.get((int) Math.floor(Math.random() * possible_split_values.size()));
+	}
+
 	
 }

@@ -76,12 +76,11 @@ public class CGMBARTPriorBuilder extends CGMTreePriorBuilder {
 		return predictors;
 	}
 	
-	public double assignSplitValue(CGMTreeNode node, int j) {
-		
+	public ArrayList<Double> possibleSplitValues(CGMTreeNode node) {
 		//we need to look above in the lineage and get the minimum value that was previously split on
 		ArrayList<Double> previous_split_points = new ArrayList<Double>();
 		for (CGMTreeNode father : node.getLineage()){
-			if (father.splitAttributeM == j){
+			if (father.splitAttributeM == node.splitAttributeM){
 				previous_split_points.add(father.splitValue);				
 			}
 		}
@@ -96,12 +95,15 @@ public class CGMBARTPriorBuilder extends CGMTreePriorBuilder {
 		//now we need to look in the design matrix and see what values are available
 		ArrayList<Double> possible_values = new ArrayList<Double>();
 		for (int i = 0; i < n; i++){
-			if (X_y.get(i)[j] < min_split_value){
-				possible_values.add(X_y.get(i)[j]);
+			if (X_y.get(i)[node.splitAttributeM] < min_split_value){
+				possible_values.add(X_y.get(i)[node.splitAttributeM]);
 			}
-		}		
-		//now we return a random draw from the discrete uniform (with multiplicity)
-		return possible_values.get((int) Math.floor(Math.random() * possible_values.size()));
+		}	
+		return possible_values;
+	}
+	
+	public double assignSplitValue(CGMTreeNode node) {
+		return node.possible_split_values.get((int) Math.floor(Math.random() * node.possible_split_values.size()));
 	}	
 
 	public Integer assignSplitAttribute(CGMTreeNode node) {
@@ -126,7 +128,7 @@ public class CGMBARTPriorBuilder extends CGMTreePriorBuilder {
 			node.isLeaf = false;
 			node.klass = null;
 			//assign a splitting value
-			node.splitValue = assignSplitValue(node, node.splitAttributeM);			
+			node.splitValue = assignSplitValue(node);			
 			//split the data correctly
 			ClassificationAndRegressionTree.SortAtAttribute(node.data, node.splitAttributeM);
 			int n_split = ClassificationAndRegressionTree.getSplitPoint(node.data, node.splitAttributeM, node.splitValue);
