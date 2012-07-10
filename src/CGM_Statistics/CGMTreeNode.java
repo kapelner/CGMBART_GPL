@@ -241,6 +241,25 @@ public class CGMTreeNode extends TreeNode implements Cloneable, Serializable {
 	public static int numTerminalNodesDataAboveN(CGMTreeNode node, int n_rule){
 		return getTerminalNodesWithDataAboveN(node, n_rule).size();
 	}
+	
+	public static ArrayList<CGMTreeNode> getPrunableNodes(CGMTreeNode node){
+		ArrayList<CGMTreeNode> prunable_nodes = new ArrayList<CGMTreeNode>();
+		findPrunableNodes(node, prunable_nodes);
+		return prunable_nodes;
+	}	
+
+	private static void findPrunableNodes(CGMTreeNode node, ArrayList<CGMTreeNode> prunable_nodes) {
+		if (node.isLeaf){
+			return;
+		}
+		else if (node.left.isLeaf && node.right.isLeaf){
+			prunable_nodes.add(node);
+		}
+		else {
+			findPrunableNodes(node.left, prunable_nodes);
+			findPrunableNodes(node.right, prunable_nodes);
+		}
+	}
 
 	/**
 	 * We prune the tree at this node. We cut off its children, mark is as a leaf,
@@ -256,8 +275,7 @@ public class CGMTreeNode extends TreeNode implements Cloneable, Serializable {
 		node.splitValue = null;
 	}
 
-	public static HashSet<CGMTreeNode> selectBranchNodesWithTwoLeaves(ArrayList<CGMTreeNode> terminalNodes) {
-		HashSet<CGMTreeNode> branch_nodes = new HashSet<CGMTreeNode>();
+	public static HashSet<CGMTreeNode> selectBranchNodesWithTwoLeaves(ArrayList<CGMTreeNode> terminalNodes) { HashSet<CGMTreeNode> branch_nodes = new HashSet<CGMTreeNode>();
 		for (CGMTreeNode node : terminalNodes){
 			if (node.parent == null){
 				continue;
@@ -590,6 +608,10 @@ public class CGMTreeNode extends TreeNode implements Cloneable, Serializable {
 
 	public Double pickRandomSplitValue() {
 		return possible_split_values.get((int) Math.floor(Math.random() * possible_split_values.size()));
+	}
+
+	public boolean isStump() {
+		return parent == null && left == null && right == null;
 	}
 
 	

@@ -520,6 +520,12 @@ Thus, the transition ratio becomes:
 \frac{\prob{T^* \rightarrow T}}{\prob{T \rightarrow T^*}} = \frac{\prob{\text{GROW}}  \oneover{b-1}\oneover{p_{adj}} \oneover{n_{adj}}}{ \prob{\text{PRUNE}}\oneover{w_2}} = \cancelto{?}{\frac{\prob{\text{GROW}}}{\prob{\text{PRUNE}}}} \frac{w_2}{(b-1) p_{adj} n_{adj}}
 \eeqn
 
+and in log form this becomes:
+
+\beqn
+\natlog{w_2} - \natlog{b - 1} - \natlog{p_{adj}} - \natlog{n_{adj}}
+\eeqn
+
 Once again, we need to bookkeep and make sure we can actually prune this node. If it's just a root node, then we can't even consider this step at all. Otherwise, they'll cancel.
 
 \subsubsection*{Likelihood Ratio}
@@ -548,6 +554,13 @@ It is also clear this is just the inverse of the tree structure ratio for the gr
 \beqn
 \frac{\prob{T^*}}{\prob{T}} &=& \inverse{\alpha \frac{\tothepow{1 + d_\eta}{\beta}}{\tothepow{2 + d_\eta}{2\beta}} \frac{p_\eta n_\eta}{p_{\eta_L} p_{\eta_R} n_{\eta_L} n_{\eta_R}}}\\
 &=& \oneover{\alpha} \frac{\tothepow{2 + d_\eta}{2\beta}}{\tothepow{1 + d_\eta}{\beta}} \frac{p_{\eta_L} p_{\eta_R} n_{\eta_L} n_{\eta_R}}{p_\eta n_\eta}
+\eeqn
+
+which in log form becomes:
+
+\beqn
+&&-\natlog{\alpha} + 2\beta \natlog{2 + d_\eta} - \beta \natlog{1 + d_\eta} \\
+&& + \natlog{p_{\eta_L}} + \natlog{ p_{\eta_R}} + \natlog{n_{\eta_L}} + \natlog{n_{\eta_R}} -  \natlog{p_\eta} -  \natlog{n_\eta}
 \eeqn
 
 

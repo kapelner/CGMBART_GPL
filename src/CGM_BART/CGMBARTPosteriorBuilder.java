@@ -25,7 +25,6 @@
 package CGM_BART;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 
 import CGM_Statistics.*;
 
@@ -115,15 +114,40 @@ public class CGMBARTPosteriorBuilder {
 			return Double.NEGATIVE_INFINITY;					
 		}				
 		double ln_transition_ratio_prune = calcLnTransRatioPrune(T_i, T_star, prune_node);
-		double ln_likelihood_ratio_prune = Math.pow(calcLnLikRatioGrow(prune_node), -1); //inverse of before (will speed up later)
-		double ln_tree_structure_ratio_prune = calcLnTreeStructureRatioPrune(prune_node);
-		pruneNode(prune_node);
+		double ln_likelihood_ratio_prune = -calcLnLikRatioGrow(prune_node); //inverse of before (will speed up later)
+		double ln_tree_structure_ratio_prune = -calcLnTreeStructureRatioGrow(prune_node);
+		CGMTreeNode.pruneTreeAt(prune_node);
 		return ln_transition_ratio_prune + ln_likelihood_ratio_prune + ln_tree_structure_ratio_prune;
 	}	
-
-	private void pruneNode(CGMTreeNode prune_node) {
-		// TODO Auto-generated method stub
+	
+	private CGMTreeNode pickPruneNode(CGMTreeNode T) {
 		
+		//2 checks
+		//a) If this is the root, we can't prune so return null
+		//b) If there are no prunable nodes (not sure how that could happen), return null as well
+		
+		if (T.isStump()){
+			System.out.println("cannot prune a stump!");
+			return null;			
+		}
+		
+		ArrayList<CGMTreeNode> prunable_nodes = CGMTreeNode.getPrunableNodes(T);
+		if (prunable_nodes.size() == 0){
+			System.out.println("no prune nodes in PRUNE step!");
+			return null;
+		}		
+		
+		//now we pick one of these nodes randomly
+		return prunable_nodes.get((int)Math.floor(Math.random() * prunable_nodes.size()));
+	}
+	
+
+	private double calcLnTransRatioPrune(CGMTreeNode T_i, CGMTreeNode T_star, CGMTreeNode prune_node) {
+		int w_2 = T_i.numPruneNodesAvailable();
+		int b = T_i.numLeaves();
+		int p_adj = prune_node.pAdj();
+		int n_adj = prune_node.nAdj();
+		return Math.log(w_2) - Math.log(b - 1) - Math.log(p_adj) - Math.log(n_adj); 
 	}
 
 	private void growNode(CGMTreeNode node) {
@@ -139,20 +163,6 @@ public class CGMBARTPosteriorBuilder {
 		node.right = new CGMTreeNode(node, ClassificationAndRegressionTree.getUpperPortion(node.data, n_split));		
 	}
 
-	private double calcLnTreeStructureRatioPrune(CGMTreeNode T_i) {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	private double calcLnTransRatioPrune(CGMTreeNode T_i, CGMTreeNode T_star, CGMTreeNode prune_node) {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	private CGMTreeNode pickPruneNode(CGMTreeNode T_star) {
-		// TODO Auto-generated method stub
-		return null;
-	}
 
 	private double calcLnTreeStructureRatioGrow(CGMTreeNode grow_node) {
 		double alpha = tree_prior_builder.getAlpha();
