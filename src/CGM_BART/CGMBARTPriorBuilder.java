@@ -86,7 +86,7 @@ public class CGMBARTPriorBuilder extends CGMTreePriorBuilder {
 		}
 		
 		double min_split_value = Double.MAX_VALUE;
-		for (int i = 0; i < n; i++){
+		for (int i = 0; i < previous_split_points.size(); i++){
 			if (previous_split_points.get(i) < min_split_value){
 				min_split_value = previous_split_points.get(i);
 			}

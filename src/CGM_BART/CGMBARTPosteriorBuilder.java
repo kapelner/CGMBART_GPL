@@ -63,6 +63,7 @@ public class CGMBARTPosteriorBuilder {
 	 * @return 					the next tree (T_{i+1}) via one iteration of M-H
 	 */
 	public CGMTreeNode iterateMHPosteriorTreeSpaceSearch(CGMTreeNode T_i) {
+		System.out.println("iterateMHPosteriorTreeSpaceSearch");
 		final CGMTreeNode T_star = T_i.clone(true);
 		//each proposal will calculate its own value, but this has to be initialized atop		
 		double log_r = 0;
@@ -92,6 +93,7 @@ public class CGMBARTPosteriorBuilder {
 	}
 
 	private double doMHGrowAndCalcLnR(CGMTreeNode T_i, CGMTreeNode T_star) {
+		System.out.println("doMHGrowAndCalcLnR");
 		CGMTreeNode grow_node = pickGrowNode(T_star);
 		//if we can't grow, reject offhand
 		if (grow_node == null){
@@ -107,6 +109,7 @@ public class CGMBARTPosteriorBuilder {
 	}
 	
 	private double doMHPruneAndCalcLnR(CGMTreeNode T_i, CGMTreeNode T_star) {
+		System.out.println("doMHPruneAndCalcLnR");
 		CGMTreeNode prune_node = pickPruneNode(T_star);
 		//if we can't grow, reject offhand
 		if (prune_node == null){
@@ -160,7 +163,11 @@ public class CGMBARTPosteriorBuilder {
 		int n_split = ClassificationAndRegressionTree.getSplitPoint(node.data, node.splitAttributeM, node.splitValue);
 		//now build the node offspring
 		node.left = new CGMTreeNode(node, ClassificationAndRegressionTree.getLowerPortion(node.data, n_split));
+		node.left.predictors_that_can_be_assigned = tree_prior_builder.predictorsThatCouldBeUsedToSplitAtNode(node.left);
+		node.left.possible_split_values = tree_prior_builder.possibleSplitValues(node.left);
 		node.right = new CGMTreeNode(node, ClassificationAndRegressionTree.getUpperPortion(node.data, n_split));		
+		node.right.predictors_that_can_be_assigned = tree_prior_builder.predictorsThatCouldBeUsedToSplitAtNode(node.right);
+		node.right.possible_split_values = tree_prior_builder.possibleSplitValues(node.right);
 	}
 
 
@@ -259,6 +266,7 @@ public class CGMBARTPosteriorBuilder {
 		//now we pick one of these nodes with enough data points randomly
 		CGMTreeNode growth_node = growth_nodes.get((int)Math.floor(Math.random() * growth_nodes.size()));
 		//find which predictors can be used
+		System.out.println("created predictors_that_can_be_assigned grow_node " + growth_node.stringID());
 		growth_node.predictors_that_can_be_assigned = tree_prior_builder.predictorsThatCouldBeUsedToSplitAtNode(growth_node);
 		//do check b
 		if (growth_node.pAdj() == 0){
@@ -269,19 +277,11 @@ public class CGMBARTPosteriorBuilder {
 		return growth_node;
 	}
 	
-	private boolean cannotPrune(CGMTreeNode T) {
-		return T.parent == null;
-	}
-	
 	protected Steps randomlyPickAmongTheTwoProposalSteps(CGMTreeNode T) {
-		//the first thing we need to check is if we can prune
-		if (!cannotPrune(T)){
-			double roll = Math.random();
-			if (roll < 0.5)
-				return Steps.GROW;
-			return Steps.PRUNE;			
-		}
-		return Steps.GROW;
+		double roll = Math.random();
+		if (roll < 0.5)
+			return Steps.GROW;
+		return Steps.PRUNE;	
 	}	
 
 

@@ -33,7 +33,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import CGM_BART_DEBUG.CGMBARTPosteriorBuilderOld;
 import CGM_Statistics.*;
 import GemIdentClassificationEngine.DatumSetupForEntireRun;
 import GemIdentStatistics.Classifier;
@@ -139,9 +138,9 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 	protected double hyper_nu;
 	protected double hyper_lambda;
 	/** we will use the tree prior builder to initally build the trees and later in the gibbs sampler as well */
-	protected CGMTreePriorBuilder tree_prior_builder;
+	protected CGMBARTPriorBuilder tree_prior_builder;
 	/** we will use the tree posterior builder to calculated liks and do the M-H step */
-	protected CGMBARTPosteriorBuilderOld posterior_builder;
+	protected CGMBARTPosteriorBuilder posterior_builder;
 	/** stuff during the build run time that we can access and look at */
 	protected int gibb_sample_i;
 	protected double[][] all_tree_liks;
@@ -210,7 +209,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 		//now generate a prior builder... used in any implementation
 		tree_prior_builder = new CGMBARTPriorBuilder(X_y, p);
 		//this posterior builder will be shared throughout the entire process
-		posterior_builder = new CGMBARTPosteriorBuilderOld(tree_prior_builder);
+		posterior_builder = new CGMBARTPosteriorBuilder(tree_prior_builder);
 		//we have to set the CGM98 hyperparameters as well as the hyperparameter sigsq_mu
 		posterior_builder.setHyperparameters(hyper_mu_mu, hyper_sigsq_mu);	
 	}
@@ -384,7 +383,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 		
 		//sample from T_j | R_j, \sigma
 		//now we will run one M-H step on this tree with the y as the R_j
-		CGMTreeNode tree_star = posterior_builder.iterateMHPosteriorTreeSpaceSearch(copy_of_old_jth_tree, false);
+		CGMTreeNode tree_star = posterior_builder.iterateMHPosteriorTreeSpaceSearch(copy_of_old_jth_tree);
 		
 		//DEBUG
 //		System.err.println("tree star: " + tree_star.stringID());

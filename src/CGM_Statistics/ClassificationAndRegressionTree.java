@@ -136,7 +136,7 @@ public abstract class ClassificationAndRegressionTree extends Classifier {
 	 * Split a data matrix and return the lower portion
 	 * 
 	 * @param data		the data matrix to be split
-	 * @param nSplit	return all data records below this index in a sub-data matrix
+	 * @param nSplit	return all data records equal to or below this index in a sub-data matrix
 	 * @return			the lower sub-data matrix
 	 */
 	public static List<double[]> getLowerPortion(List<double[]> data,int nSplit){

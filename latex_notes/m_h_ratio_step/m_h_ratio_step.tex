@@ -34,12 +34,13 @@ My goal is to come up with an exact way of calculating $r$ for all possible tree
 Throughout this document, we use the following notation:
 
 \begin{itemize}
-\item $H$ ---  the collection of \textit{all} nodes in tree $T$, not just the terminal nodes
-\item $\eta$ --- a node $\in H$.
+\item $\Hint$ ---  the collection of internal nodes in tree $T$
+\item $\Hleaves$ ---  the collection of leaves in tree $T$
+\item $\eta$ --- a node $\in \Hint \cup \Hleaves$.
 \item $d_\eta$ --- the depth of the $\eta$th node. The root node is defined as having depth 0, its first child has depth 1, etc.
-\item $b$ --- the number of terminal nodes / leaves in the tree $T$. These are the nodes that can potentially be ``grown.'' For example, the number of terminal nodes in the $T^*$ tree is $b+1$ if $T$ was grown and $b-1$ if $T$ was pruned.
-\item $w_2$ --- the number of 2nd generation internal nodes in tree $T$ \ie the number of nodes who only have two children. These are the nodes that can potentially be ``pruned.''
-\item $w_2^*$ --- the number of 2nd generation internal nodes in tree $T^*$. This can be equal to $w$ or $w+1$ so it has to be recalculated. Draw a few pictures of trees and grow steps and you'll see why this unfortunate fact is so.
+\item $b$ --- the number of terminal nodes / leaves in the tree $T$, $\abss{\Hleaves}$. These are the nodes that can potentially be ``grown.'' For example, the number of terminal nodes in the $T^*$ tree is $b+1$ if $T$ was grown and $b-1$ if $T$ was pruned.
+\item $w_2$ --- the number of 2nd generation internal nodes in tree $T$, $\abss{\Hint}$ \ie the number of nodes who only have two children. These are the nodes that can potentially be ``pruned.''
+\item $w_2^*$ --- the number of 2nd generation internal nodes in tree $T^*$, $\abss{\Hint^*}$. This can be equal to $w$ or $w+1$ so it has to be recalculated. Draw a few pictures of trees and grow steps and you'll see why this unfortunate fact is so.
 %\item $w$ --- the number of internal nodes regardless of generation (even the root is included in this count).
 \item  $\ell$ --- the index of the terminal node which we've ``picked'' to grow from it is a number $\in \braces{1, \ldots, b}$.
 \item $\ell_L$ and $\ell_R$ --- represent the new left and right node indices in tree $T^*$ which are ``grown'' from the $\ell$th node of tree $T$
@@ -458,10 +459,10 @@ In log form, this becomes:
 
 \subsubsection*{Tree Structure Ratio}
 
-We consider each tree separately.
+Remember the prior form on trees: 
 
 \beqn
-\prob{T^*} &=& \prod_{\eta \in H} \prob{\text{splitting~} \eta} \prod_{\eta \in H} \prob{\text{assigning a rule to~} \eta} \\
+\prob{T} &=& \prod_{\eta \in \Hleaves} \parens{1 - \prob{\text{splitting~} \eta}}  \prod_{\eta \in \Hint} \prob{\text{splitting~} \eta} \prod_{\eta \in \Hint} \prob{\text{assigning a rule to~} \eta} \\
 \eeqn
 
 Remember from CGM98 that the probability of splitting on a given node $\eta$ is driven by two hyperparameters, $\alpha$ and $\beta$ in the following way where $d_\eta$ is the depth of the $\eta$ node:
@@ -470,24 +471,18 @@ Remember from CGM98 that the probability of splitting on a given node $\eta$ is 
 \prob{\text{splitting~} \eta} = \frac{\alpha}{\tothepow{1 + d_\eta}{\beta}}
 \eeqn
 
-The probability of assigning the specific rule is just picking from all available attributes and then from all available split points so $\oneover{p_\eta}\oneover{n_\eta}$. Once again, the proposal tree differs from the original tree by only the $\ell$th node in the original becoming the $\ell_L$ and $\ell_R$ nodes in the proposal. This simplifies the tree structure ratio to just:
+The probability of assigning the specific rule, $\prob{\text{rule~} \eta}$, is just picking from all available attributes and then from all available split points so $\oneover{p_\eta}\oneover{n_\eta}$. Once again, the proposal tree differs from the original tree by only the $\ell$th node in the original becoming the $\ell_L$ and $\ell_R$ nodes in the proposal. This simplifies the tree structure ratio to just:
 
 \beqn
-\frac{\prob{T^*}}{\prob{T}} = \frac{\dfrac{\alpha}{\tothepow{1 + d_{\eta_L}}{\beta}} \dfrac{\alpha}{\tothepow{1 + d_{\eta_R}}{\beta}}}{ \dfrac{\alpha}{\tothepow{1 + d_{\eta}}{\beta}}} \frac{p_\eta n_\eta}{p_{\eta_L} p_{\eta_R} n_{\eta_L} n_{\eta_R}}
+\frac{\prob{T^*}}{\prob{T}} &=& \frac{\parens{1 - \prob{\text{splitting~} \eta_L}} \parens{1 - \prob{\text{splitting~} \eta_R}} \prob{\text{splitting~} \eta} \prob{\text{rule~} \eta}}{\parens{1 - \prob{\text{splitting~} \eta}}}\\
+&=& \frac{\parens{1 - \dfrac{\alpha}{\tothepow{1 + d_{\eta_L}}{\beta}}}\parens{1 - \dfrac{\alpha}{\tothepow{1 + d_{\eta_R}}{\beta}}} \dfrac{\alpha}{\tothepow{1 + d_{\eta}}{\beta}} \doneover{p_\eta}\doneover{n_\eta}}{1 -\dfrac{\alpha}{\tothepow{1 + d_{\eta}}{\beta}}} \\
+&=& \alpha \frac{\squared{1 - \frac{\alpha}{\tothepow{2 + d_\eta}{\beta}}}}{\parens{\tothepow{1+d_\eta}{\beta} - \alpha} p_\eta n_\eta}
 \eeqn
 
-We know the depth of the child nodes is just the depth of the parent node incremented by 1. That plus a bit more algebra gives us:
+With the last line following from the fact that the depth of the child nodes is just the depth of the parent node incremented by 1. In log form this becomes:
 
 \beqn
-\frac{\prob{T^*}}{\prob{T}} = \alpha \frac{\tothepow{1 + d_\eta}{\beta}}{\tothepow{2 + d_\eta}{2\beta}} \frac{p_\eta n_\eta}{p_{\eta_L} p_{\eta_R} n_{\eta_L} n_{\eta_R}}
-\eeqn
-
-In log form this becomes:
-
-\beqn
-&&\natlog{\alpha} + \beta \natlog{1 + d_\eta} - 2\beta \natlog{2 + d_\eta} \\
-&& + \natlog{p_\eta} + \natlog{n_\eta} \\
-&& - \natlog{p_{\eta_L}}- \natlog{p_{\eta_R}}- \natlog{n_{\eta_L}}- \natlog{n_{\eta_R}}
+&&\natlog{\alpha} + 2 \natlog{1 - \frac{\alpha}{\tothepow{2 + d_\eta}{\beta}}} - \natlog{\tothepow{1+d_\eta}{\beta} - \alpha} - \natlog{p_\eta} - \natlog{n_\eta}
 \eeqn
 
 Now we have a way of calculating $r$ for grow proposals by multiplying all three above results.\\
@@ -552,15 +547,15 @@ and in log form:
 It is also clear this is just the inverse of the tree structure ratio for the grow step.
 
 \beqn
-\frac{\prob{T^*}}{\prob{T}} &=& \inverse{\alpha \frac{\tothepow{1 + d_\eta}{\beta}}{\tothepow{2 + d_\eta}{2\beta}} \frac{p_\eta n_\eta}{p_{\eta_L} p_{\eta_R} n_{\eta_L} n_{\eta_R}}}\\
-&=& \oneover{\alpha} \frac{\tothepow{2 + d_\eta}{2\beta}}{\tothepow{1 + d_\eta}{\beta}} \frac{p_{\eta_L} p_{\eta_R} n_{\eta_L} n_{\eta_R}}{p_\eta n_\eta}
+\frac{\prob{T^*}}{\prob{T}} &=& \inverse{\alpha \frac{\squared{1 - \frac{\alpha}{\tothepow{2 + d_\eta}{\beta}}}}{\parens{\tothepow{1+d_\eta}{\beta} - \alpha} p_\eta n_\eta}}\\
+&=& \frac{\parens{\tothepow{1+d_\eta}{\beta} - \alpha} p_\eta n_\eta}{\alpha\squared{1 - \frac{\alpha}{\tothepow{2 + d_\eta}{\beta}}}}
 \eeqn
 
-which in log form becomes:
+
+In log form this becomes:
 
 \beqn
-&&-\natlog{\alpha} + 2\beta \natlog{2 + d_\eta} - \beta \natlog{1 + d_\eta} \\
-&& + \natlog{p_{\eta_L}} + \natlog{ p_{\eta_R}} + \natlog{n_{\eta_L}} + \natlog{n_{\eta_R}} -  \natlog{p_\eta} -  \natlog{n_\eta}
+\natlog{\tothepow{1+d_\eta}{\beta} - \alpha} + \natlog{p_\eta} + \natlog{n_\eta} -\natlog{\alpha} - 2 \natlog{1 - \frac{\alpha}{\tothepow{2 + d_\eta}{\beta}}} 
 \eeqn
 
 

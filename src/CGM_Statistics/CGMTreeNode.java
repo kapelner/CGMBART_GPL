@@ -128,6 +128,8 @@ public class CGMTreeNode extends TreeNode implements Cloneable, Serializable {
 		copy.klass = klass;	
 		copy.n = n;
 		copy.log_prop_lik = log_prop_lik;
+		copy.predictors_that_can_be_assigned = predictors_that_can_be_assigned;
+		copy.possible_split_values = possible_split_values;
 		return copy;
 	}
 
@@ -595,6 +597,8 @@ public class CGMTreeNode extends TreeNode implements Cloneable, Serializable {
 	}
 	
 	public int pAdj(){
+		System.out.println("pAdj on node " + this.stringID());
+		
 		return predictors_that_can_be_assigned.size();
 	}
 	
