@@ -64,3 +64,5 @@ r_log/*.txt
 *.log
 *.out
 *.dvi
+.RData
+.Rhistory

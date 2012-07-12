@@ -126,7 +126,7 @@ ensure_bart_is_done_in_java = function(java_bart_machine){
 }
 
 init_jvm_and_bart_object = function(debug_log, print_tree_illustrations, print_out_every){
-	.jinit(parameters = paste("-Xmx", NUM_GIGS_RAM_TO_USE, "g", sep = ""))
+	.jinit(parameters = paste("-d32 -Xmx", NUM_GIGS_RAM_TO_USE, "g", sep = ""))
 	for (dependency in JAR_DEPENDENCIES){
 		.jaddClassPath(paste(directory_where_code_is, "/", dependency, sep = ""))
 	}
