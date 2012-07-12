@@ -187,7 +187,7 @@ public class CGMBARTPosteriorBuilderOld extends CGMPosteriorBuilder {
 			return null;
 		}
 		//now we pick one of these nodes with enough data points randomly
-		CGMTreeNode growth_node = growth_nodes.get((int)Math.floor(Math.random() * growth_nodes.size()));
+		CGMTreeNode growth_node = growth_nodes.get((int)Math.floor(StatToolbox.rand() * growth_nodes.size()));
 		//now we give it a split attribute and value and assign the children data
 		treePriorBuilder.splitNodeAndAssignRule(growth_node);
 //		System.out.println("growth node: " + growth_node.stringID() + " rule: " + " X_" + growth_node.splitAttributeM + " < " + growth_node.splitValue);
@@ -204,7 +204,7 @@ public class CGMBARTPosteriorBuilderOld extends CGMPosteriorBuilder {
 	 * we also make sure we use the new distribution of tree-space moves
 	 */
 //	protected Steps randomlyPickAmongTheFourProposalSteps() {
-//		double roll = Math.random();
+//		double roll = StatToolbox.R.nextDouble();
 //		if (roll < 0.25)
 //			return Steps.GROW;
 //		else if (roll < 0.5)
@@ -215,7 +215,7 @@ public class CGMBARTPosteriorBuilderOld extends CGMPosteriorBuilder {
 //	}
 	
 	protected Steps randomlyPickAmongTheFourProposalSteps() {
-		double roll = Math.random();
+		double roll = StatToolbox.rand();
 		if (roll < 0.5)
 			return Steps.GROW;
 		return Steps.PRUNE;

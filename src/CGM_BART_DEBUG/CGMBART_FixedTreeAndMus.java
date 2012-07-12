@@ -30,7 +30,7 @@ public class CGMBART_FixedTreeAndMus extends CGMBART {
 		gibbs_samples_of_cgm_trees.set(sample_num, cgm_trees);
 		
 		//The rest is all debug		
-		double lik = posterior_builder.calculateLnProbYGivenTree(tree);
+		double lik = 0; //posterior_builder.calculateLnProbYGivenTree(tree);
 		tree_array_illustration.AddTree(tree);
 		tree_array_illustration.addLikelihood(lik);
 		System.out.println("Running BART Gibbs sampler fixed tree and mu's, iteration " + sample_num + " lik = " + lik);

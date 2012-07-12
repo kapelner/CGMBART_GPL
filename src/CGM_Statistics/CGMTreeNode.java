@@ -101,7 +101,7 @@ public class CGMTreeNode extends TreeNode implements Cloneable, Serializable {
 	public CGMTreeNode clone(boolean clone_data){ //"data" element always null in clone
 		List<double[]> new_data = new ArrayList<double[]>(data == null ? 0 : data.size());
 		//first clone the data
-		if (clone_data){
+		if (clone_data && data != null){
 			for (double[] record : data){
 				double[] new_record = new double[record.length];
 				for (int i = 0; i < record.length; i++){
@@ -499,12 +499,13 @@ public class CGMTreeNode extends TreeNode implements Cloneable, Serializable {
 	}
 
 	public int numPruneNodesAvailable() {
+		if (this.isLeaf){
+			return 0;
+		}
 		if (this.left.isLeaf && this.right.isLeaf){
 			return 1;
 		}
-		else {
-			return this.left.numPruneNodesAvailable() + this.right.numPruneNodesAvailable();
-		}
+		return this.left.numPruneNodesAvailable() + this.right.numPruneNodesAvailable();
 	}	
 
 	public String splitToString() {
@@ -597,13 +598,12 @@ public class CGMTreeNode extends TreeNode implements Cloneable, Serializable {
 	}
 	
 	public int pAdj(){
-		System.out.println("pAdj on node " + this.stringID());
-		
+//		System.out.println("pAdj on node " + this.stringID());		
 		return predictors_that_can_be_assigned.size();
 	}
 	
 	public int pickRandomPredictorThatCanBeAssigned(){
-		return predictors_that_can_be_assigned.get((int)Math.floor(Math.random() * predictors_that_can_be_assigned.size()));
+		return predictors_that_can_be_assigned.get((int)Math.floor(StatToolbox.rand() * predictors_that_can_be_assigned.size()));
 	}
 	
 	public int nAdj(){
@@ -611,7 +611,7 @@ public class CGMTreeNode extends TreeNode implements Cloneable, Serializable {
 	}	
 
 	public Double pickRandomSplitValue() {
-		return possible_split_values.get((int) Math.floor(Math.random() * possible_split_values.size()));
+		return possible_split_values.get((int) Math.floor(StatToolbox.rand() * possible_split_values.size()));
 	}
 
 	public boolean isStump() {

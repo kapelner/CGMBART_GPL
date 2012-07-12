@@ -24,7 +24,6 @@
 
 package CGM_BART;
 
-import CGM_Statistics.*;
 import GemIdentClassificationEngine.DatumSetupForEntireRun;
 import GemIdentTools.IOTools;
 import GemIdentView.JProgressBarAndLabel;

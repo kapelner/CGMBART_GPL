@@ -2,11 +2,9 @@ package CGM_BART_DEBUG;
 
 import java.util.ArrayList;
 
-import CGM_BART.CGMBART;
-import CGM_BayesianCART1998.CGMPosteriorBuilder.Steps;
 import CGM_Statistics.CGMTreeNode;
 import CGM_Statistics.CGMTreePriorBuilder;
-import CGM_Statistics.TreeIllustration;
+import CGM_Statistics.StatToolbox;
 
 public class CGMBARTPosteriorBuilder_OnlyParent extends CGMBARTPosteriorBuilder_Alt {
 
@@ -25,7 +23,7 @@ public class CGMBARTPosteriorBuilder_OnlyParent extends CGMBARTPosteriorBuilder_
 			}
 		}
 		//return a random one
-		return better_internal_nodes.get(((int)Math.floor(Math.random() * better_internal_nodes.size())));
+		return better_internal_nodes.get(((int)Math.floor(StatToolbox.rand() * better_internal_nodes.size())));
 	}
 	
 	//always reject so we can see what's going on

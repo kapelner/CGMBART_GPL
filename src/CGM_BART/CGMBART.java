@@ -47,7 +47,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 	protected static final int DEFAULT_NUM_TREES = 1;
 	//this burn in number needs to be computed via some sort of moving average or time series calculation
 	protected static final int DEFAULT_NUM_GIBBS_BURN_IN = 500;
-	protected static final int DEFAULT_NUM_GIBBS_TOTAL_ITERATIONS = 20000; //this must be larger than the number of burn in!!!
+	protected static final int DEFAULT_NUM_GIBBS_TOTAL_ITERATIONS = 2000; //this must be larger than the number of burn in!!!
 	
 	protected static PrintWriter y_and_y_trans;
 	protected static PrintWriter sigsqs;
@@ -304,7 +304,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 		}
 //		final Thread illustrator_thread = new Thread(){
 //			public void run(){
-//		if (Math.random() < 0.0333){
+//		if (StatToolbox.rand() < 0.0333){
 			if (TREE_ILLUST){
 				tree_array_illustration.CreateIllustrationAndSaveImage();
 			}
@@ -323,7 +323,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 		}
 
 		//now close and open all debug
-		if (Math.random() < 0.0333){
+		if (StatToolbox.rand() < 0.0333){
 			CloseDebugFiles();
 			OpenDebugFiles();
 		}
@@ -342,7 +342,9 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 	}
 
 	protected void SampleTree(int sample_num, int t, ArrayList<CGMTreeNode> cgm_trees, TreeArrayIllustration tree_array_illustration) {
-		final CGMTreeNode copy_of_old_jth_tree = gibbs_samples_of_cgm_trees.get(sample_num - 1).get(t).clone();
+		
+		final CGMTreeNode copy_of_old_jth_tree = gibbs_samples_of_cgm_trees.get(sample_num - 1).get(t).clone(true);
+//		System.out.println("copy_of_old_jth_tree.data:" + copy_of_old_jth_tree.data + "\n orig_tree.data:" + gibbs_samples_of_cgm_trees.get(sample_num - 1).get(t).data);
 //		System.out.println("SampleTreeByCalculatingRemainingsAndDrawingFromTreeDist t:" + t + " of m:" + m);
 //		ArrayList<CGMTreeNode> leaves = tree.getTerminalNodes();
 //		for (int b = 0; b < leaves.size(); b++){
@@ -386,7 +388,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 		CGMTreeNode tree_star = posterior_builder.iterateMHPosteriorTreeSpaceSearch(copy_of_old_jth_tree);
 		
 		//DEBUG
-//		System.err.println("tree star: " + tree_star.stringID());
+//		System.err.println("tree star: " + tree_star.stringID() + " tree num leaves: " + tree_star.numLeaves() + " tree depth:" + tree_star.deepestNode());
 		double lik = tree_star.log_prop_lik;
 		tree_liks.print(lik + "," + tree_star.stringID() + ",");
 		tree_array_illustration.addLikelihood(lik);
@@ -664,7 +666,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 			node.y_prediction = StatToolbox.sample_from_norm_dist(posterior_mean, posterior_sigsq);
 			if (node.y_prediction == StatToolbox.ILLEGAL_FLAG){				
 				node.y_prediction = 0.0; //this could happen on an empty node
-//				System.out.println("ERROR assignLeafFINAL " + node.y_prediction + " (sigsq = " + sigsq + ")");
+				System.out.println("ERROR assignLeafFINAL " + node.y_prediction + " (sigsq = " + sigsq + ")");
 			}
 //			System.out.println("assignLeafFINAL " + un_transform_y(node.y_prediction) + " (sigsq = " + sigsq * y_range_sq + ")");
 		}
@@ -762,7 +764,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 //			}
 //		}
 		System.out.println("y_min = " + y_min + " y_max = " + y_max + " R_y = " + Math.sqrt(y_range_sq));
-		System.out.println("hyperparams:  k = " + k + " hyper_mu_mu = " + hyper_mu_mu + " sigsq_mu = " + hyper_sigsq_mu + " hyper_lambda = " + hyper_lambda + " hyper_nu = " + hyper_nu + " s_y_trans^2 = " + s_sq_y + " R_y = " + Math.sqrt(y_range_sq));
+		System.out.println("hyperparams:  k = " + k + " hyper_mu_mu = " + hyper_mu_mu + " sigsq_mu = " + hyper_sigsq_mu + " hyper_lambda = " + hyper_lambda + " hyper_nu = " + hyper_nu + " s_y_trans^2 = " + s_sq_y + " R_y = " + Math.sqrt(y_range_sq) + "\n\n");
 	}
 	
 	/**

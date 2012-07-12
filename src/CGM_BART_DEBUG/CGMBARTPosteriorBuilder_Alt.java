@@ -1,7 +1,5 @@
 package CGM_BART_DEBUG;
 
-import CGM_BART.*;
-import CGM_BayesianCART1998.CGMPosteriorBuilder.Steps;
 import CGM_Statistics.CGMTreePriorBuilder;
 
 /**
@@ -17,7 +15,7 @@ public class CGMBARTPosteriorBuilder_Alt extends CGMBARTPosteriorBuilderOld {
 	}
 	
 	protected Steps randomlyPickAmongTheFourProposalSteps() {
-//		double roll = Math.random();
+//		double roll = StatToolbox.rand();
 //		if (roll < 0.01)
 //			return Steps.GROW;
 //		else if (roll < 0.02)

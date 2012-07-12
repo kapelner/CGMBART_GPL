@@ -95,6 +95,7 @@ public class DataSetupForCSVFile extends DatumSetupForEntireRun {
 			}
 			line_num++;
 		}
+		in.close();
 	}
 
 

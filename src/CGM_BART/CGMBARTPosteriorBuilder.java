@@ -40,7 +40,6 @@ public class CGMBARTPosteriorBuilder {
 
 	private double hyper_sigsq_mu;
 	private double sigsq;
-	private double hyper_mu_bar;
 	private CGMBARTPriorBuilder tree_prior_builder;
 	
 	
@@ -49,7 +48,6 @@ public class CGMBARTPosteriorBuilder {
 	}
 	
 	public void setHyperparameters(double hyper_mu_bar, double hyper_sigsq_mu){
-		this.hyper_mu_bar = hyper_mu_bar;
 		this.hyper_sigsq_mu = hyper_sigsq_mu;
 	}
 	
@@ -63,7 +61,7 @@ public class CGMBARTPosteriorBuilder {
 	 * @return 					the next tree (T_{i+1}) via one iteration of M-H
 	 */
 	public CGMTreeNode iterateMHPosteriorTreeSpaceSearch(CGMTreeNode T_i) {
-		System.out.println("iterateMHPosteriorTreeSpaceSearch");
+//		System.out.println("iterateMHPosteriorTreeSpaceSearch");
 		final CGMTreeNode T_star = T_i.clone(true);
 		//each proposal will calculate its own value, but this has to be initialized atop		
 		double log_r = 0;
@@ -75,7 +73,7 @@ public class CGMBARTPosteriorBuilder {
 				log_r = doMHPruneAndCalcLnR(T_i, T_star);
 				break;
 		}		
-		double ln_u_0_1 = Math.log(Math.random());
+		double ln_u_0_1 = Math.log(StatToolbox.rand());
 		//ACCEPT/REJECT,STEP_name,log_prop_lik_o,log_prop_lik_f,log_r 
 		CGMBART.mh_iterations_full_record.println(
 			(acceptProposal(ln_u_0_1, log_r) ? "A" : "R") + "," +  
@@ -93,14 +91,15 @@ public class CGMBARTPosteriorBuilder {
 	}
 
 	private double doMHGrowAndCalcLnR(CGMTreeNode T_i, CGMTreeNode T_star) {
-		System.out.println("doMHGrowAndCalcLnR");
+		System.out.println("doMHGrowAndCalcLnR on " + T_star.stringID() + " old depth: " + T_star.deepestNode());
 		CGMTreeNode grow_node = pickGrowNode(T_star);
 		//if we can't grow, reject offhand
-		if (grow_node == null){
+		if (grow_node == null || grow_node.generation >= 2){
 			System.out.println("proposal ln(r) = -oo DUE TO CANNOT GROW\n\n");
 			return Double.NEGATIVE_INFINITY;					
 		}
 		growNode(grow_node);
+//		System.out.println("grow_node: " + grow_node.stringID() + " new depth: " + T_star.deepestNode() + " " + grow_node.deepestNode());
 		double ln_transition_ratio_grow = calcLnTransRatioGrow(T_i, T_star, grow_node);
 		double ln_likelihood_ratio_grow = calcLnLikRatioGrow(grow_node);
 		double ln_tree_structure_ratio_grow = calcLnTreeStructureRatioGrow(grow_node);
@@ -136,12 +135,12 @@ public class CGMBARTPosteriorBuilder {
 		
 		ArrayList<CGMTreeNode> prunable_nodes = CGMTreeNode.getPrunableNodes(T);
 		if (prunable_nodes.size() == 0){
-			System.out.println("no prune nodes in PRUNE step!");
+			System.out.println("no prune nodes in PRUNE step!  T parent: " + T.parent + " T left: " + T.left + " T right: " + T.right);
 			return null;
 		}		
 		
 		//now we pick one of these nodes randomly
-		return prunable_nodes.get((int)Math.floor(Math.random() * prunable_nodes.size()));
+		return prunable_nodes.get((int)Math.floor(StatToolbox.rand() * prunable_nodes.size()));
 	}
 	
 
@@ -158,16 +157,15 @@ public class CGMBARTPosteriorBuilder {
 		node.splitAttributeM = node.pickRandomPredictorThatCanBeAssigned();
 		node.possible_split_values = tree_prior_builder.possibleSplitValues(node);
 		node.splitValue = node.pickRandomSplitValue();
+		node.isLeaf = false;
 		//split the data correctly
 		ClassificationAndRegressionTree.SortAtAttribute(node.data, node.splitAttributeM);
 		int n_split = ClassificationAndRegressionTree.getSplitPoint(node.data, node.splitAttributeM, node.splitValue);
 		//now build the node offspring
 		node.left = new CGMTreeNode(node, ClassificationAndRegressionTree.getLowerPortion(node.data, n_split));
 		node.left.predictors_that_can_be_assigned = tree_prior_builder.predictorsThatCouldBeUsedToSplitAtNode(node.left);
-		node.left.possible_split_values = tree_prior_builder.possibleSplitValues(node.left);
 		node.right = new CGMTreeNode(node, ClassificationAndRegressionTree.getUpperPortion(node.data, n_split));		
 		node.right.predictors_that_can_be_assigned = tree_prior_builder.predictorsThatCouldBeUsedToSplitAtNode(node.right);
-		node.right.possible_split_values = tree_prior_builder.possibleSplitValues(node.right);
 	}
 
 
@@ -177,21 +175,17 @@ public class CGMBARTPosteriorBuilder {
 		int d_eta = grow_node.generation;
 		int p_eta = grow_node.pAdj();
 		int n_eta = grow_node.nAdj();
-		int p_eta_L = grow_node.left.pAdj();
-		int n_eta_L = grow_node.left.nAdj();
-		int p_eta_R = grow_node.right.pAdj();
-		int n_eta_R = grow_node.right.nAdj();
 		return Math.log(alpha) 
-				+ beta * Math.log(1 + d_eta) - 2 * beta * Math.log(2 + d_eta)
-				+ Math.log(p_eta) + Math.log(n_eta)
-				- Math.log(p_eta_L) - Math.log(n_eta_L) - Math.log(p_eta_R) - Math.log(n_eta_R);
+				+ 2 * Math.log(1 - alpha / Math.pow(2 + d_eta, beta))
+				- Math.log(Math.pow(1 + d_eta, beta) - alpha)
+				- Math.log(p_eta) - Math.log(n_eta);
 	}
 
 	private double calcLnLikRatioGrow(CGMTreeNode grow_node) {
 		int n_ell = grow_node.getN();
 		int n_ell_L = grow_node.left.getN();
 		int n_ell_R = grow_node.right.getN();
-		System.out.println("calcLnTransRatioGrow n_ell: " + n_ell + " n_ell_L: " + n_ell_L + " n_ell_R: " + n_ell_R);
+		System.out.println("calcLnLikRatioGrow n_ell: " + n_ell + " n_ell_L: " + n_ell_L + " n_ell_R: " + n_ell_R);
 		double sigsq_plus_n_ell_hyper_sisgsq_mu = sigsq + n_ell * hyper_sigsq_mu;
 		double sigsq_plus_n_ell_L_hyper_sisgsq_mu = sigsq + n_ell_L * hyper_sigsq_mu;
 		double sigsq_plus_n_ell_R_hyper_sisgsq_mu = sigsq + n_ell_R * hyper_sigsq_mu;
@@ -264,9 +258,9 @@ public class CGMBARTPosteriorBuilder {
 		}		
 		
 		//now we pick one of these nodes with enough data points randomly
-		CGMTreeNode growth_node = growth_nodes.get((int)Math.floor(Math.random() * growth_nodes.size()));
+		CGMTreeNode growth_node = growth_nodes.get((int)Math.floor(StatToolbox.rand() * growth_nodes.size()));
 		//find which predictors can be used
-		System.out.println("created predictors_that_can_be_assigned grow_node " + growth_node.stringID());
+//		System.out.println("created predictors_that_can_be_assigned grow_node " + growth_node.stringID());
 		growth_node.predictors_that_can_be_assigned = tree_prior_builder.predictorsThatCouldBeUsedToSplitAtNode(growth_node);
 		//do check b
 		if (growth_node.pAdj() == 0){

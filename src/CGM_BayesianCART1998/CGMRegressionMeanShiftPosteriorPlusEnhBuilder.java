@@ -61,7 +61,7 @@ public class CGMRegressionMeanShiftPosteriorPlusEnhBuilder extends CGMRegression
 		}
 		
 		//pick one internal node at random
-		CGMTreeNode internal_node_to_change = better_internal_nodes.get(((int)Math.floor(Math.random() * better_internal_nodes.size())));
+		CGMTreeNode internal_node_to_change = better_internal_nodes.get(((int)Math.floor(StatToolbox.rand() * better_internal_nodes.size())));
 		//now switch its rule
 		internal_node_to_change.splitAttributeM = treePriorBuilder.assignSplitAttribute(internal_node_to_change);
 		internal_node_to_change.splitValue = treePriorBuilder.assignSplitValue(internal_node_to_change.data, internal_node_to_change.splitAttributeM);
@@ -109,7 +109,7 @@ public class CGMRegressionMeanShiftPosteriorPlusEnhBuilder extends CGMRegression
 			return null;
 		}
 		//now we pick one of these nodes with enough data points randomly
-		CGMTreeNode growth_node = better_growth_nodes.get((int)Math.floor(Math.random() * better_growth_nodes.size()));
+		CGMTreeNode growth_node = better_growth_nodes.get((int)Math.floor(StatToolbox.rand() * better_growth_nodes.size()));
 		//now we give it a split attribute and value and assign the children data
 		treePriorBuilder.splitNodeAndAssignRule(growth_node);
 		System.out.println("growth node: " + growth_node.stringID() + " rule: " + " X_" + growth_node.splitAttributeM + " < " + growth_node.splitValue);

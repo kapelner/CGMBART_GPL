@@ -70,7 +70,7 @@ public abstract class CGMTreePriorBuilder {
 		
 //		System.out.println("node: " + node.stringID() + " parent: " + (node.parent == null ? "null" : node.parent.stringID()));
 		//actually flip the Bernoulli coin
-		if (Math.random() < prob_split){ 
+		if (StatToolbox.rand() < prob_split){ 
 			//if we choose to split upon rolling the dice...
 //			System.out.println("SPLIT on p = " + prob_split);
 			//and if we actually do split, then grow the children
@@ -155,7 +155,7 @@ public abstract class CGMTreePriorBuilder {
 //		}
 //		else {
 			//now choose one at random
-			return could_be_used.get((int) Math.floor(Math.random() * could_be_used.size()));
+			return could_be_used.get((int) Math.floor(StatToolbox.rand() * could_be_used.size()));
 //		}
 	}
 	
@@ -180,7 +180,7 @@ public abstract class CGMTreePriorBuilder {
 			predictor_data.add(data.get(i)[j]);
 		}
 		//now choose one at random
-		return predictor_data.get((int) Math.floor(Math.random() * nsub));	//coll.get_random_element()	
+		return predictor_data.get((int) Math.floor(StatToolbox.rand() * nsub));	//coll.get_random_element()	
 	}
 
 	/**

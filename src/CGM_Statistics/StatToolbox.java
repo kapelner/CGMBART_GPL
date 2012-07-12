@@ -25,6 +25,7 @@
 package CGM_Statistics;
 
 import java.util.Arrays;
+import java.util.Random;
 
 import org.apache.commons.math.MathException;
 import org.apache.commons.math.distribution.GammaDistributionImpl;
@@ -36,6 +37,15 @@ import org.apache.commons.math.special.Gamma;
  * as a utility-style class
  */
 public class StatToolbox {
+	
+	private static final Random R = new Random();
+	static {
+		R.setSeed(1984);
+	}
+	
+	public static double rand(){
+		return R.nextDouble();
+	}
 
 	/**
 	 * Wikipedia parameterization
@@ -50,7 +60,7 @@ public class StatToolbox {
 	public static double sample_from_gamma(double k, double theta){
 		GammaDistributionImpl gamma_dist = new GammaDistributionImpl(k, theta);
 		try {
-			return gamma_dist.inverseCumulativeProbability(Math.random());
+			return gamma_dist.inverseCumulativeProbability(StatToolbox.rand());
 		} catch (MathException e) {
 			e.printStackTrace();
 		}
@@ -70,7 +80,7 @@ public class StatToolbox {
 	public static double sample_from_norm_dist(double mu, double sigsq){
 //		System.out.println("sample_from_norm_dist mu=" + mu + " sigsq=" + sigsq);
 		try {
-			return new NormalDistributionImpl(mu, Math.sqrt(sigsq)).inverseCumulativeProbability(Math.random());
+			return new NormalDistributionImpl(mu, Math.sqrt(sigsq)).inverseCumulativeProbability(StatToolbox.rand());
 		} catch (MathException e) {
 //			System.err.println("ERROR sample_from_norm_dist mu=" + mu + " sigsq=" + sigma);
 //			e.printStackTrace();

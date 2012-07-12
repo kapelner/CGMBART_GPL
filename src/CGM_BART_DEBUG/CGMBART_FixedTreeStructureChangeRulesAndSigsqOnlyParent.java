@@ -5,11 +5,9 @@ import java.util.ArrayList;
 import GemIdentClassificationEngine.DatumSetupForEntireRun;
 import GemIdentView.JProgressBarAndLabel;
 import CGM_BART.*;
-import CGM_Statistics.CGMTreeNode;
 
 public class CGMBART_FixedTreeStructureChangeRulesAndSigsqOnlyParent extends CGMBART_FixedTreeStructureChangeRulesAndSigsq {
-	private static final long serialVersionUID = 3460935328647793073L;
-	private static boolean TREE_ILLUST = true;	
+	private static final long serialVersionUID = 3460935328647793073L;	
 		
 	public CGMBART_FixedTreeStructureChangeRulesAndSigsqOnlyParent(DatumSetupForEntireRun datumSetupForEntireRun, JProgressBarAndLabel buildProgress) {
 		super(datumSetupForEntireRun, buildProgress);

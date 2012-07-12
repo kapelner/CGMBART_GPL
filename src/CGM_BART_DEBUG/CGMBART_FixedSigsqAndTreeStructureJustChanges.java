@@ -20,7 +20,7 @@ public class CGMBART_FixedSigsqAndTreeStructureJustChanges extends CGMBART {
 	public void setData(ArrayList<double[]> X_y){
 		super.setData(X_y);
 		//this posterior builder will be shared throughout the entire process
-		posterior_builder = new CGMBARTPosteriorBuilder_Alt(tree_prior_builder);
+		posterior_builder = new CGMBARTPosteriorBuilder(tree_prior_builder);
 		//we have to set the CGM98 hyperparameters as well as the hyperparameter sigsq_mu
 		posterior_builder.setHyperparameters(hyper_mu_mu, hyper_sigsq_mu);
 	}

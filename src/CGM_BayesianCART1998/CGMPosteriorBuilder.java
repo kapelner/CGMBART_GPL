@@ -35,7 +35,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 import CGM_BART.CGMBART;
-import CGM_BayesianCART1998.CGMPosteriorBuilder.Steps;
 import CGM_Statistics.*;
 
 
@@ -309,7 +308,7 @@ public abstract class CGMPosteriorBuilder {
 			return null;
 		}
 		//now we pick one of these nodes with enough data points randomly
-		CGMTreeNode growth_node = growth_nodes.get((int)Math.floor(Math.random() * growth_nodes.size()));
+		CGMTreeNode growth_node = growth_nodes.get((int)Math.floor(StatToolbox.rand() * growth_nodes.size()));
 		//now we give it a split attribute and value and assign the children data
 		treePriorBuilder.splitNodeAndAssignRule(growth_node);
 //		System.out.println("growth node: " + growth_node.stringID() + " rule: " + " X_" + growth_node.splitAttributeM + " < " + growth_node.splitValue);
@@ -388,7 +387,7 @@ public abstract class CGMPosteriorBuilder {
 		}		
 		//now we pick one of these nodes randomly AND take its parent
 		//this involves some retarded Java gymnastics
-		CGMTreeNode prune_node = ((CGMTreeNode)branch_nodes.toArray()[((int)Math.floor(Math.random() * branch_nodes.size()))]);
+		CGMTreeNode prune_node = ((CGMTreeNode)branch_nodes.toArray()[((int)Math.floor(StatToolbox.rand() * branch_nodes.size()))]);
 		//if the prune node happened to be the root node,
 		//its parent is null, and we have to jet big time
 		if (prune_node == null){
@@ -455,7 +454,7 @@ public abstract class CGMPosteriorBuilder {
 	
 	protected CGMTreeNode pickChangeNode(ArrayList<CGMTreeNode> internal_nodes) {
 		//return a random one
-		return internal_nodes.get(((int)Math.floor(Math.random() * internal_nodes.size())));
+		return internal_nodes.get(((int)Math.floor(StatToolbox.rand() * internal_nodes.size())));
 	}
 
 	/**
@@ -515,7 +514,7 @@ public abstract class CGMPosteriorBuilder {
 			return;
 		}
 		//pick one internal node at random
-		CGMTreeNode doubly_internal_node_to_swap = doubly_internal_nodes.get(((int)Math.floor(Math.random() * doubly_internal_nodes.size())));
+		CGMTreeNode doubly_internal_node_to_swap = doubly_internal_nodes.get(((int)Math.floor(StatToolbox.rand() * doubly_internal_nodes.size())));
 		//now get both its children
 		CGMTreeNode left_child = doubly_internal_node_to_swap.left;
 		CGMTreeNode right_child = doubly_internal_node_to_swap.right;

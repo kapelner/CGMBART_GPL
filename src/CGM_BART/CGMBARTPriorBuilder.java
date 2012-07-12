@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import CGM_Statistics.CGMTreeNode;
 import CGM_Statistics.CGMTreePriorBuilder;
 import CGM_Statistics.ClassificationAndRegressionTree;
+import CGM_Statistics.StatToolbox;
 
 public class CGMBARTPriorBuilder extends CGMTreePriorBuilder {
 	
@@ -103,12 +104,12 @@ public class CGMBARTPriorBuilder extends CGMTreePriorBuilder {
 	}
 	
 	public double assignSplitValue(CGMTreeNode node) {
-		return node.possible_split_values.get((int) Math.floor(Math.random() * node.possible_split_values.size()));
+		return node.possible_split_values.get((int) Math.floor(StatToolbox.rand() * node.possible_split_values.size()));
 	}	
 
 	public Integer assignSplitAttribute(CGMTreeNode node) {
 		ArrayList<Integer> could_be_used = predictorsThatCouldBeUsedToSplitAtNode(node);
-		return could_be_used.get((int) Math.floor(Math.random() * could_be_used.size()));
+		return could_be_used.get((int) Math.floor(StatToolbox.rand() * could_be_used.size()));
 	}	
 	
 	public boolean splitNodeAndAssignRule(CGMTreeNode node) {		
