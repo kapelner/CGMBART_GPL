@@ -245,7 +245,7 @@ public class CGMBARTPosteriorBuilder {
 	protected static final int N_RULE = 5;	
 
 	protected CGMTreeNode pickGrowNode(CGMTreeNode T) {
-		ArrayList<CGMTreeNode> growth_nodes = CGMTreeNode.getTerminalNodesWithDataAboveN(T, N_RULE);
+		ArrayList<CGMTreeNode> growth_nodes = CGMTreeNode.getTerminalNodesWithDataAboveOrEqualToN(T, N_RULE);
 		
 		//2 checks
 		//a) If there is no nodes to grow, return null
@@ -272,7 +272,7 @@ public class CGMBARTPosteriorBuilder {
 	}
 	
 	protected Steps randomlyPickAmongTheTwoProposalSteps(CGMTreeNode T) {
-		double roll = Math.random();
+		double roll = StatToolbox.rand();
 		if (roll < 0.5)
 			return Steps.GROW;
 		return Steps.PRUNE;	

@@ -65,7 +65,7 @@ public class CGMBARTPosteriorBuilderOld extends CGMPosteriorBuilder {
 //		System.out.println("hyper_sigsq_mu: " + hyper_sigsq_mu);
 		
 		//first get the leaves
-		ArrayList<CGMTreeNode> terminal_nodes = CGMTreeNode.getTerminalNodesWithDataAboveN(T, 0);
+		ArrayList<CGMTreeNode> terminal_nodes = CGMTreeNode.getTerminalNodesWithDataAboveOrEqualToN(T, 0);
 //		System.out.println("calculateLnProbYGivenTree num terminal_nodes: " + terminal_nodes.size());
 		
 //		int n = treePriorBuilder.getN();
@@ -174,7 +174,7 @@ public class CGMBARTPosteriorBuilderOld extends CGMPosteriorBuilder {
 //		System.out.println("proposal via GROW  " + T.stringID());
 		//find all terminals nodes that have **more** than N_RULE data
  
-		ArrayList<CGMTreeNode> growth_nodes = CGMTreeNode.getTerminalNodesWithDataAboveN(T, N_RULE);
+		ArrayList<CGMTreeNode> growth_nodes = CGMTreeNode.getTerminalNodesWithDataAboveOrEqualToN(T, N_RULE);
 //		System.out.print("num growth nodes: " + growth_nodes.size() +":");
 //		for (CGMTreeNode node : growth_nodes){
 //			System.out.print(" " + node.stringID());

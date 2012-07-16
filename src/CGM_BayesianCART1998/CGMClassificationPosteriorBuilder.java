@@ -48,7 +48,7 @@ public final class CGMClassificationPosteriorBuilder extends CGMPosteriorBuilder
 		
 //		System.out.println("calculateProbYGivenTree");
 		//get all terminal nodes and save its size
-		ArrayList<CGMTreeNode> terminal_nodes = CGMTreeNode.getTerminalNodesWithDataAboveN(T, 0);
+		ArrayList<CGMTreeNode> terminal_nodes = CGMTreeNode.getTerminalNodesWithDataAboveOrEqualToN(T, 0);
 		int b = terminal_nodes.size();
 		//first get the constants
 		double b_times_alpha_const = b * calculateAlphaConstant();

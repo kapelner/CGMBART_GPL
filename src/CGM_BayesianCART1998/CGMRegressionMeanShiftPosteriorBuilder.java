@@ -54,7 +54,7 @@ public class CGMRegressionMeanShiftPosteriorBuilder extends CGMPosteriorBuilder 
 //		System.out.println("calculateLnProbYGivenTree CGMRegressionMeanShiftPosteriorBuilder");
 //		System.out.println("calculateLnProbYGivenTree for CGMRegressionMeanShiftPosteriorBuilder");
 		//get all terminal nodes and save its size
-		ArrayList<CGMTreeNode> terminal_nodes = CGMTreeNode.getTerminalNodesWithDataAboveN(T, 0);
+		ArrayList<CGMTreeNode> terminal_nodes = CGMTreeNode.getTerminalNodesWithDataAboveOrEqualToN(T, 0);
 		//we'll first need to calculate the hyperparameters
 		calculateHyperparameters();		
 		

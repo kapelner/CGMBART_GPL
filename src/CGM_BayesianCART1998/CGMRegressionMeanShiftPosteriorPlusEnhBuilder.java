@@ -88,7 +88,7 @@ public class CGMRegressionMeanShiftPosteriorPlusEnhBuilder extends CGMRegression
 			iteration_info.put("change_step", "GROW");
 		}
 		System.out.println("proposal via GROW");
-		ArrayList<CGMTreeNode> growth_nodes = CGMTreeNode.getTerminalNodesWithDataAboveN(T, N_RULE);
+		ArrayList<CGMTreeNode> growth_nodes = CGMTreeNode.getTerminalNodesWithDataAboveOrEqualToN(T, N_RULE);
 		System.out.print("num growth nodes: " + growth_nodes.size() +":");
 //		for (CGMTreeNode node : growth_nodes){
 //			System.out.print(" " + node.stringID());

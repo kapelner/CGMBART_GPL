@@ -132,69 +132,7 @@ public class CGMTreeNode extends TreeNode implements Cloneable, Serializable {
 		copy.possible_split_values = possible_split_values;
 		return copy;
 	}
-
-	public HashSet<Integer> getAlreadyUsedPredictors() {
-		HashSet<Integer> already_used_predictors = new HashSet<Integer>();
-		//start with this current node
-		CGMTreeNode node = this;
-		do {
-			//snag the split attribute
-			already_used_predictors.add(node.splitAttributeM);
-			//jump to parent and play it again 
-			node = node.parent;
-		} while (node != null); //if we reached the root, bail
-		
-		return already_used_predictors;
-	}
 	
-	public static void DebugWholeTree(CGMTreeNode root){
-		System.out.println("DEBUG WHOLE TREE ***********************************");
-		DebugWholeTreeRecursively(root);
-		System.out.println("****************************************************");
-	}
-	
-	private static void DebugWholeTreeRecursively(CGMTreeNode node){
-		DebugNode(node);
-		if (node.left != null){
-			DebugWholeTreeRecursively(node.left);
-		}
-		if (node.right != null){
-			DebugWholeTreeRecursively(node.right);
-		}		
-	}	
-	
-	public static void DebugNode(CGMTreeNode node){	
-		System.out.println(" DEBUG: " + node.stringID());
-		if (node.data != null){
-			System.out.println("  data n: " + node.data.size());
-		}	
-		if (node.parent != null){
-			System.out.println("  parent: " + node.parent.stringID());
-		}
-		else {
-			System.out.println("  parent: null");
-		}
-		if (node.left != null){
-			System.out.println("  left: " + node.left.stringID() + "\t\tnL: " + node.left.data.size());
-		}
-		if (node.right != null){
-			System.out.println("  right: " + node.right.stringID() + "\t\tnR: " + node.right.data.size());
-		}
-		System.out.println("  gen: " + node.generation);
-		if (node.isLeaf){
-			System.out.println("  isleaf");
-		}
-
-		if (node.splitAttributeM != null){
-			System.out.println("  splitAtrr: " + node.splitAttributeM);
-		}
-		if (node.splitValue != null){
-			System.out.println("  splitval: " + node.splitValue);
-		}
-		if (node.klass != null){
-			System.out.println("  class: " + node.klass);
-		}
-	}
 	
 	//serializable happy
 	public CGMTreeNode getLeft() {
@@ -212,17 +150,17 @@ public class CGMTreeNode extends TreeNode implements Cloneable, Serializable {
 
 	
 	//toolbox functions
-	public static ArrayList<CGMTreeNode> getTerminalNodesWithDataAboveN(CGMTreeNode node, int n_rule){
+	public static ArrayList<CGMTreeNode> getTerminalNodesWithDataAboveOrEqualToN(CGMTreeNode node, int n_rule){
 		ArrayList<CGMTreeNode> terminal_nodes_data_above_n = new ArrayList<CGMTreeNode>();
-		findTerminalNodesDataAboveN(node, terminal_nodes_data_above_n, n_rule);
+		findTerminalNodesDataAboveOrEqualToN(node, terminal_nodes_data_above_n, n_rule);
 		return terminal_nodes_data_above_n;
 	}
 	
 	public ArrayList<CGMTreeNode> getTerminalNodes(){
-		return getTerminalNodesWithDataAboveN(this, 0);
+		return getTerminalNodesWithDataAboveOrEqualToN(this, 0);
 	}
 	
-	private static void findTerminalNodesDataAboveN(CGMTreeNode node, ArrayList<CGMTreeNode> terminal_nodes, int n_rule) {
+	private static void findTerminalNodesDataAboveOrEqualToN(CGMTreeNode node, ArrayList<CGMTreeNode> terminal_nodes, int n_rule) {
 		if (node.isLeaf && node.data.size() >= n_rule){
 			terminal_nodes.add(node);
 		}
@@ -231,17 +169,17 @@ public class CGMTreeNode extends TreeNode implements Cloneable, Serializable {
 				System.err.println("error node: " + node.stringID());
 				DebugNode(node);
 			}			
-			findTerminalNodesDataAboveN(node.left, terminal_nodes, n_rule);
-			findTerminalNodesDataAboveN(node.right, terminal_nodes, n_rule);
+			findTerminalNodesDataAboveOrEqualToN(node.left, terminal_nodes, n_rule);
+			findTerminalNodesDataAboveOrEqualToN(node.right, terminal_nodes, n_rule);
 		}
 	}
 
 	public static int numTerminalNodes(CGMTreeNode node){
-		return getTerminalNodesWithDataAboveN(node, 0).size();
+		return getTerminalNodesWithDataAboveOrEqualToN(node, 0).size();
 	}
 	
 	public static int numTerminalNodesDataAboveN(CGMTreeNode node, int n_rule){
-		return getTerminalNodesWithDataAboveN(node, n_rule).size();
+		return getTerminalNodesWithDataAboveOrEqualToN(node, n_rule).size();
 	}
 	
 	public static ArrayList<CGMTreeNode> getPrunableNodes(CGMTreeNode node){
@@ -619,4 +557,52 @@ public class CGMTreeNode extends TreeNode implements Cloneable, Serializable {
 	}
 
 	
+	private static void DebugWholeTreeRecursively(CGMTreeNode node){
+		DebugNode(node);
+		if (node.left != null){
+			DebugWholeTreeRecursively(node.left);
+		}
+		if (node.right != null){
+			DebugWholeTreeRecursively(node.right);
+		}		
+	}	
+	
+	public static void DebugWholeTree(CGMTreeNode root){
+		System.out.println("DEBUG WHOLE TREE ***********************************");
+		DebugWholeTreeRecursively(root);
+		System.out.println("****************************************************");
+	}	
+	
+	public static void DebugNode(CGMTreeNode node){	
+		System.out.println(" DEBUG: " + node.stringID());
+		if (node.data != null){
+			System.out.println("  data n: " + node.data.size());
+		}	
+		if (node.parent != null){
+			System.out.println("  parent: " + node.parent.stringID());
+		}
+		else {
+			System.out.println("  parent: null");
+		}
+		if (node.left != null){
+			System.out.println("  left: " + node.left.stringID() + "\t\tnL: " + node.left.data.size());
+		}
+		if (node.right != null){
+			System.out.println("  right: " + node.right.stringID() + "\t\tnR: " + node.right.data.size());
+		}
+		System.out.println("  gen: " + node.generation);
+		if (node.isLeaf){
+			System.out.println("  isleaf");
+		}
+
+		if (node.splitAttributeM != null){
+			System.out.println("  splitAtrr: " + node.splitAttributeM);
+		}
+		if (node.splitValue != null){
+			System.out.println("  splitval: " + node.splitValue);
+		}
+		if (node.klass != null){
+			System.out.println("  class: " + node.klass);
+		}
+	}	
 }

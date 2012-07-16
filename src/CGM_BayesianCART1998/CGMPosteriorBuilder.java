@@ -235,7 +235,7 @@ public abstract class CGMPosteriorBuilder {
 //				System.out.println("most likely tree log prob: " + ln_prob_y_proposal);
 			}
 		}
-		double ln_u_0_1 = Math.log(Math.random());
+		double ln_u_0_1 = Math.log(StatToolbox.rand());
 		//ACCEPT/REJECT,STEP_name,log_prop_lik_o,log_prop_lik_f,log_r 
 		CGMBART.mh_iterations_full_record.println(
 			(acceptOrRejectProposal(ln_u_0_1, log_r) ? "A" : "R") + "," +  
@@ -269,7 +269,7 @@ public abstract class CGMPosteriorBuilder {
 
 	//can be overwritten to allow for more flexibility
 	protected Steps randomlyPickAmongTheFourProposalSteps() {
-		double roll = Math.random();
+		double roll = StatToolbox.rand();
 		if (roll < 0.25)
 			return Steps.GROW;
 		else if (roll < 0.5)
@@ -295,7 +295,7 @@ public abstract class CGMPosteriorBuilder {
 			iteration_info.put("change_step", "GROW");
 		}
 //		System.out.println("proposal via GROW  " + T.stringID());
-		ArrayList<CGMTreeNode> growth_nodes = CGMTreeNode.getTerminalNodesWithDataAboveN(T, N_RULE);
+		ArrayList<CGMTreeNode> growth_nodes = CGMTreeNode.getTerminalNodesWithDataAboveOrEqualToN(T, N_RULE);
 //		System.out.print("num growth nodes: " + growth_nodes.size() +":");
 //		for (CGMTreeNode node : growth_nodes){
 //			System.out.print(" " + node.stringID());
@@ -366,7 +366,7 @@ public abstract class CGMPosteriorBuilder {
 		}
 		//get a random terminal node (all terminal nodes accepted)
 //		System.out.println("proposal via PRUNE  " + T.stringID());
-		ArrayList<CGMTreeNode> terminal_nodes = CGMTreeNode.getTerminalNodesWithDataAboveN(T, 0);
+		ArrayList<CGMTreeNode> terminal_nodes = CGMTreeNode.getTerminalNodesWithDataAboveOrEqualToN(T, 0);
 //		System.out.print("num terminal nodes: " + terminal_nodes.size());
 //		for (CGMTreeNode node : terminal_nodes){
 //			System.out.print(" " + node.stringID());
@@ -539,7 +539,7 @@ public abstract class CGMPosteriorBuilder {
 		}
 		else {
 			//pick one of the children at random
-			CGMTreeNode child = Math.random() < 0.5 ? right_child : left_child;
+			CGMTreeNode child = StatToolbox.rand() < 0.5 ? right_child : left_child;
 			//swap the parent's rule with the children's rule
 			Integer save_parent_attribute = doubly_internal_node_to_swap.splitAttributeM;
 			Double save_parent_value = doubly_internal_node_to_swap.splitValue;
