@@ -25,12 +25,12 @@
 package CGM_BART;
 
 import java.awt.image.BufferedImage;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 
 import javax.media.jai.JAI;
 
-import CGM_BayesianCART1998.CGMPosteriorBuilder;
 import CGM_Statistics.*;
 
 public class TreeArrayIllustration {
@@ -38,6 +38,11 @@ public class TreeArrayIllustration {
 	private int sample_num;
 	private ArrayList<CGMTreeNode> trees;
 	private ArrayList<Double> likelihoods;
+	
+	public static NumberFormat one_digit_format = NumberFormat.getInstance();
+	static {
+		one_digit_format.setMaximumFractionDigits(1);
+	}	
 
 	public TreeArrayIllustration(int sample_num) {
 		this.sample_num = sample_num;
@@ -64,7 +69,7 @@ public class TreeArrayIllustration {
 			HashMap<String, String> info = new HashMap<String, String>();
 			info.put("tree_num", "" + (t + 1));
 			info.put("num_iteration", "" + sample_num);
-			info.put("likelihood", "" + CGMPosteriorBuilder.one_digit_format.format(likelihoods.get(t)));
+			info.put("likelihood", "" + one_digit_format.format(likelihoods.get(t)));
 			BufferedImage canvas = new TreeIllustration(tree, info).getCanvas();
 			w += canvas.getWidth(); //aggregate the widths
 			if (canvas.getHeight() > h){ //get the maximum height
@@ -85,9 +90,59 @@ public class TreeArrayIllustration {
 	}
 	
 	private void saveImageFile(BufferedImage image) {
-		String title = "BART_trees_iter_" + CGMPosteriorBuilder.LeadingZeroes(sample_num, 5);
+		String title = "BART_trees_iter_" + LeadingZeroes(sample_num, 5);
 		JAI.create("filestore", image, CGMShared.DEBUG_DIR + "//" + title + ".png", "PNG");
 	}
+	
+	private static final String ZEROES = "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
+	public static String LeadingZeroes(double num, int num_digits) {
+		if (num < 10 && num_digits >= 2){
+			return ZEROES.substring(0, num_digits - 1) + num;
+		}
+		else if (num < 100 && num_digits >= 3){
+			return ZEROES.substring(0, num_digits - 2) + num;
+		}
+		else if (num < 1000 && num_digits >= 4){
+			return ZEROES.substring(0, num_digits - 3) + num;
+		}
+		else if (num < 10000 && num_digits >= 5){
+			return ZEROES.substring(0, num_digits - 4) + num;
+		}
+		else if (num < 100000 && num_digits >= 6){
+			return ZEROES.substring(0, num_digits - 5) + num;
+		}
+		else if (num < 1000000 && num_digits >= 7){
+			return ZEROES.substring(0, num_digits - 6) + num;
+		}
+		else if (num < 10000000 && num_digits >= 8){
+			return ZEROES.substring(0, num_digits - 7) + num;
+		}
+		return String.valueOf(num);
+	}
+	public static String LeadingZeroes(int num, int num_digits) {
+		if (num < 10 && num_digits >= 2){
+			return ZEROES.substring(0, num_digits - 1) + num;
+		}
+		else if (num < 100 && num_digits >= 3){
+			return ZEROES.substring(0, num_digits - 2) + num;
+		}
+		else if (num < 1000 && num_digits >= 4){
+			return ZEROES.substring(0, num_digits - 3) + num;
+		}
+		else if (num < 10000 && num_digits >= 5){
+			return ZEROES.substring(0, num_digits - 4) + num;
+		}
+		else if (num < 100000 && num_digits >= 6){
+			return ZEROES.substring(0, num_digits - 5) + num;
+		}
+		else if (num < 1000000 && num_digits >= 7){
+			return ZEROES.substring(0, num_digits - 6) + num;
+		}
+		else if (num < 10000000 && num_digits >= 8){
+			return ZEROES.substring(0, num_digits - 7) + num;
+		}
+		return String.valueOf(num);
+	}		
 
 
 	
