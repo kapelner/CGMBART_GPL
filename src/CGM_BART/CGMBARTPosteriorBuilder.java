@@ -158,13 +158,11 @@ public class CGMBARTPosteriorBuilder {
 		node.possible_split_values = tree_prior_builder.possibleSplitValues(node);
 		node.splitValue = node.pickRandomSplitValue();
 		node.isLeaf = false;
-		//split the data correctly
-		ClassificationAndRegressionTree.SortAtAttribute(node.data, node.splitAttributeM);
-		int n_split = ClassificationAndRegressionTree.getSplitPoint(node.data, node.splitAttributeM, node.splitValue);
-		//now build the node offspring
-		node.left = new CGMTreeNode(node, ClassificationAndRegressionTree.getLowerPortion(node.data, n_split));
-		node.left.predictors_that_can_be_assigned = tree_prior_builder.predictorsThatCouldBeUsedToSplitAtNode(node.left);
-		node.right = new CGMTreeNode(node, ClassificationAndRegressionTree.getUpperPortion(node.data, n_split));		
+		node.left = new CGMTreeNode(node, null);
+		node.right = new CGMTreeNode(node, null);
+		CGMTreeNode.propagateRuleChangeOrSwapThroughoutTree(node, true);
+		//now cache the predictors that can be assigned for future use		
+		node.left.predictors_that_can_be_assigned = tree_prior_builder.predictorsThatCouldBeUsedToSplitAtNode(node.left);			
 		node.right.predictors_that_can_be_assigned = tree_prior_builder.predictorsThatCouldBeUsedToSplitAtNode(node.right);
 	}
 

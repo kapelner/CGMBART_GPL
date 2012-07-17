@@ -57,7 +57,7 @@ public abstract class CGMCART extends ClassificationAndRegressionTree implements
 	
 	public void setData(ArrayList<double[]> X_y){
 		super.setData(X_y);
-		tree_prior_builder = new CGMBayesianCARTPriorBuilder(X_y, p);
+		tree_prior_builder = new CGMBayesianCARTPriorBuilder(X_y);
 		num_restarts = DEFAULT_NUM_RESTARTS_MH_ALGORITHM;
 		num_iterations = DEFAULT_MH_ITERATIONS_PER_SET;	
 		createPosteriorBuilder();

@@ -75,7 +75,7 @@ public class CGMRegressionTreeAvg extends CGMCART {
 	
 	public void setData(ArrayList<double[]> X_y){
 		super.setData(X_y);
-		tree_prior_builder = new CGMBayesianCARTPriorBuilder(X_y, p);
+		tree_prior_builder = new CGMBayesianCARTPriorBuilder(X_y);
 		num_separate_chains = DEFAULT_NUM_SEPARATE_CHAINS;
 		num_iterations_per_chain = DEFAULT_MH_ITERATIONS_PER_CHAIN;	
 		num_burn_in_per_chain = DEFAULT_BURN_IN_PER_CHAIN;

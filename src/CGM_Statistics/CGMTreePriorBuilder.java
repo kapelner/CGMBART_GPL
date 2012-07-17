@@ -38,9 +38,9 @@ public abstract class CGMTreePriorBuilder {
 
 
 
-	public CGMTreePriorBuilder(ArrayList<double[]> X_y, int p){
+	public CGMTreePriorBuilder(ArrayList<double[]> X_y){
 		this.X_y = X_y;
-		this.p = p;
+		this.p = X_y.get(0).length - 1;
 		this.n = X_y.size();
 	}
 	

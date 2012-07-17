@@ -38,8 +38,8 @@ public class CGMBARTPriorBuilder extends CGMTreePriorBuilder {
 	
 	protected double[] minimum_values_by_attribute;
 	
-	public CGMBARTPriorBuilder(ArrayList<double[]> X_y, int p) {
-		super(X_y, p);
+	public CGMBARTPriorBuilder(ArrayList<double[]> X_y) {
+		super(X_y);
 		//now let's go through and keep some more records
 		recordMinimumAttributeValues();
 	}

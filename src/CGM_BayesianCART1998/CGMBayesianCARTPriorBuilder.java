@@ -34,8 +34,8 @@ public class CGMBayesianCARTPriorBuilder extends CGMTreePriorBuilder {
 	private static final double ALPHA = 0.95;
 	private static final double BETA = 1;
 	
-	public CGMBayesianCARTPriorBuilder(ArrayList<double[]> X_y, int p) {
-		super(X_y, p);
+	public CGMBayesianCARTPriorBuilder(ArrayList<double[]> X_y) {
+		super(X_y);
 	}	
 	
 	public double getAlpha() {

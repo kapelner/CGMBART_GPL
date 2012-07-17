@@ -215,7 +215,8 @@ public class CGMTreeNode extends TreeNode implements Cloneable, Serializable {
 		node.splitValue = null;
 	}
 
-	public static HashSet<CGMTreeNode> selectBranchNodesWithTwoLeaves(ArrayList<CGMTreeNode> terminalNodes) { HashSet<CGMTreeNode> branch_nodes = new HashSet<CGMTreeNode>();
+	public static HashSet<CGMTreeNode> selectBranchNodesWithTwoLeaves(ArrayList<CGMTreeNode> terminalNodes) { 
+		HashSet<CGMTreeNode> branch_nodes = new HashSet<CGMTreeNode>();
 		for (CGMTreeNode node : terminalNodes){
 			if (node.parent == null){
 				continue;
@@ -526,7 +527,7 @@ public class CGMTreeNode extends TreeNode implements Cloneable, Serializable {
 		return Math.pow(sumResponses(), 2);
 	}
 
-	private double sumResponses() {
+	public double sumResponses() {
 		double sum = 0;
 		for (int i = 0; i < n; i++){
 			double[] record = data.get(i);

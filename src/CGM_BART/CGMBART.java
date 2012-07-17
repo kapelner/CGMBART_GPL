@@ -207,7 +207,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 		//first establish the hyperparams sigsq_mu, nu, lambda
 		calculateHyperparameters();	
 		//now generate a prior builder... used in any implementation
-		tree_prior_builder = new CGMBARTPriorBuilder(X_y, p);
+		tree_prior_builder = new CGMBARTPriorBuilder(X_y);
 		//this posterior builder will be shared throughout the entire process
 		posterior_builder = new CGMBARTPosteriorBuilder(tree_prior_builder);
 		//we have to set the CGM98 hyperparameters as well as the hyperparameter sigsq_mu
