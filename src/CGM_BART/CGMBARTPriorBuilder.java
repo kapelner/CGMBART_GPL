@@ -31,15 +31,20 @@ import CGM_Statistics.CGMTreePriorBuilder;
 import CGM_Statistics.ClassificationAndRegressionTree;
 import CGM_Statistics.StatToolbox;
 
-public class CGMBARTPriorBuilder extends CGMTreePriorBuilder {
+public class CGMBARTPriorBuilder {
 	
 	public static double ALPHA = 0.95;
 	public static double BETA = 2; //see p271 in CGM10
 	
+	protected ArrayList<double[]> X_y;
+	protected int p;
+	protected int n;	
 	protected double[] minimum_values_by_attribute;
 	
 	public CGMBARTPriorBuilder(ArrayList<double[]> X_y) {
-		super(X_y);
+		this.X_y = X_y;
+		this.p = X_y.get(0).length - 1;
+		this.n = X_y.size();
 		//now let's go through and keep some more records
 		recordMinimumAttributeValues();
 	}
@@ -63,7 +68,7 @@ public class CGMBARTPriorBuilder extends CGMTreePriorBuilder {
 			//okay we can only add a predictor here if we don't see the minimum 
 			//value in any of the nodes above split rules
 			boolean can_use = true;
-			
+			System.out.println("predictorsThatCouldBeUsedToSplitAtNode" + node);
 			for (CGMTreeNode father : node.getLineage()){
 				if (father.splitAttributeM == j && father.splitValue == minimum_values_by_attribute[j]){
 					can_use = false;
@@ -121,7 +126,7 @@ public class CGMBARTPriorBuilder extends CGMTreePriorBuilder {
 		//b) there's only one data point left
 		//then this node automatically becomes a leaf, otherwise split it
 		if (node.splitAttributeM == null || node.data.size() == 1){
-			markNodeAsLeaf(node);
+			node.isLeaf = true;
 			return false; //we did not do a split
 		}	
 		else {
@@ -140,6 +145,14 @@ public class CGMBARTPriorBuilder extends CGMTreePriorBuilder {
 			return true; //we did actually do a split
 		}
 	}	
+	
+	public int getP() {
+		return p;
+	}	
+	
+	public double[] getMinimumValuesByAttribute(){
+		return minimum_values_by_attribute;
+	}
 	
 	public double getAlpha() {
 		return ALPHA;

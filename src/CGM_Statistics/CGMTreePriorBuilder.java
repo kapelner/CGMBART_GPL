@@ -29,6 +29,11 @@ import java.util.List;
 
 import CGM_BART.CGMBART;
 
+/**
+ * This class only supports deprecated functions and thus does not have to be tested
+ * @author kapelner
+ *
+ */
 public abstract class CGMTreePriorBuilder {
 	
 	protected ArrayList<double[]> X_y;
@@ -51,41 +56,41 @@ public abstract class CGMTreePriorBuilder {
 		return p;
 	}
 
-	public CGMTreeNode buildTreeStructureBasedOnPrior(CGMBART bart) {
-		//we're going to build this exactly like CGM 938-9
-		//first build the root (by definition the root is parentless)
-		CGMTreeNode root = new CGMTreeNode(null, X_y, bart);
-		//now determine recursively the size and shape of tree
-		constructSizeAndShape(root);
-		//return the tree by sending back the root
-		return root;
-	}
+//	public CGMTreeNode buildTreeStructureBasedOnPrior(CGMBART bart) {
+//		//we're going to build this exactly like CGM 938-9
+//		//first build the root (by definition the root is parentless)
+//		CGMTreeNode root = new CGMTreeNode(null, X_y, bart);
+//		//now determine recursively the size and shape of tree
+//		constructSizeAndShape(root);
+//		//return the tree by sending back the root
+//		return root;
+//	}
 	
 	///// all functions related to splitting and node placement prior ($\T$)
 
 
-	private void constructSizeAndShape(CGMTreeNode node) {
-		//do we need to do this in the posterior
-		double prob_split = calculateProbabilityOfSplitting(node);
-		
-//		System.out.println("node: " + node.stringID() + " parent: " + (node.parent == null ? "null" : node.parent.stringID()));
-		//actually flip the Bernoulli coin
-		if (StatToolbox.rand() < prob_split){ 
-			//if we choose to split upon rolling the dice...
-//			System.out.println("SPLIT on p = " + prob_split);
-			//and if we actually do split, then grow the children
-			if (splitNodeAndAssignRule(node)){
-				constructSizeAndShape(node.left);
-				constructSizeAndShape(node.right);				
-			}
-		}
-		else {
-//			System.out.println("FAILED TO SPLIT on p = " + prob_split);
-			//we choose to NOT split upon rolling the dice...
-			markNodeAsLeaf(node);
-//			CGMTreeNode.DebugNode(node);
-		}
-	}
+//	private void constructSizeAndShape(CGMTreeNode node) {
+//		//do we need to do this in the posterior
+//		double prob_split = calculateProbabilityOfSplitting(node);
+//		
+////		System.out.println("node: " + node.stringID() + " parent: " + (node.parent == null ? "null" : node.parent.stringID()));
+//		//actually flip the Bernoulli coin
+//		if (StatToolbox.rand() < prob_split){ 
+//			//if we choose to split upon rolling the dice...
+////			System.out.println("SPLIT on p = " + prob_split);
+//			//and if we actually do split, then grow the children
+//			if (splitNodeAndAssignRule(node)){
+//				constructSizeAndShape(node.left);
+//				constructSizeAndShape(node.right);				
+//			}
+//		}
+//		else {
+////			System.out.println("FAILED TO SPLIT on p = " + prob_split);
+//			//we choose to NOT split upon rolling the dice...
+//			markNodeAsLeaf(node);
+////			CGMTreeNode.DebugNode(node);
+//		}
+//	}
 
 	public boolean splitNodeAndAssignRule(CGMTreeNode node) {		
 		//first assign a split attribute
@@ -96,7 +101,7 @@ public abstract class CGMTreePriorBuilder {
 		//b) there's only one data point left
 		//then this node automatically becomes a leaf, otherwise split it
 		if (node.splitAttributeM == null || node.data.size() == 1){
-			markNodeAsLeaf(node);
+			node.isLeaf = true;
 			return false; //we did not do a split
 		}	
 		else {
@@ -117,8 +122,8 @@ public abstract class CGMTreePriorBuilder {
 	}
 
 
-	protected void markNodeAsLeaf(CGMTreeNode node) {
-		node.isLeaf = true;
+//	protected void markNodeAsLeaf(CGMTreeNode node) {
+//		node.isLeaf = true;
 //		System.out.println("marked " + node.stringID() + " as leaf");
 		
 //		System.out.print("LEAF: [");
@@ -127,7 +132,7 @@ public abstract class CGMTreePriorBuilder {
 //			System.out.print(ns[k] + ",");
 //		}
 //		System.out.print("] of " + node.data.size() + "\n");
-	}
+//	}
 
 	/**
 	 * According to CGM98 p398, we uniformly sample one from the population

@@ -61,6 +61,7 @@ public class CGMTreeNode extends TreeNode implements Cloneable, Serializable {
 
 	public ArrayList<Integer> predictors_that_can_be_assigned;
 	public ArrayList<Double> possible_split_values;
+	private HashSet<Double> unique_possible_split_values;
 
 
 	public CGMTreeNode(CGMTreeNode parent, List<double[]> data, CGMBART bart){
@@ -546,7 +547,11 @@ public class CGMTreeNode extends TreeNode implements Cloneable, Serializable {
 	}
 	
 	public int nAdj(){
-		return possible_split_values.size();
+		if (unique_possible_split_values == null){
+			unique_possible_split_values = new HashSet<Double>();
+			unique_possible_split_values.addAll(possible_split_values);
+		}
+		return unique_possible_split_values.size();
 	}	
 
 	public Double pickRandomSplitValue() {

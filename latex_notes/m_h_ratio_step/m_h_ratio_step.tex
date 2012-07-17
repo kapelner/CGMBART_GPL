@@ -471,7 +471,7 @@ Remember from CGM98 that the probability of splitting on a given node $\eta$ is 
 \prob{\text{splitting~} \eta} = \frac{\alpha}{\tothepow{1 + d_\eta}{\beta}}
 \eeqn
 
-The probability of assigning the specific rule, $\prob{\text{rule~} \eta}$, is just picking from all available attributes and then from all available split points so $\oneover{p_\eta}\oneover{n_\eta}$. Once again, the proposal tree differs from the original tree by only the $\ell$th node in the original becoming the $\ell_L$ and $\ell_R$ nodes in the proposal. This simplifies the tree structure ratio to just:
+The probability of assigning the specific rule, $\prob{\text{rule~} \eta}$, is just picking from all available attributes and then from all available unique split points so $\oneover{p_\eta}\oneover{n_\eta}$. Once again, the proposal tree differs from the original tree by only the $\ell$th node in the original becoming the $\ell_L$ and $\ell_R$ nodes in the proposal. This simplifies the tree structure ratio to just:
 
 \beqn
 \frac{\prob{T^*}}{\prob{T}} &=& \frac{\parens{1 - \prob{\text{splitting~} \eta_L}} \parens{1 - \prob{\text{splitting~} \eta_R}} \prob{\text{splitting~} \eta} \prob{\text{rule~} \eta}}{\parens{1 - \prob{\text{splitting~} \eta}}}\\
