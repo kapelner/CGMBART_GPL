@@ -240,7 +240,12 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 	}
 	
 	public int frequencyValueForAttribute(int attribute, double val){
-		return num_val_hash_by_column.get(attribute).get(val);
+		HashMap<Double, Integer> attr_vals = num_val_hash_by_column.get(attribute);
+		if (attr_vals.get(val) == null){
+			System.out.println("attr_vals.get(val) == null");
+			System.out.println(Tools.StringJoin(attr_vals.keySet().toArray(), ","));
+		}
+		return attr_vals.get(val);
 	}
 
 	private void recordMinimumAttributeValues() {
@@ -708,7 +713,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 			node.y_prediction = StatToolbox.sample_from_norm_dist(posterior_mean, posterior_sigsq);
 			if (node.y_prediction == StatToolbox.ILLEGAL_FLAG){				
 				node.y_prediction = 0.0; //this could happen on an empty node
-				System.out.println("ERROR assignLeafFINAL " + node.y_prediction + " (sigsq = " + sigsq + ")");
+				System.err.println("ERROR assignLeafFINAL " + node.y_prediction + " (sigsq = " + sigsq + ")");
 			}
 //			System.out.println("assignLeafFINAL " + un_transform_y(node.y_prediction) + " (sigsq = " + sigsq * y_range_sq + ")");
 		}

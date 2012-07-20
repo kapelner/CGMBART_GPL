@@ -594,9 +594,9 @@ public class CGMBARTTreeNode extends TreeNode implements Cloneable, Serializable
 	
 	public int pAdj(){
 //		System.out.println("pAdj on node " + this.stringID());	
-		if (predictors_that_can_be_assigned == null){
+//		if (predictors_that_can_be_assigned == null){
 			predictors_that_can_be_assigned = predictorsThatCouldBeUsedToSplitAtNode();
-		}
+//		}
 		return predictors_that_can_be_assigned.size();
 	}
 	
@@ -606,9 +606,9 @@ public class CGMBARTTreeNode extends TreeNode implements Cloneable, Serializable
 	}
 	
 	public int nAdj(){
-		if (possible_split_values == null){
+//		if (possible_split_values == null){
 			possible_split_values = possibleSplitValuesGivenAttribute();
-		}
+//		}
 		return possible_split_values.size();
 	}	
 
@@ -619,8 +619,8 @@ public class CGMBARTTreeNode extends TreeNode implements Cloneable, Serializable
 	
 
 	public int splitValuesRepeated() {
-		System.out.println("splitValuesRepeated j = " + this.splitAttributeM + " x_ij = " + this.splitValue);
-		System.out.println("freq: " + cgmbart.frequencyValueForAttribute(this.splitAttributeM, this.splitValue));
+//		System.out.println("splitValuesRepeated j = " + this.splitAttributeM + " x_ij = " + this.splitValue);
+//		System.out.println("freq: " + cgmbart.frequencyValueForAttribute(this.splitAttributeM, this.splitValue));
 		return cgmbart.frequencyValueForAttribute(this.splitAttributeM, this.splitValue);
 	}	
 
