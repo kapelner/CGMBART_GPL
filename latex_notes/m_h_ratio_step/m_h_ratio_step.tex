@@ -106,12 +106,12 @@ So $\prob{T \rightarrow T^*}$ means the probability of transitioning from $T$ in
 We're picking from one of the terminal nodes, and then we're picking an attribute and split point, this becomes:
 
 \beqn
-\cprob{T^*}{T} &=& \prob{\text{GROW}} \oneover{b} \oneover{p_{adj}} \oneover{n_{adj}}
+\cprob{T^*}{T} &=& \prob{\text{GROW}} \oneover{b} \oneover{p_{adj}} \oneover{n_{adj}} \sum_{k=1}^{n_{adj}} \indic{X_{i_k j} = x^*}
 \eeqn
 
 Now, $p_{adj}$ is the number of predictors left available to split on. This is \textit{from the perspective} of the $\ell$th node in tree $T$. Why would this be less than $p$? Because if you look up into the node's lineage, you may have already used all available split values for some attributes. Those would no longer be available to split from.
 
-Then, $n_{adj}$ is the number of split values left available considering we picked attribute $j$. We can obtain this by looking at the node's lineage for any splits on $j$ and then taking the minimum of those split values, and then finding the subset of the design matrix whose values are less than that minimum for column $j$.\\
+Then, $\indic{X_{i_k j} = x^*}$ is whether or not a particular value of column $j$ is equal to the split point, $x^*$ we've chosen. $n_{adj}$ is the number of values left in the column after adjusting for previous splits. We can obtain this by looking at the node's lineage for any splits on $j$ and then taking the minimum of those split values, and then finding the subset of the design matrix whose values are less than that minimum for column $j$.\\
 
 So now $\prob{T^* \rightarrow T}$ is the probability of transitioning from the new tree back to the old tree which would be:
 
@@ -123,7 +123,7 @@ So now $\prob{T^* \rightarrow T}$ is the probability of transitioning from the n
 Thus, the transition ratio will be:
 
 \beqn
-\frac{\prob{T^* \rightarrow T}}{\prob{T \rightarrow T^*}} = \frac{\prob{\text{PRUNE}}\oneover{w_2^*}}{\prob{\text{GROW}}\oneover{b} \oneover{p_{adj}} \oneover{n_{adj}}} = \cancelto{?}{\frac{\prob{\text{PRUNE}}}{\prob{\text{GROW}}}} \frac{b ~ p_{adj} ~ n_{adj}}{w_2^*}
+\frac{\prob{T^* \rightarrow T}}{\prob{T \rightarrow T^*}} = \frac{\prob{\text{PRUNE}}\oneover{w_2^*}}{\prob{\text{GROW}}\oneover{b} \oneover{p_{adj}} \oneover{n_{adj}} \sum_{k=1}^{n_{adj}} \indic{X_{i_k j} = x^*}} = \cancelto{?}{\frac{\prob{\text{PRUNE}}}{\prob{\text{GROW}}}} \frac{b ~ p_{adj} ~ n_{adj}}{w_2^* \sum_{k=1}^{n_{adj}} \indic{X_{i_k j} = x^*}}
 \eeqn
 
 Why don't the probabilities of prune and grow cancel? Well, under the case where we cannot grow anymore (if we use all split variables), the probability of growth will be 0. Thus, those steps \textit{cannot} be considered since the ratio would be undefined. As long as they can be considered, that ratio will cancel.
@@ -504,7 +504,7 @@ To go the opposite direction, we need to make sure we grow the exact same node s
 \prob{T^* \rightarrow T} &=& \prob{\text{GROW}} \prob{\text{selecting the $\ell$th node to grow from}} \times \\
 && \prob{\text{selecting the original attribute to split on}} \times \\
 && \prob{\text{selecting the original value to split on}} \\
-&=& \prob{\text{GROW}} \oneover{b-1} \oneover{p_{adj}} \oneover{n_{adj}}
+&=& \prob{\text{GROW}} \oneover{b-1} \oneover{p_{adj}} \oneover{n_{adj}} \sum_{k=1}^{n_{adj}} \indic{X_{i_k j} = x^*}
 \eeqn
 
 We're using $b-1$ here because the proposed tree has one less terminal node due to the pruning than the original tree $T$ had.\\
@@ -512,7 +512,7 @@ We're using $b-1$ here because the proposed tree has one less terminal node due 
 Thus, the transition ratio becomes:
 
 \beqn
-\frac{\prob{T^* \rightarrow T}}{\prob{T \rightarrow T^*}} = \frac{\prob{\text{GROW}}  \oneover{b-1}\oneover{p_{adj}} \oneover{n_{adj}}}{ \prob{\text{PRUNE}}\oneover{w_2}} = \cancelto{?}{\frac{\prob{\text{GROW}}}{\prob{\text{PRUNE}}}} \frac{w_2}{(b-1) p_{adj} n_{adj}}
+\frac{\prob{T^* \rightarrow T}}{\prob{T \rightarrow T^*}} = \frac{\prob{\text{GROW}}  \oneover{b-1}\oneover{p_{adj}} \oneover{n_{adj}} \sum_{k=1}^{n_{adj}} \indic{X_{i_k j} = x^*}}{ \prob{\text{PRUNE}}\oneover{w_2}} = \cancelto{?}{\frac{\prob{\text{GROW}}}{\prob{\text{PRUNE}}}} \frac{w_2  \sum_{k=1}^{n_{adj}} \indic{X_{i_k j} = x^*}}{(b-1) p_{adj} n_{adj}}
 \eeqn
 
 and in log form this becomes:
