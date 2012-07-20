@@ -31,14 +31,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 
-import GemIdentClassificationEngine.DatumSetupForEntireRun;
-import GemIdentClassificationEngine.Features.DatumFeatureSet.FeatureType;
-
-public class DataSetupForCSVFile extends DatumSetupForEntireRun {
+public class DataSetupForCSVFile {
 
 	private final ArrayList<double[]> X_y;
 	private int K;
 	private boolean file_has_header;
+	private int p;
+//	private ArrayList<FeatureType> feature_types;
+	private ArrayList<String> feature_names;
 	
 	public DataSetupForCSVFile(File file, boolean header) {
 		X_y = new ArrayList<double[]>();
@@ -75,10 +75,10 @@ public class DataSetupForCSVFile extends DatumSetupForEntireRun {
 			p = datums.length - 1;
 
 			if (line_num == 0 && file_has_header){
-				feature_types = new ArrayList<FeatureType>(p);
-				for (int i = 0; i < p; i++){
-					feature_types.add(FeatureType.NUMBER); //default for now
-				}
+//				feature_types = new ArrayList<FeatureType>(p);
+//				for (int i = 0; i < p; i++){
+//					feature_types.add(FeatureType.NUMBER); //default for now
+//				}
 				feature_names = new ArrayList<String>(p);
 //				for (int i = 0; i < p; i++){
 //					feature_names.add(datums[i]); //default for now

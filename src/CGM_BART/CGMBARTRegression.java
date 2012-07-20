@@ -28,10 +28,6 @@ import java.io.File;
 
 import AlgorithmTesting.DataSetupForCSVFile;
 
-import GemIdentClassificationEngine.DatumSetupForEntireRun;
-import GemIdentTools.IOTools;
-import GemIdentView.JProgressBarAndLabel;
-
 public class CGMBARTRegression extends CGMBART {
 	private static final long serialVersionUID = 6418127647567343927L;
 	
@@ -42,23 +38,9 @@ public class CGMBARTRegression extends CGMBART {
 	 * @param datumSetupForEntireRun
 	 * @param buildProgress
 	 */
-	public CGMBARTRegression(DatumSetupForEntireRun datumSetupForEntireRun, JProgressBarAndLabel buildProgress) {
-		super(datumSetupForEntireRun, buildProgress);
+	public CGMBARTRegression() {
+		super();
 //		System.out.println("CGMBARTRegression init\n");
-	}
-	 
-	/** Default constructor. this is used for the R package.
-	 * 
-	 * @param datumSetupForEntireRun
-	 * @param buildProgress
-	 */
-
-	public CGMBARTRegression() { 
-		super(new DataSetupForCSVFile(new File(CSVFileFromRDirectory, CSVFileFromRName), true), new JProgressBarAndLabel(0, 0, null));
-		//kind of klunky but whatever 
-//		System.err.println("about to do setData on datumsetup: " + this.datumSetupForEntireRun);
-		this.setData(((DataSetupForCSVFile)this.datumSetupForEntireRun).getX_y());
-//		System.err.println("default data loaded CGMBARTRegression");
 	}	
 	 
 
@@ -76,7 +58,7 @@ public class CGMBARTRegression extends CGMBART {
 			double[] ppi = get95PctPostPredictiveIntervalForPrediction(record);
 			double[] samples = getGibbsSamplesForPrediction(record);
 			int inside = (y >= ppi[0] && y <= ppi[1]) ? 1 : 0;
-			output.println(y + "," + yhat + "," + ppi[0] + "," + ppi[1] + "," + inside + "," + IOTools.StringJoin(samples, ","));
+			output.println(y + "," + yhat + "," + ppi[0] + "," + ppi[1] + "," + inside + "," + Tools.StringJoin(samples, ","));
 //			System.out.println(y + "," + yhat + "," + ppi[0] + "," + ppi[1] + "," + inside);
 		}
 		output.close();

@@ -1,17 +1,15 @@
 package CGM_BART_DEBUG;
 
 import CGM_BART.*;
+
 import java.util.ArrayList;
 
-import CGM_Statistics.CGMTreeNode;
-import GemIdentClassificationEngine.DatumSetupForEntireRun;
-import GemIdentView.JProgressBarAndLabel;
 
 public class CGMBART_FixedTreeAndSigsq extends CGMBART {
 	private static final long serialVersionUID = -331480664944699926L;
 	
-	public CGMBART_FixedTreeAndSigsq(DatumSetupForEntireRun datumSetupForEntireRun, JProgressBarAndLabel buildProgress) {
-		super(datumSetupForEntireRun, buildProgress);
+	public CGMBART_FixedTreeAndSigsq() {
+		super();
 		System.out.println("CGMBART_FixedTreeAndSigsq init\n");
 		setNumTrees(1); //in this DEBUG model, there's only one tree	
 	}
@@ -24,7 +22,7 @@ public class CGMBART_FixedTreeAndSigsq extends CGMBART {
 	}
 	
 	protected void InitiatizeTrees() {
-		ArrayList<CGMTreeNode> cgm_trees = new ArrayList<CGMTreeNode>(num_trees);
+		ArrayList<CGMBARTTreeNode> cgm_trees = new ArrayList<CGMBARTTreeNode>(num_trees);
 		cgm_trees.add(CreateTheSimpleTreeModel());	
 		gibbs_samples_of_cgm_trees.add(0, cgm_trees);		
 	}
@@ -38,8 +36,8 @@ public class CGMBART_FixedTreeAndSigsq extends CGMBART {
 		gibbs_samples_of_sigsq.add(sample_num, fixed_sigsq); //fix it forever
 	}
 
-	protected void SampleTree(int sample_num, int t, ArrayList<CGMTreeNode> cgm_trees, TreeArrayIllustration tree_array_illustration) {
-		CGMTreeNode tree = CreateTheSimpleTreeModel();
+	protected void SampleTree(int sample_num, int t, ArrayList<CGMBARTTreeNode> cgm_trees, TreeArrayIllustration tree_array_illustration) {
+		CGMBARTTreeNode tree = CreateTheSimpleTreeModel();
 		tree.updateWithNewResponsesAndPropagate(X_y, y_trans, p); //no need for new y vector (which is usually the residuals from other trees)
 		cgm_trees.add(tree);
 		gibbs_samples_of_cgm_trees.set(sample_num, cgm_trees);

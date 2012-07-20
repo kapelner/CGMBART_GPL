@@ -29,9 +29,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import GemIdentClassificationEngine.DatumSetupForEntireRun;
-import GemIdentStatistics.Classifier;
-import GemIdentView.JProgressBarAndLabel;
 
 public abstract class ClassificationAndRegressionTree extends Classifier {
 	private static final long serialVersionUID = 3362976822356958024L;
@@ -39,13 +36,8 @@ public abstract class ClassificationAndRegressionTree extends Classifier {
 	/** This is the root of the Decision Tree, the only thing that is 
 	 * saved during serialization, you must override this field! */
 	protected TreeNode root;
-	
-	/** serializable happy */
+
 	public ClassificationAndRegressionTree(){}
-	
-	public ClassificationAndRegressionTree(DatumSetupForEntireRun datumSetupForEntireRun, JProgressBarAndLabel buildProgress){
-		super(datumSetupForEntireRun, buildProgress);
-	}
 	
 	/** deletes all records from the tree. Usually a wrapper for a recursive function */
 	public abstract void FlushData();

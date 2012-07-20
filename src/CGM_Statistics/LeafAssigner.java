@@ -24,6 +24,8 @@
 
 package CGM_Statistics;
 
+import CGM_BART.CGMBARTTreeNode;
+
 public interface LeafAssigner {
-	public abstract void assignLeaf(CGMTreeNode node);
+	public abstract void assignLeaf(CGMBARTTreeNode node);
 }

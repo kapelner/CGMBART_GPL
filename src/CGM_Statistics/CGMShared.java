@@ -24,6 +24,8 @@
 
 package CGM_Statistics;
 
+import CGM_BART.CGMBARTTreeNode;
+
 public class CGMShared {
 	
 	
@@ -33,7 +35,7 @@ public class CGMShared {
 	/**
 	 * Assign classes to the leaves... do it recursively...
 	 */
-	public static void assignLeaves(CGMTreeNode node, LeafAssigner leaf_assigner) {
+	public static void assignLeaves(CGMBARTTreeNode node, LeafAssigner leaf_assigner) {
 //		System.out.println("fill in leaves b = " + CGMTreeNode.numTerminalNodes(node));
 		if (node.isLeaf){
 			leaf_assigner.assignLeaf(node);

@@ -29,12 +29,13 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FilenameFilter;
 import java.text.NumberFormat;
 import java.util.HashMap;
 
 import javax.media.jai.JAI;
 
-import GemIdentTools.Thumbnails;
+import CGM_BART.CGMBARTTreeNode;
 
 public class TreeIllustration {
 
@@ -55,7 +56,7 @@ public class TreeIllustration {
 	}
 	
 	/** the root of the tree we're illustrating */
-	private CGMTreeNode root;
+	private CGMBARTTreeNode root;
 	/** the illustration image */
 	private BufferedImage canvas;
 
@@ -63,7 +64,7 @@ public class TreeIllustration {
 	private int depth_in_num_splits;
 	private HashMap<String, String> info;
 
-	public TreeIllustration(CGMTreeNode root, HashMap<String, String> info) {
+	public TreeIllustration(CGMBARTTreeNode root, HashMap<String, String> info) {
 		this.root = root;
 		this.info = info;
 		calculateBreadthAndDepthAndThickness();
@@ -135,9 +136,35 @@ public class TreeIllustration {
 			canvas.getGraphics().drawString(iter_info + tree_info + lik_info, draw_x, 15);
 		}
 	}
+	
+	/**
+	 * This {@link java.io.FilenameFilter file filter} returns
+	 * only image files of type "jpg", "tif", "tiff, and "bmp"
+	 *
+	 */
+	public static class ImageFileFilter implements FilenameFilter{
+		/**
+		 * Given a file, returns true if it is an image
+		 * 
+		 * @param dir		the directory the file is located in
+		 * @param name		the file itself
+		 * @return			whether or not the file is an image
+		 */
+		public boolean accept(File dir, String name) {
+			String[] fileparts=name.split("\\.");
+			if (fileparts.length >= 2){
+				String ext=fileparts[fileparts.length - 1].toLowerCase();
+				if (ext.equals("jpg") || ext.equals("tif") || ext.equals("tiff") || ext.equals("TIFF") || ext.equals("bmp") || ext.equals("png"))
+					return true;
+				else 
+					return false;
+			}
+			else return false;
+		}		
+	}	
 
 	public static void DeletePreviousTreeIllustrations(){
-		 String[] image_filenames = new File(CGMShared.DEBUG_DIR).list(new Thumbnails.ImageFileFilter());
+		 String[] image_filenames = new File(CGMShared.DEBUG_DIR).list(new ImageFileFilter());
 		 for (String filename : image_filenames){
 			 new File(CGMShared.DEBUG_DIR, filename).delete();
 		 }
@@ -168,18 +195,18 @@ public class TreeIllustration {
 		}
 	}	
 
-	private void drawSplit(CGMTreeNode node, int x, int y) {
+	private void drawSplit(CGMBARTTreeNode node, int x, int y) {
 //		System.out.println("node:" + node.stringID() + " leaf:" + node.isLeaf + " left: " + node.left + " right:" + node.right);
 		Graphics g = canvas.getGraphics();
 		if (node.isLeaf && node.y_prediction != null){
 			String pred = two_digit_format.format(node.prediction_untransformed());//;
 			int draw_x = (int)Math.round(x - pred.length() / 2.0 * character_width_in_px);
-			g.drawString(pred + " (" + node.n + ") ", draw_x, y + 16);
+			g.drawString(pred + " (" + node.n_at_this_juncture + ") ", draw_x, y + 16);
 		}
 		else if (node.splitAttributeM != null && node.splitValue != null) {
 			int attr = node.splitAttributeM;
 			double val = node.splitValue;
-			String rule_and_n = "X_" + (attr + 1) + " < " + two_digit_format.format(val) + " (" + node.n + ") " + two_digit_format.format(node.avg_response_untransformed());
+			String rule_and_n = "X_" + (attr + 1) + " < " + two_digit_format.format(val) + " (" + node.n_at_this_juncture + ") " + two_digit_format.format(node.avg_response_untransformed());
 			int draw_x = (int)Math.round(x - rule_and_n.length() / 2.0 * character_width_in_px);
 			g.drawString(rule_and_n, draw_x, y - 5);
 			draw_x = (int)Math.round(x - node.stringID().length() / 2.0 * character_width_in_px);

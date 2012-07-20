@@ -2,16 +2,13 @@ package CGM_BART_DEBUG;
 
 import java.util.ArrayList;
 
-import GemIdentClassificationEngine.DatumSetupForEntireRun;
-import GemIdentView.JProgressBarAndLabel;
 import CGM_BART.*;
-import CGM_Statistics.CGMTreeNode;
 
 public class CGMBART_FixedSigsqAndTreeStructureJustChanges extends CGMBART {
 	private static final long serialVersionUID = 3460935328647793073L;
 	
-	public CGMBART_FixedSigsqAndTreeStructureJustChanges(DatumSetupForEntireRun datumSetupForEntireRun, JProgressBarAndLabel buildProgress) {
-		super(datumSetupForEntireRun, buildProgress);
+	public CGMBART_FixedSigsqAndTreeStructureJustChanges() {
+		super();
 		System.out.println("CGMBART_Alt init\n");
 		setNumTrees(1); //in this DEBUG model, there's only one tree
 //		printTreeIllustations();
@@ -20,7 +17,7 @@ public class CGMBART_FixedSigsqAndTreeStructureJustChanges extends CGMBART {
 	public void setData(ArrayList<double[]> X_y){
 		super.setData(X_y);
 		//this posterior builder will be shared throughout the entire process
-		posterior_builder = new CGMBARTPosteriorBuilder(tree_prior_builder);
+		posterior_builder = new CGMBARTPosteriorBuilder(this);
 		//we have to set the CGM98 hyperparameters as well as the hyperparameter sigsq_mu
 		posterior_builder.setHyperparameters(hyper_mu_mu, hyper_sigsq_mu);
 	}
@@ -40,8 +37,8 @@ public class CGMBART_FixedSigsqAndTreeStructureJustChanges extends CGMBART {
 
 	//start the tree with no information
 	protected void InitiatizeTrees() {
-		ArrayList<CGMTreeNode> cgm_trees = new ArrayList<CGMTreeNode>(num_trees);
-		CGMTreeNode tree = CreateTheSimpleTreeModel();
+		ArrayList<CGMBARTTreeNode> cgm_trees = new ArrayList<CGMBARTTreeNode>(num_trees);
+		CGMBARTTreeNode tree = CreateTheSimpleTreeModel();
 		tree.splitAttributeM = 0;
 		tree.splitValue = 0.0;
 		tree.left.splitAttributeM = 0;

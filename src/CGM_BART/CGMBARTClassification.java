@@ -24,10 +24,6 @@
 
 package CGM_BART;
 
-import GemIdentClassificationEngine.DatumSetupForEntireRun;
-import GemIdentTools.IOTools;
-import GemIdentView.JProgressBarAndLabel;
-
 public final class CGMBARTClassification extends CGMBART {
 	private static final long serialVersionUID = -9061432248755912576L;
 	
@@ -39,8 +35,8 @@ public final class CGMBARTClassification extends CGMBART {
 	 * @param datumSetup
 	 * @param buildProgress
 	 */
-	public CGMBARTClassification(DatumSetupForEntireRun datumSetupForEntireRun, JProgressBarAndLabel buildProgress, int K) {
-		super(datumSetupForEntireRun, buildProgress);
+	public CGMBARTClassification(int K) {
+		super();
 //		this.K = K;
 	}	
 	
@@ -70,7 +66,7 @@ public final class CGMBARTClassification extends CGMBART {
 			double[] ppi = get95PctPostPredictiveIntervalForPrediction(record);
 			double[] samples = getGibbsSamplesForPrediction(record);
 			int inside = (y >= ppi[0] && y <= ppi[1]) ? 1 : 0;
-			output.println(y + "," + yhat + "," + ppi[0] + "," + ppi[1] + "," + inside + "," + IOTools.StringJoin(samples, ","));
+			output.println(y + "," + yhat + "," + ppi[0] + "," + ppi[1] + "," + inside + "," + Tools.StringJoin(samples, ","));
 		}		
 		output.close();
 	}

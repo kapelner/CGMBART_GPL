@@ -40,11 +40,11 @@ public class CGMBARTPosteriorBuilder {
 
 	private double hyper_sigsq_mu;
 	private double sigsq;
-	private CGMBARTPriorBuilder tree_prior_builder;
+	private CGMBART cgmbart;
 	
 	
-	public CGMBARTPosteriorBuilder(CGMBARTPriorBuilder tree_prior_builder) {
-		this.tree_prior_builder = tree_prior_builder;
+	public CGMBARTPosteriorBuilder(CGMBART cgmbart) {
+		this.cgmbart = cgmbart;
 	}
 	
 	public void setHyperparameters(double hyper_mu_bar, double hyper_sigsq_mu){
@@ -60,9 +60,9 @@ public class CGMBARTPosteriorBuilder {
 	 * @param iteration_name	we just use this when naming the image file of this illustration
 	 * @return 					the next tree (T_{i+1}) via one iteration of M-H
 	 */
-	public CGMTreeNode iterateMHPosteriorTreeSpaceSearch(CGMTreeNode T_i) {
+	public CGMBARTTreeNode iterateMHPosteriorTreeSpaceSearch(CGMBARTTreeNode T_i) {
 //		System.out.println("iterateMHPosteriorTreeSpaceSearch");
-		final CGMTreeNode T_star = T_i.clone(true);
+		final CGMBARTTreeNode T_star = T_i.clone(true);
 		//each proposal will calculate its own value, but this has to be initialized atop		
 		double log_r = 0;
 		switch (randomlyPickAmongTheTwoProposalSteps(T_i)){
@@ -90,9 +90,9 @@ public class CGMBARTPosteriorBuilder {
 		return T_i;
 	}
 
-	private double doMHGrowAndCalcLnR(CGMTreeNode T_i, CGMTreeNode T_star) {
+	private double doMHGrowAndCalcLnR(CGMBARTTreeNode T_i, CGMBARTTreeNode T_star) {
 		System.out.println("doMHGrowAndCalcLnR on " + T_star.stringID() + " old depth: " + T_star.deepestNode());
-		CGMTreeNode grow_node = pickGrowNode(T_star);
+		CGMBARTTreeNode grow_node = pickGrowNode(T_star);
 		//if we can't grow, reject offhand
 		if (grow_node == null || grow_node.generation >= 2){
 			System.out.println("proposal ln(r) = -oo DUE TO CANNOT GROW\n\n");
@@ -107,9 +107,9 @@ public class CGMBARTPosteriorBuilder {
 		return ln_transition_ratio_grow + ln_likelihood_ratio_grow + ln_tree_structure_ratio_grow;
 	}
 	
-	private double doMHPruneAndCalcLnR(CGMTreeNode T_i, CGMTreeNode T_star) {
+	private double doMHPruneAndCalcLnR(CGMBARTTreeNode T_i, CGMBARTTreeNode T_star) {
 		System.out.println("doMHPruneAndCalcLnR");
-		CGMTreeNode prune_node = pickPruneNode(T_star);
+		CGMBARTTreeNode prune_node = pickPruneNode(T_star);
 		//if we can't grow, reject offhand
 		if (prune_node == null){
 			System.out.println("proposal ln(r) = -oo DUE TO CANNOT PRUNE\n\n");
@@ -118,11 +118,11 @@ public class CGMBARTPosteriorBuilder {
 		double ln_transition_ratio_prune = calcLnTransRatioPrune(T_i, T_star, prune_node);
 		double ln_likelihood_ratio_prune = -calcLnLikRatioGrow(prune_node); //inverse of before (will speed up later)
 		double ln_tree_structure_ratio_prune = -calcLnTreeStructureRatioGrow(prune_node);
-		CGMTreeNode.pruneTreeAt(prune_node);
+		CGMBARTTreeNode.pruneTreeAt(prune_node);
 		return ln_transition_ratio_prune + ln_likelihood_ratio_prune + ln_tree_structure_ratio_prune;
 	}	
 	
-	private CGMTreeNode pickPruneNode(CGMTreeNode T) {
+	private CGMBARTTreeNode pickPruneNode(CGMBARTTreeNode T) {
 		
 		//2 checks
 		//a) If this is the root, we can't prune so return null
@@ -133,7 +133,7 @@ public class CGMBARTPosteriorBuilder {
 			return null;			
 		}
 		
-		ArrayList<CGMTreeNode> prunable_nodes = CGMTreeNode.getPrunableNodes(T);
+		ArrayList<CGMBARTTreeNode> prunable_nodes = CGMBARTTreeNode.getPrunableNodes(T);
 		if (prunable_nodes.size() == 0){
 			System.out.println("no prune nodes in PRUNE step!  T parent: " + T.parent + " T left: " + T.left + " T right: " + T.right);
 			return null;
@@ -144,7 +144,7 @@ public class CGMBARTPosteriorBuilder {
 	}
 	
 
-	private double calcLnTransRatioPrune(CGMTreeNode T_i, CGMTreeNode T_star, CGMTreeNode prune_node) {
+	private double calcLnTransRatioPrune(CGMBARTTreeNode T_i, CGMBARTTreeNode T_star, CGMBARTTreeNode prune_node) {
 		int w_2 = T_i.numPruneNodesAvailable();
 		int b = T_i.numLeaves();
 		int p_adj = prune_node.pAdj();
@@ -152,24 +152,20 @@ public class CGMBARTPosteriorBuilder {
 		return Math.log(w_2) - Math.log(b - 1) - Math.log(p_adj) - Math.log(n_adj); 
 	}
 
-	private void growNode(CGMTreeNode node) {
+	private void growNode(CGMBARTTreeNode grow_node) {
 		//we already assume the node can grow, now we just have to pick an attribute and split point
-		node.splitAttributeM = node.pickRandomPredictorThatCanBeAssigned();
-		node.possible_split_values = tree_prior_builder.possibleSplitValues(node);
-		node.splitValue = node.pickRandomSplitValue();
-		node.isLeaf = false;
-		node.left = new CGMTreeNode(node, null);
-		node.right = new CGMTreeNode(node, null);
-		CGMTreeNode.propagateRuleChangeOrSwapThroughoutTree(node, true);
-		//now cache the predictors that can be assigned for future use		
-		node.left.predictors_that_can_be_assigned = tree_prior_builder.predictorsThatCouldBeUsedToSplitAtNode(node.left);			
-		node.right.predictors_that_can_be_assigned = tree_prior_builder.predictorsThatCouldBeUsedToSplitAtNode(node.right);
+		grow_node.splitAttributeM = grow_node.pickRandomPredictorThatCanBeAssigned();
+		grow_node.splitValue = grow_node.pickRandomSplitValue();
+		grow_node.isLeaf = false;
+		grow_node.left = new CGMBARTTreeNode(grow_node);
+		grow_node.right = new CGMBARTTreeNode(grow_node);
+		CGMBARTTreeNode.propagateRuleChangeOrSwapThroughoutTree(grow_node, true);
 	}
 
 
-	private double calcLnTreeStructureRatioGrow(CGMTreeNode grow_node) {
-		double alpha = tree_prior_builder.getAlpha();
-		double beta = tree_prior_builder.getBeta();
+	private double calcLnTreeStructureRatioGrow(CGMBARTTreeNode grow_node) {
+		double alpha = cgmbart.getAlpha();
+		double beta = cgmbart.getBeta();
 		int d_eta = grow_node.generation;
 		int p_eta = grow_node.pAdj();
 		int n_eta = grow_node.nAdj();
@@ -179,7 +175,7 @@ public class CGMBARTPosteriorBuilder {
 				- Math.log(p_eta) - Math.log(n_eta);
 	}
 
-	private double calcLnLikRatioGrow(CGMTreeNode grow_node) {
+	private double calcLnLikRatioGrow(CGMBARTTreeNode grow_node) {
 		int n_ell = grow_node.getN();
 		int n_ell_L = grow_node.left.getN();
 		int n_ell_R = grow_node.right.getN();
@@ -201,12 +197,13 @@ public class CGMBARTPosteriorBuilder {
 		return c + d * e;
 	}
 
-	private double calcLnTransRatioGrow(CGMTreeNode T_i, CGMTreeNode T_star, CGMTreeNode grow_node) {
+	private double calcLnTransRatioGrow(CGMBARTTreeNode T_i, CGMBARTTreeNode T_star, CGMBARTTreeNode grow_node) {
 		int b = T_i.numLeaves();
 		int p_adj = grow_node.pAdj();
 		int n_adj = grow_node.nAdj();
 		int w_2_star = T_star.numPruneNodesAvailable();
-		return Math.log(b) + Math.log(p_adj) + Math.log(n_adj) - Math.log(w_2_star); 
+		int n_repeat = grow_node.splitValuesRepeated();
+		return Math.log(b) + Math.log(p_adj) + Math.log(n_adj) - Math.log(w_2_star) - Math.log(n_repeat); 
 	}
 
 	protected boolean acceptProposal(double ln_u_0_1, double log_r){
@@ -242,8 +239,8 @@ public class CGMBARTPosteriorBuilder {
 	/** The number of data points in a node that we can split on */
 	protected static final int N_RULE = 5;	
 
-	protected CGMTreeNode pickGrowNode(CGMTreeNode T) {
-		ArrayList<CGMTreeNode> growth_nodes = CGMTreeNode.getTerminalNodesWithDataAboveOrEqualToN(T, N_RULE);
+	protected CGMBARTTreeNode pickGrowNode(CGMBARTTreeNode T) {
+		ArrayList<CGMBARTTreeNode> growth_nodes = CGMBARTTreeNode.getTerminalNodesWithDataAboveOrEqualToN(T, N_RULE);
 		
 		//2 checks
 		//a) If there is no nodes to grow, return null
@@ -256,10 +253,8 @@ public class CGMBARTPosteriorBuilder {
 		}		
 		
 		//now we pick one of these nodes with enough data points randomly
-		CGMTreeNode growth_node = growth_nodes.get((int)Math.floor(StatToolbox.rand() * growth_nodes.size()));
-		//find which predictors can be used
-//		System.out.println("created predictors_that_can_be_assigned grow_node " + growth_node.stringID());
-		growth_node.predictors_that_can_be_assigned = tree_prior_builder.predictorsThatCouldBeUsedToSplitAtNode(growth_node);
+		CGMBARTTreeNode growth_node = growth_nodes.get((int)Math.floor(StatToolbox.rand() * growth_nodes.size()));
+
 		//do check b
 		if (growth_node.pAdj() == 0){
 			System.out.println("no attributes available in GROW step!");
@@ -269,7 +264,7 @@ public class CGMBARTPosteriorBuilder {
 		return growth_node;
 	}
 	
-	protected Steps randomlyPickAmongTheTwoProposalSteps(CGMTreeNode T) {
+	protected Steps randomlyPickAmongTheTwoProposalSteps(CGMBARTTreeNode T) {
 		double roll = StatToolbox.rand();
 		if (roll < 0.5)
 			return Steps.GROW;

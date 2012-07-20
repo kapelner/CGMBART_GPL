@@ -28,9 +28,7 @@ import java.io.File;
 import java.io.IOException;
 
 import CGM_BART.*;
-
-import GemIdentStatistics.Classifier;
-import GemIdentView.JProgressBarAndLabel;
+import CGM_Statistics.Classifier;
 
 public class DataAnalysis {
 	
@@ -54,7 +52,7 @@ public class DataAnalysis {
 		//if the filename begins with a "c" => classification task, if it begins with an "r" => regression task
 		if (DataSetFilename.charAt(0) == 'c'){ //classification problem
 //			CGMClassificationTree tree = new CGMClassificationTree(data, new JProgressBarAndLabel(0, 0, null), data.getK());
-			machine = new CGMBARTClassification(data, new JProgressBarAndLabel(0, 0, null), data.getK());
+			machine = new CGMBARTClassification(data.getK());
 			machine.setData(data.getX_y());
 			machine.Build();
 			System.out.println("errors: " + (int)machine.calculateInSampleLoss(Classifier.ErrorTypes.MISCLASSIFICATION) + "/" + machine.getN() + "  (" + machine.calculateMisclassificationRate() + "%)");
@@ -62,7 +60,7 @@ public class DataAnalysis {
 		else { //regression problem
 //			machine = new RandomForest(data, new JProgressBarAndLabel(0, 0, null));
 //			for (int num_times = 0; num_times < 100; num_times++){
-				machine = new CGMBARTRegression(data, new JProgressBarAndLabel(0, 0, null));
+				machine = new CGMBARTRegression();
 				machine.setData(data.getX_y());
 				machine.Build();
 				System.out.println("L1 error: " + Math.round(machine.calculateInSampleLoss(Classifier.ErrorTypes.L1)) + " L2 error: " + Math.round(machine.calculateInSampleLoss(Classifier.ErrorTypes.L2)));

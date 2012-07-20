@@ -36,7 +36,7 @@ import CGM_Statistics.*;
 public class TreeArrayIllustration {
 
 	private int sample_num;
-	private ArrayList<CGMTreeNode> trees;
+	private ArrayList<CGMBARTTreeNode> trees;
 	private ArrayList<Double> likelihoods;
 	
 	public static NumberFormat one_digit_format = NumberFormat.getInstance();
@@ -46,11 +46,11 @@ public class TreeArrayIllustration {
 
 	public TreeArrayIllustration(int sample_num) {
 		this.sample_num = sample_num;
-		trees = new ArrayList<CGMTreeNode>();
+		trees = new ArrayList<CGMBARTTreeNode>();
 		likelihoods = new ArrayList<Double>();
 	}
 
-	public void AddTree(CGMTreeNode tree) {
+	public void AddTree(CGMBARTTreeNode tree) {
 		trees.add(tree);
 	}
 
@@ -65,7 +65,7 @@ public class TreeArrayIllustration {
 		int h = Integer.MIN_VALUE;
 		ArrayList<BufferedImage> canvases = new ArrayList<BufferedImage>(m);
 		for (int t = 0; t < m; t++){
-			CGMTreeNode tree = trees.get(t);
+			CGMBARTTreeNode tree = trees.get(t);
 			HashMap<String, String> info = new HashMap<String, String>();
 			info.put("tree_num", "" + (t + 1));
 			info.put("num_iteration", "" + sample_num);

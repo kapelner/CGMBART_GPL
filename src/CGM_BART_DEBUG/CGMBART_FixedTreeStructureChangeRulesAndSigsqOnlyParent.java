@@ -2,15 +2,13 @@ package CGM_BART_DEBUG;
 
 import java.util.ArrayList;
 
-import GemIdentClassificationEngine.DatumSetupForEntireRun;
-import GemIdentView.JProgressBarAndLabel;
 import CGM_BART.*;
 
 public class CGMBART_FixedTreeStructureChangeRulesAndSigsqOnlyParent extends CGMBART_FixedTreeStructureChangeRulesAndSigsq {
 	private static final long serialVersionUID = 3460935328647793073L;	
 		
-	public CGMBART_FixedTreeStructureChangeRulesAndSigsqOnlyParent(DatumSetupForEntireRun datumSetupForEntireRun, JProgressBarAndLabel buildProgress) {
-		super(datumSetupForEntireRun, buildProgress);
+	public CGMBART_FixedTreeStructureChangeRulesAndSigsqOnlyParent() {
+		super();
 		System.out.println("CGMBART_Alt init\n");
 		setNumTrees(1); //in this DEBUG model, there's only one tree
 //		printTreeIllustations();
@@ -19,7 +17,7 @@ public class CGMBART_FixedTreeStructureChangeRulesAndSigsqOnlyParent extends CGM
 	public void setData(ArrayList<double[]> X_y){
 		super.setData(X_y);
 		//this posterior builder will be shared throughout the entire process
-		posterior_builder = new CGMBARTPosteriorBuilder(tree_prior_builder);
+		posterior_builder = new CGMBARTPosteriorBuilder(this);
 		//we have to set the CGM98 hyperparameters as well as the hyperparameter sigsq_mu
 		posterior_builder.setHyperparameters(hyper_mu_mu, hyper_sigsq_mu);
 		//set sigsq
