@@ -28,7 +28,7 @@ public class TreeTest {
 	static {
 		data = new ArrayList<double[]>();
 		CGMBART bart = new CGMBARTRegression();
-		bart.setData(data);
+		
 		double[] x_0 = {0, 1, 0, 1, 0, 1, 0};
 		double[] x_1 = {15.3, 45.8, 31.2, 9.3, 65.9, 32.3, 9.3};
 		double[] x_2 = {1, 1, 1, 1, 0, 0, 0};
@@ -36,6 +36,7 @@ public class TreeTest {
 			double datum[] = {x_0[i], x_1[i], x_2[i], y[i]};
 			data.add(datum);
 		}
+		bart.setData(data);
 		
 		stump = new CGMBARTTreeNode(null, data, bart);
 		
@@ -176,7 +177,7 @@ public class TreeTest {
 		Integer[] all_predictors = {0, 1, 2};
 		assertArrayEquals(simple_tree.predictorsThatCouldBeUsedToSplitAtNode().toArray(), all_predictors);
 		assertEquals(simple_tree.pAdj(), 3);
-		Object[] vals_to_split = {0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0};
+		Object[] vals_to_split = {1.0, 1.0, 1.0}; //remember we can't split on 0 because it's the min value
 		assertArrayEquals(simple_tree.possibleSplitValuesGivenAttribute().toArray(), vals_to_split);
 		assertEquals(simple_tree.pAdj(), 3);
 		//now go into the leaves and see what else we can split on
@@ -217,10 +218,10 @@ public class TreeTest {
 	public void testDoubleTreeNadj(){
 		CGMBARTTreeNode double_tree_ext = buildDoubleTreeExt();
 		
-		assertEquals(double_tree_ext.nAdj(), 7);
-		assertEquals(double_tree_ext.right.nAdj(), 7);
-		assertEquals(double_tree_ext.left.nAdj(), 7);
-		assertEquals(double_tree_ext.left.left.nAdj(), 4);
+		assertEquals(double_tree_ext.nAdj(), 3);
+		assertEquals(double_tree_ext.right.nAdj(), 4);
+		assertEquals(double_tree_ext.left.nAdj(), 5);
+		assertEquals(double_tree_ext.left.left.nAdj(), 2);
 	}	
 
 	

@@ -83,6 +83,8 @@ public abstract class Classifier implements Serializable {
 	public void setData(ArrayList<double[]> X_y){
 		this.X_y = X_y;
 		n = X_y.size();
+		p = X_y.get(0).length - 1;
+		System.out.println("setData n:" + n + " p:" + p);
 		y = extractResponseFromRawData(X_y);
 		y_trans = new double[y.length];
 //		for (int i = 0; i < n; i++){

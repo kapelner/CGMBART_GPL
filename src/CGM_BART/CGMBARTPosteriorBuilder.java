@@ -94,7 +94,7 @@ public class CGMBARTPosteriorBuilder {
 		System.out.println("doMHGrowAndCalcLnR on " + T_star.stringID() + " old depth: " + T_star.deepestNode());
 		CGMBARTTreeNode grow_node = pickGrowNode(T_star);
 		//if we can't grow, reject offhand
-		if (grow_node == null || grow_node.generation >= 2){
+		if (grow_node == null){ // || grow_node.generation >= 2
 			System.out.println("proposal ln(r) = -oo DUE TO CANNOT GROW\n\n");
 			return Double.NEGATIVE_INFINITY;					
 		}
@@ -149,7 +149,8 @@ public class CGMBARTPosteriorBuilder {
 		int b = T_i.numLeaves();
 		int p_adj = prune_node.pAdj();
 		int n_adj = prune_node.nAdj();
-		return Math.log(w_2) - Math.log(b - 1) - Math.log(p_adj) - Math.log(n_adj); 
+		int n_repeat = prune_node.splitValuesRepeated();
+		return Math.log(w_2) + Math.log(n_repeat) - Math.log(b - 1) - Math.log(p_adj) - Math.log(n_adj); 
 	}
 
 	private void growNode(CGMBARTTreeNode grow_node) {
@@ -167,12 +168,15 @@ public class CGMBARTPosteriorBuilder {
 		double alpha = cgmbart.getAlpha();
 		double beta = cgmbart.getBeta();
 		int d_eta = grow_node.generation;
-		int p_eta = grow_node.pAdj();
-		int n_eta = grow_node.nAdj();
+		int p_adj = grow_node.pAdj();
+		int n_adj = grow_node.nAdj();
+		int n_repeat = grow_node.splitValuesRepeated();
 		return Math.log(alpha) 
 				+ 2 * Math.log(1 - alpha / Math.pow(2 + d_eta, beta))
+				+ Math.log(n_repeat)
 				- Math.log(Math.pow(1 + d_eta, beta) - alpha)
-				- Math.log(p_eta) - Math.log(n_eta);
+				- Math.log(p_adj) 
+				- Math.log(n_adj);
 	}
 
 	private double calcLnLikRatioGrow(CGMBARTTreeNode grow_node) {

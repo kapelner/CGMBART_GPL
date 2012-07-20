@@ -547,7 +547,7 @@ public class CGMBARTTreeNode extends TreeNode implements Cloneable, Serializable
 			//okay we can only add a predictor here if we don't see the minimum 
 			//value in any of the nodes above split rules
 			boolean can_use = true;
-//			System.out.println("predictorsThatCouldBeUsedToSplitAtNode" + node);
+//			System.out.println("predictorsThatCouldBeUsedToSplitAtNode" + this.stringLocation(true));
 			for (CGMBARTTreeNode father : this.getLineage()){
 //				System.out.println("father " + father.stringLocation(true) + " j " + father.splitAttributeM + " val " + father.splitValue);
 				if (father.splitAttributeM == j && father.splitValue == cgmbart.minimum_values_by_attribute[j]){
@@ -581,10 +581,10 @@ public class CGMBARTTreeNode extends TreeNode implements Cloneable, Serializable
 		
 		//now we need to look in the design matrix and see what values are available
 		ArrayList<Double> possible_values = new ArrayList<Double>();
-		System.out.println("possibleSplitValuesGivenAttribute cgmbart.getN(): " + cgmbart.getN());
+//		System.out.println("possibleSplitValuesGivenAttribute cgmbart.getN(): " + cgmbart.getN());
 		for (int i = 0; i < cgmbart.getN(); i++){
 			double split_val = cgmbart.getData().get(i)[this.splitAttributeM];
-			System.out.println("possibleSplitValuesGivenAttribute split_val: " + split_val);
+//			System.out.println("possibleSplitValuesGivenAttribute split_val: " + split_val);
 			if (split_val < min_split_value_lineage && split_val != abs_min_split_val){
 				possible_values.add(cgmbart.getData().get(i)[this.splitAttributeM]);
 			}
@@ -613,12 +613,14 @@ public class CGMBARTTreeNode extends TreeNode implements Cloneable, Serializable
 	}	
 
 	public Double pickRandomSplitValue() {
-		int n_adj = possible_split_values.size();
+		int n_adj = nAdj();
 		return possible_split_values.get((int) Math.floor(StatToolbox.rand() * n_adj));
 	}
 	
 
 	public int splitValuesRepeated() {
+		System.out.println("splitValuesRepeated j = " + this.splitAttributeM + " x_ij = " + this.splitValue);
+		System.out.println("freq: " + cgmbart.frequencyValueForAttribute(this.splitAttributeM, this.splitValue));
 		return cgmbart.frequencyValueForAttribute(this.splitAttributeM, this.splitValue);
 	}	
 
