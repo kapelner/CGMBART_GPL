@@ -10,7 +10,6 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 
-import CGM_BART.CGMBART;
 import CGM_BART.CGMBARTRegression;
 import CGM_BART.CGMBARTTreeNode;
 
@@ -23,11 +22,13 @@ public class TreeTest {
 	public static CGMBARTTreeNode stump;	
 	public static CGMBARTTreeNode simple_tree;
 	public static CGMBARTTreeNode double_tree;
+
+	public static CGMBARTRegression bart;
 	
 	
 	static {
 		data = new ArrayList<double[]>();
-		CGMBART bart = new CGMBARTRegression();
+		bart = new CGMBARTRegression();
 		
 		double[] x_0 = {0, 1, 0, 1, 0, 1, 0};
 		double[] x_1 = {15.3, 45.8, 31.2, 9.3, 65.9, 32.3, 9.3};

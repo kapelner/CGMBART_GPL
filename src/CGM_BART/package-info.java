@@ -22,9 +22,8 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-package CGM_BART;
-
 /**
  * The code for the implementation of the BART algorithm 
  * as described in Annals of Applied Statistics, 2010 
  */
+package CGM_BART;

@@ -17,12 +17,12 @@ public class CGMBART_FixedTreeAndMus extends CGMBART {
 	//only the simple tree
 	protected void InitiatizeTrees() {
 		ArrayList<CGMBARTTreeNode> cgm_trees = new ArrayList<CGMBARTTreeNode>(num_trees);
-		cgm_trees.add(CreateTheSimpleTreeModel());	
+		cgm_trees.add(CGMBART_FixedTree.CreateTheSimpleTreeModel(this));	
 		gibbs_samples_of_cgm_trees.add(0, cgm_trees);		
 	}
 
 	protected void SampleTree(int sample_num, int t, ArrayList<CGMBARTTreeNode> cgm_trees, TreeArrayIllustration tree_array_illustration) {
-		CGMBARTTreeNode tree = CreateTheSimpleTreeModel();
+		CGMBARTTreeNode tree = CGMBART_FixedTree.CreateTheSimpleTreeModel(this);
 		tree.updateWithNewResponsesAndPropagate(X_y, y_trans, p); //no need for new y vector (which is usually the residuals from other trees)
 		cgm_trees.add(tree);
 		gibbs_samples_of_cgm_trees.set(sample_num, cgm_trees);

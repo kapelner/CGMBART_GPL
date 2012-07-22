@@ -91,7 +91,7 @@ public class TreeArrayIllustration {
 	
 	private void saveImageFile(BufferedImage image) {
 		String title = "BART_trees_iter_" + LeadingZeroes(sample_num, 5);
-		JAI.create("filestore", image, CGMShared.DEBUG_DIR + "//" + title + ".png", "PNG");
+		JAI.create("filestore", image, CGMBART_debug.DEBUG_DIR + "//" + title + ".png", "PNG");
 	}
 	
 	private static final String ZEROES = "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";

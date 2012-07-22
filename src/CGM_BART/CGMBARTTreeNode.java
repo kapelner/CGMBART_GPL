@@ -59,8 +59,6 @@ public class CGMBARTTreeNode extends TreeNode implements Cloneable, Serializable
 	public int generation;
 	/** the amount of data points at this node */
 	public int n_at_this_juncture;
-	/** keep the log proportional likelihood of this tree around, if null, must be computed */
-	public Double log_prop_lik;
 
 	public ArrayList<Integer> predictors_that_can_be_assigned;
 	public ArrayList<Double> possible_split_values;
@@ -132,7 +130,6 @@ public class CGMBARTTreeNode extends TreeNode implements Cloneable, Serializable
 		copy.splitValue = splitValue;
 		copy.klass = klass;	
 		copy.n_at_this_juncture = n_at_this_juncture;
-		copy.log_prop_lik = log_prop_lik;
 		copy.predictors_that_can_be_assigned = predictors_that_can_be_assigned;
 		copy.possible_split_values = possible_split_values;
 		return copy;
@@ -463,10 +460,6 @@ public class CGMBARTTreeNode extends TreeNode implements Cloneable, Serializable
 			return "x_" + split + "  <  " + value;
 		}
 	}
-
-	public void initLogPropLik() {
-		this.log_prop_lik = 0.0;
-	}
 	
 	public Double get_pred_for_nth_leaf(int leaf_num) {
 		String leaf_num_binary = Integer.toBinaryString(leaf_num);
@@ -550,7 +543,7 @@ public class CGMBARTTreeNode extends TreeNode implements Cloneable, Serializable
 //			System.out.println("predictorsThatCouldBeUsedToSplitAtNode" + this.stringLocation(true));
 			for (CGMBARTTreeNode father : this.getLineage()){
 //				System.out.println("father " + father.stringLocation(true) + " j " + father.splitAttributeM + " val " + father.splitValue);
-				if (father.splitAttributeM == j && father.splitValue == cgmbart.minimum_values_by_attribute[j]){
+				if (father.splitAttributeM == j && father.splitValue == cgmbart.getMinimum_values_by_attribute()[j]){
 					can_use = false;
 					break;
 				}
@@ -571,7 +564,7 @@ public class CGMBARTTreeNode extends TreeNode implements Cloneable, Serializable
 			}
 		}
 		
-		double abs_min_split_val = cgmbart.minimum_values_by_attribute[this.splitAttributeM];
+		double abs_max_split_val = cgmbart.maximum_values_by_attribute[this.splitAttributeM];
 		double min_split_value_lineage = Double.MAX_VALUE;
 		for (int i = 0; i < previous_split_points.size(); i++){
 			if (previous_split_points.get(i) < min_split_value_lineage){
@@ -585,7 +578,7 @@ public class CGMBARTTreeNode extends TreeNode implements Cloneable, Serializable
 		for (int i = 0; i < cgmbart.getN(); i++){
 			double split_val = cgmbart.getData().get(i)[this.splitAttributeM];
 //			System.out.println("possibleSplitValuesGivenAttribute split_val: " + split_val);
-			if (split_val < min_split_value_lineage && split_val != abs_min_split_val){
+			if (split_val < min_split_value_lineage && split_val != abs_max_split_val){
 				possible_values.add(cgmbart.getData().get(i)[this.splitAttributeM]);
 			}
 		}	

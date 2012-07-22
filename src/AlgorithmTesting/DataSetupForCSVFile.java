@@ -36,9 +36,9 @@ public class DataSetupForCSVFile {
 	private final ArrayList<double[]> X_y;
 	private int K;
 	private boolean file_has_header;
-	private int p;
+//	private int p;
 //	private ArrayList<FeatureType> feature_types;
-	private ArrayList<String> feature_names;
+//	private ArrayList<String> feature_names;
 	
 	public DataSetupForCSVFile(File file, boolean header) {
 		X_y = new ArrayList<double[]>();
@@ -72,14 +72,14 @@ public class DataSetupForCSVFile {
 				break;
 			}
 			String[] datums = datum.split(",");
-			p = datums.length - 1;
+//			p = datums.length - 1;
 
 			if (line_num == 0 && file_has_header){
 //				feature_types = new ArrayList<FeatureType>(p);
 //				for (int i = 0; i < p; i++){
 //					feature_types.add(FeatureType.NUMBER); //default for now
 //				}
-				feature_names = new ArrayList<String>(p);
+//				feature_names = new ArrayList<String>(p);
 //				for (int i = 0; i < p; i++){
 //					feature_names.add(datums[i]); //default for now
 //					System.out.println("feature " + (i + 1) + " " + datums[i]);

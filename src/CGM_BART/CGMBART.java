@@ -24,243 +24,27 @@
 
 package CGM_BART;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 
 import CGM_Statistics.*;
 
 @SuppressWarnings("serial")
-public abstract class CGMBART extends Classifier implements Serializable  {
+public abstract class CGMBART extends CGMBART_debug implements Serializable  {
 
-	//do not set this to FALSE!!! The whole thing will break...
-	protected static final boolean TRANSFORM_Y = true;
-	protected static final int DEFAULT_NUM_TREES = 1;
-	//this burn in number needs to be computed via some sort of moving average or time series calculation
-	protected static final int DEFAULT_NUM_GIBBS_BURN_IN = 500;
-	protected static final int DEFAULT_NUM_GIBBS_TOTAL_ITERATIONS = 2000; //this must be larger than the number of burn in!!!
-	
-	private static double ALPHA = 0.95;
-	private static double BETA = 2; //see p271 in CGM10	
-	
-	protected static PrintWriter y_and_y_trans;
-	protected static PrintWriter sigsqs;
-	protected static PrintWriter other_debug;
-	protected static PrintWriter sigsqs_draws;
-	protected static PrintWriter tree_liks;
-	protected static PrintWriter remainings;
-	protected static PrintWriter evaluations;
-	public static PrintWriter mh_iterations_full_record;
-	
-	protected static boolean TREE_ILLUST = true;
-	protected static final boolean WRITE_DETAILED_DEBUG_FILES = false;
-	
-	protected static final String CSVFileFromRName = "bart_data.csv";
-	protected static final String CSVFileFromRDirectory = "datasets";	
-	
-//	static {
-//		Classifier.writeToDebugLog();
-//	}
 
-	static {
-		try {			
-			output = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "output" + DEBUG_EXT)));
-			other_debug = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "other_debug" + DEBUG_EXT)));
-			y_and_y_trans = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "y_and_y_trans" + DEBUG_EXT)));
-			sigsqs = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "sigsqs" + DEBUG_EXT)));
-			sigsqs.println("sample_num,sigsq");
-			sigsqs_draws = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "sigsqs_draws" + DEBUG_EXT)));
-			double[] simu = new double[1000];
-			for (int i = 1; i <= 1000; i++){
-				simu[i-1] = i;
-			}			
-			sigsqs_draws.println("sample_num,nu,lambda,n,sse,realization,corr," + Tools.StringJoin(simu, ","));			
-			tree_liks = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "tree_liks" + DEBUG_EXT)));
-			evaluations = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "evaluations" + DEBUG_EXT)));
-			remainings = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "remainings" + DEBUG_EXT)));
-			tree_liks.print("sample_num,");
-			for (int t = 0; t < DEFAULT_NUM_TREES; t++){
-				tree_liks.print("t_" + t + "_lik,t_" + t + "_id,");
-			}
-			tree_liks.print("\n");
-			mh_iterations_full_record = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "mh_iterations_full_record" + DEBUG_EXT)));
-			mh_iterations_full_record.println(
-					"step" + "," + 
-					"node_to_change" + "," + 
-					"loc" + "," +
-					"a_i" + "," +
-					"v_i" + "," +
-					"a_*" + "," +	
-					"v_*" + "," +
-					"leaf_1_*" + "," + 
-					"leaf_2_*" + "," + 
-					"leaf_3_*" + "," + 
-					"leaf_4_*" + "," + 
-					"tree_*_likelihood" + "," + 
-					"leaf_1_i" + "," + 
-					"leaf_2_i" + "," + 
-					"leaf_3_i" + "," + 
-					"leaf_4_i" + "," + 
-					"tree_i_likelihood" + "," + 	
-					"accept_or_reject" + "," + 
-					"ln_r" + "," +
-					"ln_u_0_1"
-				);			
-			TreeIllustration.DeletePreviousTreeIllustrations();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	/** the actual list of trees */
-	protected ArrayList<ArrayList<CGMBARTTreeNode>> gibbs_samples_of_cgm_trees;
-	protected ArrayList<ArrayList<CGMBARTTreeNode>> gibbs_samples_of_cgm_trees_after_burn_in;
-	/** the variance of the errors */
-	protected ArrayList<Double> gibbs_samples_of_sigsq;
-	protected ArrayList<Double> gibbs_samples_of_sigsq_after_burn_in;
-	/** information about the response variable */
-	protected double y_min;
-	protected double y_max;
-	protected double y_range_sq;
-	/** the current # of trees */
-	protected int num_trees;
-	protected int num_gibbs_burn_in;
-	protected int num_gibbs_total_iterations;	
-	/** all the hyperparameters */
-	protected double hyper_mu_mu;
-	protected double hyper_sigsq_mu;
-	protected double hyper_nu;
-	protected double hyper_lambda;
-	/** we will use the tree posterior builder to calculated liks and do the M-H step */
-	protected CGMBARTPosteriorBuilder posterior_builder;
-	/** useful metadata */
-	protected double[] minimum_values_by_attribute;
-	//this is frequency of unique values by each column
-	protected ArrayList<HashMap<Double, Integer>> num_val_hash_by_column;
+	public CGMBART(){}
 	
-	/** stuff during the build run time that we can access and look at */
-	protected int gibb_sample_i;
-	protected double[][] all_tree_liks;
-	/** if the user pressed stop, we can cancel the Gibbs Sampling to unlock the CPU */
-	protected boolean stop_bit;	
-	protected static Integer PrintOutEvery = null;
-	/** during debugging, we may want to fix sigsq */
-	protected double fixed_sigsq;
-	
-	/**
-	 * Constructs the BART classifier for regression. We rely on the SetupClassification class to set the raw data
-	 * 
-	 */
-	public CGMBART() {
-		super();
-//		System.out.println("CGMBART constructor");
-		num_trees = DEFAULT_NUM_TREES;
-		num_gibbs_burn_in = DEFAULT_NUM_GIBBS_BURN_IN;
-		num_gibbs_total_iterations = DEFAULT_NUM_GIBBS_TOTAL_ITERATIONS;
-	}	
-	
-	public void setNumTrees(int m){
-		this.num_trees = m;
-	}
-	
-	public void setSigsq(double fixed_sigsq){
-		this.fixed_sigsq = fixed_sigsq;
-	}
-	
-	public void printTreeIllustations(){
-		TREE_ILLUST = true;
-	}
-	
-	public void setPrintOutEveryNIter(int print_out_every){
-		PrintOutEvery = print_out_every;
-	}
-	
-	public void setNumGibbsBurnIn(int num_gibbs_burn_in){
-		this.num_gibbs_burn_in = num_gibbs_burn_in;
-	}
-	
-	public void setNumGibbsTotalIterations(int num_gibbs_total_iterations){
-		this.num_gibbs_total_iterations = num_gibbs_total_iterations;
-	}	
-	
-	public void setAlpha(double alpha){
-		ALPHA = alpha;
-	}
-	
-	public void setBeta(double beta){
-		BETA = beta;
-	}	
-	
-	public double getAlpha(){
-		return ALPHA;
-	}
-	
-	public double getBeta(){
-		return BETA;
-	}
 	
 	public void setData(ArrayList<double[]> X_y){
-		super.setData(X_y);
-		//do things that can be done as soon as the data is known
-		
-		//first establish the hyperparams sigsq_mu, nu, lambda
-		calculateHyperparameters();	
-		//calculate certain metadata conveniences
-		recordMinimumAttributeValues();
-		recordHashesForNumValues();
-		
+		super.setData(X_y);		
 		//this posterior builder will be shared throughout the entire process
 		posterior_builder = new CGMBARTPosteriorBuilder(this);
 		//we have to set the CGM98 hyperparameters as well as the hyperparameter sigsq_mu
 		posterior_builder.setHyperparameters(hyper_mu_mu, hyper_sigsq_mu);	
-	}
-	
-	private void recordHashesForNumValues() {
-		num_val_hash_by_column = new ArrayList<HashMap<Double, Integer>>();
-		for (int j = 0; j < p; j++){
-			HashMap<Double, Integer> num_val_hash = new HashMap<Double, Integer>();
-			for (int i = 0; i < n; i++){
-				double val = X_y.get(i)[j];
-				Integer freq = num_val_hash.get(val);
-				if (freq == null){
-					num_val_hash.put(val, 1);
-				}
-				else {
-					num_val_hash.put(val, freq + 1);					
-				}
-			}
-			num_val_hash_by_column.add(num_val_hash);
-		}		
-	}
-	
-	public int frequencyValueForAttribute(int attribute, double val){
-		HashMap<Double, Integer> attr_vals = num_val_hash_by_column.get(attribute);
-		if (attr_vals.get(val) == null){
-			System.out.println("attr_vals.get(val) == null");
-			System.out.println(Tools.StringJoin(attr_vals.keySet().toArray(), ","));
-		}
-		return attr_vals.get(val);
-	}
-
-	private void recordMinimumAttributeValues() {
-		minimum_values_by_attribute = new double[p];
-		for (int j = 0; j < p; j++){
-			double min = Double.MAX_VALUE;
-			for (int i = 0; i < n; i++){
-				if (X_y.get(i)[j] < min){
-					min = X_y.get(i)[j];
-				}
-			}
-			minimum_values_by_attribute[j] = min;
-		}
 	}	
-
+	
 	@Override
 	public void Build() {
 		//this can be different for any BART implementation
@@ -275,14 +59,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 		//make sure debug files are closed
 		CloseDebugFiles();
 	}
-	
-	public int currentGibbsSampleIteration(){
-		return gibb_sample_i;
-	}
-	
-	public boolean gibbsFinished(){
-		return gibb_sample_i >= num_gibbs_total_iterations;
-	}
+
 	
 	protected void SetupGibbsSampling(){
 		all_tree_liks = new double[num_trees][num_gibbs_total_iterations + 1];
@@ -299,6 +76,40 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 		InitializeMus();		
 		DebugInitialization();		
 	}
+	
+	protected void InitiatizeTrees() {
+		ArrayList<CGMBARTTreeNode> cgm_trees = new ArrayList<CGMBARTTreeNode>(num_trees);
+		//now we're going to build each tree based on the prior given in section 2 of the paper
+		//first thing is first, we create the tree structures using priors for p(T_1), p(T_2), .., p(T_m)
+		
+		for (int i = 0; i < num_trees; i++){
+//			System.out.println("CGMBART create prior on tree: " + (i + 1));
+			CGMBARTTreeNode tree = new CGMBARTTreeNode(null, X_y, this);
+			tree.y_prediction = 0.0; //default
+//			modifyTreeForDebugging(tree);
+			tree.updateWithNewResponsesAndPropagate(X_y, y_trans, p);
+			cgm_trees.add(tree);
+		}	
+		gibbs_samples_of_cgm_trees.add(0, cgm_trees);		
+	}
+
+	protected void InitializeMus() {
+		for (CGMBARTTreeNode tree : gibbs_samples_of_cgm_trees.get(0)){
+			assignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsq(tree, gibbs_samples_of_sigsq.get(0));
+		}		
+	}
+
+	protected void InitizializeSigsq() {
+		gibbs_samples_of_sigsq.add(0, sampleInitialSigsqByDrawingFromThePrior());		
+	}
+
+	private void BurnTreeAndSigsqChain() {		
+		for (int i = num_gibbs_burn_in; i < num_gibbs_total_iterations; i++){
+			gibbs_samples_of_cgm_trees_after_burn_in.add(gibbs_samples_of_cgm_trees.get(i));
+			gibbs_samples_of_sigsq_after_burn_in.add(gibbs_samples_of_sigsq.get(i));
+		}	
+		System.out.println("BurnTreeAndSigsqChain gibbs_samples_of_sigsq_after_burn_in length = " + gibbs_samples_of_sigsq_after_burn_in.size());
+	}		
 
 	protected void DoGibbsSampling(){	
 		for (gibb_sample_i = 1; gibb_sample_i <= num_gibbs_total_iterations; gibb_sample_i++){
@@ -333,48 +144,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 		}
 	}
 
-	protected void DebugSample(int sample_num, TreeArrayIllustration tree_array_illustration) {
 
-		if (WRITE_DETAILED_DEBUG_FILES){	
-			remainings.println((sample_num) + ",,y," + Tools.StringJoin(y_trans, ","));
-			
-			ArrayList<CGMBARTTreeNode> current_trees = gibbs_samples_of_cgm_trees.get(sample_num);
-			for (int t = 0; t < num_trees; t++){
-				CGMBARTTreeNode tree = current_trees.get(t);
-				ArrayList<String> all_results = new ArrayList<String>(n);
-				for (int i = 0; i < n; i++){
-					all_results.add("" + tree.Evaluate(X_y.get(i)));
-				}
-				evaluations.println(sample_num + "," + t + "," + tree.stringID() + "," + Tools.StringJoin(all_results, ","));
-			}	
-			evaluations.println((sample_num) + ",,y," + Tools.StringJoin(y_trans, ","));
-		}
-//		final Thread illustrator_thread = new Thread(){
-//			public void run(){
-//		if (StatToolbox.rand() < 0.0333){
-			if (TREE_ILLUST){
-				tree_array_illustration.CreateIllustrationAndSaveImage();
-			}
-//		}
-//			}
-//		};
-//		illustrator_thread.start();
-		
-		tree_liks.print("\n");	
-		
-		if (TRANSFORM_Y){
-			sigsqs.println(sample_num + "," + gibbs_samples_of_sigsq.get(sample_num) * y_range_sq);	
-		}
-		else {
-			sigsqs.println(sample_num + "," + gibbs_samples_of_sigsq.get(sample_num));
-		}
-
-		//now close and open all debug
-		if (StatToolbox.rand() < 0.0333){
-			CloseDebugFiles();
-			OpenDebugFiles();
-		}
-	}
 
 	protected void SampleSigsq(int sample_num) {
 		double sigsq = drawSigsqFromPosterior(sample_num);
@@ -436,10 +206,10 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 		
 		//DEBUG
 //		System.err.println("tree star: " + tree_star.stringID() + " tree num leaves: " + tree_star.numLeaves() + " tree depth:" + tree_star.deepestNode());
-		double lik = tree_star.log_prop_lik;
-		tree_liks.print(lik + "," + tree_star.stringID() + ",");
-		tree_array_illustration.addLikelihood(lik);
-		all_tree_liks[t][sample_num] = lik;
+//		double lik = tree_star.
+//		tree_liks.print(lik + "," + tree_star.stringID() + ",");
+//		tree_array_illustration.addLikelihood(lik);
+//		all_tree_liks[t][sample_num] = lik;
 		
 		cgm_trees.add(tree_star);
 		//now set the new trees in the gibbs sample pantheon, keep updating it...
@@ -449,29 +219,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 		tree_array_illustration.AddTree(tree_star);
 	}	
 
-	protected void DebugInitialization() {
-		ArrayList<CGMBARTTreeNode> initial_trees = gibbs_samples_of_cgm_trees.get(0);
-			
-		if (TREE_ILLUST){
-			TreeArrayIllustration tree_array_illustration = new TreeArrayIllustration(0);
-			for (CGMBARTTreeNode tree : initial_trees){
-				tree_array_illustration.AddTree(tree);
-				tree_array_illustration.addLikelihood(0);			
-			}
-			tree_array_illustration.CreateIllustrationAndSaveImage();
-		}
-		
-		if (WRITE_DETAILED_DEBUG_FILES){
-			for (int t = 0; t < num_trees; t++){
-				CGMBARTTreeNode tree = initial_trees.get(t);
-				ArrayList<String> all_results = new ArrayList<String>(n);
-				for (int i = 0; i < n; i++){
-					all_results.add("" + tree.Evaluate(X_y.get(i))); //TreeIllustration.one_digit_format.format(
-				} 
-				evaluations.println(0 + "," + t + "," + tree.stringID() + "," + Tools.StringJoin(all_results, ","));
-			}
-		}
-	}
+
 	
 	private double[] getResidualsBySubtractingTrees(ArrayList<CGMBARTTreeNode> other_trees) {
 		double[] sum_ys_without_jth_tree = new double[n];
@@ -491,40 +239,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 		return Rjs;
 	}		
 
-	protected void InitiatizeTrees() {
-		ArrayList<CGMBARTTreeNode> cgm_trees = new ArrayList<CGMBARTTreeNode>(num_trees);
-		//now we're going to build each tree based on the prior given in section 2 of the paper
-		//first thing is first, we create the tree structures using priors for p(T_1), p(T_2), .., p(T_m)
-		
-		for (int i = 0; i < num_trees; i++){
-//			System.out.println("CGMBART create prior on tree: " + (i + 1));
-			CGMBARTTreeNode tree = new CGMBARTTreeNode(null, X_y, this);
-			tree.y_prediction = 0.0; //default
-			tree.initLogPropLik();
-//			modifyTreeForDebugging(tree);
-			tree.updateWithNewResponsesAndPropagate(X_y, y_trans, p);
-			cgm_trees.add(tree);
-		}	
-		gibbs_samples_of_cgm_trees.add(0, cgm_trees);		
-	}
 
-	protected void InitializeMus() {
-		for (CGMBARTTreeNode tree : gibbs_samples_of_cgm_trees.get(0)){
-			assignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsq(tree, gibbs_samples_of_sigsq.get(0));
-		}		
-	}
-
-	protected void InitizializeSigsq() {
-		gibbs_samples_of_sigsq.add(0, sampleInitialSigsqByDrawingFromThePrior());		
-	}
-
-	private void BurnTreeAndSigsqChain() {		
-		for (int i = num_gibbs_burn_in; i < num_gibbs_total_iterations; i++){
-			gibbs_samples_of_cgm_trees_after_burn_in.add(gibbs_samples_of_cgm_trees.get(i));
-			gibbs_samples_of_sigsq_after_burn_in.add(gibbs_samples_of_sigsq.get(i));
-		}	
-		System.out.println("BurnTreeAndSigsqChain gibbs_samples_of_sigsq_after_burn_in length = " + gibbs_samples_of_sigsq_after_burn_in.size());
-	}	
 	
 	
 	/*
@@ -549,9 +264,7 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 		return StatToolbox.sample_average(getGibbsSamplesForPrediction(record));
 	}		
 	
-	public int numSamplesAfterBurningAndThinning(){
-		return num_gibbs_total_iterations - num_gibbs_burn_in;
-	}
+
 
 	protected double[] getGibbsSamplesForPrediction(double[] record){
 //		System.out.println("eval record: " + record + " numtrees:" + this.bayesian_trees.size());
@@ -586,116 +299,9 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 	protected double[] get95PctPostPredictiveIntervalForPrediction(double[] record){
 		return getPostPredictiveIntervalForPrediction(record, 0.95);
 	}	
+
 	
-	/*
-	 * 
-	 * 
-	 * 
-	 * Everything that has to do with evaluation
-	 * 
-	 * 
-	 */
-	
-	public double[] getGibbsSamplesSigsqs(){
-		double[] sigsqs_to_export = new double[gibbs_samples_of_sigsq.size()];
-		for (int n_g = 0; n_g < gibbs_samples_of_sigsq.size(); n_g++){			
-			sigsqs_to_export[n_g] = gibbs_samples_of_sigsq.get(n_g) * (TRANSFORM_Y ? y_range_sq : 1);			
-		}
-		return sigsqs_to_export;
-	}
-	
-	public double[] getMuValuesForAllItersByTreeAndLeaf(int t, int leaf_num){
-		double[] mu_vals = new double[num_gibbs_total_iterations];
-		for (int n_g = 0; n_g < num_gibbs_total_iterations; n_g++){
-//			System.out.println("n_g: " + n_g + "length of tree vec: " + gibbs_samples_of_cgm_trees.get(n_g).size());
-			CGMBARTTreeNode tree = gibbs_samples_of_cgm_trees.get(n_g).get(t);
-			
-			Double pred_y = tree.get_pred_for_nth_leaf(leaf_num);
-//			System.out.println("t: " + t + " leaf: " + leaf_num + " pred_y: " + pred_y);
-			mu_vals[n_g] = un_transform_y(pred_y);
-		}
-		return mu_vals;
-	}	
-	
-	private int maximalTreeGeneration(){
-		int max_gen = Integer.MIN_VALUE;
-		for (ArrayList<CGMBARTTreeNode> cgm_trees : gibbs_samples_of_cgm_trees){
-			if (cgm_trees != null){				
-				for (CGMBARTTreeNode tree : cgm_trees){					
-					int gen = tree.deepestNode();
-					if (gen >= max_gen){
-						max_gen = gen;
-					}
-				}
-			}
-		}
-		return max_gen;
-	}
-	
-	public int maximalNodeNumber(){
-		int max_gen = maximalTreeGeneration();
-		int node_num = 0;
-		for (int g = 0; g <= max_gen; g++){
-			node_num += (int)Math.pow(2, g);
-		}
-		return node_num;
-	}
-	
-	public double[] getLikForTree(int t){
-		return all_tree_liks[t];
-	}
-	
-	public int[] getNumNodesForTreesInGibbsSamp(int n_g){
-		ArrayList<CGMBARTTreeNode> trees = gibbs_samples_of_cgm_trees.get(n_g);
-		int[] num_nodes_by_tree = new int[trees.size()];
-		for (int t = 0; t < trees.size(); t++){
-			num_nodes_by_tree[t] = trees.get(t).numLeaves();
-		}
-		return num_nodes_by_tree;
-	}	
-	
-	public int[] getDepthsForTreesInGibbsSamp(int n_g){
-		ArrayList<CGMBARTTreeNode> trees = gibbs_samples_of_cgm_trees.get(n_g);
-		int[] depth_by_tree = new int[trees.size()];
-		for (int t = 0; t < trees.size(); t++){
-			depth_by_tree[t] = trees.get(t).deepestNode();
-		}
-		return depth_by_tree;
-	}
-	
-	public String getRootSplits(int n_g){
-		ArrayList<CGMBARTTreeNode> trees = gibbs_samples_of_cgm_trees.get(n_g);
-		ArrayList<String> root_splits = new ArrayList<String>(trees.size());
-		for (int t = 0; t < trees.size(); t++){
-			root_splits.add(trees.get(t).splitToString());
-		}
-		return Tools.StringJoin(root_splits, "   ||   ");		
-	}
-	
-	protected static void CloseDebugFiles(){
-		tree_liks.close();
-		remainings.close();
-		sigsqs.close();
-		sigsqs_draws.close();
-		evaluations.close();
-		other_debug.close();		
-		mh_iterations_full_record.close();
-	}
-	
-	protected static void OpenDebugFiles(){		
-		try {
-			sigsqs = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "sigsqs" + DEBUG_EXT, true)));
-			other_debug = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "other_debug" + DEBUG_EXT, true)));
-			sigsqs_draws = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "sigsqs_draws" + DEBUG_EXT, true)));
-			tree_liks = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "tree_liks" + DEBUG_EXT, true)));
-			evaluations = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "evaluations" + DEBUG_EXT, true)));
-			remainings = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "remainings" + DEBUG_EXT, true)));	
-			mh_iterations_full_record = new PrintWriter(new BufferedWriter(new FileWriter(CGMShared.DEBUG_DIR + File.separatorChar + "mh_iterations_full_record" + DEBUG_EXT, true)));
-			
-		} catch (IOException e) {
-			e.printStackTrace();
-		}			
-	}
+
 
 	protected double sampleInitialSigsqByDrawingFromThePrior() {
 		//we're sampling from sigsq ~ InvGamma(nu / 2, nu * lambda / 2)
@@ -762,121 +368,9 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 		return sigsq;
 	}
 	
-//	private String treeIDsInCurrentSample(int sample_num){
-//		ArrayList<CGMTreeNode> trees = gibbs_samples_of_cgm_trees.get(sample_num);
-//		ArrayList<String> treeIds = new ArrayList<String>(trees.size());
-//		for (int t = 0; t < trees.size(); t++){
-//			treeIds.add(trees.get(t).stringID());
-//		}
-//		return IOTools.StringJoin(treeIds, ",");
-//	}
 
-	// hist(1 / rgamma(5000, 1.5, 1.5 * 153.65), br=100)
-	protected void calculateHyperparameters() {
-//		System.out.println("calculateHyperparameters in BART\n\n");
-		double k = 2; //StatToolbox.inv_norm_dist(1 - (1 - CGMShared.MostOfTheDistribution) / 2.0);	
-//		y_min = StatToolbox.sample_minimum(y);
-//		y_max = StatToolbox.sample_maximum(y);
-		if (TRANSFORM_Y){
-			hyper_mu_mu = 0;
-			hyper_sigsq_mu = Math.pow(YminAndYmaxHalfDiff / (k * Math.sqrt(num_trees)), 2);
-		}
-		else {
-			hyper_mu_mu = (y_min + y_max) / (2 * num_trees); //ie the "center" of the distribution
-			hyper_sigsq_mu = Math.pow((y_max - hyper_mu_mu) / (k * Math.sqrt(num_trees)), 2); //margin of error over confidence spread with a correction factor for num trees
-		}
-		
-		//first calculate \sigma_\mu
-		
-		//we fix nu and q		
-		hyper_nu = 3.0;
-		
-		//now we do a simple search for the best value of lambda
-		//if sig_sq ~ \nu\lambda * X where X is Inv chi sq, then sigsq ~ InvGamma(\nu/2, \nu\lambda/2) \neq InvChisq
-		double s_sq_y = StatToolbox.sample_variance(y_trans);
-//		double prob_diff = Double.MAX_VALUE;
-		
-//		double q = 0.9;
-		double ten_pctile_chisq_df_3 = 0.5843744; //we need q=0.9 for this to work
-		
-		hyper_lambda = ten_pctile_chisq_df_3 / 3 * s_sq_y;
-//		System.out.println("lambda: " + lambda);
-//		
-//		for (lambda = 0.00001; lambda < 10 * s_sq_y; lambda += (s_sq_y / 10000)){
-//			double p = StatToolbox.cumul_dens_function_inv_gamma(hyper_nu / 2, hyper_nu * lambda / 2, s_sq_y);			
-//			if (Math.abs(p - q) < prob_diff){
-////				System.out.println("hyper_lambda = " + hyper_lambda + " lambda = " + lambda + " p = " + p + " ssq = " + ssq);
-//				hyper_lambda = lambda;
-//				prob_diff = Math.abs(p - q);
-//			}
-//		}
-		System.out.println("y_min = " + y_min + " y_max = " + y_max + " R_y = " + Math.sqrt(y_range_sq));
-		System.out.println("hyperparams:  k = " + k + " hyper_mu_mu = " + hyper_mu_mu + " sigsq_mu = " + hyper_sigsq_mu + " hyper_lambda = " + hyper_lambda + " hyper_nu = " + hyper_nu + " s_y_trans^2 = " + s_sq_y + " R_y = " + Math.sqrt(y_range_sq) + "\n\n");
-	}
-	
-	/**
-	 * We call then override the setData function. we need to ensure y is properly transformed pursuant to 
-	 * bottom of p271
-	 */
-//	public void setData(ArrayList<double[]> X_y){
-//		y_trans = y; //do this first and let it be overwritten by the super function
-//		super.setData(X_y);
-		
-		//DEBUG STUFF
-//		ArrayList<String> y_header = new ArrayList<String>(n);
-//		for (int i = 0; i < n; i++){
-//			y_header.add("y_" + i);
-//		}
-//
-//		remainings.println("iter,tree_num_left_out,tree_id," + IOTools.StringJoin(y_header, ","));		
-//		evaluations.println("iter,tree_num,tree_id," + IOTools.StringJoin(y_header, ","));		
-//	}
-	
-	//make sure you get the prior correct if you don't transform
-	protected static final double YminAndYmaxHalfDiff = 0.5;
-	protected void transformResponseVariable() {
-		System.out.println("CGMBART transformResponseVariable");
-		//make sure to initialize the y_trans to be y first
-		super.transformResponseVariable();
-		//make data we need later
-		y_min = StatToolbox.sample_minimum(y);
-		y_max = StatToolbox.sample_maximum(y);
-		y_range_sq = Math.pow(y_max - y_min, 2);
 
-		if (TRANSFORM_Y){
-			for (int i = 0; i < n; i++){
-				y_trans[i] = transform_y(y[i]);
-			}
-		}
-		//debug stuff
-//		y_and_y_trans.println("y,y_trans");
-//		for (int i = 0; i < n; i++){
-//			System.out.println("y_trans[i] = " + y_trans[i] + " y[i] = " + y[i] + " y_untransform = " + un_transform_y(y_trans[i]));
-//			y_and_y_trans.println(y[i] + "," + y_trans[i]);
-//		}
-//		y_and_y_trans.close();
-	}
 	
-	protected double transform_y(double y_i){
-		return (y_i - y_min) / (y_max - y_min) - YminAndYmaxHalfDiff;
-	}
-	
-	public double un_transform_y(double yt_i){
-		if (TRANSFORM_Y){
-//			System.out.println("un_transform_y TRANSFORM_Y");
-			return (yt_i + YminAndYmaxHalfDiff) * (y_max - y_min) + y_min;
-		}
-		else {
-			return yt_i;
-		}
-	}
-
-	public double un_transform_y(Double yt_i){
-		if (yt_i == null){
-			return -9999999;
-		}
-		return un_transform_y((double)yt_i);
-	}	
 	
 	protected double[] getResidualsForAllTreesExcept(int j, int sample_num){		
 		double[] sum_ys_without_jth_tree = new double[n];
@@ -923,71 +417,6 @@ public abstract class CGMBART extends Classifier implements Serializable  {
 //		System.out.println("y_trans " + IOTools.StringJoin(y_trans, ","));
 //		System.out.println("errorjs " + IOTools.StringJoin(errorjs, ","));
 		return errorjs;
-	}	
-
-
-	@Override
-	protected void FlushData() {
-		for (ArrayList<CGMBARTTreeNode> cgm_trees : gibbs_samples_of_cgm_trees){
-			for (CGMBARTTreeNode tree : cgm_trees){
-				tree.flushNodeData();
-			}
-		}	
 	}
-
-	@Override
-	public void StopBuilding() {
-		stop_bit = true;
-	}
-	
-	protected CGMBARTTreeNode CreateTheSimpleTreeModel() {
-		CGMBARTTreeNode root = new CGMBARTTreeNode(null, null, this);
-		CGMBARTTreeNode left = new CGMBARTTreeNode(null, null, this);
-		CGMBARTTreeNode leftleft = new CGMBARTTreeNode(null, null, this);
-		CGMBARTTreeNode leftright = new CGMBARTTreeNode(null, null, this);
-		CGMBARTTreeNode right = new CGMBARTTreeNode(null, null, this);
-		CGMBARTTreeNode rightleft = new CGMBARTTreeNode(null, null, this);
-		CGMBARTTreeNode rightright = new CGMBARTTreeNode(null, null, this);
-
-		root.isLeaf = false;
-		root.splitAttributeM = 0;
-		root.splitValue = 30.0;
-		root.left = left;
-		root.right = right;	
-
-		left.parent = root;
-		left.isLeaf = false;
-		left.splitAttributeM = 2;
-		left.splitValue = 10.0;	
-		left.left = leftleft;
-		left.right = leftright;
-
-		leftleft.parent = left;
-		leftleft.isLeaf = true;
-		leftleft.y_prediction = transform_y(10);		
-
-		leftright.parent = left;
-		leftright.isLeaf = true;
-		leftright.y_prediction = transform_y(30);
-
-		right.parent = root;
-		right.isLeaf = false;
-		right.splitAttributeM = 1;
-		right.splitValue = 80.0;	
-		right.left = rightleft;
-		right.right = rightright;
-
-		rightleft.parent = right;
-		rightleft.isLeaf = true;
-		rightleft.y_prediction = transform_y(50);		
-
-		rightright.parent = right;
-		rightright.isLeaf = true;
-		rightright.y_prediction = transform_y(70);
-
-		//make sure there's data in there
-		root.updateWithNewResponsesAndPropagate(X_y, y_trans, p);
-		return root;
-	}	
 
 }

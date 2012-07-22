@@ -269,6 +269,10 @@ public abstract class Classifier implements Serializable {
 		return loss;
 	}
 	
+	public double[] getYTrans() {
+		return y_trans;
+	}		
+	
 	public Classifier clone(){
 		return null;
 	}
