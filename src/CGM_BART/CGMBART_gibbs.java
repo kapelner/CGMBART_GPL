@@ -1,115 +1,12 @@
-/*
-    BART - Bayesian Additive Regressive Trees
-    Software for Supervised Statistical Learning
-    
-    Copyright (C) 2012 Professor Ed George & Adam Kapelner, 
-    Dept of Statistics, The Wharton School of the University of Pennsylvania
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details:
-    
-    http://www.gnu.org/licenses/gpl-2.0.txt
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-*/
-
 package CGM_BART;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 
-import CGM_Statistics.*;
+import CGM_Statistics.StatToolbox;
 
-@SuppressWarnings("serial")
-public abstract class CGMBART extends CGMBART_debug implements Serializable  {
-
-
-	public CGMBART(){}
-	
-	
-	public void setData(ArrayList<double[]> X_y){
-		super.setData(X_y);		
-		//this posterior builder will be shared throughout the entire process
-		posterior_builder = new CGMBARTPosteriorBuilder(this);
-		//we have to set the CGM98 hyperparameters as well as the hyperparameter sigsq_mu
-		posterior_builder.setHyperparameters(hyper_mu_mu, hyper_sigsq_mu);	
-	}	
-	
-	@Override
-	public void Build() {
-		//this can be different for any BART implementation
-		SetupGibbsSampling();
-		//this section is different for the different BART implementations
-		//but it basically does all the Gibbs sampling
-		DoGibbsSampling();
-		//now we burn and thin the chains for each param
-		BurnTreeAndSigsqChain();
-		//for some reason we don't thin... I don't really understand why... has to do with autocorrelation and stickiness?
-//		ThinBothChains();
-		//make sure debug files are closed
-		CloseDebugFiles();
-	}
-
-	
-	protected void SetupGibbsSampling(){
-		all_tree_liks = new double[num_trees][num_gibbs_total_iterations + 1];
-
-		//now initialize the gibbs sampler array for trees and error variances
-		gibbs_samples_of_cgm_trees = new ArrayList<ArrayList<CGMBARTTreeNode>>(num_gibbs_total_iterations);
-		gibbs_samples_of_cgm_trees_after_burn_in = new ArrayList<ArrayList<CGMBARTTreeNode>>(num_gibbs_total_iterations - num_gibbs_burn_in);
-		gibbs_samples_of_cgm_trees.add(null);
-		gibbs_samples_of_sigsq = new ArrayList<Double>(num_gibbs_total_iterations);	
-		gibbs_samples_of_sigsq_after_burn_in = new ArrayList<Double>(num_gibbs_total_iterations - num_gibbs_burn_in);
-		
-		InitizializeSigsq();
-		InitiatizeTrees();
-		InitializeMus();		
-		DebugInitialization();		
-	}
-	
-	protected void InitiatizeTrees() {
-		ArrayList<CGMBARTTreeNode> cgm_trees = new ArrayList<CGMBARTTreeNode>(num_trees);
-		//now we're going to build each tree based on the prior given in section 2 of the paper
-		//first thing is first, we create the tree structures using priors for p(T_1), p(T_2), .., p(T_m)
-		
-		for (int i = 0; i < num_trees; i++){
-//			System.out.println("CGMBART create prior on tree: " + (i + 1));
-			CGMBARTTreeNode tree = new CGMBARTTreeNode(null, X_y, this);
-			tree.y_prediction = 0.0; //default
-//			modifyTreeForDebugging(tree);
-			tree.updateWithNewResponsesAndPropagate(X_y, y_trans, p);
-			cgm_trees.add(tree);
-		}	
-		gibbs_samples_of_cgm_trees.add(0, cgm_trees);		
-	}
-
-	protected void InitializeMus() {
-		for (CGMBARTTreeNode tree : gibbs_samples_of_cgm_trees.get(0)){
-			assignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsq(tree, gibbs_samples_of_sigsq.get(0));
-		}		
-	}
-
-	protected void InitizializeSigsq() {
-		gibbs_samples_of_sigsq.add(0, sampleInitialSigsqByDrawingFromThePrior());		
-	}
-
-	private void BurnTreeAndSigsqChain() {		
-		for (int i = num_gibbs_burn_in; i < num_gibbs_total_iterations; i++){
-			gibbs_samples_of_cgm_trees_after_burn_in.add(gibbs_samples_of_cgm_trees.get(i));
-			gibbs_samples_of_sigsq_after_burn_in.add(gibbs_samples_of_sigsq.get(i));
-		}	
-		System.out.println("BurnTreeAndSigsqChain gibbs_samples_of_sigsq_after_burn_in length = " + gibbs_samples_of_sigsq_after_burn_in.size());
-	}		
+public abstract class CGMBART_gibbs extends CGMBART_init implements Serializable {
+	private static final long serialVersionUID = 1280579612167425306L;
 
 	protected void DoGibbsSampling(){	
 		for (gibb_sample_i = 1; gibb_sample_i <= num_gibbs_total_iterations; gibb_sample_i++){
@@ -143,8 +40,6 @@ public abstract class CGMBART extends CGMBART_debug implements Serializable  {
 			tree.flushNodeData();	
 		}
 	}
-
-
 
 	protected void SampleSigsq(int sample_num) {
 		double sigsq = drawSigsqFromPosterior(sample_num);
@@ -241,73 +136,8 @@ public abstract class CGMBART extends CGMBART_debug implements Serializable  {
 
 
 	
-	
-	/*
-	 * 
-	 * 
-	 * 
-	 * Everything that has to do with evaluation
-	 * 
-	 * 
-	 */
-	
-	@Override
-	public double Evaluate(double[] record) { //posterior sample median (it's what Rob uses)		
-		return EvaluateViaSampMed(record);
-	}	
-	
-	public double EvaluateViaSampMed(double[] record) { //posterior sample average		
-		return StatToolbox.sample_median(getGibbsSamplesForPrediction(record));
-	}
-	
-	public double EvaluateViaSampAvg(double[] record) { //posterior sample average		
-		return StatToolbox.sample_average(getGibbsSamplesForPrediction(record));
-	}		
-	
 
 
-	protected double[] getGibbsSamplesForPrediction(double[] record){
-//		System.out.println("eval record: " + record + " numtrees:" + this.bayesian_trees.size());
-		//the results for each of the gibbs samples
-		double[] y_gibbs_samples = new double[numSamplesAfterBurningAndThinning()];	
-		for (int i = 0; i < numSamplesAfterBurningAndThinning(); i++){
-			ArrayList<CGMBARTTreeNode> cgm_trees = gibbs_samples_of_cgm_trees_after_burn_in.get(i);
-			double yt_i = 0;
-			for (CGMBARTTreeNode tree : cgm_trees){ //sum of trees right?
-				yt_i += tree.Evaluate(record);
-			}
-			//just make sure we switch it back to really what y is for the user
-			y_gibbs_samples[i] = un_transform_y(yt_i);
-		}
-		return y_gibbs_samples;
-	}
-	
-	protected double[] getPostPredictiveIntervalForPrediction(double[] record, double coverage){
-		//get all gibbs samples sorted
-		double[] y_gibbs_samples_sorted = getGibbsSamplesForPrediction(record);
-		Arrays.sort(y_gibbs_samples_sorted);
-		
-		//calculate index of the CI_a and CI_b
-		int n_bottom = (int)Math.round((1 - coverage) / 2 * y_gibbs_samples_sorted.length) - 1; //-1 because arrays start at zero
-		int n_top = (int)Math.round(((1 - coverage) / 2 + coverage) * y_gibbs_samples_sorted.length) - 1; //-1 because arrays start at zero
-//		System.out.print("getPostPredictiveIntervalForPrediction record = " + IOTools.StringJoin(record, ",") + "  Ng=" + y_gibbs_samples_sorted.length + " n_a=" + n_bottom + " n_b=" + n_top + " guess = " + Evaluate(record));
-		double[] conf_interval = {y_gibbs_samples_sorted[n_bottom], y_gibbs_samples_sorted[n_top]};
-//		System.out.println("  [" + conf_interval[0] + ", " + conf_interval[1] + "]");
-		return conf_interval;
-	}
-	
-	protected double[] get95PctPostPredictiveIntervalForPrediction(double[] record){
-		return getPostPredictiveIntervalForPrediction(record, 0.95);
-	}	
-
-	
-
-
-	protected double sampleInitialSigsqByDrawingFromThePrior() {
-		//we're sampling from sigsq ~ InvGamma(nu / 2, nu * lambda / 2)
-		//which is equivalent to sampling (1 / sigsq) ~ Gamma(nu / 2, 2 / (nu * lambda))
-		return StatToolbox.sample_from_inv_gamma(hyper_nu / 2, 2 / (hyper_nu * hyper_lambda)); 
-	}
 	
 	protected void assignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsq(CGMBARTTreeNode node, double sigsq) {
 //		System.out.println("assignLeafValsUsingPosteriorMeanAndCurrentSigsq sigsq: " + sigsq);
@@ -417,6 +247,5 @@ public abstract class CGMBART extends CGMBART_debug implements Serializable  {
 //		System.out.println("y_trans " + IOTools.StringJoin(y_trans, ","));
 //		System.out.println("errorjs " + IOTools.StringJoin(errorjs, ","));
 		return errorjs;
-	}
-
+	}	
 }

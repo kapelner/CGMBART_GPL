@@ -69,7 +69,7 @@ public class TreeArrayIllustration {
 			HashMap<String, String> info = new HashMap<String, String>();
 			info.put("tree_num", "" + (t + 1));
 			info.put("num_iteration", "" + sample_num);
-			info.put("likelihood", "" + one_digit_format.format(likelihoods.get(t)));
+//			info.put("likelihood", "" + one_digit_format.format(likelihoods.get(t)));
 			BufferedImage canvas = new TreeIllustration(tree, info).getCanvas();
 			w += canvas.getWidth(); //aggregate the widths
 			if (canvas.getHeight() > h){ //get the maximum height

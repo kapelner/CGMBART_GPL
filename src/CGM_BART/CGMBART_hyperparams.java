@@ -95,9 +95,17 @@ public abstract class CGMBART_hyperparams extends CGMBART_base implements Serial
 	//	}
 	//	y_and_y_trans.close();
 	}
-	
+
 	public double transform_y(double y_i){
 		return (y_i - y_min) / (y_max - y_min) - YminAndYmaxHalfDiff;
+	}
+	
+	public double[] un_transform_y(double[] yt){
+		double[] y = new double[yt.length];
+		for (int i = 0; i < yt.length; i++){
+			y[i] = un_transform_y(yt[i]);
+		}
+		return y;
 	}
 	
 	public double un_transform_y(double yt_i){
@@ -116,5 +124,33 @@ public abstract class CGMBART_hyperparams extends CGMBART_base implements Serial
 		}
 		return un_transform_y((double)yt_i);
 	}	
-		
+
+	
+	public double getHyper_mu_mu() {
+		return hyper_mu_mu;
+	}
+
+	public double getHyper_sigsq_mu() {
+		return hyper_sigsq_mu;
+	}
+
+	public double getHyper_nu() {
+		return hyper_nu;
+	}
+
+	public double getHyper_lambda() {
+		return hyper_lambda;
+	}
+
+	public double getY_min() {
+		return y_min;
+	}
+
+	public double getY_max() {
+		return y_max;
+	}
+
+	public double getY_range_sq() {
+		return y_range_sq;
+	}
 }

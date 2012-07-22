@@ -40,10 +40,10 @@ public class CGMBARTPosteriorBuilder {
 
 	private double hyper_sigsq_mu;
 	private double sigsq;
-	private CGMBART cgmbart;
+	private CGMBART_base cgmbart;
 	
 	
-	public CGMBARTPosteriorBuilder(CGMBART cgmbart) {
+	public CGMBARTPosteriorBuilder(CGMBART_base cgmbart) {
 		this.cgmbart = cgmbart;
 	}
 	
@@ -74,8 +74,12 @@ public class CGMBARTPosteriorBuilder {
 				break;
 		}		
 		double ln_u_0_1 = Math.log(StatToolbox.rand());
+		System.out.println("u = " + Math.exp(ln_u_0_1) + 
+				" <? r = " + 
+				(Math.exp(log_r) < 0.0000001 ? "damn small" : Math.exp(log_r)));
+		
 		//ACCEPT/REJECT,STEP_name,log_prop_lik_o,log_prop_lik_f,log_r 
-		CGMBART.mh_iterations_full_record.println(
+		CGMBART_debug.mh_iterations_full_record.println(
 			(acceptProposal(ln_u_0_1, log_r) ? "A" : "R") + "," +  
 			TreeIllustration.one_digit_format.format(log_r) + "," +
 			TreeIllustration.two_digit_format.format(ln_u_0_1)

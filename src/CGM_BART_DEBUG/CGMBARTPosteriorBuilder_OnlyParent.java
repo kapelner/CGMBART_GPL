@@ -2,14 +2,14 @@ package CGM_BART_DEBUG;
 
 import java.util.ArrayList;
 
-import CGM_BART.CGMBART;
 import CGM_BART.CGMBARTPosteriorBuilder;
 import CGM_BART.CGMBARTTreeNode;
+import CGM_BART.CGMBART_eval;
 import CGM_Statistics.StatToolbox;
 
 public class CGMBARTPosteriorBuilder_OnlyParent extends CGMBARTPosteriorBuilder {
 
-	public CGMBARTPosteriorBuilder_OnlyParent(CGMBART cgmbart) {
+	public CGMBARTPosteriorBuilder_OnlyParent(CGMBART_eval cgmbart) {
 		super(cgmbart);
 	}
 

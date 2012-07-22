@@ -4,7 +4,7 @@ import CGM_BART.*;
 
 import java.util.ArrayList;
 
-public class CGMBART_FixedTree extends CGMBART {
+public class CGMBART_FixedTree extends CGMBART_eval {
 	private static final long serialVersionUID = 3460935328647793073L;
 	
 	public CGMBART_FixedTree() {
@@ -37,7 +37,7 @@ public class CGMBART_FixedTree extends CGMBART {
 	}	
 	
 	
-	public static CGMBARTTreeNode CreateTheSimpleTreeModel(CGMBART bart) {
+	public static CGMBARTTreeNode CreateTheSimpleTreeModel(CGMBART_eval bart) {
 		CGMBARTTreeNode root = new CGMBARTTreeNode(null, null, bart);
 		CGMBARTTreeNode left = new CGMBARTTreeNode(null, null, bart);
 		CGMBARTTreeNode leftleft = new CGMBARTTreeNode(null, null, bart);

@@ -8,12 +8,11 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-
-import CGM_BART.CGMBART;
+import CGM_BART.CGMBART_eval;
 
 public class BARTbaseTest {
 
-	private static CGMBART simple_bart;
+	private static CGMBART_eval simple_bart;
 
 
 	@BeforeClass
