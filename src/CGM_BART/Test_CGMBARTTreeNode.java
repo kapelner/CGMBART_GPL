@@ -1,4 +1,4 @@
-package CGM_Tests;
+package CGM_BART;
 
 import static org.junit.Assert.*;
 
@@ -10,10 +10,8 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 
-import CGM_BART.CGMBARTRegression;
-import CGM_BART.CGMBARTTreeNode;
 
-public class TreeTest {
+public class Test_CGMBARTTreeNode {
 
 	public static double[] y = {0, 0, 2, 4, 5, 8, 9};
 	

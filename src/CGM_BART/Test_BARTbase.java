@@ -1,4 +1,4 @@
-package CGM_Tests;
+package CGM_BART;
 
 import static org.junit.Assert.*;
 
@@ -8,16 +8,15 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import CGM_BART.CGMBART_eval;
 
-public class BARTbaseTest {
+public class Test_BARTbase {
 
 	private static CGMBART_eval simple_bart;
 
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		simple_bart = TreeTest.bart;
+		simple_bart = Test_CGMBARTTreeNode.bart;
 	}
 
 	@AfterClass

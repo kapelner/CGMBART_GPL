@@ -1,4 +1,4 @@
-package CGM_Tests;
+package CGM_BART;
 
 import static org.junit.Assert.*;
 
@@ -9,16 +9,15 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 
-import CGM_BART.CGMBART_eval;
 
-public class BARThyperparamsTest {
+public class Test_BARThyperparams {
 
 	private static CGMBART_eval simple_bart;
 
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		simple_bart = TreeTest.bart;
+		simple_bart = Test_CGMBARTTreeNode.bart;
 	}
 
 	@AfterClass
@@ -43,6 +42,6 @@ public class BARThyperparamsTest {
 		assertEquals(simple_bart.getY_range_sq(), 9, 81);
 		double[] ytrans = {-0.5, -0.5, -0.27777, -0.055555, 0.055555, 0.38888, 0.5};
 		assertArrayEquals(simple_bart.getYTrans(), ytrans, 0.0001);
-		assertArrayEquals(simple_bart.un_transform_y(ytrans), TreeTest.y, 0.0001);
+		assertArrayEquals(simple_bart.un_transform_y(ytrans), Test_CGMBARTTreeNode.y, 0.0001);
 	}
 }

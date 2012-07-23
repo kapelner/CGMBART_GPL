@@ -7,6 +7,21 @@ import CGM_Statistics.StatToolbox;
 
 public abstract class CGMBART_gibbs extends CGMBART_init implements Serializable {
 	private static final long serialVersionUID = 1280579612167425306L;
+	
+	@Override
+	public void Build() {
+		//this can be different for any BART implementation
+		SetupGibbsSampling();
+		//this section is different for the different BART implementations
+		//but it basically does all the Gibbs sampling
+		DoGibbsSampling();
+		//now we burn and thin the chains for each param
+		BurnTreeAndSigsqChain();
+		//for some reason we don't thin... I don't really understand why... has to do with autocorrelation and stickiness?
+//		ThinBothChains();
+		//make sure debug files are closed
+		CloseDebugFiles();
+	}	
 
 	protected void DoGibbsSampling(){	
 		for (gibb_sample_i = 1; gibb_sample_i <= num_gibbs_total_iterations; gibb_sample_i++){
@@ -247,5 +262,13 @@ public abstract class CGMBART_gibbs extends CGMBART_init implements Serializable
 //		System.out.println("y_trans " + IOTools.StringJoin(y_trans, ","));
 //		System.out.println("errorjs " + IOTools.StringJoin(errorjs, ","));
 		return errorjs;
+	}	
+	
+	private void BurnTreeAndSigsqChain() {		
+		for (int i = num_gibbs_burn_in; i < num_gibbs_total_iterations; i++){
+			gibbs_samples_of_cgm_trees_after_burn_in.add(gibbs_samples_of_cgm_trees.get(i));
+			gibbs_samples_of_sigsq_after_burn_in.add(gibbs_samples_of_sigsq.get(i));
+		}	
+		System.out.println("BurnTreeAndSigsqChain gibbs_samples_of_sigsq_after_burn_in length = " + gibbs_samples_of_sigsq_after_burn_in.size());
 	}	
 }

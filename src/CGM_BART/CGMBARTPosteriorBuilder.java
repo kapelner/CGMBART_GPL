@@ -217,33 +217,7 @@ public class CGMBARTPosteriorBuilder {
 	protected boolean acceptProposal(double ln_u_0_1, double log_r){
 		return ln_u_0_1 < log_r ? true : false;
 	}
-	
-//	private static final double ln_one_over_sqrt_two_pi = Math.log(1 / Math.sqrt(2 * Math.PI));
-//	private static final double ln_two_pi = Math.log(2 * Math.PI);
 
-	/**
-	 * This calculates the marginalized ln(P(R_1, \ldots, R_N | \sigsq))
-	 * by calculating g(\Rbar | \sigsq)
-	 * 
-	 * @param node
-	 * @return
-	 */
-//	private double calculcateLnPropProbOfNode(CGMTreeNode node) {
-//		double log_prob_node_ell = 0;
-//		log_prob_node_ell -= 0.5 * (Math.log(hyper_sigsq_mu) + Math.log(node.n / sigsq + 1));
-//		log_prob_node_ell += 
-//		
-//		DoubleMatrix rs = new DoubleMatrix(node.get_ys_in_data());
-//		DoubleMatrix mu = new DoubleMatrix(hyper_mu_bar, node.n);
-//		
-//		CGMBART.mh_iterations_full_record.print(
-//			TreeIllustration.two_digit_format.format(log_prob_node_ell) + ","
-//		);		
-//		//cache this for further use
-//		node.log_prop_lik = log_prob_node_ell;
-//		
-//		return log_prob_node_ell;
-//	}
 	/** The number of data points in a node that we can split on */
 	protected static final int N_RULE = 5;	
 
