@@ -35,7 +35,7 @@ public abstract class CGMBART_mh extends CGMBART_gibbs implements Serializable {
 		double ln_u_0_1 = Math.log(StatToolbox.rand());
 		System.out.println("u = " + Math.exp(ln_u_0_1) + 
 				" <? r = " + 
-				(Math.exp(log_r) < 0.0000001 ? "damn small" : Math.exp(log_r)));
+				(Math.exp(log_r) < 0.00001 ? "damn small" : Math.exp(log_r)));
 		
 		//ACCEPT/REJECT,STEP_name,log_prop_lik_o,log_prop_lik_f,log_r 
 		CGMBART_debug.mh_iterations_full_record.println(
@@ -54,7 +54,7 @@ public abstract class CGMBART_mh extends CGMBART_gibbs implements Serializable {
 	}
 
 	private double doMHGrowAndCalcLnR(CGMBARTTreeNode T_i, CGMBARTTreeNode T_star) {
-		System.out.println("doMHGrowAndCalcLnR on " + T_star.stringID() + " old depth: " + T_star.deepestNode());
+//		System.out.println("doMHGrowAndCalcLnR on " + T_star.stringID() + " old depth: " + T_star.deepestNode());
 		CGMBARTTreeNode grow_node = pickGrowNode(T_star);
 		//if we can't grow, reject offhand
 		if (grow_node == null){ // || grow_node.generation >= 2
@@ -67,11 +67,16 @@ public abstract class CGMBART_mh extends CGMBART_gibbs implements Serializable {
 		double ln_likelihood_ratio_grow = calcLnLikRatioGrow(grow_node);
 		double ln_tree_structure_ratio_grow = calcLnTreeStructureRatioGrow(grow_node);
 		
+		System.out.println("GROW   trans ratio: " + 
+				(Math.exp(ln_transition_ratio_grow) < 0.00001 ? "damn small" : Math.exp(ln_transition_ratio_grow)) +
+				"  lik ratio: " + 
+				(Math.exp(ln_likelihood_ratio_grow) < 0.00001 ? "damn small" : Math.exp(ln_likelihood_ratio_grow)) +
+				"  structure ratio: " + 
+				(Math.exp(ln_tree_structure_ratio_grow) < 0.00001 ? "damn small" : Math.exp(ln_tree_structure_ratio_grow)));		
 		return ln_transition_ratio_grow + ln_likelihood_ratio_grow + ln_tree_structure_ratio_grow;
 	}
 	
 	private double doMHPruneAndCalcLnR(CGMBARTTreeNode T_i, CGMBARTTreeNode T_star) {
-		System.out.println("doMHPruneAndCalcLnR");
 		CGMBARTTreeNode prune_node = pickPruneNode(T_star);
 		//if we can't grow, reject offhand
 		if (prune_node == null){
@@ -82,6 +87,13 @@ public abstract class CGMBART_mh extends CGMBART_gibbs implements Serializable {
 		double ln_likelihood_ratio_prune = -calcLnLikRatioGrow(prune_node); //inverse of before (will speed up later)
 		double ln_tree_structure_ratio_prune = -calcLnTreeStructureRatioGrow(prune_node);
 		CGMBARTTreeNode.pruneTreeAt(prune_node);
+		
+		System.out.println("PRUNE   trans ratio: " + 
+				(Math.exp(ln_transition_ratio_prune) < 0.00001 ? "damn small" : Math.exp(ln_transition_ratio_prune)) +
+				"  lik ratio: " + 
+				(Math.exp(ln_likelihood_ratio_prune) < 0.00001 ? "damn small" : Math.exp(ln_likelihood_ratio_prune)) +
+				"  structure ratio: " + 
+				(Math.exp(ln_tree_structure_ratio_prune) < 0.00001 ? "damn small" : Math.exp(ln_tree_structure_ratio_prune)));
 		return ln_transition_ratio_prune + ln_likelihood_ratio_prune + ln_tree_structure_ratio_prune;
 	}	
 	
