@@ -2,8 +2,6 @@ package CGM_BART_DEBUG;
 
 import java.util.ArrayList;
 
-import CGM_BART.*;
-
 public class CGMBART_FixedTreeStructureChangeRulesAndSigsqOnlyParent extends CGMBART_FixedTreeStructureChangeRulesAndSigsq {
 	private static final long serialVersionUID = 3460935328647793073L;	
 		
@@ -16,13 +14,7 @@ public class CGMBART_FixedTreeStructureChangeRulesAndSigsqOnlyParent extends CGM
 	
 	public void setData(ArrayList<double[]> X_y){
 		super.setData(X_y);
-		//this posterior builder will be shared throughout the entire process
-		posterior_builder = new CGMBARTPosteriorBuilder(this);
-		//we have to set the CGM98 hyperparameters as well as the hyperparameter sigsq_mu
-		posterior_builder.setHyperparameters(hyper_mu_mu, hyper_sigsq_mu);
-		//set sigsq
 		fixed_sigsq = 1 / y_range_sq;
-		posterior_builder.setCurrentSigsqValue(fixed_sigsq);
 	}
 //	
 //	//fix it once for good

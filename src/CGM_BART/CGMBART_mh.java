@@ -1,56 +1,15 @@
-/*
-    BART - Bayesian Additive Regressive Trees
-    Software for Supervised Statistical Learning
-    
-    Copyright (C) 2012 Professor Ed George & Adam Kapelner, 
-    Dept of Statistics, The Wharton School of the University of Pennsylvania
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details:
-    
-    http://www.gnu.org/licenses/gpl-2.0.txt
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-*/
-
 package CGM_BART;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
-import CGM_Statistics.*;
+import CGM_Statistics.StatToolbox;
+import CGM_Statistics.TreeIllustration;
 
-/**
- * This is the same thing as CGMRegressionMeanShiftPosteriorBuilder
- * except we are feedings the hyperparameters to it
- * that way it will not calculate them using the CGM98 methods
- * 
- * @author kapelner
- *
- */
-public class CGMBARTPosteriorBuilder {
+public abstract class CGMBART_mh extends CGMBART_gibbs implements Serializable {
+	private static final long serialVersionUID = 1825856510284398699L;
 
-	private double hyper_sigsq_mu;
-	private double sigsq;
-	private CGMBART_base cgmbart;
-	
-	
-	public CGMBARTPosteriorBuilder(CGMBART_base cgmbart) {
-		this.cgmbart = cgmbart;
-	}
-	
-	public void setHyperparameters(double hyper_mu_bar, double hyper_sigsq_mu){
-		this.hyper_sigsq_mu = hyper_sigsq_mu;
-	}
-	
+
 	public enum Steps {GROW, PRUNE};
 	/**
 	 * Iterates the Metropolis-Hastings algorithm by one step
@@ -169,21 +128,20 @@ public class CGMBARTPosteriorBuilder {
 
 
 	private double calcLnTreeStructureRatioGrow(CGMBARTTreeNode grow_node) {
-		double alpha = cgmbart.getAlpha();
-		double beta = cgmbart.getBeta();
 		int d_eta = grow_node.generation;
 		int p_adj = grow_node.pAdj();
 		int n_adj = grow_node.nAdj();
 		int n_repeat = grow_node.splitValuesRepeated();
-		return Math.log(alpha) 
-				+ 2 * Math.log(1 - alpha / Math.pow(2 + d_eta, beta))
+		return Math.log(ALPHA) 
+				+ 2 * Math.log(1 - ALPHA / Math.pow(2 + d_eta, BETA))
 				+ Math.log(n_repeat)
-				- Math.log(Math.pow(1 + d_eta, beta) - alpha)
+				- Math.log(Math.pow(1 + d_eta, BETA) - ALPHA)
 				- Math.log(p_adj) 
 				- Math.log(n_adj);
 	}
 
 	private double calcLnLikRatioGrow(CGMBARTTreeNode grow_node) {
+		double sigsq = gibbs_samples_of_sigsq.get(gibb_sample_num - 1);
 		int n_ell = grow_node.getN();
 		int n_ell_L = grow_node.left.getN();
 		int n_ell_R = grow_node.right.getN();
@@ -251,11 +209,5 @@ public class CGMBARTPosteriorBuilder {
 		if (roll < 0.5)
 			return Steps.GROW;
 		return Steps.PRUNE;	
-	}	
-
-
-	public void setCurrentSigsqValue(double sigsq) {
-		this.sigsq = sigsq;
 	}
-
 }

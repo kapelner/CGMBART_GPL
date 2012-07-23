@@ -8,19 +8,12 @@ import CGM_Statistics.StatToolbox;
 public abstract class CGMBART_init extends CGMBART_debug implements Serializable {
 	private static final long serialVersionUID = 8239599486635371714L;
 
-	public void setData(ArrayList<double[]> X_y){
-		super.setData(X_y);		
-		//this posterior builder will be shared throughout the entire process
-		posterior_builder = new CGMBARTPosteriorBuilder(this);
-		//we have to set the CGM98 hyperparameters as well as the hyperparameter sigsq_mu
-		posterior_builder.setHyperparameters(hyper_mu_mu, hyper_sigsq_mu);	
-	}	
-
 	protected void SetupGibbsSampling(){
 		all_tree_liks = new double[num_trees][num_gibbs_total_iterations + 1];
 
 		//now initialize the gibbs sampler array for trees and error variances
 		gibbs_samples_of_cgm_trees = new ArrayList<ArrayList<CGMBARTTreeNode>>(num_gibbs_total_iterations);
+		gibbs_samples_of_cgm_trees.add(null);
 		gibbs_samples_of_cgm_trees_after_burn_in = new ArrayList<ArrayList<CGMBARTTreeNode>>(num_gibbs_total_iterations - num_gibbs_burn_in);
 		gibbs_samples_of_sigsq = new ArrayList<Double>(num_gibbs_total_iterations);	
 		gibbs_samples_of_sigsq_after_burn_in = new ArrayList<Double>(num_gibbs_total_iterations - num_gibbs_burn_in);
@@ -38,13 +31,13 @@ public abstract class CGMBART_init extends CGMBART_debug implements Serializable
 		
 		for (int i = 0; i < num_trees; i++){
 //			System.out.println("CGMBART create prior on tree: " + (i + 1));
-			CGMBARTTreeNode tree = new CGMBARTTreeNode(null, X_y, this);
-			tree.y_prediction = 0.0; //default
+			CGMBARTTreeNode stump = new CGMBARTTreeNode(null, X_y, this);
+			stump.y_prediction = 0.0; //default
 //			modifyTreeForDebugging(tree);
-			tree.updateWithNewResponsesAndPropagate(X_y, y_trans, p);
-			cgm_trees.add(tree);
+			stump.updateWithNewResponsesAndPropagate(X_y, y_trans, p);
+			cgm_trees.add(stump);
 		}	
-		gibbs_samples_of_cgm_trees.add(cgm_trees);		
+		gibbs_samples_of_cgm_trees.add(0, cgm_trees);	//possible mistake?	
 	}
 
 	protected void InitializeMus() {

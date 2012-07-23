@@ -14,14 +14,6 @@ public class CGMBART_FixedTreeStructureChangeRulesAndSigsq extends CGMBART_eval 
 //		printTreeIllustations();
 	}
 	
-	public void setData(ArrayList<double[]> X_y){
-		super.setData(X_y);
-		//this posterior builder will be shared throughout the entire process
-		posterior_builder = new CGMBARTPosteriorBuilder(this);
-		//we have to set the CGM98 hyperparameters as well as the hyperparameter sigsq_mu
-		posterior_builder.setHyperparameters(hyper_mu_mu, hyper_sigsq_mu);
-	}
-
 	//start the tree with no information
 	protected void InitiatizeTrees() {
 		ArrayList<CGMBARTTreeNode> cgm_trees = new ArrayList<CGMBARTTreeNode>(num_trees);

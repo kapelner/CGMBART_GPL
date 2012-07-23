@@ -16,8 +16,8 @@ public abstract class CGMBART_base extends Classifier implements Serializable {
 	protected static final int DEFAULT_NUM_GIBBS_BURN_IN = 500;
 	protected static final int DEFAULT_NUM_GIBBS_TOTAL_ITERATIONS = 2000; //this must be larger than the number of burn in!!!
 	
-	private static double ALPHA = 0.95;
-	private static double BETA = 2; //see p271 in CGM10	
+	protected static double ALPHA = 0.95;
+	protected static double BETA = 2; //see p271 in CGM10	
 	
 
 
@@ -33,8 +33,6 @@ public abstract class CGMBART_base extends Classifier implements Serializable {
 	protected int num_gibbs_burn_in;
 	protected int num_gibbs_total_iterations;	
 
-	/** we will use the tree posterior builder to calculated liks and do the M-H step */
-	protected CGMBARTPosteriorBuilder posterior_builder;
 	/** useful metadata */
 	protected double[] minimum_values_by_attribute;
 	protected double[] maximum_values_by_attribute;
@@ -42,13 +40,11 @@ public abstract class CGMBART_base extends Classifier implements Serializable {
 	protected ArrayList<HashMap<Double, Integer>> num_val_hash_by_column;
 	
 	/** stuff during the build run time that we can access and look at */
-	protected int gibb_sample_i;
 	protected double[][] all_tree_liks;
 	/** if the user pressed stop, we can cancel the Gibbs Sampling to unlock the CPU */
 	protected boolean stop_bit;	
 	protected static Integer PrintOutEvery = null;
-	/** during debugging, we may want to fix sigsq */
-	protected double fixed_sigsq;	
+	
 	
 	
 	public CGMBART_base() {
@@ -71,11 +67,6 @@ public abstract class CGMBART_base extends Classifier implements Serializable {
 	public void setNumTrees(int m){
 		this.num_trees = m;
 	}
-	
-	public void setSigsq(double fixed_sigsq){
-		this.fixed_sigsq = fixed_sigsq;
-	}
-
 	
 	public void setPrintOutEveryNIter(int print_out_every){
 		PrintOutEvery = print_out_every;
@@ -161,16 +152,6 @@ public abstract class CGMBART_base extends Classifier implements Serializable {
 		return num_gibbs_total_iterations - num_gibbs_burn_in;
 	}	
 	
-	
-	public int currentGibbsSampleIteration(){
-		return gibb_sample_i;
-	}
-	
-	public boolean gibbsFinished(){
-		return gibb_sample_i >= num_gibbs_total_iterations;
-	}	
-	
-
 	public double[] getMinimum_values_by_attribute() {
 		return minimum_values_by_attribute;
 	}

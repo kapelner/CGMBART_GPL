@@ -8,6 +8,11 @@ import CGM_Statistics.StatToolbox;
 public abstract class CGMBART_gibbs extends CGMBART_init implements Serializable {
 	private static final long serialVersionUID = 1280579612167425306L;
 	
+	/** during debugging, we may want to fix sigsq */
+	protected double fixed_sigsq;
+	/** which gibbs sample are we on now? */
+	protected int gibb_sample_num;
+	
 	@Override
 	public void Build() {
 		//this can be different for any BART implementation
@@ -24,28 +29,28 @@ public abstract class CGMBART_gibbs extends CGMBART_init implements Serializable
 	}	
 
 	protected void DoGibbsSampling(){	
-		for (gibb_sample_i = 1; gibb_sample_i <= num_gibbs_total_iterations; gibb_sample_i++){
-			tree_liks.print(gibb_sample_i + ",");
+		for (gibb_sample_num = 1; gibb_sample_num <= num_gibbs_total_iterations; gibb_sample_num++){
+			tree_liks.print(gibb_sample_num + ",");
 			final ArrayList<CGMBARTTreeNode> cgm_trees = new ArrayList<CGMBARTTreeNode>(num_trees);				
-			final TreeArrayIllustration tree_array_illustration = new TreeArrayIllustration(gibb_sample_i);			
+			final TreeArrayIllustration tree_array_illustration = new TreeArrayIllustration(gibb_sample_num);			
 			//we cycle over each tree and update it according to formulas 15, 16 on p274
 			for (int t = 0; t < num_trees; t++){
 				if (t == 0){
-					System.out.println("Sampling M_" + (t + 1) + "/" + num_trees + " iter " + gibb_sample_i + "/" + num_gibbs_total_iterations);
+					System.out.println("Sampling M_" + (t + 1) + "/" + num_trees + " iter " + gibb_sample_num + "/" + num_gibbs_total_iterations);
 				}				
-				SampleTree(gibb_sample_i, t, cgm_trees, tree_array_illustration);
-				SampleMus(gibb_sample_i, t);
-				gibbs_samples_of_cgm_trees.add(gibb_sample_i, cgm_trees);
+				SampleTree(gibb_sample_num, t, cgm_trees, tree_array_illustration);
+				SampleMus(gibb_sample_num, t);
+				gibbs_samples_of_cgm_trees.add(gibb_sample_num, cgm_trees);
 				if (stop_bit){
 					return;
 				}				
 			}
-			SampleSigsq(gibb_sample_i);
-			DebugSample(gibb_sample_i, tree_array_illustration);
+			SampleSigsq(gibb_sample_num);
+			DebugSample(gibb_sample_num, tree_array_illustration);
 			FlushTempDataForSample(cgm_trees);
 			
-			if (PrintOutEvery != null && gibb_sample_i % PrintOutEvery == 0){
-				System.out.println("gibbs iter: " + gibb_sample_i + "/" + num_gibbs_total_iterations);
+			if (PrintOutEvery != null && gibb_sample_num % PrintOutEvery == 0){
+				System.out.println("gibbs iter: " + gibb_sample_num + "/" + num_gibbs_total_iterations);
 			}
 		}
 	}
@@ -59,7 +64,6 @@ public abstract class CGMBART_gibbs extends CGMBART_init implements Serializable
 	protected void SampleSigsq(int sample_num) {
 		double sigsq = drawSigsqFromPosterior(sample_num);
 		gibbs_samples_of_sigsq.add(sample_num, sigsq);
-		posterior_builder.setCurrentSigsqValue(sigsq);
 	}
 
 	protected void SampleMus(int sample_num, int t) {
@@ -112,7 +116,7 @@ public abstract class CGMBART_gibbs extends CGMBART_init implements Serializable
 		
 		//sample from T_j | R_j, \sigma
 		//now we will run one M-H step on this tree with the y as the R_j
-		CGMBARTTreeNode tree_star = posterior_builder.iterateMHPosteriorTreeSpaceSearch(copy_of_old_jth_tree);
+		CGMBARTTreeNode tree_star = iterateMHPosteriorTreeSpaceSearch(copy_of_old_jth_tree);
 		
 		//DEBUG
 //		System.err.println("tree star: " + tree_star.stringID() + " tree num leaves: " + tree_star.numLeaves() + " tree depth:" + tree_star.deepestNode());
@@ -127,10 +131,10 @@ public abstract class CGMBART_gibbs extends CGMBART_init implements Serializable
 //		System.out.println("SampleTree sample_num " + sample_num + " cgm_trees " + cgm_trees);
 		
 		tree_array_illustration.AddTree(tree_star);
-	}	
-
-
+	}
 	
+	protected abstract CGMBARTTreeNode iterateMHPosteriorTreeSpaceSearch(CGMBARTTreeNode copy_of_old_jth_tree);
+
 	private double[] getResidualsBySubtractingTrees(ArrayList<CGMBARTTreeNode> other_trees) {
 		double[] sum_ys_without_jth_tree = new double[n];
 
@@ -271,4 +275,8 @@ public abstract class CGMBART_gibbs extends CGMBART_init implements Serializable
 		}	
 		System.out.println("BurnTreeAndSigsqChain gibbs_samples_of_sigsq_after_burn_in length = " + gibbs_samples_of_sigsq_after_burn_in.size());
 	}	
+	
+	public void setSigsq(double fixed_sigsq){
+		this.fixed_sigsq = fixed_sigsq;
+	}		
 }

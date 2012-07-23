@@ -18,7 +18,6 @@ public class CGMBART_FixedTreeAndSigsq extends CGMBART_eval {
 		super.setData(X_y);
 		//now calculate the fixed sigsq
 		fixed_sigsq = 1 / y_range_sq;
-		posterior_builder.setCurrentSigsqValue(fixed_sigsq);
 	}
 	
 	protected void InitiatizeTrees() {

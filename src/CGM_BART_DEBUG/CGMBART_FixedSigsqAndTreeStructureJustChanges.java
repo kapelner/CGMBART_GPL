@@ -12,14 +12,6 @@ public class CGMBART_FixedSigsqAndTreeStructureJustChanges extends CGMBART_eval 
 		System.out.println("CGMBART_Alt init\n");
 		setNumTrees(1); //in this DEBUG model, there's only one tree
 //		printTreeIllustations();
-	}	
-	
-	public void setData(ArrayList<double[]> X_y){
-		super.setData(X_y);
-		//this posterior builder will be shared throughout the entire process
-		posterior_builder = new CGMBARTPosteriorBuilder(this);
-		//we have to set the CGM98 hyperparameters as well as the hyperparameter sigsq_mu
-		posterior_builder.setHyperparameters(hyper_mu_mu, hyper_sigsq_mu);
 	}
 	
 
@@ -27,7 +19,6 @@ public class CGMBART_FixedSigsqAndTreeStructureJustChanges extends CGMBART_eval 
 	protected void InitizializeSigsq() {	
 		fixed_sigsq = 1 / y_range_sq;
 		gibbs_samples_of_sigsq.add(0, fixed_sigsq);
-		posterior_builder.setCurrentSigsqValue(fixed_sigsq);
 	}	
 	
 	//keep sigsq fixed
