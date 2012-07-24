@@ -8,27 +8,36 @@ import CGM_Statistics.StatToolbox;
 public abstract class CGMBART_init extends CGMBART_debug implements Serializable {
 	private static final long serialVersionUID = 8239599486635371714L;
 
+	protected int num_gibbs_burn_in;
+	protected int num_gibbs_total_iterations;
+	
+	public CGMBART_init() {
+		super();
+		num_gibbs_burn_in = DEFAULT_NUM_GIBBS_BURN_IN;
+		num_gibbs_total_iterations = DEFAULT_NUM_GIBBS_TOTAL_ITERATIONS;
+	}
+	
 	protected void SetupGibbsSampling(){
-		all_tree_liks = new double[num_trees][num_gibbs_total_iterations + 1];
-
-		//now initialize the gibbs sampler array for trees and error variances
-		gibbs_samples_of_cgm_trees = new ArrayList<ArrayList<CGMBARTTreeNode>>(num_gibbs_total_iterations);
-		gibbs_samples_of_cgm_trees.add(null);
-		gibbs_samples_of_cgm_trees_after_burn_in = new ArrayList<ArrayList<CGMBARTTreeNode>>(num_gibbs_total_iterations - num_gibbs_burn_in);
-		gibbs_samples_of_sigsq = new ArrayList<Double>(num_gibbs_total_iterations);	
-		gibbs_samples_of_sigsq_after_burn_in = new ArrayList<Double>(num_gibbs_total_iterations - num_gibbs_burn_in);
-		
+		InitGibbsSamplingData();	
 		InitizializeSigsq();
 		InitiatizeTrees();
 		InitializeMus();		
 		DebugInitialization();		
 	}
 	
+	protected void InitGibbsSamplingData(){
+		all_tree_liks = new double[num_trees][num_gibbs_total_iterations + 1];
+
+		//now initialize the gibbs sampler array for trees and error variances
+		gibbs_samples_of_cgm_trees = new ArrayList<ArrayList<CGMBARTTreeNode>>(num_gibbs_total_iterations);
+		gibbs_samples_of_cgm_trees_after_burn_in = new ArrayList<ArrayList<CGMBARTTreeNode>>(num_gibbs_total_iterations - num_gibbs_burn_in);
+		gibbs_samples_of_sigsq = new ArrayList<Double>(num_gibbs_total_iterations);	
+		gibbs_samples_of_sigsq_after_burn_in = new ArrayList<Double>(num_gibbs_total_iterations - num_gibbs_burn_in);		
+	}
+	
 	protected void InitiatizeTrees() {
-		ArrayList<CGMBARTTreeNode> cgm_trees = new ArrayList<CGMBARTTreeNode>(num_trees);
-		//now we're going to build each tree based on the prior given in section 2 of the paper
-		//first thing is first, we create the tree structures using priors for p(T_1), p(T_2), .., p(T_m)
-		
+		//create the array of trees for the zeroth gibbs sample
+		ArrayList<CGMBARTTreeNode> cgm_trees = new ArrayList<CGMBARTTreeNode>(num_trees);		
 		for (int i = 0; i < num_trees; i++){
 //			System.out.println("CGMBART create prior on tree: " + (i + 1));
 			CGMBARTTreeNode stump = new CGMBARTTreeNode(null, X_y, this);
@@ -37,7 +46,7 @@ public abstract class CGMBART_init extends CGMBART_debug implements Serializable
 			stump.updateWithNewResponsesAndPropagate(X_y, y_trans, p);
 			cgm_trees.add(stump);
 		}	
-		gibbs_samples_of_cgm_trees.add(0, cgm_trees);	//possible mistake?	
+		gibbs_samples_of_cgm_trees.add(cgm_trees);	
 	}
 
 	protected void InitializeMus() {
@@ -57,4 +66,17 @@ public abstract class CGMBART_init extends CGMBART_debug implements Serializable
 	}	
 
 	protected abstract void assignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsq(CGMBARTTreeNode node, double sigsq);
+	
+	
+	public void setNumGibbsBurnIn(int num_gibbs_burn_in){
+		this.num_gibbs_burn_in = num_gibbs_burn_in;
+	}
+	
+	public void setNumGibbsTotalIterations(int num_gibbs_total_iterations){
+		this.num_gibbs_total_iterations = num_gibbs_total_iterations;
+	}
+	
+	public int numSamplesAfterBurningAndThinning(){
+		return num_gibbs_total_iterations - num_gibbs_burn_in;
+	}	
 }

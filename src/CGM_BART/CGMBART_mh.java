@@ -104,7 +104,7 @@ public abstract class CGMBART_mh extends CGMBART_gibbs implements Serializable {
 		//b) If there are no prunable nodes (not sure how that could happen), return null as well
 		
 		if (T.isStump()){
-			System.out.println("cannot prune a stump!");
+			System.err.println("cannot prune a stump!");
 			return null;			
 		}
 		
@@ -200,7 +200,7 @@ public abstract class CGMBART_mh extends CGMBART_gibbs implements Serializable {
 		
 		//do check a
 		if (growth_nodes.size() == 0){
-			System.out.println("no growth nodes in GROW step!");
+			System.err.println("no growth nodes in GROW step!");
 			return null;
 		}		
 		
@@ -209,7 +209,7 @@ public abstract class CGMBART_mh extends CGMBART_gibbs implements Serializable {
 
 		//do check b
 		if (growth_node.pAdj() == 0){
-			System.out.println("no attributes available in GROW step!");
+			System.err.println("no attributes available in GROW step!");
 			return null;			
 		}
 		//if we passed, we can use this node

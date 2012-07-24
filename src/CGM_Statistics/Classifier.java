@@ -41,10 +41,6 @@ import java.util.logging.SimpleFormatter;
  * The base class for all machine learning / statistical-learning
  * algorithms. Extend this class to add your own implementation.
  * 
- * Note this implementation is only for instances where y is categorical
- * and the design matrix $\X \in \mathbb{N}^{n \times p}$, i.e. the design
- * matrix is all integer values
- * 
  * @author Adam Kapelner
  */
 public abstract class Classifier implements Serializable {

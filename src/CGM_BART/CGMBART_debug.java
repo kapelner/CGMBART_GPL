@@ -185,18 +185,18 @@ public abstract class CGMBART_debug extends CGMBART_hyperparams implements Seria
 		return sigsqs_to_export;
 	}
 	
-	public double[] getMuValuesForAllItersByTreeAndLeaf(int t, int leaf_num){
-		double[] mu_vals = new double[num_gibbs_total_iterations];
-		for (int n_g = 0; n_g < num_gibbs_total_iterations; n_g++){
-//			System.out.println("n_g: " + n_g + "length of tree vec: " + gibbs_samples_of_cgm_trees.get(n_g).size());
-			CGMBARTTreeNode tree = gibbs_samples_of_cgm_trees.get(n_g).get(t);
-			
-			Double pred_y = tree.get_pred_for_nth_leaf(leaf_num);
-//			System.out.println("t: " + t + " leaf: " + leaf_num + " pred_y: " + pred_y);
-			mu_vals[n_g] = un_transform_y(pred_y);
-		}
-		return mu_vals;
-	}	
+//	public double[] getMuValuesForAllItersByTreeAndLeaf(int t, int leaf_num){
+//		double[] mu_vals = new double[num_gibbs_total_iterations];
+//		for (int n_g = 0; n_g < num_gibbs_total_iterations; n_g++){
+////			System.out.println("n_g: " + n_g + "length of tree vec: " + gibbs_samples_of_cgm_trees.get(n_g).size());
+//			CGMBARTTreeNode tree = gibbs_samples_of_cgm_trees.get(n_g).get(t);
+//			
+//			Double pred_y = tree.get_pred_for_nth_leaf(leaf_num);
+////			System.out.println("t: " + t + " leaf: " + leaf_num + " pred_y: " + pred_y);
+//			mu_vals[n_g] = un_transform_y(pred_y);
+//		}
+//		return mu_vals;
+//	}	
 	
 	private int maximalTreeGeneration(){
 		int max_gen = Integer.MIN_VALUE;

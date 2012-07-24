@@ -8,15 +8,17 @@ import CGM_Statistics.StatToolbox;
 public abstract class CGMBART_gibbs extends CGMBART_init implements Serializable {
 	private static final long serialVersionUID = 1280579612167425306L;
 	
+	
 	/** during debugging, we may want to fix sigsq */
 	protected double fixed_sigsq;
 	/** which gibbs sample are we on now? */
 	protected int gibb_sample_num;
 	
+	
 	@Override
 	public void Build() {
 		//this can be different for any BART implementation
-		SetupGibbsSampling();
+		SetupGibbsSampling();		
 		//this section is different for the different BART implementations
 		//but it basically does all the Gibbs sampling
 		DoGibbsSampling();
@@ -40,7 +42,7 @@ public abstract class CGMBART_gibbs extends CGMBART_init implements Serializable
 				}				
 				SampleTree(gibb_sample_num, t, cgm_trees, tree_array_illustration);
 				SampleMus(gibb_sample_num, t);
-				gibbs_samples_of_cgm_trees.add(gibb_sample_num, cgm_trees);
+				gibbs_samples_of_cgm_trees.set(gibb_sample_num, cgm_trees);
 				if (stop_bit){
 					return;
 				}				
@@ -127,7 +129,7 @@ public abstract class CGMBART_gibbs extends CGMBART_init implements Serializable
 		
 		cgm_trees.add(tree_star);
 		//now set the new trees in the gibbs sample pantheon, keep updating it...
-		gibbs_samples_of_cgm_trees.set(sample_num, cgm_trees);
+		gibbs_samples_of_cgm_trees.add(sample_num, cgm_trees);
 //		System.out.println("SampleTree sample_num " + sample_num + " cgm_trees " + cgm_trees);
 		
 		tree_array_illustration.AddTree(tree_star);
@@ -279,4 +281,15 @@ public abstract class CGMBART_gibbs extends CGMBART_init implements Serializable
 	public void setSigsq(double fixed_sigsq){
 		this.fixed_sigsq = fixed_sigsq;
 	}		
+	
+
+
+	@Override
+	protected void FlushData() {
+		for (ArrayList<CGMBARTTreeNode> cgm_trees : gibbs_samples_of_cgm_trees){
+			for (CGMBARTTreeNode tree : cgm_trees){
+				tree.flushNodeData();
+			}
+		}	
+	}	
 }

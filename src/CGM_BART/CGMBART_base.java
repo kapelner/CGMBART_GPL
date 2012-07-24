@@ -30,8 +30,6 @@ public abstract class CGMBART_base extends Classifier implements Serializable {
 
 	/** the current # of trees */
 	protected int num_trees;
-	protected int num_gibbs_burn_in;
-	protected int num_gibbs_total_iterations;	
 
 	/** useful metadata */
 	protected double[] minimum_values_by_attribute;
@@ -51,8 +49,6 @@ public abstract class CGMBART_base extends Classifier implements Serializable {
 		super();
 //		System.out.println("CGMBART constructor");
 		num_trees = DEFAULT_NUM_TREES;
-		num_gibbs_burn_in = DEFAULT_NUM_GIBBS_BURN_IN;
-		num_gibbs_total_iterations = DEFAULT_NUM_GIBBS_TOTAL_ITERATIONS;
 	}	
 	
 	
@@ -72,13 +68,6 @@ public abstract class CGMBART_base extends Classifier implements Serializable {
 		PrintOutEvery = print_out_every;
 	}
 	
-	public void setNumGibbsBurnIn(int num_gibbs_burn_in){
-		this.num_gibbs_burn_in = num_gibbs_burn_in;
-	}
-	
-	public void setNumGibbsTotalIterations(int num_gibbs_total_iterations){
-		this.num_gibbs_total_iterations = num_gibbs_total_iterations;
-	}	
 	
 	public void setAlpha(double alpha){
 		ALPHA = alpha;
@@ -146,10 +135,6 @@ public abstract class CGMBART_base extends Classifier implements Serializable {
 			}
 			maximum_values_by_attribute[j] = max;
 		}
-	}
-	
-	public int numSamplesAfterBurningAndThinning(){
-		return num_gibbs_total_iterations - num_gibbs_burn_in;
 	}	
 	
 	public double[] getMinimum_values_by_attribute() {
