@@ -9,7 +9,11 @@ public abstract class CGMBART_init extends CGMBART_debug implements Serializable
 	private static final long serialVersionUID = 8239599486635371714L;
 
 	protected int num_gibbs_burn_in;
-	protected int num_gibbs_total_iterations;
+	protected int num_gibbs_total_iterations;	
+	/** during debugging, we may want to fix sigsq */
+	protected double fixed_sigsq;
+	/** which gibbs sample are we on now? */
+	protected int gibb_sample_num;		
 	
 	public CGMBART_init() {
 		super();
@@ -22,7 +26,8 @@ public abstract class CGMBART_init extends CGMBART_debug implements Serializable
 		InitizializeSigsq();
 		InitiatizeTrees();
 		InitializeMus();		
-		DebugInitialization();		
+		DebugInitialization();	
+		gibb_sample_num = 1;
 	}
 	
 	protected void InitGibbsSamplingData(){
@@ -78,5 +83,9 @@ public abstract class CGMBART_init extends CGMBART_debug implements Serializable
 	
 	public int numSamplesAfterBurningAndThinning(){
 		return num_gibbs_total_iterations - num_gibbs_burn_in;
+	}	
+	
+	public void setSigsq(double fixed_sigsq){
+		this.fixed_sigsq = fixed_sigsq;
 	}	
 }

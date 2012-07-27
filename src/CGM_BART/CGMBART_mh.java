@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import CGM_Statistics.StatToolbox;
 import CGM_Statistics.TreeIllustration;
 
-public abstract class CGMBART_mh extends CGMBART_gibbs implements Serializable {
+public abstract class CGMBART_mh extends CGMBART_gibbs_internal implements Serializable {
 	private static final long serialVersionUID = 1825856510284398699L;
 
 
@@ -19,7 +19,7 @@ public abstract class CGMBART_mh extends CGMBART_gibbs implements Serializable {
 	 * @param iteration_name	we just use this when naming the image file of this illustration
 	 * @return 					the next tree (T_{i+1}) via one iteration of M-H
 	 */
-	public CGMBARTTreeNode iterateMHPosteriorTreeSpaceSearch(CGMBARTTreeNode T_i) {
+	public CGMBARTTreeNode metroHastingsPosteriorTreeSpaceIteration(CGMBARTTreeNode T_i) {
 //		System.out.println("iterateMHPosteriorTreeSpaceSearch");
 		final CGMBARTTreeNode T_star = T_i.clone(true);
 		//each proposal will calculate its own value, but this has to be initialized atop		

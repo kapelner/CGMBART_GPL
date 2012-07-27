@@ -95,9 +95,9 @@ public class Test_CGMBARTTreeNode {
 	@Test
 	public void testCloneStump() {
 		CGMBARTTreeNode cloned_stump = stump.clone();
-		assertEquals(cloned_stump.n_at_this_juncture, stump.n_at_this_juncture);
+		assertEquals(cloned_stump.n_eta, stump.n_eta);
 		assertArrayEquals(stump.responses(), cloned_stump.responses(), 0);
-		for (int i = 0; i < stump.n_at_this_juncture; i++){
+		for (int i = 0; i < stump.n_eta; i++){
 			assertArrayEquals(stump.data.get(i), cloned_stump.data.get(i), 0);
 		}
 		assertTrue(cloned_stump.isLeaf);
@@ -221,7 +221,15 @@ public class Test_CGMBARTTreeNode {
 		assertEquals(double_tree_ext.right.nAdj(), 4);
 		assertEquals(double_tree_ext.left.nAdj(), 5);
 		assertEquals(double_tree_ext.left.left.nAdj(), 2);
+	}
+	
+	
+	@Test 
+	public void testUpdateWithNewResponsesAndPropagate(){
+		CGMBARTTreeNode double_tree_ext = buildDoubleTreeExt();
+		//TODO
 	}	
+	
 
 	
 }

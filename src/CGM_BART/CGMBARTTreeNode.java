@@ -58,7 +58,7 @@ public class CGMBARTTreeNode extends TreeNode implements Cloneable, Serializable
 	/** the generation of this node from the top node (root note has generation = 0 by definition) */
 	public int generation;
 	/** the amount of data points at this node */
-	public int n_at_this_juncture;
+	public int n_eta;
 
 	public ArrayList<Integer> predictors_that_can_be_assigned;
 	public ArrayList<Double> possible_split_values;
@@ -71,7 +71,7 @@ public class CGMBARTTreeNode extends TreeNode implements Cloneable, Serializable
 		this.data = clone_data_matrix_with_new_y_optional(data, null);
 		this.cgmbart = cgmbart;
 		if (data != null){
-			n_at_this_juncture = data.size();
+			n_eta = data.size();
 		}
 		if (parent != null){
 			generation = parent.generation + 1;
@@ -88,8 +88,8 @@ public class CGMBARTTreeNode extends TreeNode implements Cloneable, Serializable
 	}
 	
 	public double[] responses(){
-		double[] ys = new double[n_at_this_juncture];
-		for (int i = 0; i < n_at_this_juncture; i++){
+		double[] ys = new double[n_eta];
+		for (int i = 0; i < n_eta; i++){
 			double[] record = data.get(i);
 			ys[i] = record[record.length - 1];
 		}
@@ -129,7 +129,7 @@ public class CGMBARTTreeNode extends TreeNode implements Cloneable, Serializable
 		copy.splitAttributeM = splitAttributeM;
 		copy.splitValue = splitValue;
 		copy.klass = klass;	
-		copy.n_at_this_juncture = n_at_this_juncture;
+		copy.n_eta = n_eta;
 		copy.predictors_that_can_be_assigned = predictors_that_can_be_assigned;
 		copy.possible_split_values = possible_split_values;
 		return copy;
@@ -320,11 +320,11 @@ public class CGMBARTTreeNode extends TreeNode implements Cloneable, Serializable
 
 	//serializable happy
 	public int getN() {
-		return n_at_this_juncture;
+		return n_eta;
 	}
 
 	public void setN(int n_at_this_juncture) {
-		this.n_at_this_juncture = n_at_this_juncture;
+		this.n_eta = n_at_this_juncture;
 	}
 
 	public double Evaluate(double[] record) {
@@ -374,13 +374,13 @@ public class CGMBARTTreeNode extends TreeNode implements Cloneable, Serializable
 			int n_split = ClassificationAndRegressionTree.getSplitPoint(node.data, node.splitAttributeM, node.splitValue);
 			//now set the data in the offspring
 			node.left.data = ClassificationAndRegressionTree.getLowerPortion(node.data, n_split);			
-			node.left.n_at_this_juncture = node.left.data.size();
+			node.left.n_eta = node.left.data.size();
 //			for (int i = 0; i < node.left.n; i++){
 //				System.out.println("parent " + node.stringID() + " left node " + node.left.stringID()+ " record num " + (i+1) + " " + IOTools.StringJoin(node.left.data.get(i), ","));
 //			}
 //			System.out.println("left avg: " + StatToolbox.sample_average(node.left.get_ys_in_data())); 
 			node.right.data = ClassificationAndRegressionTree.getUpperPortion(node.data, n_split);
-			node.right.n_at_this_juncture = node.right.data.size();
+			node.right.n_eta = node.right.data.size();
 //			for (int i = 0; i < node.right.n; i++){
 //				System.out.println("parent " + node.stringID() + " right node " + node.right.stringID()+ " record num " + (i+1) + " " + IOTools.StringJoin(node.right.data.get(i), ","));
 //			}		
@@ -527,7 +527,7 @@ public class CGMBARTTreeNode extends TreeNode implements Cloneable, Serializable
 
 	public double sumResponses() {
 		double sum = 0;
-		for (int i = 0; i < n_at_this_juncture; i++){
+		for (int i = 0; i < n_eta; i++){
 			double[] record = data.get(i);
 			sum += record[record.length - 1];
 		}
