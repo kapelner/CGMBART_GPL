@@ -28,7 +28,6 @@ import java.io.File;
 import java.io.IOException;
 
 import CGM_BART.*;
-import CGM_Statistics.Classifier;
 
 public class DataAnalysis {
 	

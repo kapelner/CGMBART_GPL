@@ -40,13 +40,14 @@ public abstract class CGMBART_init extends CGMBART_debug implements Serializable
 		gibbs_samples_of_sigsq_after_burn_in = new ArrayList<Double>(num_gibbs_total_iterations - num_gibbs_burn_in);		
 	}
 	
+	protected static final double INITIAL_PRED = -0.5; //bare minimum... doesn't matter anyway
 	protected void InitiatizeTrees() {
 		//create the array of trees for the zeroth gibbs sample
 		ArrayList<CGMBARTTreeNode> cgm_trees = new ArrayList<CGMBARTTreeNode>(num_trees);		
 		for (int i = 0; i < num_trees; i++){
 //			System.out.println("CGMBART create prior on tree: " + (i + 1));
 			CGMBARTTreeNode stump = new CGMBARTTreeNode(null, X_y, this);
-			stump.y_prediction = 0.0; //default
+			stump.y_prediction = INITIAL_PRED;
 //			modifyTreeForDebugging(tree);
 			stump.updateWithNewResponsesAndPropagate(X_y, y_trans, p);
 			cgm_trees.add(stump);

@@ -4,14 +4,13 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import CGM_Statistics.Classifier;
 
 
 public abstract class CGMBART_base extends Classifier implements Serializable {
 	private static final long serialVersionUID = -7068937615952180038L;
 
 
-	protected static final int DEFAULT_NUM_TREES = 5;
+	protected static final int DEFAULT_NUM_TREES = 1;
 	//this burn in number needs to be computed via some sort of moving average or time series calculation
 	protected static final int DEFAULT_NUM_GIBBS_BURN_IN = 500;
 	protected static final int DEFAULT_NUM_GIBBS_TOTAL_ITERATIONS = 2000; //this must be larger than the number of burn in!!!

@@ -261,6 +261,7 @@ public class CGMBARTTreeNode extends TreeNode implements Cloneable, Serializable
 
 	public double classification_or_regression_prediction() {
 		if (klass == null){
+//			System.out.println("evaluate " + y_prediction);
 			return y_prediction;
 		}
 		return klass;

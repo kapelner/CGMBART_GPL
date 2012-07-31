@@ -1,4 +1,4 @@
-package CGM_Statistics;
+package CGM_BART;
 
 /*
     GemIdent v1.1b

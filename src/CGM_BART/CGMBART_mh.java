@@ -19,7 +19,7 @@ public abstract class CGMBART_mh extends CGMBART_gibbs_internal implements Seria
 	 * @param iteration_name	we just use this when naming the image file of this illustration
 	 * @return 					the next tree (T_{i+1}) via one iteration of M-H
 	 */
-	public CGMBARTTreeNode metroHastingsPosteriorTreeSpaceIteration(CGMBARTTreeNode T_i) {
+	protected CGMBARTTreeNode metroHastingsPosteriorTreeSpaceIteration(CGMBARTTreeNode T_i) {
 //		System.out.println("iterateMHPosteriorTreeSpaceSearch");
 		final CGMBARTTreeNode T_star = T_i.clone(true);
 		//each proposal will calculate its own value, but this has to be initialized atop		
@@ -53,7 +53,7 @@ public abstract class CGMBART_mh extends CGMBART_gibbs_internal implements Seria
 		return T_i;
 	}
 
-	private double doMHGrowAndCalcLnR(CGMBARTTreeNode T_i, CGMBARTTreeNode T_star) {
+	protected double doMHGrowAndCalcLnR(CGMBARTTreeNode T_i, CGMBARTTreeNode T_star) {
 //		System.out.println("doMHGrowAndCalcLnR on " + T_star.stringID() + " old depth: " + T_star.deepestNode());
 		CGMBARTTreeNode grow_node = pickGrowNode(T_star);
 		//if we can't grow, reject offhand
@@ -76,7 +76,7 @@ public abstract class CGMBART_mh extends CGMBART_gibbs_internal implements Seria
 		return ln_transition_ratio_grow + ln_likelihood_ratio_grow + ln_tree_structure_ratio_grow;
 	}
 	
-	private double doMHPruneAndCalcLnR(CGMBARTTreeNode T_i, CGMBARTTreeNode T_star) {
+	protected double doMHPruneAndCalcLnR(CGMBARTTreeNode T_i, CGMBARTTreeNode T_star) {
 		CGMBARTTreeNode prune_node = pickPruneNode(T_star);
 		//if we can't grow, reject offhand
 		if (prune_node == null){
@@ -97,7 +97,7 @@ public abstract class CGMBART_mh extends CGMBART_gibbs_internal implements Seria
 		return ln_transition_ratio_prune + ln_likelihood_ratio_prune + ln_tree_structure_ratio_prune;
 	}	
 	
-	private CGMBARTTreeNode pickPruneNode(CGMBARTTreeNode T) {
+	protected CGMBARTTreeNode pickPruneNode(CGMBARTTreeNode T) {
 		
 		//2 checks
 		//a) If this is the root, we can't prune so return null
@@ -118,8 +118,7 @@ public abstract class CGMBART_mh extends CGMBART_gibbs_internal implements Seria
 		return prunable_nodes.get((int)Math.floor(StatToolbox.rand() * prunable_nodes.size()));
 	}
 	
-
-	private double calcLnTransRatioPrune(CGMBARTTreeNode T_i, CGMBARTTreeNode T_star, CGMBARTTreeNode prune_node) {
+	protected double calcLnTransRatioPrune(CGMBARTTreeNode T_i, CGMBARTTreeNode T_star, CGMBARTTreeNode prune_node) {
 		int w_2 = T_i.numPruneNodesAvailable();
 		int b = T_i.numLeaves();
 		int p_adj = prune_node.pAdj();
@@ -128,7 +127,7 @@ public abstract class CGMBART_mh extends CGMBART_gibbs_internal implements Seria
 		return Math.log(w_2) + Math.log(n_repeat) - Math.log(b - 1) - Math.log(p_adj) - Math.log(n_adj); 
 	}
 
-	private void growNode(CGMBARTTreeNode grow_node) {
+	protected void growNode(CGMBARTTreeNode grow_node) {
 		//we already assume the node can grow, now we just have to pick an attribute and split point
 		grow_node.splitAttributeM = grow_node.pickRandomPredictorThatCanBeAssigned();
 		grow_node.splitValue = grow_node.pickRandomSplitValue();
@@ -138,8 +137,7 @@ public abstract class CGMBART_mh extends CGMBART_gibbs_internal implements Seria
 		CGMBARTTreeNode.propagateRuleChangeOrSwapThroughoutTree(grow_node, true);
 	}
 
-
-	private double calcLnTreeStructureRatioGrow(CGMBARTTreeNode grow_node) {
+	protected double calcLnTreeStructureRatioGrow(CGMBARTTreeNode grow_node) {
 		int d_eta = grow_node.generation;
 		int p_adj = grow_node.pAdj();
 		int n_adj = grow_node.nAdj();
@@ -152,7 +150,7 @@ public abstract class CGMBART_mh extends CGMBART_gibbs_internal implements Seria
 				- Math.log(n_adj);
 	}
 
-	private double calcLnLikRatioGrow(CGMBARTTreeNode grow_node) {
+	protected double calcLnLikRatioGrow(CGMBARTTreeNode grow_node) {
 		double sigsq = gibbs_samples_of_sigsq.get(gibb_sample_num - 1);
 		int n_ell = grow_node.getN();
 		int n_ell_L = grow_node.left.getN();
@@ -175,7 +173,7 @@ public abstract class CGMBART_mh extends CGMBART_gibbs_internal implements Seria
 		return c + d * e;
 	}
 
-	private double calcLnTransRatioGrow(CGMBARTTreeNode T_i, CGMBARTTreeNode T_star, CGMBARTTreeNode grow_node) {
+	protected double calcLnTransRatioGrow(CGMBARTTreeNode T_i, CGMBARTTreeNode T_star, CGMBARTTreeNode grow_node) {
 		int b = T_i.numLeaves();
 		int p_adj = grow_node.pAdj();
 		int n_adj = grow_node.nAdj();

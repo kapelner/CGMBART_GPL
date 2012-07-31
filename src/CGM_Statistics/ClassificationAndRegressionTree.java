@@ -29,6 +29,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import CGM_BART.Classifier;
+
 
 public abstract class ClassificationAndRegressionTree extends Classifier {
 	private static final long serialVersionUID = 3362976822356958024L;

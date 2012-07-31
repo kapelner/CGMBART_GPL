@@ -35,15 +35,18 @@ public abstract class CGMBART_gibbs_internal extends CGMBART_gibbs_base implemen
 		for (int i = 0; i < n; i++){
 			sum_ys_without_jth_tree[i] = 0; //initialize at zero, then add it up over all trees except the jth
 			for (int t = 0; t < trees_to_subtract.size(); t++){
-				sum_ys_without_jth_tree[i] += trees_to_subtract.get(t).Evaluate(X_y.get(i));
+				double y_i = un_transform_y(trees_to_subtract.get(t).Evaluate(X_y.get(i)));
+				sum_ys_without_jth_tree[i] += y_i;
+//				System.out.println(y_i);
 			}
 		}
 		//now we need to subtract this from y
 		double[] Rjs = new double[n];
 		for (int i = 0; i < n; i++){
-			Rjs[i] = y_trans[i] - sum_ys_without_jth_tree[i];
+			Rjs[i] = y[i] - sum_ys_without_jth_tree[i];
+			Rjs[i] = transform_y(Rjs[i]);
 		}
-//		System.out.println("getResidualsForAllTreesExcept one " +  new DoubleMatrix(Rjs).transpose().toString(2));
+		System.out.println("getResidualsForAllTreesExcept one " +  Tools.StringJoin(Rjs, ", "));
 		return Rjs;
 	}
 	
@@ -67,12 +70,12 @@ public abstract class CGMBART_gibbs_internal extends CGMBART_gibbs_base implemen
 		}
 	}
 
-	private double calcLeafPosteriorMean(CGMBARTTreeNode node, double sigsq, double posterior_var) {
+	protected double calcLeafPosteriorMean(CGMBARTTreeNode node, double sigsq, double posterior_var) {
 //		System.out.println("leafPosteriorMean hyper_sigsq_mu " + hyper_sigsq_mu + " node.n " + node.n + " sigsq " + sigsq + " node.avg_response() " + node.avg_response() + " posterior_var " + posterior_var);
 		return (hyper_mu_mu / hyper_sigsq_mu + node.n_eta / sigsq * node.avgResponse()) / (1 / posterior_var);
 	}
 
-	private double calcLeafPosteriorVar(CGMBARTTreeNode node, double sigsq) {
+	protected double calcLeafPosteriorVar(CGMBARTTreeNode node, double sigsq) {
 //		System.out.println("leafPosteriorVar sigsq " + sigsq + " var " + 1 / (1 / hyper_sigsq_mu + node.n * m / sigsq));
 		return 1 / (1 / hyper_sigsq_mu + node.n_eta / sigsq);
 	}
@@ -127,7 +130,7 @@ public abstract class CGMBART_gibbs_internal extends CGMBART_gibbs_base implemen
 		return Rjs;
 	}
 	
-	private double[] getErrorsForAllTrees(int sample_num){
+	protected double[] getErrorsForAllTrees(int sample_num){
 //		System.out.println("getErrorsForAllTrees");
 		double[] sum_ys = new double[n];
 		for (int i = 0; i < n; i++){
@@ -136,15 +139,16 @@ public abstract class CGMBART_gibbs_internal extends CGMBART_gibbs_base implemen
 //				System.out.println("getErrorsForAllTrees m = " + m);
 				//obviously y_vec - \sum_i g_i = \sum_i y_i - g_i
 				CGMBARTTreeNode tree = gibbs_samples_of_cgm_trees.get(sample_num).get(t);
-				double y_hat = tree.Evaluate(X_y.get(i));
-//				System.out.println("i = " + (i + 1) + " y: " + y_trans[i] + " y_hat: " + y_hat + " e: " + (y_trans[i] - y_hat)+ " tree " + tree.stringID());
+				double y_hat = un_transform_y(tree.Evaluate(X_y.get(i)));
+				System.out.println("i = " + (i + 1) + " y: " + y[i] + " y_hat: " + y_hat + " e: " + (y[i] - y_hat)+ " tree " + t);
 				sum_ys[i] += y_hat;
 			}
 		}
 		//now we need to subtract this from y
 		double[] errorjs = new double[n];
 		for (int i = 0; i < n; i++){
-			errorjs[i] = y_trans[i] - sum_ys[i];
+			errorjs[i] = y[i] - sum_ys[i];
+			errorjs[i] = transform_y(errorjs[i]);
 		}
 //		System.out.println("sum_ys " + IOTools.StringJoin(sum_ys, ","));
 //		System.out.println("y_trans " + IOTools.StringJoin(y_trans, ","));

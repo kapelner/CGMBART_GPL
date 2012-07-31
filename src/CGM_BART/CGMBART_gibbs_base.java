@@ -65,7 +65,8 @@ public abstract class CGMBART_gibbs_base extends CGMBART_init implements Seriali
 	protected void SampleMus(int sample_num, int t) {
 //		System.out.println("SampleMu sample_num " +  sample_num + " t " + t + " gibbs array " + gibbs_samples_of_cgm_trees.get(sample_num));
 		CGMBARTTreeNode tree = gibbs_samples_of_cgm_trees.get(sample_num).get(t);
-		assignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsq(tree, gibbs_samples_of_sigsq.get(sample_num - 1));
+		double current_sigsq = gibbs_samples_of_sigsq.get(sample_num - 1);
+		assignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsq(tree, current_sigsq);
 	}
 	
 	protected void SampleTree(int sample_num, int t, ArrayList<CGMBARTTreeNode> cgm_trees, TreeArrayIllustration tree_array_illustration) {
