@@ -3,8 +3,6 @@ package CGM_BART;
 import java.io.Serializable;
 import java.util.ArrayList;
 
-import CGM_Statistics.StatToolbox;
-import CGM_Statistics.TreeIllustration;
 
 public abstract class CGMBART_mh extends CGMBART_gibbs_internal implements Serializable {
 	private static final long serialVersionUID = 1825856510284398699L;
@@ -134,7 +132,7 @@ public abstract class CGMBART_mh extends CGMBART_gibbs_internal implements Seria
 		grow_node.isLeaf = false;
 		grow_node.left = new CGMBARTTreeNode(grow_node);
 		grow_node.right = new CGMBARTTreeNode(grow_node);
-		CGMBARTTreeNode.propagateRuleChangeOrSwapThroughoutTree(grow_node, true);
+		CGMBARTTreeNode.propagateDataByChangedRule(grow_node, true);
 	}
 
 	protected double calcLnTreeStructureRatioGrow(CGMBARTTreeNode grow_node) {
@@ -152,14 +150,14 @@ public abstract class CGMBART_mh extends CGMBART_gibbs_internal implements Seria
 
 	protected double calcLnLikRatioGrow(CGMBARTTreeNode grow_node) {
 		double sigsq = gibbs_samples_of_sigsq.get(gibb_sample_num - 1);
-		int n_ell = grow_node.getN();
-		int n_ell_L = grow_node.left.getN();
-		int n_ell_R = grow_node.right.getN();
+		int n_ell = grow_node.n_eta;
+		int n_ell_L = grow_node.left.n_eta;
+		int n_ell_R = grow_node.right.n_eta;
 		System.out.println("calcLnLikRatioGrow n_ell: " + n_ell + " n_ell_L: " + n_ell_L + " n_ell_R: " + n_ell_R);
+		//now go ahead and calculate it out	in an organized fashion:
 		double sigsq_plus_n_ell_hyper_sisgsq_mu = sigsq + n_ell * hyper_sigsq_mu;
 		double sigsq_plus_n_ell_L_hyper_sisgsq_mu = sigsq + n_ell_L * hyper_sigsq_mu;
 		double sigsq_plus_n_ell_R_hyper_sisgsq_mu = sigsq + n_ell_R * hyper_sigsq_mu;
-		//now go ahead and calculate it out		
 		double c = 0.5 * (
 				Math.log(sigsq) 
 				+ Math.log(sigsq_plus_n_ell_hyper_sisgsq_mu) 
@@ -182,12 +180,12 @@ public abstract class CGMBART_mh extends CGMBART_gibbs_internal implements Seria
 		return Math.log(b) + Math.log(p_adj) + Math.log(n_adj) - Math.log(w_2_star) - Math.log(n_repeat); 
 	}
 
-	protected boolean acceptProposal(double ln_u_0_1, double log_r){
+	private boolean acceptProposal(double ln_u_0_1, double log_r){
 		return ln_u_0_1 < log_r ? true : false;
 	}
 
 	/** The number of data points in a node that we can split on */
-	protected static final int N_RULE = 5;	
+	protected static int N_RULE = 5;	
 
 	protected CGMBARTTreeNode pickGrowNode(CGMBARTTreeNode T) {
 		ArrayList<CGMBARTTreeNode> growth_nodes = CGMBARTTreeNode.getTerminalNodesWithDataAboveOrEqualToN(T, N_RULE);

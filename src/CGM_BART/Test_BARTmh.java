@@ -2,6 +2,8 @@ package CGM_BART;
 
 import static org.junit.Assert.*;
 
+import java.util.HashMap;
+
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -10,7 +12,7 @@ import org.junit.Test;
 
 public class Test_BARTmh {
 
-	private static CGMBART_gibbs_internal bart;
+	private static CGMBART_mh bart;
 	private static final int NB = 10;
 	private static final int NGAndNB = 20;
 	
@@ -36,32 +38,130 @@ public class Test_BARTmh {
 	public void tearDown() throws Exception {
 	}
 	
+	private static final double BigN = 100000;
 	
-	@Test
-	public void testGetErrorsForAllTrees(){
-		int num_trees = 10;
-		bart.setNumTrees(num_trees);
-		bart.InitGibbsSamplingData();
-		bart.InitiatizeTrees();
-
-		double[] errors = bart.getErrorsForAllTrees(0);
+	@Test	
+	public void testPickGrowNode(){
+		bart.SetupGibbsSampling();
+		CGMBART_mh.N_RULE = 1;
 		
-//		System.out.println("Y(" + CGMBART_init.INITIAL_PRED + ") = " + bart.un_transform_y(CGMBART_init.INITIAL_PRED));
-//		System.out.println("Y = " + Tools.StringJoin(bart.y, ",") + "  avg_y = " + StatToolbox.sample_average(bart.y));
-//		System.out.println("Y_t = " + Tools.StringJoin(bart.y_trans, ",") + "  avg_y_t = " + StatToolbox.sample_average(bart.y_trans));
-//		System.out.println("errors = " + Tools.StringJoin(errors, ","));
+		//make sure stumps always grown
+		CGMBARTTreeNode tree = bart.gibbs_samples_of_cgm_trees.get(0).get(0);		
+		CGMBARTTreeNode grow_node = bart.pickGrowNode(tree);	
+		assertEquals(tree, grow_node);
 		
+		//now grow it once and make sure it's never the stump and that we pick the grow correctly
+		tree.splitAttributeM = 1;
+		tree.splitValue = 20.0;
+		tree.isLeaf = false;
+		tree.left = new CGMBARTTreeNode(tree);
+		tree.right = new CGMBARTTreeNode(tree);
+		CGMBARTTreeNode.propagateDataByChangedRule(tree, true);
 		
-		errors = bart.un_transform_y(errors);
-		double[] expected_errors = new double[bart.n];
-		for (int i = 0; i < bart.n; i++){
-			expected_errors[i] = bart.y[i] - num_trees * bart.un_transform_y(CGMBART_init.INITIAL_PRED);
+		HashMap<CGMBARTTreeNode, Integer> counts = new HashMap<CGMBARTTreeNode, Integer>(2);
+		counts.put(tree.left, 0);
+		counts.put(tree.right, 0);
+		for (int i = 0; i < BigN; i++){
+			grow_node = bart.pickGrowNode(tree);
+			counts.put(grow_node, counts.get(grow_node) + 1);
+			assertTrue(tree != grow_node);
 		}
-		assertArrayEquals(errors, expected_errors, 0.0001);
+		assertEquals(counts.get(tree.left) / BigN, 0.5, 0.001);
+		assertEquals(counts.get(tree.right) / BigN, 0.5, 0.001);
 		
-
+		//now grow it again
+		tree.right.splitAttributeM = 0;
+		tree.right.splitValue = 0.0;
+		tree.right.isLeaf = false;
+		tree.right.left = new CGMBARTTreeNode(tree.right);
+		tree.right.right = new CGMBARTTreeNode(tree.right);
+		CGMBARTTreeNode.propagateDataByChangedRule(tree, true);
+		
+		counts = new HashMap<CGMBARTTreeNode, Integer>(3);
+		counts.put(tree.left, 0);
+		counts.put(tree.right.left, 0);
+		counts.put(tree.right.right, 0);		
+		for (int i = 0; i < BigN; i++){
+			grow_node = bart.pickGrowNode(tree);
+			counts.put(grow_node, counts.get(grow_node) + 1);
+			assertTrue(tree != grow_node);
+			assertTrue(tree.right != grow_node);
+		}
+		assertEquals(counts.get(tree.left) / BigN, 0.33333, 0.01);
+		assertEquals(counts.get(tree.right.left) / BigN, 0.33333, 0.01);
+		assertEquals(counts.get(tree.right.right) / BigN, 0.33333, 0.01);
 	}	
 	
-
+	@Test	
+	public void testPickPruneNode(){
+		bart.SetupGibbsSampling();
+		CGMBART_mh.N_RULE = 1;
+		
+		//make sure stumps always grown
+		CGMBARTTreeNode tree = bart.gibbs_samples_of_cgm_trees.get(0).get(0);		
+		CGMBARTTreeNode prune_node = bart.pickPruneNode(tree);
+		assertNull(prune_node);
+		
+		//now grow it once and make sure it's never the stump and that we pick the grow correctly
+		tree.splitAttributeM = 1;
+		tree.splitValue = 20.0;
+		tree.isLeaf = false;
+		tree.left = new CGMBARTTreeNode(tree);
+		tree.right = new CGMBARTTreeNode(tree);
+		CGMBARTTreeNode.propagateDataByChangedRule(tree, true);
+		
+		
+		for (int i = 0; i < BigN; i++){
+			prune_node = bart.pickPruneNode(tree);
+			assertEquals(tree, prune_node);
+		}
+		
+		//now grow it again
+		tree.right.splitAttributeM = 0;
+		tree.right.splitValue = 0.0;
+		tree.right.isLeaf = false;
+		tree.right.left = new CGMBARTTreeNode(tree.right);
+		tree.right.right = new CGMBARTTreeNode(tree.right);
+		CGMBARTTreeNode.propagateDataByChangedRule(tree, true);
+				
+		for (int i = 0; i < BigN; i++){
+			prune_node = bart.pickPruneNode(tree);
+			assertEquals(tree.right, prune_node);
+		}
+		
+		
+		//now grow it again
+		tree.right.right.splitAttributeM = 2;
+		tree.right.right.splitValue = 0.0;
+		tree.right.right.isLeaf = false;
+		tree.right.right.left = new CGMBARTTreeNode(tree.right.right);
+		tree.right.right.right = new CGMBARTTreeNode(tree.right.right);
+		CGMBARTTreeNode.propagateDataByChangedRule(tree, true);
+				
+		for (int i = 0; i < BigN; i++){
+			prune_node = bart.pickPruneNode(tree);
+			assertEquals(tree.right.right, prune_node);
+		}	
+		
+		
+		
+		//now grow it again so there's two prune nodes
+		tree.left.splitAttributeM = 2;
+		tree.left.splitValue = 0.0;
+		tree.left.isLeaf = false;
+		tree.left.left = new CGMBARTTreeNode(tree.left);
+		tree.left.right = new CGMBARTTreeNode(tree.left);
+		CGMBARTTreeNode.propagateDataByChangedRule(tree, true);
+				
+		HashMap<CGMBARTTreeNode, Integer> counts = new HashMap<CGMBARTTreeNode, Integer>(2);
+		counts.put(tree.left, 0);
+		counts.put(tree.right.right, 0);		
+		for (int i = 0; i < BigN; i++){
+			prune_node = bart.pickPruneNode(tree);
+			counts.put(prune_node, counts.get(prune_node) + 1);
+		}	
+		assertEquals(counts.get(tree.left) / BigN, 0.5, 0.001);
+		assertEquals(counts.get(tree.right.right) / BigN, 0.5, 0.001);		
+	}
 	
 }

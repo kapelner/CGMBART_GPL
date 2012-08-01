@@ -3,7 +3,6 @@ package CGM_BART;
 import java.util.ArrayList;
 import java.io.Serializable;
 
-import CGM_Statistics.StatToolbox;
 
 public abstract class CGMBART_init extends CGMBART_debug implements Serializable {
 	private static final long serialVersionUID = 8239599486635371714L;

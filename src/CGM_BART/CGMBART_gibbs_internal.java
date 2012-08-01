@@ -4,7 +4,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import CGM_Statistics.StatToolbox;
 
 public abstract class CGMBART_gibbs_internal extends CGMBART_gibbs_base implements Serializable {
 	private static final long serialVersionUID = 5591873635969255497L;

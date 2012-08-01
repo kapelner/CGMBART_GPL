@@ -26,14 +26,7 @@ package CGM_BART;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-
-import CGM_Statistics.ClassificationAndRegressionTree;
-import CGM_Statistics.StatToolbox;
-import CGM_Statistics.TreeIllustration;
-import CGM_Statistics.TreeNode;
 
 /**
  * A dumb struct to store information about a 
@@ -44,7 +37,7 @@ import CGM_Statistics.TreeNode;
  * 
  * @author Adam Kapelner
  */
-public class CGMBARTTreeNode extends TreeNode implements Cloneable, Serializable {
+public class CGMBARTTreeNode implements Cloneable, Serializable {
 	private static final long serialVersionUID = -5584590448078741112L;
 
 	/** a link back to the overall bart model */
@@ -59,6 +52,18 @@ public class CGMBARTTreeNode extends TreeNode implements Cloneable, Serializable
 	public int generation;
 	/** the amount of data points at this node */
 	public int n_eta;
+	/** is this node a terminal leaf? */
+	public boolean isLeaf;
+	/** the attribute this node makes a decision on */
+	public Integer splitAttributeM;
+	/** the value this node makes a decision on */
+	public Double splitValue;
+	/** if this is a leaf node, then the result of the classification, otherwise null */
+	public Double klass;
+	/** if this is a leaf node, then the result of the prediction for regression, otherwise null */
+	public Double y_prediction;
+	/** the remaining data records at this point in the tree construction (freed after tree is constructed) */
+	public transient List<double[]> data;	
 
 	public ArrayList<Integer> predictors_that_can_be_assigned;
 	public ArrayList<Double> possible_split_values;
@@ -135,22 +140,6 @@ public class CGMBARTTreeNode extends TreeNode implements Cloneable, Serializable
 		return copy;
 	}
 	
-	
-	//serializable happy
-	public CGMBARTTreeNode getLeft() {
-		return left;
-	}
-	public CGMBARTTreeNode getRight() {
-		return right;
-	}
-	public int getGeneration() {
-		return generation;
-	}
-	public void setGeneration(int generation) {
-		this.generation = generation;
-	}
-
-	
 	//toolbox functions
 	public static ArrayList<CGMBARTTreeNode> getTerminalNodesWithDataAboveOrEqualToN(CGMBARTTreeNode node, int n_rule){
 		ArrayList<CGMBARTTreeNode> terminal_nodes_data_above_n = new ArrayList<CGMBARTTreeNode>();
@@ -168,21 +157,21 @@ public class CGMBARTTreeNode extends TreeNode implements Cloneable, Serializable
 		}
 		else if (!node.isLeaf){ //as long as we're not in a leaf we should recurse
 			if (node.left == null || node.right == null){
-				System.err.println("error node: " + node.stringID());
-				DebugNode(node);
+				System.err.println("error node no children during findTerminalNodesDataAboveOrEqualToN id: " + node.stringID());
+//				DebugNode(node);
 			}			
 			findTerminalNodesDataAboveOrEqualToN(node.left, terminal_nodes, n_rule);
 			findTerminalNodesDataAboveOrEqualToN(node.right, terminal_nodes, n_rule);
 		}
 	}
 
-	public static int numTerminalNodes(CGMBARTTreeNode node){
-		return getTerminalNodesWithDataAboveOrEqualToN(node, 0).size();
-	}
-	
-	public static int numTerminalNodesDataAboveN(CGMBARTTreeNode node, int n_rule){
-		return getTerminalNodesWithDataAboveOrEqualToN(node, n_rule).size();
-	}
+//	public static int numTerminalNodes(CGMBARTTreeNode node){
+//		return getTerminalNodesWithDataAboveOrEqualToN(node, 0).size();
+//	}
+//	
+//	public static int numTerminalNodesDataAboveN(CGMBARTTreeNode node, int n_rule){
+//		return getTerminalNodesWithDataAboveOrEqualToN(node, n_rule).size();
+//	}
 	
 	public static ArrayList<CGMBARTTreeNode> getPrunableNodes(CGMBARTTreeNode node){
 		ArrayList<CGMBARTTreeNode> prunable_nodes = new ArrayList<CGMBARTTreeNode>();
@@ -217,47 +206,47 @@ public class CGMBARTTreeNode extends TreeNode implements Cloneable, Serializable
 		node.splitValue = null;
 	}
 
-	public static HashSet<CGMBARTTreeNode> selectBranchNodesWithTwoLeaves(ArrayList<CGMBARTTreeNode> terminalNodes) { 
-		HashSet<CGMBARTTreeNode> branch_nodes = new HashSet<CGMBARTTreeNode>();
-		for (CGMBARTTreeNode node : terminalNodes){
-			if (node.parent == null){
-				continue;
-			}
-			if (node.parent.left.isLeaf && node.parent.right.isLeaf){
-				branch_nodes.add(node.parent);
-			}
-		}
-		return branch_nodes;
-	}
+//	public static HashSet<CGMBARTTreeNode> selectBranchNodesWithTwoLeaves(ArrayList<CGMBARTTreeNode> terminalNodes) { 
+//		HashSet<CGMBARTTreeNode> branch_nodes = new HashSet<CGMBARTTreeNode>();
+//		for (CGMBARTTreeNode node : terminalNodes){
+//			if (node.parent == null){
+//				continue;
+//			}
+//			if (node.parent.left.isLeaf && node.parent.right.isLeaf){
+//				branch_nodes.add(node.parent);
+//			}
+//		}
+//		return branch_nodes;
+//	}
 	
-	public static ArrayList<CGMBARTTreeNode> findInternalNodes(CGMBARTTreeNode root){
-		ArrayList<CGMBARTTreeNode> internal_nodes = new ArrayList<CGMBARTTreeNode>();
-		findInternalNodesRecursively(root, internal_nodes);
-		return internal_nodes;
-	}
+//	public static ArrayList<CGMBARTTreeNode> findInternalNodes(CGMBARTTreeNode root){
+//		ArrayList<CGMBARTTreeNode> internal_nodes = new ArrayList<CGMBARTTreeNode>();
+//		findInternalNodesRecursively(root, internal_nodes);
+//		return internal_nodes;
+//	}
+//
+//	private static void findInternalNodesRecursively(CGMBARTTreeNode node, ArrayList<CGMBARTTreeNode> internal_nodes) {
+//		//if we are a leaf, get out
+//		if (node.isLeaf){
+//			return;
+//		}
+//		internal_nodes.add(node);
+//		//recurse to find others
+//		findInternalNodesRecursively(node.left, internal_nodes);
+//		findInternalNodesRecursively(node.right, internal_nodes);
+//	}
 
-	private static void findInternalNodesRecursively(CGMBARTTreeNode node, ArrayList<CGMBARTTreeNode> internal_nodes) {
-		//if we are a leaf, get out
-		if (node.isLeaf){
-			return;
-		}
-		internal_nodes.add(node);
-		//recurse to find others
-		findInternalNodesRecursively(node.left, internal_nodes);
-		findInternalNodesRecursively(node.right, internal_nodes);
-	}
-
-	public static ArrayList<CGMBARTTreeNode> findDoublyInternalNodes(CGMBARTTreeNode root) {
-		ArrayList<CGMBARTTreeNode> internal_nodes = findInternalNodes(root);
-		ArrayList<CGMBARTTreeNode> doubly_internal_nodes = new ArrayList<CGMBARTTreeNode>();
-		//remove all those whose children aren't also internal nodes
-		for (CGMBARTTreeNode node : internal_nodes){
-			if (!node.isLeaf && node.parent != null && !node.right.isLeaf && !node.left.isLeaf){
-				doubly_internal_nodes.add(node);
-			}
-		}
-		return doubly_internal_nodes;
-	}
+//	public static ArrayList<CGMBARTTreeNode> findDoublyInternalNodes(CGMBARTTreeNode root) {
+//		ArrayList<CGMBARTTreeNode> internal_nodes = findInternalNodes(root);
+//		ArrayList<CGMBARTTreeNode> doubly_internal_nodes = new ArrayList<CGMBARTTreeNode>();
+//		//remove all those whose children aren't also internal nodes
+//		for (CGMBARTTreeNode node : internal_nodes){
+//			if (!node.isLeaf && node.parent != null && !node.right.isLeaf && !node.left.isLeaf){
+//				doubly_internal_nodes.add(node);
+//			}
+//		}
+//		return doubly_internal_nodes;
+//	}
 
 	public double classification_or_regression_prediction() {
 		if (klass == null){
@@ -283,50 +272,41 @@ public class CGMBARTTreeNode extends TreeNode implements Cloneable, Serializable
 		}
 	}
 
-	public int widestGeneration() {
-		HashMap<Integer, Integer> generation_to_freq = new HashMap<Integer, Integer>();
-		this.widestGeneration(generation_to_freq);
-		Object[] thicknesses = generation_to_freq.values().toArray();
-		//now go through and get the maximum
-		int max_thickness = Integer.MIN_VALUE;
-		for (int i = 0; i < thicknesses.length; i++){
-			if ((Integer)thicknesses[i] > max_thickness){
-				max_thickness = (Integer)thicknesses[i];
-			}
-		}
-		return max_thickness;
-	}
-	public void widestGeneration(HashMap<Integer, Integer> generation_to_freq) {
-		//first do the incrementation
-		if (generation_to_freq.containsKey(this.generation)){
-			//now we check if this node has children to make it thicker
-			if (this.isLeaf){
-				generation_to_freq.put(this.generation, generation_to_freq.get(this.generation) + 1);
-			}
-			else {
-				generation_to_freq.put(this.generation, generation_to_freq.get(this.generation) + 2);
-			}
-		}
-		else {
-			generation_to_freq.put(this.generation, 1);
-		}
-		//if it's a leaf, we're done
-		if (this.isLeaf){
-			return;
-		}		
-		//otherwise, recurse through the children
-		this.left.widestGeneration(generation_to_freq);
-		this.right.widestGeneration(generation_to_freq);
-	}
-
-	//serializable happy
-	public int getN() {
-		return n_eta;
-	}
-
-	public void setN(int n_at_this_juncture) {
-		this.n_eta = n_at_this_juncture;
-	}
+//	public int widestGeneration() {
+//		HashMap<Integer, Integer> generation_to_freq = new HashMap<Integer, Integer>();
+//		this.widestGeneration(generation_to_freq);
+//		Object[] thicknesses = generation_to_freq.values().toArray();
+//		//now go through and get the maximum
+//		int max_thickness = Integer.MIN_VALUE;
+//		for (int i = 0; i < thicknesses.length; i++){
+//			if ((Integer)thicknesses[i] > max_thickness){
+//				max_thickness = (Integer)thicknesses[i];
+//			}
+//		}
+//		return max_thickness;
+//	}
+//	public void widestGeneration(HashMap<Integer, Integer> generation_to_freq) {
+//		//first do the incrementation
+//		if (generation_to_freq.containsKey(this.generation)){
+//			//now we check if this node has children to make it thicker
+//			if (this.isLeaf){
+//				generation_to_freq.put(this.generation, generation_to_freq.get(this.generation) + 1);
+//			}
+//			else {
+//				generation_to_freq.put(this.generation, generation_to_freq.get(this.generation) + 2);
+//			}
+//		}
+//		else {
+//			generation_to_freq.put(this.generation, 1);
+//		}
+//		//if it's a leaf, we're done
+//		if (this.isLeaf){
+//			return;
+//		}		
+//		//otherwise, recurse through the children
+//		this.left.widestGeneration(generation_to_freq);
+//		this.right.widestGeneration(generation_to_freq);
+//	}
 
 	public double Evaluate(double[] record) {
 		CGMBARTTreeNode evalNode = this;
@@ -362,7 +342,7 @@ public class CGMBARTTreeNode extends TreeNode implements Cloneable, Serializable
 			this.right.flushNodeData();
 	}
 	
-	public static void propagateRuleChangeOrSwapThroughoutTree(CGMBARTTreeNode node, boolean clean_cache) {
+	public static void propagateDataByChangedRule(CGMBARTTreeNode node, boolean clean_cache) {
 		//only propagate if we are in a split node and NOT a leaf
 		if (node.left == null || node.right == null){
 			return;
@@ -393,8 +373,8 @@ public class CGMBARTTreeNode extends TreeNode implements Cloneable, Serializable
 //			}
 //			else {
 				//now recursively take care of the children
-				propagateRuleChangeOrSwapThroughoutTree(node.left, clean_cache);
-				propagateRuleChangeOrSwapThroughoutTree(node.right, clean_cache);
+				propagateDataByChangedRule(node.left, clean_cache);
+				propagateDataByChangedRule(node.right, clean_cache);
 //			}
 		}
 	}
@@ -403,7 +383,7 @@ public class CGMBARTTreeNode extends TreeNode implements Cloneable, Serializable
 		//set the root node data
 		this.data = clone_data_matrix_with_new_y_optional(X_y, y_new);
 		//now just propagate away
-		propagateRuleChangeOrSwapThroughoutTree(this, true);
+		propagateDataByChangedRule(this, true);
 	}
 	
 	public static ArrayList<double[]> clone_data_matrix_with_new_y_optional(List<double[]> X_y, double[] y_new){
@@ -462,29 +442,29 @@ public class CGMBARTTreeNode extends TreeNode implements Cloneable, Serializable
 		}
 	}
 	
-	public Double get_pred_for_nth_leaf(int leaf_num) {
-		String leaf_num_binary = Integer.toBinaryString(leaf_num);
-		//now hack off first digit
-		leaf_num_binary = leaf_num_binary.substring(1, leaf_num_binary.length());
-
-//		System.out.println("get_pred_for_nth_leaf gen: directions: " + new String(leaf_num_binary));
-		
-		//now that we have our direction array, now we just iterate down the line, begin right where we are
-		CGMBARTTreeNode node = this;
-		for (char direction : leaf_num_binary.toCharArray()){
-			if (direction == '0'){
-				node = node.left;
-			}
-			else {
-				node = node.right;
-			}
-			//if this node does not exist in our tree, we're done
-			if (node == null){
-				return null;
-			}
-		}
-		return node.y_prediction;
-	}
+//	public Double get_pred_for_nth_leaf(int leaf_num) {
+//		String leaf_num_binary = Integer.toBinaryString(leaf_num);
+//		//now hack off first digit
+//		leaf_num_binary = leaf_num_binary.substring(1, leaf_num_binary.length());
+//
+////		System.out.println("get_pred_for_nth_leaf gen: directions: " + new String(leaf_num_binary));
+//		
+//		//now that we have our direction array, now we just iterate down the line, begin right where we are
+//		CGMBARTTreeNode node = this;
+//		for (char direction : leaf_num_binary.toCharArray()){
+//			if (direction == '0'){
+//				node = node.left;
+//			}
+//			else {
+//				node = node.right;
+//			}
+//			//if this node does not exist in our tree, we're done
+//			if (node == null){
+//				return null;
+//			}
+//		}
+//		return node.y_prediction;
+//	}
 	
 	public Double prediction_untransformed(){
 		if (y_prediction == null){
@@ -623,52 +603,115 @@ public class CGMBARTTreeNode extends TreeNode implements Cloneable, Serializable
 	}
 
 	
-	private static void DebugWholeTreeRecursively(CGMBARTTreeNode node){
-		DebugNode(node);
-		if (node.left != null){
-			DebugWholeTreeRecursively(node.left);
-		}
-		if (node.right != null){
-			DebugWholeTreeRecursively(node.right);
-		}		
+//	private static void DebugWholeTreeRecursively(CGMBARTTreeNode node){
+//		DebugNode(node);
+//		if (node.left != null){
+//			DebugWholeTreeRecursively(node.left);
+//		}
+//		if (node.right != null){
+//			DebugWholeTreeRecursively(node.right);
+//		}		
+//	}	
+//	
+//	public static void DebugWholeTree(CGMBARTTreeNode root){
+//		System.out.println("DEBUG WHOLE TREE ***********************************");
+//		DebugWholeTreeRecursively(root);
+//		System.out.println("****************************************************");
+//	}	
+//	
+//	public static void DebugNode(CGMBARTTreeNode node){	
+//		System.out.println(" DEBUG: " + node.stringLocation(true) + "   ID: " + node.stringID());
+//		if (node.data != null){
+//			System.out.println("  data n: " + node.data.size());
+//		}	
+//		if (node.parent != null){
+//			System.out.println("  parent: " + node.parent.stringID());
+//		}
+//		else {
+//			System.out.println("  parent: null");
+//		}
+//		if (node.left != null){
+//			System.out.println("  left: " + node.left.stringID() + "\t\tnL: " + node.left.data.size());
+//		}
+//		if (node.right != null){
+//			System.out.println("  right: " + node.right.stringID() + "\t\tnR: " + node.right.data.size());
+//		}
+//		System.out.println("  gen: " + node.generation);
+//		if (node.isLeaf){
+//			System.out.println("  isleaf");
+//		}
+//
+//		if (node.splitAttributeM != null){
+//			System.out.println("  splitAtrr: " + node.splitAttributeM);
+//		}
+//		if (node.splitValue != null){
+//			System.out.println("  splitval: " + node.splitValue);
+//		}
+//		if (node.klass != null){
+//			System.out.println("  class: " + node.klass);
+//		}
+//	}
+	
+	public String stringID() {
+		return toString().split("@")[1];
 	}	
 	
-	public static void DebugWholeTree(CGMBARTTreeNode root){
-		System.out.println("DEBUG WHOLE TREE ***********************************");
-		DebugWholeTreeRecursively(root);
-		System.out.println("****************************************************");
-	}	
+	public double[] get_ys_in_data(){
+		double[] ys = new double[data.size()];
+		for (int i = 0; i < data.size(); i++){
+			double[] record = data.get(i);
+			ys[i] = record[record.length - 1];
+		}
+		return ys;
+	}
 	
-	public static void DebugNode(CGMBARTTreeNode node){	
-		System.out.println(" DEBUG: " + node.stringLocation(true) + "   ID: " + node.stringID());
-		if (node.data != null){
-			System.out.println("  data n: " + node.data.size());
-		}	
-		if (node.parent != null){
-			System.out.println("  parent: " + node.parent.stringID());
-		}
-		else {
-			System.out.println("  parent: null");
-		}
-		if (node.left != null){
-			System.out.println("  left: " + node.left.stringID() + "\t\tnL: " + node.left.data.size());
-		}
-		if (node.right != null){
-			System.out.println("  right: " + node.right.stringID() + "\t\tnR: " + node.right.data.size());
-		}
-		System.out.println("  gen: " + node.generation);
-		if (node.isLeaf){
-			System.out.println("  isleaf");
-		}
-
-		if (node.splitAttributeM != null){
-			System.out.println("  splitAtrr: " + node.splitAttributeM);
-		}
-		if (node.splitValue != null){
-			System.out.println("  splitval: " + node.splitValue);
-		}
-		if (node.klass != null){
-			System.out.println("  class: " + node.klass);
-		}
+	//serializable happy
+	public CGMBARTTreeNode getLeft() {
+		return left;
+	}
+	public CGMBARTTreeNode getRight() {
+		return right;
+	}
+	public int getGeneration() {
+		return generation;
+	}
+	public void setGeneration(int generation) {
+		this.generation = generation;
 	}	
+	public boolean isLeaf() {
+		return isLeaf;
+	}
+	public void setLeaf(boolean isLeaf) {
+		this.isLeaf = isLeaf;
+	}
+	public void setLeft(CGMBARTTreeNode left) {
+		this.left = left;
+	}
+	public void setRight(CGMBARTTreeNode right) {
+		this.right = right;
+	}
+	public int getSplitAttributeM() {
+		return splitAttributeM;
+	}
+	public void setSplitAttributeM(int splitAttributeM) {
+		this.splitAttributeM = splitAttributeM;
+	}
+	public double getSplitValue() {
+		return splitValue;
+	}
+	public void setSplitValue(double splitValue) {
+		this.splitValue = splitValue;
+	}
+	public Double getKlass() {
+		return klass;
+	}
+	public void setKlass(Double klass) {
+		this.klass = klass;
+	}
+	public int getNEta() {
+		return n_eta;
+	}
+	public void setNEta(int n_eta) {
+		this.n_eta = n_eta;
+	}
 }

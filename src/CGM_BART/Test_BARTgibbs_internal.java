@@ -11,7 +11,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import CGM_Statistics.StatToolbox;
 
 public class Test_BARTgibbs_internal {
 

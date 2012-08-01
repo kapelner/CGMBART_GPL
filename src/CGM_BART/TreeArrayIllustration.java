@@ -31,8 +31,6 @@ import java.util.HashMap;
 
 import javax.media.jai.JAI;
 
-import CGM_Statistics.*;
-
 public class TreeArrayIllustration {
 
 	private int sample_num;

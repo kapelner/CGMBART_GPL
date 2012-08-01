@@ -8,8 +8,6 @@ import java.io.PrintWriter;
 import java.io.Serializable;
 import java.util.ArrayList;
 
-import CGM_Statistics.StatToolbox;
-import CGM_Statistics.TreeIllustration;
 
 public abstract class CGMBART_debug extends CGMBART_hyperparams implements Serializable {
 	private static final long serialVersionUID = -5808113783423229776L;
