@@ -171,12 +171,12 @@ public abstract class CGMBART_mh extends CGMBART_gibbs_internal implements Seria
 		return c + d * e;
 	}
 
-	protected double calcLnTransRatioGrow(CGMBARTTreeNode T_i, CGMBARTTreeNode T_star, CGMBARTTreeNode grow_node) {
+	protected double calcLnTransRatioGrow(CGMBARTTreeNode T_i, CGMBARTTreeNode T_star, CGMBARTTreeNode node_grown_in_Tstar) {
 		int b = T_i.numLeaves();
-		int p_adj = grow_node.pAdj();
-		int n_adj = grow_node.nAdj();
+		int p_adj = node_grown_in_Tstar.pAdj();
+		int n_adj = node_grown_in_Tstar.nAdj();
 		int w_2_star = T_star.numPruneNodesAvailable();
-		int n_repeat = grow_node.splitValuesRepeated();
+		int n_repeat = node_grown_in_Tstar.splitValuesRepeated();
 		return Math.log(b) + Math.log(p_adj) + Math.log(n_adj) - Math.log(w_2_star) - Math.log(n_repeat); 
 	}
 

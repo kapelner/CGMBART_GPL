@@ -555,12 +555,12 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		
 		//now we need to look in the design matrix and see what values are available
 		ArrayList<Double> possible_values = new ArrayList<Double>();
-//		System.out.println("possibleSplitValuesGivenAttribute cgmbart.getN(): " + cgmbart.getN());
-		for (int i = 0; i < cgmbart.getN(); i++){
-			double split_val = cgmbart.getData().get(i)[this.splitAttributeM];
+		System.out.println("possibleSplitValuesGivenAttribute this.n_eta: " + this.n_eta);
+		for (int i = 0; i < this.n_eta; i++){
+			double split_val = this.data.get(i)[this.splitAttributeM];
 //			System.out.println("possibleSplitValuesGivenAttribute split_val: " + split_val);
 			if (split_val < min_split_value_lineage && split_val != abs_max_split_val){
-				possible_values.add(cgmbart.getData().get(i)[this.splitAttributeM]);
+				possible_values.add(split_val);
 			}
 		}	
 		return possible_values;
@@ -591,11 +591,18 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		return possible_split_values.get((int) Math.floor(StatToolbox.rand() * n_adj));
 	}
 	
-
+	/**
+	 * How many times is this split value available to split on?
+	 * @return
+	 */
 	public int splitValuesRepeated() {
-//		System.out.println("splitValuesRepeated j = " + this.splitAttributeM + " x_ij = " + this.splitValue);
-//		System.out.println("freq: " + cgmbart.frequencyValueForAttribute(this.splitAttributeM, this.splitValue));
-		return cgmbart.frequencyValueForAttribute(this.splitAttributeM, this.splitValue);
+		int n_repeat = 0;
+		for (int i = 0; i < this.n_eta; i++){
+			if (this.splitValue == this.data.get(i)[this.splitAttributeM]){
+				n_repeat++;
+			}
+		}
+		return n_repeat;
 	}	
 
 	public boolean isStump() {

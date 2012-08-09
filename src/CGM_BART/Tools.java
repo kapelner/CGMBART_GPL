@@ -1,5 +1,6 @@
 package CGM_BART;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
 public class Tools {
@@ -19,6 +20,10 @@ public class Tools {
 		}
 		return joined;
 	}
+	
+	public static String StringJoin(ArrayList<Double> all, String joinby){
+		return StringJoin(all.toArray(), joinby);
+	}	
 	
 	/**
 	 * Joins a collection of strings into one string
