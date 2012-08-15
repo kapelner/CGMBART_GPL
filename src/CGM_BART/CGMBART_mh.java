@@ -59,7 +59,7 @@ public abstract class CGMBART_mh extends CGMBART_gibbs_internal implements Seria
 			System.out.println("proposal ln(r) = -oo DUE TO CANNOT GROW\n\n");
 			return Double.NEGATIVE_INFINITY;					
 		}
-		growNode(grow_node);
+		growNodeWithRandomRule(grow_node);
 //		System.out.println("grow_node: " + grow_node.stringID() + " new depth: " + T_star.deepestNode() + " " + grow_node.deepestNode());
 		double ln_transition_ratio_grow = calcLnTransRatioGrow(T_i, T_star, grow_node);
 		double ln_likelihood_ratio_grow = calcLnLikRatioGrow(grow_node);
@@ -125,7 +125,7 @@ public abstract class CGMBART_mh extends CGMBART_gibbs_internal implements Seria
 		return Math.log(w_2) + Math.log(n_repeat) - Math.log(b - 1) - Math.log(p_adj) - Math.log(n_adj); 
 	}
 
-	protected void growNode(CGMBARTTreeNode grow_node) {
+	protected void growNodeWithRandomRule(CGMBARTTreeNode grow_node) {
 		//we already assume the node can grow, now we just have to pick an attribute and split point
 		grow_node.splitAttributeM = grow_node.pickRandomPredictorThatCanBeAssigned();
 		grow_node.splitValue = grow_node.pickRandomSplitValue();

@@ -184,7 +184,7 @@ public class Test_BARTmh {
 		CGMBARTTreeNode.propagateDataByChangedRule(first_node_grown, true);
 		assertEquals(1, T_star.numPruneNodesAvailable()); //w_2^* = 1
 		
-		double trans_ratio = Math.pow(Math.E, bart.calcLnTransRatioGrow(T_i, T_star, first_node_grown));
+		double trans_ratio = Math.exp(bart.calcLnTransRatioGrow(T_i, T_star, first_node_grown));
 		assertEquals(3, trans_ratio, 0.0001);
 		
 		//now go further and test again the grow function
@@ -195,8 +195,6 @@ public class Test_BARTmh {
 		assertEquals(second_node_grown.pAdj(), 2); //padj = 2
 		assertEquals(T_star.numPruneNodesAvailable(), 1); //w_2^* = 1
 		second_node_grown.splitAttributeM = 2;
-		System.out.println("further");
-		System.out.println(Tools.StringJoin(second_node_grown.possibleSplitValuesGivenAttribute(), ", "));
 		assertEquals(second_node_grown.nAdj(), 2); //n_adj = 2 since there are 2 zeroes
 		second_node_grown.splitValue = 0.0;
 		assertEquals(second_node_grown.splitValuesRepeated(), 2); //n_repeat = 2 since the zero is repeated 2 times at this juncture
@@ -205,7 +203,7 @@ public class Test_BARTmh {
 		second_node_grown.right = new CGMBARTTreeNode(T_star);		
 		CGMBARTTreeNode.propagateDataByChangedRule(T_star, true);
 		
-		trans_ratio = Math.pow(Math.E, bart.calcLnTransRatioGrow(T_i, T_star, second_node_grown));
+		trans_ratio = Math.exp(bart.calcLnTransRatioGrow(T_i, T_star, second_node_grown));
 		assertEquals(4, trans_ratio, 0.0001);	
 		
 		//now test the prune function
@@ -220,7 +218,7 @@ public class Test_BARTmh {
 		assertEquals(prune_node.nAdj(), 2); //n_adj = 2 since there are 2 zeroes
 		assertEquals(prune_node.splitValuesRepeated(), 2); //n_repeat = 2
 		
-		trans_ratio = Math.pow(Math.E, bart.calcLnTransRatioPrune(T_i, T_star, prune_node));
+		trans_ratio = Math.exp(bart.calcLnTransRatioPrune(T_i, T_star, prune_node));
 		assertEquals(0.25, trans_ratio, 0.0001);	
 		CGMBARTTreeNode.pruneTreeAt(prune_node);
 		
@@ -235,9 +233,78 @@ public class Test_BARTmh {
 		assertEquals(prune_node.nAdj(), 4); //n_adj = 4 since there are 4 zeroes
 		assertEquals(prune_node.splitValuesRepeated(), 4); //n_repeat = 4	
 		
-		trans_ratio = Math.pow(Math.E, bart.calcLnTransRatioPrune(T_i, T_star, prune_node));
+		trans_ratio = Math.exp(bart.calcLnTransRatioPrune(T_i, T_star, prune_node));
 		assertEquals(0.333333, trans_ratio, 0.0001);	
 		CGMBARTTreeNode.pruneTreeAt(prune_node);	
 	}
 
+	@Test	
+	public void testCalcLnTreeStructureRatioGrow(){
+		//we're going to test the stump's transition ratio
+		CGMBARTTreeNode T_i = Test_CGMBARTTreeNode.stump;
+		CGMBARTTreeNode T_star = Test_CGMBARTTreeNode.stump.clone();
+		CGMBARTTreeNode first_node_grown = T_star;
+		assertEquals(first_node_grown.pAdj(), 3); //padj = 3
+		
+		//set up the stump as a tree
+		first_node_grown.splitAttributeM = 0;
+		assertEquals(first_node_grown.nAdj(), 4); //n_adj = 4 since there are 4 zeroes
+		first_node_grown.splitValue = 0.0;
+		assertEquals(first_node_grown.splitValuesRepeated(), 4); //n_repeat = 4 since the zero is repeated 4 times
+		first_node_grown.isLeaf = false;
+		first_node_grown.left = new CGMBARTTreeNode(T_star);
+		first_node_grown.right = new CGMBARTTreeNode(T_star);
+		CGMBARTTreeNode.propagateDataByChangedRule(first_node_grown, true);
+		assertEquals(0, first_node_grown.generation); //d_eta = 0
+		
+		double tree_structure_ratio = Math.exp(bart.calcLnTreeStructureRatioGrow(first_node_grown));
+		assertEquals(3.6822395, tree_structure_ratio, 0.0001);
+		
+		//now go further and test again the grow function
+		T_i = T_star;
+		T_star = T_star.clone();
+		CGMBARTTreeNode second_node_grown = T_star.left;
+		assertEquals(second_node_grown.pAdj(), 2); //padj = 2
+		assertEquals(1, second_node_grown.generation); //d_eta = 1
+		second_node_grown.splitAttributeM = 2;
+		assertEquals(second_node_grown.nAdj(), 2); //n_adj = 2 since there are 2 zeroes
+		second_node_grown.splitValue = 0.0;
+		assertEquals(second_node_grown.splitValuesRepeated(), 2); //n_repeat = 2 since the zero is repeated 2 times at this juncture
+		second_node_grown.isLeaf = false;
+		second_node_grown.left = new CGMBARTTreeNode(T_star);
+		second_node_grown.right = new CGMBARTTreeNode(T_star);		
+		CGMBARTTreeNode.propagateDataByChangedRule(T_star, true);
+		
+		tree_structure_ratio = Math.exp(bart.calcLnTreeStructureRatioGrow(second_node_grown));
+		assertEquals(0.124594970654, tree_structure_ratio, 0.0001);	
+		
+		//now test the prune function
+		CGMBARTTreeNode temp = T_i;
+		T_i = T_star;
+		T_star = temp;
+		CGMBARTTreeNode prune_node = second_node_grown;
+		
+		assertEquals(prune_node.pAdj(), 2); //padj = 2
+		assertEquals(prune_node.nAdj(), 2); //n_adj = 2 since there are 2 zeroes
+		assertEquals(prune_node.splitValuesRepeated(), 2); //n_repeat = 2
+		assertEquals(1, prune_node.generation);
+		
+		
+		tree_structure_ratio = Math.exp(-bart.calcLnTreeStructureRatioGrow(prune_node));
+		assertEquals(8.02600614418, tree_structure_ratio, 0.0001);	
+		CGMBARTTreeNode.pruneTreeAt(prune_node);
+		
+		//prune it again
+		T_i = T_star;
+		T_star = Test_CGMBARTTreeNode.stump;
+		prune_node = first_node_grown;
+		
+		assertEquals(prune_node.pAdj(), 3); //padj = 3
+		assertEquals(prune_node.nAdj(), 4); //n_adj = 4 since there are 4 zeroes
+		assertEquals(prune_node.splitValuesRepeated(), 4); //n_repeat = 4	
+		
+		tree_structure_ratio = Math.exp(bart.calcLnTreeStructureRatioGrow(prune_node));
+		assertEquals(0.333333, tree_structure_ratio, 0.0001);	
+		CGMBARTTreeNode.pruneTreeAt(prune_node);	
+	}
 }
