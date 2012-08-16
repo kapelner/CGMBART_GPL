@@ -502,7 +502,7 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		return lineage;
 	}
 
-	public double sumResponsesSqd() {
+	public double sumResponsesQuantitySqd() {
 		return Math.pow(sumResponses(), 2);
 	}
 

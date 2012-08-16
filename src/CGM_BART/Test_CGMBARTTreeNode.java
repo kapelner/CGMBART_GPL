@@ -129,8 +129,8 @@ public class Test_CGMBARTTreeNode {
 		assertArrayEquals(simple_tree.right.responses(), right_responses, 0);
 		assertEquals(simple_tree.left.sumResponses(), 16, 0);
 		assertEquals(simple_tree.right.sumResponses(), 12, 0);
-		assertEquals(simple_tree.left.sumResponsesSqd(), 256, 0);
-		assertEquals(simple_tree.right.sumResponsesSqd(), 144, 0);	
+		assertEquals(simple_tree.left.sumResponsesQuantitySqd(), 256, 0);
+		assertEquals(simple_tree.right.sumResponsesQuantitySqd(), 144, 0);	
 		ArrayList<CGMBARTTreeNode> internal_nodes = new ArrayList<CGMBARTTreeNode>(1);
 		internal_nodes.add(simple_tree);
 //		assertArrayEquals(CGMBARTTreeNode.findInternalNodes(simple_tree).toArray(), internal_nodes.toArray());
@@ -154,8 +154,8 @@ public class Test_CGMBARTTreeNode {
 		assertArrayEquals(double_tree.right.responses(), right_responses, 0);
 		assertEquals(double_tree.left.sumResponses(), 16, 0);
 		assertEquals(double_tree.right.sumResponses(), 12, 0);
-		assertEquals(double_tree.left.sumResponsesSqd(), 256, 0);
-		assertEquals(double_tree.right.sumResponsesSqd(), 144, 0);	
+		assertEquals(double_tree.left.sumResponsesQuantitySqd(), 256, 0);
+		assertEquals(double_tree.right.sumResponsesQuantitySqd(), 144, 0);	
 		ArrayList<CGMBARTTreeNode> internal_nodes = new ArrayList<CGMBARTTreeNode>(1);
 		internal_nodes.add(double_tree);
 		internal_nodes.add(double_tree.left);

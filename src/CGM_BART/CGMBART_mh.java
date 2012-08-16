@@ -164,9 +164,9 @@ public abstract class CGMBART_mh extends CGMBART_gibbs_internal implements Seria
 				- Math.log(sigsq_plus_n_ell_L_hyper_sisgsq_mu) 
 				- Math.log(sigsq_plus_n_ell_R_hyper_sisgsq_mu));
 		double d = hyper_sigsq_mu / (2 * sigsq);
-		double e = grow_node.left.sumResponsesSqd() / sigsq_plus_n_ell_L_hyper_sisgsq_mu
-				+ grow_node.right.sumResponsesSqd() / sigsq_plus_n_ell_R_hyper_sisgsq_mu
-				- grow_node.sumResponsesSqd() / sigsq_plus_n_ell_hyper_sisgsq_mu;
+		double e = grow_node.left.sumResponsesQuantitySqd() / sigsq_plus_n_ell_L_hyper_sisgsq_mu
+				+ grow_node.right.sumResponsesQuantitySqd() / sigsq_plus_n_ell_R_hyper_sisgsq_mu
+				- grow_node.sumResponsesQuantitySqd() / sigsq_plus_n_ell_hyper_sisgsq_mu;
 		
 		return c + d * e;
 	}

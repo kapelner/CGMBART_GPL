@@ -299,12 +299,108 @@ public class Test_BARTmh {
 		T_star = Test_CGMBARTTreeNode.stump;
 		prune_node = first_node_grown;
 		
+		assertEquals(prune_node.generation, 0); //padj = 3
 		assertEquals(prune_node.pAdj(), 3); //padj = 3
 		assertEquals(prune_node.nAdj(), 4); //n_adj = 4 since there are 4 zeroes
 		assertEquals(prune_node.splitValuesRepeated(), 4); //n_repeat = 4	
 		
-		tree_structure_ratio = Math.exp(bart.calcLnTreeStructureRatioGrow(prune_node));
-		assertEquals(0.333333, tree_structure_ratio, 0.0001);	
+		tree_structure_ratio = Math.exp(-bart.calcLnTreeStructureRatioGrow(prune_node));
+		assertEquals(0.271573855, tree_structure_ratio, 0.0001);	
 		CGMBARTTreeNode.pruneTreeAt(prune_node);	
 	}
+
+	@Test	
+	public void testCalcLnLikRatioGrow(){
+		//first set it up so sigsq = 0.01
+		double sigsq = 0.01;
+		bart.gibb_sample_num = 1;
+		bart.InitGibbsSamplingData();
+		bart.gibbs_samples_of_sigsq.add(0.01);
+		
+		//we're going to test the stump's transition ratio
+		CGMBARTTreeNode T_i = Test_CGMBARTTreeNode.stump;
+		CGMBARTTreeNode T_star = Test_CGMBARTTreeNode.stump.clone();
+		CGMBARTTreeNode first_node_grown = T_star;
+		assertEquals(784, first_node_grown.sumResponsesQuantitySqd(), 0.001);
+		
+		//make the node grow
+		first_node_grown.splitAttributeM = 0;
+		first_node_grown.splitValue = 0.0;
+		first_node_grown.isLeaf = false;
+		first_node_grown.left = new CGMBARTTreeNode(T_star);
+		first_node_grown.right = new CGMBARTTreeNode(T_star);
+		CGMBARTTreeNode.propagateDataByChangedRule(first_node_grown, true);
+		
+		//now ensure the proper n's
+		assertEquals(7, first_node_grown.n_eta);
+		assertEquals(4, first_node_grown.left.n_eta);
+		assertEquals(3, first_node_grown.right.n_eta);
+		assertEquals(256, first_node_grown.left.sumResponsesQuantitySqd(), 0.001);
+		assertEquals(144, first_node_grown.right.sumResponsesQuantitySqd(), 0.001);
+		
+		double sigsq_plus_n_ell_hyper_sisgsq_mu = sigsq + 7 * bart.hyper_sigsq_mu;
+		double sigsq_plus_n_ell_L_hyper_sisgsq_mu = sigsq + 4 * bart.hyper_sigsq_mu;
+		double sigsq_plus_n_ell_R_hyper_sisgsq_mu = sigsq + 3 * bart.hyper_sigsq_mu;
+		double c = 0.5 * (
+				Math.log(sigsq) 
+				+ Math.log(sigsq_plus_n_ell_hyper_sisgsq_mu) 
+				- Math.log(sigsq_plus_n_ell_L_hyper_sisgsq_mu) 
+				- Math.log(sigsq_plus_n_ell_R_hyper_sisgsq_mu));
+		double d = bart.hyper_sigsq_mu / (2 * sigsq);
+		double e = 256 / sigsq_plus_n_ell_L_hyper_sisgsq_mu
+				+ 144 / sigsq_plus_n_ell_R_hyper_sisgsq_mu
+				- 784 / sigsq_plus_n_ell_hyper_sisgsq_mu;		
+		
+		double lik_ratio = Math.exp(bart.calcLnLikRatioGrow(first_node_grown));
+		assertEquals(Math.exp(c + d * e), lik_ratio, 0.0001);
+		
+		//now go further and test again the grow function
+		T_i = T_star;
+		T_star = T_star.clone();
+		CGMBARTTreeNode second_node_grown = T_star.left;
+		assertEquals(second_node_grown.pAdj(), 2); //padj = 2
+		assertEquals(1, second_node_grown.generation); //d_eta = 1
+		second_node_grown.splitAttributeM = 2;
+		assertEquals(second_node_grown.nAdj(), 2); //n_adj = 2 since there are 2 zeroes
+		second_node_grown.splitValue = 0.0;
+		assertEquals(second_node_grown.splitValuesRepeated(), 2); //n_repeat = 2 since the zero is repeated 2 times at this juncture
+		second_node_grown.isLeaf = false;
+		second_node_grown.left = new CGMBARTTreeNode(T_star);
+		second_node_grown.right = new CGMBARTTreeNode(T_star);		
+		CGMBARTTreeNode.propagateDataByChangedRule(T_star, true);
+		
+		lik_ratio = Math.exp(bart.calcLnLikRatioGrow(second_node_grown));
+		assertEquals(0.124594970654, lik_ratio, 0.0001);	
+		
+		//now test the prune function
+		CGMBARTTreeNode temp = T_i;
+		T_i = T_star;
+		T_star = temp;
+		CGMBARTTreeNode prune_node = second_node_grown;
+		
+		assertEquals(prune_node.pAdj(), 2); //padj = 2
+		assertEquals(prune_node.nAdj(), 2); //n_adj = 2 since there are 2 zeroes
+		assertEquals(prune_node.splitValuesRepeated(), 2); //n_repeat = 2
+		assertEquals(1, prune_node.generation);
+		
+		
+		lik_ratio = Math.exp(-bart.calcLnLikRatioGrow(prune_node));
+		assertEquals(8.02600614418, lik_ratio, 0.0001);	
+		CGMBARTTreeNode.pruneTreeAt(prune_node);
+		
+		//prune it again
+		T_i = T_star;
+		T_star = Test_CGMBARTTreeNode.stump;
+		prune_node = first_node_grown;
+		
+		assertEquals(prune_node.generation, 0); //padj = 3
+		assertEquals(prune_node.pAdj(), 3); //padj = 3
+		assertEquals(prune_node.nAdj(), 4); //n_adj = 4 since there are 4 zeroes
+		assertEquals(prune_node.splitValuesRepeated(), 4); //n_repeat = 4	
+		
+		lik_ratio = Math.exp(-bart.calcLnLikRatioGrow(prune_node));
+		assertEquals(0.271573855, lik_ratio, 0.0001);	
+		CGMBARTTreeNode.pruneTreeAt(prune_node);		
+	}
+
 }
