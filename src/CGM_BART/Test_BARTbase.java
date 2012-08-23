@@ -34,8 +34,6 @@ public class Test_BARTbase {
 	
 	@Test 
 	public void testMetadataCreation(){
-		double[] min_vals = {0, 9.3, 0};
-		assertArrayEquals(simple_bart.getMinimum_values_by_attribute(), min_vals, 0);
 		double[] max_vals = {1, 65.9, 1};
 		assertArrayEquals(simple_bart.getMaximum_values_by_attribute(), max_vals, 0);		
 		//check freq

@@ -31,7 +31,9 @@ public abstract class CGMBART_base extends Classifier implements Serializable {
 	protected int num_trees;
 
 	/** useful metadata */
+	//we need to know the minimum values because if the minimum val is already split on... we can no longer use this attribute
 	protected double[] minimum_values_by_attribute;
+	//we need to know the max vals because those can't ever be split on (they're useless)
 	protected double[] maximum_values_by_attribute;
 	//this is frequency of unique values by each column
 	protected ArrayList<HashMap<Double, Integer>> num_val_hash_by_column;

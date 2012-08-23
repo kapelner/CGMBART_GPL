@@ -26,6 +26,7 @@ package CGM_BART;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -555,19 +556,22 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		
 		//now we need to look in the design matrix and see what values are available
 		ArrayList<Double> possible_values = new ArrayList<Double>();
-		System.out.println("possibleSplitValuesGivenAttribute this.n_eta: " + this.n_eta);
 		for (int i = 0; i < this.n_eta; i++){
 			double split_val = this.data.get(i)[this.splitAttributeM];
 //			System.out.println("possibleSplitValuesGivenAttribute split_val: " + split_val);
 			if (split_val < min_split_value_lineage && split_val != abs_max_split_val){
 				possible_values.add(split_val);
 			}
-		}	
+		}
+//		Collections.sort(possible_values);
+//		System.out.println("possibleSplitValuesGivenAttribute this.n_eta: " + this.n_eta + " X_" + this.splitAttributeM + 
+//				" min: " + min_split_value_lineage + " vals: " + Tools.StringJoin(possible_values, ", "));
+		
 		return possible_values;
 	}	
 	
 	public int pAdj(){
-//		System.out.println("pAdj on node " + this.stringID());	
+		
 //		if (predictors_that_can_be_assigned == null){
 			predictors_that_can_be_assigned = predictorsThatCouldBeUsedToSplitAtNode();
 //		}
@@ -576,6 +580,7 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 	
 	public int pickRandomPredictorThatCanBeAssigned(){
 		int p_adj = pAdj();
+		System.out.println("pAdj: " + p_adj + " on node: " + this.stringID());	
 		return predictors_that_can_be_assigned.get((int)Math.floor(StatToolbox.rand() * p_adj));
 	}
 	
@@ -588,6 +593,10 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 
 	public Double pickRandomSplitValue() {
 		int n_adj = nAdj();
+		System.out.println("n_adj: " + n_adj + " on node: " + this.stringID());
+		if (n_adj == 0){
+			return null;
+		}
 		return possible_split_values.get((int) Math.floor(StatToolbox.rand() * n_adj));
 	}
 	

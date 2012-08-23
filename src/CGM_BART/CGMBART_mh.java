@@ -56,16 +56,35 @@ public abstract class CGMBART_mh extends CGMBART_gibbs_internal implements Seria
 		CGMBARTTreeNode grow_node = pickGrowNode(T_star);
 		//if we can't grow, reject offhand
 		if (grow_node == null){ // || grow_node.generation >= 2
-			System.out.println("proposal ln(r) = -oo DUE TO CANNOT GROW\n\n");
+			System.err.println("proposal ln(r) = -oo DUE TO CANNOT GROW\n\n");
 			return Double.NEGATIVE_INFINITY;					
 		}
-		growNodeWithRandomRule(grow_node);
+		
+		//now start the growth process
+		//first pick the attribute
+		grow_node.splitAttributeM = grow_node.pickRandomPredictorThatCanBeAssigned();
+		
+		Double split_value = grow_node.pickRandomSplitValue();
+		if (split_value == null){ // || grow_node.generation >= 2
+			System.err.println("proposal ln(r) = -oo DUE TO NO SPLIT VALUES\n\n");
+			return Double.NEGATIVE_INFINITY;					
+		}		
+		
+		//now we can go off and take care of the split
+		grow_node.splitValue = split_value;
+		grow_node.isLeaf = false;
+		grow_node.left = new CGMBARTTreeNode(grow_node);
+		grow_node.right = new CGMBARTTreeNode(grow_node);
+		CGMBARTTreeNode.propagateDataByChangedRule(grow_node, true);		
+		
 //		System.out.println("grow_node: " + grow_node.stringID() + " new depth: " + T_star.deepestNode() + " " + grow_node.deepestNode());
 		double ln_transition_ratio_grow = calcLnTransRatioGrow(T_i, T_star, grow_node);
 		double ln_likelihood_ratio_grow = calcLnLikRatioGrow(grow_node);
 		double ln_tree_structure_ratio_grow = calcLnTreeStructureRatioGrow(grow_node);
 		
-		System.out.println("GROW   trans ratio: " + 
+		System.out.println("GROW\n  <<" + grow_node.stringLocation(true) + 
+				">>\n X_" + (grow_node.splitAttributeM + 1) + " < " + TreeArrayIllustration.one_digit_format.format(grow_node.splitValue) + 
+				"\n  trans ratio: " + 
 				(Math.exp(ln_transition_ratio_grow) < 0.00001 ? "damn small" : Math.exp(ln_transition_ratio_grow)) +
 				"  lik ratio: " + 
 				(Math.exp(ln_likelihood_ratio_grow) < 0.00001 ? "damn small" : Math.exp(ln_likelihood_ratio_grow)) +
@@ -78,15 +97,16 @@ public abstract class CGMBART_mh extends CGMBART_gibbs_internal implements Seria
 		CGMBARTTreeNode prune_node = pickPruneNode(T_star);
 		//if we can't grow, reject offhand
 		if (prune_node == null){
-			System.out.println("proposal ln(r) = -oo DUE TO CANNOT PRUNE\n\n");
-			return Double.NEGATIVE_INFINITY;					
+			System.err.println("proposal ln(r) = -oo DUE TO CANNOT PRUNE\n\n");
+			return Double.NEGATIVE_INFINITY;
 		}				
 		double ln_transition_ratio_prune = calcLnTransRatioPrune(T_i, T_star, prune_node);
 		double ln_likelihood_ratio_prune = -calcLnLikRatioGrow(prune_node); //inverse of before (will speed up later)
 		double ln_tree_structure_ratio_prune = -calcLnTreeStructureRatioGrow(prune_node);
 		CGMBARTTreeNode.pruneTreeAt(prune_node);
 		
-		System.out.println("PRUNE   trans ratio: " + 
+		System.out.println("PRUNE \n<<" + prune_node.stringLocation(true) + 
+				">>\n  trans ratio: " + 
 				(Math.exp(ln_transition_ratio_prune) < 0.00001 ? "damn small" : Math.exp(ln_transition_ratio_prune)) +
 				"  lik ratio: " + 
 				(Math.exp(ln_likelihood_ratio_prune) < 0.00001 ? "damn small" : Math.exp(ln_likelihood_ratio_prune)) +
@@ -108,7 +128,7 @@ public abstract class CGMBART_mh extends CGMBART_gibbs_internal implements Seria
 		
 		ArrayList<CGMBARTTreeNode> prunable_nodes = CGMBARTTreeNode.getPrunableNodes(T);
 		if (prunable_nodes.size() == 0){
-			System.out.println("no prune nodes in PRUNE step!  T parent: " + T.parent + " T left: " + T.left + " T right: " + T.right);
+			System.err.println("no prune nodes in PRUNE step!  T parent: " + T.parent + " T left: " + T.left + " T right: " + T.right);
 			return null;
 		}		
 		
@@ -123,16 +143,6 @@ public abstract class CGMBART_mh extends CGMBART_gibbs_internal implements Seria
 		int n_adj = prune_node.nAdj();
 		int n_repeat = prune_node.splitValuesRepeated();
 		return Math.log(w_2) + Math.log(n_repeat) - Math.log(b - 1) - Math.log(p_adj) - Math.log(n_adj); 
-	}
-
-	protected void growNodeWithRandomRule(CGMBARTTreeNode grow_node) {
-		//we already assume the node can grow, now we just have to pick an attribute and split point
-		grow_node.splitAttributeM = grow_node.pickRandomPredictorThatCanBeAssigned();
-		grow_node.splitValue = grow_node.pickRandomSplitValue();
-		grow_node.isLeaf = false;
-		grow_node.left = new CGMBARTTreeNode(grow_node);
-		grow_node.right = new CGMBARTTreeNode(grow_node);
-		CGMBARTTreeNode.propagateDataByChangedRule(grow_node, true);
 	}
 
 	protected double calcLnTreeStructureRatioGrow(CGMBARTTreeNode grow_node) {
@@ -167,7 +177,7 @@ public abstract class CGMBART_mh extends CGMBART_gibbs_internal implements Seria
 		double e = grow_node.left.sumResponsesQuantitySqd() / sigsq_plus_n_ell_L_hyper_sisgsq_mu
 				+ grow_node.right.sumResponsesQuantitySqd() / sigsq_plus_n_ell_R_hyper_sisgsq_mu
 				- grow_node.sumResponsesQuantitySqd() / sigsq_plus_n_ell_hyper_sisgsq_mu;
-		
+//		System.out.println("REAL c: " + c + " d: " + d + " e: " + e);
 		return c + d * e;
 	}
 

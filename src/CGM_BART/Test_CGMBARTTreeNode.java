@@ -176,7 +176,8 @@ public class Test_CGMBARTTreeNode {
 		Integer[] all_predictors = {0, 1, 2};
 		assertArrayEquals(simple_tree.predictorsThatCouldBeUsedToSplitAtNode().toArray(), all_predictors);
 		assertEquals(simple_tree.pAdj(), 3);
-		Object[] vals_to_split = {1.0, 1.0, 1.0}; //remember we can't split on 0 because it's the min value
+		Object[] vals_to_split = {0.0, 0.0, 0.0, 0.0}; //remember we can't split on 1 because it's the max value
+		System.out.println("poss splits: " + Tools.StringJoin(simple_tree.possibleSplitValuesGivenAttribute().toArray(), ","));
 		assertArrayEquals(simple_tree.possibleSplitValuesGivenAttribute().toArray(), vals_to_split);
 		assertEquals(simple_tree.pAdj(), 3);
 		//now go into the leaves and see what else we can split on
@@ -217,10 +218,9 @@ public class Test_CGMBARTTreeNode {
 	public void testDoubleTreeNadj(){
 		CGMBARTTreeNode double_tree_ext = buildDoubleTreeExt();
 		
-		assertEquals(double_tree_ext.nAdj(), 3);
-		assertEquals(double_tree_ext.right.nAdj(), 4);
-		assertEquals(double_tree_ext.left.nAdj(), 5);
-		assertEquals(double_tree_ext.left.left.nAdj(), 2);
+		assertEquals(double_tree_ext.nAdj(), 4);
+		assertEquals(double_tree_ext.right.nAdj(), 1);
+		assertEquals(double_tree_ext.left.nAdj(), 3);
 	}
 	
 	
