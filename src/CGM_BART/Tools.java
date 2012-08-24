@@ -20,9 +20,15 @@ public class Tools {
 		}
 		return joined;
 	}
+	public static String StringJoin(double[] all){
+		return StringJoin(all, ", ");
+	}
 	
 	public static String StringJoin(ArrayList<Double> all, String joinby){
 		return StringJoin(all.toArray(), joinby);
+	}	
+	public static String StringJoin(ArrayList<Double> all){
+		return StringJoin(all, ", ");
 	}	
 	
 	/**
@@ -41,6 +47,9 @@ public class Tools {
 		}
 		return joined;
 	}	
+	public static String StringJoin(Object[] all){
+		return StringJoin(all, ", ");
+	}	
 	
 	/**
 	 * Joins a collection of strings into one string
@@ -58,5 +67,8 @@ public class Tools {
 				joined += joinby;
 		}
 		return joined;
+	}	
+	public static String StringJoin(Collection<String> all){
+		return StringJoin(all, ", ");
 	}	
 }

@@ -99,6 +99,7 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 			double[] record = data.get(i);
 			ys[i] = record[record.length - 1];
 		}
+//		System.out.println("ys: " + Tools.StringJoin(ys, ", "));
 		return ys;
 	}
 	
@@ -546,6 +547,7 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 			}
 		}
 		
+		
 		double abs_max_split_val = cgmbart.maximum_values_by_attribute[this.splitAttributeM];
 		double min_split_value_lineage = Double.MAX_VALUE;
 		for (int i = 0; i < previous_split_points.size(); i++){
@@ -553,7 +555,7 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 				min_split_value_lineage = previous_split_points.get(i);
 			}
 		}
-		
+		//////////////WRONG::::: NEED TO ADJUST FOR LEFT AND RIGHT
 		//now we need to look in the design matrix and see what values are available
 		ArrayList<Double> possible_values = new ArrayList<Double>();
 		for (int i = 0; i < this.n_eta; i++){
@@ -567,6 +569,9 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 //		System.out.println("possibleSplitValuesGivenAttribute this.n_eta: " + this.n_eta + " X_" + this.splitAttributeM + 
 //				" min: " + min_split_value_lineage + " vals: " + Tools.StringJoin(possible_values, ", "));
 		
+		if (possible_values.size() == 0){
+			System.out.println("min_split_value_lineage: " + min_split_value_lineage + " previous_split_points: "+ Tools.StringJoin(previous_split_points));
+		}
 		return possible_values;
 	}	
 	
@@ -580,7 +585,7 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 	
 	public int pickRandomPredictorThatCanBeAssigned(){
 		int p_adj = pAdj();
-		System.out.println("pAdj: " + p_adj + " on node: " + this.stringID());	
+//		System.out.println("pAdj: " + p_adj + " on node: " + this.stringID());	
 		return predictors_that_can_be_assigned.get((int)Math.floor(StatToolbox.rand() * p_adj));
 	}
 	
@@ -593,7 +598,7 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 
 	public Double pickRandomSplitValue() {
 		int n_adj = nAdj();
-		System.out.println("n_adj: " + n_adj + " on node: " + this.stringID());
+//		System.out.println("n_adj: " + n_adj + " on node: " + this.stringID());
 		if (n_adj == 0){
 			return null;
 		}
@@ -607,11 +612,12 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 	public int splitValuesRepeated() {
 		int n_repeat = 0;
 		for (int i = 0; i < this.n_eta; i++){
+//			System.out.println("eps: " + (this.splitValue - this.data.get(i)[this.splitAttributeM]));
 			if (this.splitValue == this.data.get(i)[this.splitAttributeM]){
 				n_repeat++;
 			}
 		}
-		return n_repeat;
+		return n_repeat == 0 ? 1 : n_repeat; //for debugging only
 	}	
 
 	public boolean isStump() {

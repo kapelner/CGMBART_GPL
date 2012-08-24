@@ -43,7 +43,7 @@ public abstract class CGMBART_gibbs_internal extends CGMBART_gibbs_base implemen
 		//now we need to subtract this from y
 		double[] Rjs = new double[n];
 		for (int i = 0; i < n; i++){ 
-			Rjs[i] = y[i] - sum_ys_without_jth_tree[i];
+			Rjs[i] = y_trans[i] - sum_ys_without_jth_tree[i];
 //			Rjs[i] = transform_y(Rjs[i]);
 		}
 //		System.out.println("getResidualsForAllTreesExcept one " +  Tools.StringJoin(Rjs, ", "));
@@ -56,7 +56,7 @@ public abstract class CGMBART_gibbs_internal extends CGMBART_gibbs_base implemen
 			double posterior_sigsq = calcLeafPosteriorVar(node, sigsq);
 			//draw from posterior distribution
 			double posterior_mean = calcLeafPosteriorMean(node, sigsq, posterior_sigsq);
-//			System.out.println("posterior_mean = " + posterior_mean + " node.avg_response = " + node.avg_response());
+//			System.out.println("posterior_mean = " + posterior_mean + " node.avg_response = " + node.avg_response_untransformed());
 			node.y_prediction = StatToolbox.sample_from_norm_dist(posterior_mean, posterior_sigsq);
 			if (node.y_prediction == StatToolbox.ILLEGAL_FLAG){				
 				node.y_prediction = 0.0; //this could happen on an empty node
@@ -132,28 +132,28 @@ public abstract class CGMBART_gibbs_internal extends CGMBART_gibbs_base implemen
 	
 	protected double[] getErrorsForAllTrees(int sample_num){
 //		System.out.println("getErrorsForAllTrees");
-		double[] sum_ys = new double[n];
+		double[] sum_ys_trans = new double[n];
 		for (int i = 0; i < n; i++){
-			sum_ys[i] = 0; //initialize at zero, then add it up over all trees except the jth
+			sum_ys_trans[i] = 0; //initialize at zero, then add it up over all trees except the jth
 			for (int t = 0; t < num_trees; t++){
 //				System.out.println("getErrorsForAllTrees m = " + m);
 				//obviously y_vec - \sum_i g_i = \sum_i y_i - g_i
 				CGMBARTTreeNode tree = gibbs_samples_of_cgm_trees.get(sample_num).get(t);
-				double y_hat = tree.Evaluate(X_y.get(i));
+				double y_hat_trans = tree.Evaluate(X_y.get(i));
 //				double y_hat = un_transform_y(tree.Evaluate(X_y.get(i)));
 //				System.out.println("i = " + (i + 1) + " y: " + y[i] + " y_hat: " + y_hat + " e: " + (y[i] - y_hat)+ " tree " + t);
-				sum_ys[i] += y_hat;
+				sum_ys_trans[i] += y_hat_trans;
 			}
 		}
 		//now we need to subtract this from y
-		double[] errorjs = new double[n];
+		double[] error_js = new double[n];
 		for (int i = 0; i < n; i++){
-			errorjs[i] = y[i] - sum_ys[i];
+			error_js[i] = y_trans[i] - sum_ys_trans[i];
 //			errorjs[i] = transform_y(errorjs[i]);
 		}
 //		System.out.println("sum_ys " + IOTools.StringJoin(sum_ys, ","));
 //		System.out.println("y_trans " + IOTools.StringJoin(y_trans, ","));
 //		System.out.println("errorjs " + IOTools.StringJoin(errorjs, ","));
-		return errorjs;
+		return error_js;
 	}	
 }

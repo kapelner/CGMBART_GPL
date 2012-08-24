@@ -24,6 +24,8 @@
  
 package CGM_BART;
 
+import CGM_BART_DEBUG.*; //sample #21
+
 public class CGMBARTRegression extends CGMBART_eval {
 	private static final long serialVersionUID = 6418127647567343927L;
 	
