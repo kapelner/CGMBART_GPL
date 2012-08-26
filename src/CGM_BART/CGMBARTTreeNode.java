@@ -27,6 +27,8 @@ package CGM_BART;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 /**
@@ -491,15 +493,16 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		}
 	}
 
-	public ArrayList<CGMBARTTreeNode> getLineage() {
-		ArrayList<CGMBARTTreeNode> lineage = new ArrayList<CGMBARTTreeNode>();
+	public LinkedHashMap<CGMBARTTreeNode, String> getLineage() {
+		LinkedHashMap<CGMBARTTreeNode, String> lineage = new LinkedHashMap<CGMBARTTreeNode, String>();
 		CGMBARTTreeNode node = this;
 		while (true){
+			CGMBARTTreeNode oldnode = node;
 			node = node.parent;
 			if (node == null){
 				break;
 			}			
-			lineage.add(node);
+			lineage.put(node, oldnode == node.left ? "L" : "R");
 		}
 		return lineage;
 	}
@@ -524,9 +527,12 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 			//value in any of the nodes above split rules
 			boolean can_use = true;
 //			System.out.println("predictorsThatCouldBeUsedToSplitAtNode" + this.stringLocation(true));
-			for (CGMBARTTreeNode father : this.getLineage()){
+			LinkedHashMap<CGMBARTTreeNode, String> lineage = this.getLineage();
+			for (CGMBARTTreeNode father : lineage.keySet()){
 //				System.out.println("father " + father.stringLocation(true) + " j " + father.splitAttributeM + " val " + father.splitValue);
-				if (father.splitAttributeM == j && father.splitValue == cgmbart.getMinimum_values_by_attribute()[j]){
+				if (father.splitAttributeM == j && 
+						father.splitValue == cgmbart.getMinimum_values_by_attribute()[j] &&
+						lineage.get(father).equals("L")){
 					can_use = false;
 					break;
 				}
@@ -540,28 +546,59 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 	
 	public ArrayList<Double> possibleSplitValuesGivenAttribute() {
 		//we need to look above in the lineage and get the minimum value that was previously split on
-		ArrayList<Double> previous_split_points = new ArrayList<Double>();
-		for (CGMBARTTreeNode father : this.getLineage()){
+		ArrayList<Double> previous_ubs = new ArrayList<Double>();
+		ArrayList<Double> previous_lbs = new ArrayList<Double>();
+		LinkedHashMap<CGMBARTTreeNode, String> lineage = this.getLineage();
+		for (CGMBARTTreeNode father : lineage.keySet()){
 			if (father.splitAttributeM == this.splitAttributeM){
-				previous_split_points.add(father.splitValue);				
+				if (lineage.get(father).equals("L")){
+					previous_ubs.add(father.splitValue);
+				}
+				else {
+					previous_lbs.add(father.splitValue);
+				}
+								
 			}
 		}
-		
 		
 		double abs_max_split_val = cgmbart.maximum_values_by_attribute[this.splitAttributeM];
-		double min_split_value_lineage = Double.MAX_VALUE;
-		for (int i = 0; i < previous_split_points.size(); i++){
-			if (previous_split_points.get(i) < min_split_value_lineage){
-				min_split_value_lineage = previous_split_points.get(i);
+		double abs_min_split_val = cgmbart.minimum_values_by_attribute[this.splitAttributeM];
+		
+		double upper_bound = Double.MIN_VALUE;
+		
+		if (previous_ubs.size() == 0){
+			upper_bound = abs_max_split_val;
+		}
+		else {
+			for (int i = 0; i < previous_ubs.size(); i++){
+				if (previous_ubs.get(i) > upper_bound){
+					upper_bound = previous_ubs.get(i);
+				}
 			}
 		}
-		//////////////WRONG::::: NEED TO ADJUST FOR LEFT AND RIGHT
+		
+		double lower_bound = Double.MAX_VALUE;
+		
+		if (previous_lbs.size() == 0){
+			lower_bound = abs_min_split_val;
+		}
+		else {
+			for (int i = 0; i < previous_lbs.size(); i++){
+				if (previous_lbs.get(i) < lower_bound){
+					lower_bound = previous_lbs.get(i);
+				}
+			}		
+		}
+		
+		
 		//now we need to look in the design matrix and see what values are available
 		ArrayList<Double> possible_values = new ArrayList<Double>();
 		for (int i = 0; i < this.n_eta; i++){
 			double split_val = this.data.get(i)[this.splitAttributeM];
 //			System.out.println("possibleSplitValuesGivenAttribute split_val: " + split_val);
-			if (split_val < min_split_value_lineage && split_val != abs_max_split_val){
+			if (split_val < upper_bound 
+					&& split_val > lower_bound 
+					&& split_val != abs_max_split_val){
 				possible_values.add(split_val);
 			}
 		}
@@ -570,7 +607,7 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 //				" min: " + min_split_value_lineage + " vals: " + Tools.StringJoin(possible_values, ", "));
 		
 		if (possible_values.size() == 0){
-			System.out.println("min_split_value_lineage: " + min_split_value_lineage + " previous_split_points: "+ Tools.StringJoin(previous_split_points));
+			System.out.println("lb: " + lower_bound + " upper_bound: " + upper_bound);
 		}
 		return possible_values;
 	}	

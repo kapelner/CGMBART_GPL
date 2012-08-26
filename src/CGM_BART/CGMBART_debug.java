@@ -151,7 +151,7 @@ public abstract class CGMBART_debug extends CGMBART_hyperparams implements Seria
 //		final Thread illustrator_thread = new Thread(){
 //			public void run(){
 //		if (StatToolbox.rand() < 0.0333){
-			if (TREE_ILLUST){
+			if (TREE_ILLUST && sample_num % 20 == 0){
 				tree_array_illustration.CreateIllustrationAndSaveImage();
 			}
 //		}
