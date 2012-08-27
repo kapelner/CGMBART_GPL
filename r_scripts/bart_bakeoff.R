@@ -12,9 +12,9 @@ source("r_scripts/create_simulated_models.R")
 graphics.off()
 
 PRINT_TREE_ILLUS = FALSE
-JAVA_LOG = TRUE
+JAVA_LOG = FALSE
 
-run_model_N_times = 2
+run_model_N_times = 10
 real_regression_data_sets = c(
 #	"r_boston"
 #	"r_forestfires", 
@@ -71,7 +71,7 @@ colnames(simulation_results) = c(
 		"CART_rmse"
 )
 
-avg_simulation_results = matrix(NA, nrow = 0, ncol = 13)
+avg_simulation_results = as.data.frame(matrix(NA, nrow = 0, ncol = 13))
 colnames(avg_simulation_results) = c(
 		"data_model", 
 		"m",
@@ -92,7 +92,7 @@ colnames(avg_simulation_results) = c(
 
 #avg_simulation_results_pretty
 
-run_bakeoff = function(){
+run_bart_bakeoff = function(){
 	current_run = 0
 	for (alpha in alphas_of_interest){
 		for (beta in betas_of_interest){
@@ -248,6 +248,8 @@ run_bart_model_and_save_diags_and_results = function(training_data, test_data, d
 		print_tree_illustrations = PRINT_TREE_ILLUS,
 		debug_log = JAVA_LOG,
 		num_iterations_after_burn_in = num_iterations_after_burn_in)
+	assign("bart_machine", bart_machine, .GlobalEnv)
+	append_to_log("built")
 	
 	#now use the bart model to predict y_hat's for the test data
 	a_bart_predictions = predict_and_calc_ppis(bart_machine, test_data)
@@ -269,8 +271,8 @@ run_bart_model_and_save_diags_and_results = function(training_data, test_data, d
 	plot_tree_num_nodes(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)	
 	plot_tree_depths(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)
 	for (t in 1 : num_trees){
-		plot_all_mu_values_for_tree(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot, t)
-		hist_all_mu_values_for_tree(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot, t)
+#		plot_all_mu_values_for_tree(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot, t)
+#		hist_all_mu_values_for_tree(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot, t)
 #		for (b in 1 : maximum_nodes_over_all_trees(bart_machine)){
 #			hist_mu_values_by_tree_and_leaf_after_burn_in(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot, t, b)
 #		}

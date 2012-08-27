@@ -446,29 +446,29 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		}
 	}
 	
-//	public Double get_pred_for_nth_leaf(int leaf_num) {
-//		String leaf_num_binary = Integer.toBinaryString(leaf_num);
-//		//now hack off first digit
-//		leaf_num_binary = leaf_num_binary.substring(1, leaf_num_binary.length());
-//
-////		System.out.println("get_pred_for_nth_leaf gen: directions: " + new String(leaf_num_binary));
-//		
-//		//now that we have our direction array, now we just iterate down the line, begin right where we are
-//		CGMBARTTreeNode node = this;
-//		for (char direction : leaf_num_binary.toCharArray()){
-//			if (direction == '0'){
-//				node = node.left;
-//			}
-//			else {
-//				node = node.right;
-//			}
-//			//if this node does not exist in our tree, we're done
-//			if (node == null){
-//				return null;
-//			}
-//		}
-//		return node.y_prediction;
-//	}
+	public Double get_pred_for_nth_leaf(int leaf_num) {
+		String leaf_num_binary = Integer.toBinaryString(leaf_num);
+		//now hack off first digit
+		leaf_num_binary = leaf_num_binary.substring(1, leaf_num_binary.length());
+
+//		System.out.println("get_pred_for_nth_leaf gen: directions: " + new String(leaf_num_binary));
+		
+		//now that we have our direction array, now we just iterate down the line, begin right where we are
+		CGMBARTTreeNode node = this;
+		for (char direction : leaf_num_binary.toCharArray()){
+			if (direction == '0'){
+				node = node.left;
+			}
+			else {
+				node = node.right;
+			}
+			//if this node does not exist in our tree, we're done
+			if (node == null){
+				return null;
+			}
+		}
+		return node.y_prediction;
+	}
 	
 	public Double prediction_untransformed(){
 		if (y_prediction == null){

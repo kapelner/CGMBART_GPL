@@ -11,7 +11,7 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 	
 	@Override
 	public void Build() {
-		System.out.println("Build CGMBART_05_gibbs_base");
+//		System.out.println("Build CGMBART_05_gibbs_base");
 		//this can be different for any BART implementation
 		SetupGibbsSampling();		
 		//this section is different for the different BART implementations
@@ -24,7 +24,7 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 	}	
 
 	protected void DoGibbsSampling(){	
-		System.out.println("DoGibbsSampling");
+//		System.out.println("DoGibbsSampling");
 		while(gibb_sample_num <= num_gibbs_total_iterations){			
 			if (stop_bit){ //rounded to the nearest gibbs sample
 				return;
@@ -120,5 +120,18 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 		}	
 		System.out.println("BurnTreeAndSigsqChain gibbs_samples_of_sigsq_after_burn_in length = " + gibbs_samples_of_sigsq_after_burn_in.size());
 	}
+	
+	public double[] getMuValuesForAllItersByTreeAndLeaf(int t, int leaf_num){
+		double[] mu_vals = new double[num_gibbs_total_iterations];
+		for (int n_g = 0; n_g < num_gibbs_total_iterations; n_g++){
+//			System.out.println("n_g: " + n_g + "length of tree vec: " + gibbs_samples_of_cgm_trees.get(n_g).size());
+			CGMBARTTreeNode tree = gibbs_samples_of_cgm_trees.get(n_g).get(t);
+			
+			Double pred_y = tree.get_pred_for_nth_leaf(leaf_num);
+//			System.out.println("t: " + t + " leaf: " + leaf_num + " pred_y: " + pred_y);
+			mu_vals[n_g] = un_transform_y(pred_y);
+		}
+		return mu_vals;
+	}	
 	
 }

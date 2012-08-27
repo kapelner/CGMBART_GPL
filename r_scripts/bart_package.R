@@ -564,7 +564,7 @@ plot_y_vs_yhat = function(bart_predictions, extra_text = NULL, data_title = "dat
 	
 	#make the general plot
 	if (save_plot){	
-		save_plot_function(bart_machine, "yvyhat_bart", data_title)
+		save_plot_function(bart_machine, "yvyhat_A_Bart", data_title)
 	}
 	else {
 		dev.new()
