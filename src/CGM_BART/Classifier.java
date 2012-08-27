@@ -26,6 +26,7 @@ package CGM_BART;
 
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -38,6 +39,7 @@ import java.util.logging.LogManager;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
+import AlgorithmTesting.DataSetupForCSVFile;
 import CustomLogging.*;
 
 /**
@@ -63,10 +65,19 @@ public abstract class Classifier implements Serializable {
 	
 	protected static PrintWriter output;
 	protected static final String DEBUG_EXT = ".csv";
+	
+	protected static final String CSVFileFromRName = "bart_data.csv";
+	protected static final String CSVFileFromRDirectory = "datasets";		
 
 	
 	/** Serializable happy */
 	public Classifier(){}
+	
+	
+	public void setDataToDefaultForRPackage(){
+		DataSetupForCSVFile data = new DataSetupForCSVFile(new File(CSVFileFromRDirectory, CSVFileFromRName), true);
+		setData(data.getX_y());
+	}
 
 	
 	/** 
@@ -142,7 +153,7 @@ public abstract class Classifier implements Serializable {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-        fileHandler.setFormatter(new SimpleFormatter());
+        fileHandler.setFormatter(new SuperSimpleFormatter());
         Logger.getLogger("").addHandler(fileHandler);
         
         // now rebind stdout/stderr to logger

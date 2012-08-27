@@ -11,6 +11,44 @@ source("r_scripts/bart_package.R")
 source("r_scripts/create_simulated_models.R")
 graphics.off()
 
+PRINT_TREE_ILLUS = FALSE
+JAVA_LOG = TRUE
+
+run_model_N_times = 2
+real_regression_data_sets = c(
+#	"r_boston"
+#	"r_forestfires", 
+#	"r_concretedata"
+)
+simulated_data_sets = c(
+#	"univariate_linear",
+#	"bivariate_linear",
+#	"friedman",
+#	"simple_tree_structure_sigsq_hundredth",
+#	"simple_tree_structure_sigsq_tenth",
+#	"simple_tree_structure_sigsq_half",
+		"simple_tree_structure"
+#	"simple_tree_structure_sigsq_3",
+#	"simple_tree_structure_sigsq_5",
+#	"simple_tree_structure_sigsq_10",
+#	"simple_tree_structure_sigsq_30",
+#	"simple_tree_structure_sigsq_100"
+)
+
+#nice to have data around for testing... should be overwritten...
+num_trees_of_interest = c(1)
+num_burn_ins_of_interest = c(2000)
+num_iterations_after_burn_ins_of_interest = c(2000)
+alphas_of_interest = c(0.95)
+betas_of_interest = c(2)
+total_num_runs = (length(real_regression_data_sets) + length(simulated_data_sets)) * run_model_N_times
+num_trees = 1
+num_burn_in = 2000
+num_iterations_after_burn_in = 2000
+alpha = 0.95
+beta = 2
+
+
 simulation_results = matrix(NA, nrow = 0, ncol = 18)
 colnames(simulation_results) = c(
 		"data_model", 
@@ -195,11 +233,6 @@ data_title = "simple_tree_structure_sigsq_half"
 training_data = simulate_data_from_simulation_name(data_title)
 test_data = simulate_data_from_simulation_name(data_title)
 
-num_trees = 1
-num_burn_in = 2000
-num_iterations_after_burn_in = 2000
-alpha = 0.95
-beta = -2
 
 run_bart_model_and_save_diags_and_results = function(training_data, test_data, data_title, num_trees, num_burn_in, num_iterations_after_burn_in, alpha, beta){
 	save_plot = TRUE
@@ -215,8 +248,6 @@ run_bart_model_and_save_diags_and_results = function(training_data, test_data, d
 		print_tree_illustrations = PRINT_TREE_ILLUS,
 		debug_log = JAVA_LOG,
 		num_iterations_after_burn_in = num_iterations_after_burn_in)
-
-	ensure_bart_is_done_in_java(bart_machine$java_bart_machine)
 	
 	#now use the bart model to predict y_hat's for the test data
 	a_bart_predictions = predict_and_calc_ppis(bart_machine, test_data)
@@ -233,8 +264,8 @@ run_bart_model_and_save_diags_and_results = function(training_data, test_data, d
 	#do some plots and histograms to diagnose convergence
 	plot_sigsqs_convergence_diagnostics(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)
 	hist_sigsqs(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)
-	plot_tree_liks_convergence_diagnostics(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)
-	hist_tree_liks(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)
+#	plot_tree_liks_convergence_diagnostics(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)
+#	hist_tree_liks(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)
 	plot_tree_num_nodes(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)	
 	plot_tree_depths(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)
 	for (t in 1 : num_trees){

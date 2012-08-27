@@ -32,6 +32,7 @@ public abstract class CGMBART_04_init extends CGMBART_03_debug implements Serial
 	}
 	
 	protected void InitGibbsSamplingData(){
+		System.out.println("InitGibbsSamplingData");
 		all_tree_liks = new double[num_trees][num_gibbs_total_iterations + 1];
 
 		//now initialize the gibbs sampler array for trees and error variances
@@ -43,6 +44,7 @@ public abstract class CGMBART_04_init extends CGMBART_03_debug implements Serial
 	
 	protected static final double INITIAL_PRED = 0; //median, doesn't matter anyway
 	protected void InitiatizeTrees() {
+		System.out.println("InitiatizeTrees");
 		//create the array of trees for the zeroth gibbs sample
 		ArrayList<CGMBARTTreeNode> cgm_trees = new ArrayList<CGMBARTTreeNode>(num_trees);		
 		for (int i = 0; i < num_trees; i++){
@@ -57,12 +59,14 @@ public abstract class CGMBART_04_init extends CGMBART_03_debug implements Serial
 	}
 
 	protected void InitializeMus() {
+		System.out.println("InitializeMus");
 		for (CGMBARTTreeNode tree : gibbs_samples_of_cgm_trees.get(0)){
 			assignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsq(tree, gibbs_samples_of_sigsq.get(0));
 		}		
 	}
 	
 	protected void InitizializeSigsq() {
+		System.out.println("InitizializeSigsq");
 		gibbs_samples_of_sigsq.add(0, sampleInitialSigsqByDrawingFromThePrior());		
 	}
 	

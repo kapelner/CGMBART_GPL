@@ -12,8 +12,8 @@ NUM_GIGS_RAM_TO_USE = ifelse(.Platform$OS.type == "windows", 6, 8)
 PLOTS_DIR = "output_plots"
 JAR_DEPENDENCIES = c("bart_java.jar", "commons-math-2.1.jar", "jai_codec.jar", "jai_core.jar")
 DATA_FILENAME = "datasets/bart_data.csv"
-DEFAULT_ALPHA = 0.01
-DEFAULT_BETA = 10
+DEFAULT_ALPHA = 0.95
+DEFAULT_BETA = 2
 COLORS = array(NA, 500)
 for (i in 1 : 500){
 	COLORS[i] = rgb(runif(1, 0, 0.7), runif(1, 0, 0.7), runif(1, 0, 0.7))
@@ -58,7 +58,7 @@ bart_model = function(training_data,
 		beta = DEFAULT_BETA, 
 		class_or_regr = "r", 
 		debug_log = TRUE,
-		fix_seed = TRUE,
+		fix_seed = FALSE,
 		print_tree_illustrations = FALSE, 
 		print_out_every = NULL){
 	
@@ -89,10 +89,8 @@ bart_model = function(training_data,
 	#need http://math.acadiau.ca/ACMMaC/Rmpi/sample.html RMPI here
 	#or better yet do this in pieces and plot slowly
 	.jcall(java_bart_machine, "V", "Build")
-#	print(java_bart_machine)
+
 	#now once it's done, let's extract things that are related to diagnosing the build of the BART model
-	ensure_bart_is_done_in_java(java_bart_machine)
-	
 	list(java_bart_machine = java_bart_machine, 
 		num_trees = num_trees,
 		num_burn_in = num_burn_in,
@@ -111,16 +109,19 @@ init_jvm_and_bart_object = function(debug_log, print_tree_illustrations, print_o
 	}
 	java_bart_machine = .jnew("CGM_BART.CGMBARTRegression")
 	if (debug_log){
-#		cat("warning: printing out the log file will slow down the runtime perceptibly\n")
+		cat("warning: printing out the log file will slow down the runtime perceptibly\n")
 		.jcall(java_bart_machine, "V", "writeToDebugLog")
 	}
+	#now initialize the data
+	.jcall(java_bart_machine, "V", "setDataToDefaultForRPackage")
+	if (fix_seed){
+		.jcall(java_bart_machine, "V", "fixRandSeed")		
+	}	
 	if (print_tree_illustrations){
 		cat("warning: printing tree illustrations will slow down the runtime significantly\n")
 		.jcall(java_bart_machine, "V", "printTreeIllustations")
 	}
-	if (fix_seed){
-		.jcall(java_bart_machine, "V", "fixRandSeed")		
-	}
+
 	if (!is.null(print_out_every)){
 		.jcall(java_bart_machine, "V", "setPrintOutEveryNIter", as.integer(print_out_every))
 	}
@@ -145,11 +146,11 @@ clean_previous_bart_data = function(){
 	}
 }
 
-ensure_bart_is_done_in_java = function(java_bart_machine){
-	if (!.jcall(java_bart_machine, "Z", "gibbsFinished")){
-		stop("BART model not finished building yet", call. = FALSE)
-	}
-}
+#ensure_bart_is_done_in_java = function(java_bart_machine){
+#	if (!.jcall(java_bart_machine, "Z", "gibbsFinished")){
+#		stop("BART model not finished building yet", call. = FALSE)
+#	}
+#}
 
 
 plot_sigsqs_convergence_diagnostics = function(bart_machine, extra_text = NULL, data_title = "data_model", save_plot = FALSE){

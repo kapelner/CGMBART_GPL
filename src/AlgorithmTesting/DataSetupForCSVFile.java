@@ -91,7 +91,7 @@ public class DataSetupForCSVFile {
 					record[i] = Double.parseDouble(datums[i]);
 				}				
 				X_y.add(record);
-//				System.out.println("record: " + IOTools.StringJoin(record, ", "));
+//				System.out.println("record: " + Tools.StringJoin(record, ", "));
 			}
 			line_num++;
 		}

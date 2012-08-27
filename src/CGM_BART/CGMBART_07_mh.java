@@ -53,12 +53,11 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 	}
 
 	protected double doMHGrowAndCalcLnR(CGMBARTTreeNode T_i, CGMBARTTreeNode T_star) {
-		System.out.println("GROW");
 //		System.out.println("doMHGrowAndCalcLnR on " + T_star.stringID() + " old depth: " + T_star.deepestNode());
 		CGMBARTTreeNode grow_node = pickGrowNode(T_star);
 		//if we can't grow, reject offhand
 		if (grow_node == null){ // || grow_node.generation >= 2
-			System.out.println("proposal ln(r) = -oo DUE TO CANNOT GROW\n\n");
+			System.out.println("  proposal ln(r) = -oo DUE TO CANNOT GROW\n\n");
 			return Double.NEGATIVE_INFINITY;					
 		}
 		
@@ -66,11 +65,10 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 		//first pick the attribute
 		grow_node.splitAttributeM = grow_node.pickRandomPredictorThatCanBeAssigned();
 		
-		System.out.print("  <<" + grow_node.stringLocation(true) + ">> ---- X_" + (grow_node.splitAttributeM + 1) + " < ");
-		
 		Double split_value = grow_node.pickRandomSplitValue();
+//		System.out.print("split_value = " + split_value);
 		if (split_value == null){
-			System.out.print("ERROR    proposal ln(r) = -oo DUE TO NO SPLIT VALUES\n\n");
+			System.out.print("ERROR!!! GROW <<" + grow_node.stringLocation(true) + ">> ---- X_" + (grow_node.splitAttributeM + 1) + "  proposal ln(r) = -oo DUE TO NO SPLIT VALUES\n\n");
 			return Double.NEGATIVE_INFINITY;					
 		}		
 		
@@ -79,14 +77,17 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 		grow_node.isLeaf = false;
 		grow_node.left = new CGMBARTTreeNode(grow_node);
 		grow_node.right = new CGMBARTTreeNode(grow_node);
-		CGMBARTTreeNode.propagateDataByChangedRule(grow_node, true);		
+		CGMBARTTreeNode.propagateDataByChangedRule(grow_node, true);	
+		
+//		System.out.print("grow_node.splitValue = " + grow_node.splitValue);
 		
 //		System.out.println("grow_node: " + grow_node.stringID() + " new depth: " + T_star.deepestNode() + " " + grow_node.deepestNode());
 		double ln_transition_ratio_grow = calcLnTransRatioGrow(T_i, T_star, grow_node);
 		double ln_likelihood_ratio_grow = calcLnLikRatioGrow(grow_node);
 		double ln_tree_structure_ratio_grow = calcLnTreeStructureRatioGrow(grow_node);
 		
-		System.out.println(TreeIllustration.two_digit_format.format(grow_node.splitValue) + 
+		System.out.println("GROW  <<" + grow_node.stringLocation(true) + ">> ---- X_" + (grow_node.splitAttributeM + 1) + 
+			" < " + TreeIllustration.two_digit_format.format(grow_node.splitValue) + 
 			"\n  ln trans ratio: " + ln_transition_ratio_grow + " ln lik ratio: " + ln_likelihood_ratio_grow + " ln structure ratio: " + ln_tree_structure_ratio_grow +			
 			"\n  trans ratio: " + 
 			(Math.exp(ln_transition_ratio_grow) < 0.00001 ? "damn small" : Math.exp(ln_transition_ratio_grow)) +
@@ -109,7 +110,7 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 		double ln_tree_structure_ratio_prune = -calcLnTreeStructureRatioGrow(prune_node);
 		
 		
-		System.out.println("PRUNE \n<<" + prune_node.stringLocation(true) + 
+		System.out.println("PRUNE <<" + prune_node.stringLocation(true) + 
 				">> ---- X_" + (prune_node.splitAttributeM == null ? "null" : (prune_node.splitAttributeM + 1)) + " < " + TreeIllustration.two_digit_format.format(prune_node.splitValue == null ? Double.NaN : prune_node.splitValue) + 
 			"\n  ln trans ratio: " + ln_transition_ratio_prune + " ln lik ratio: " + ln_likelihood_ratio_prune + " ln structure ratio: " + ln_tree_structure_ratio_prune +
 			"\n  trans ratio: " + 
@@ -157,6 +158,7 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 		int p_adj = grow_node.pAdj();
 		int n_adj = grow_node.nAdj();
 		int n_repeat = grow_node.splitValuesRepeated();
+//		System.out.println("calcLnTreeStructureRatioGrow d_eta: " + d_eta + " p_adj: " + p_adj + " n_adj: " + n_adj + " n_repeat: " + n_repeat + " ALPHA: " + ALPHA + " BETA: " + BETA);
 		return Math.log(ALPHA) 
 				+ 2 * Math.log(1 - ALPHA / Math.pow(2 + d_eta, BETA))
 				+ Math.log(n_repeat)

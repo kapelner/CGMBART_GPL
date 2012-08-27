@@ -604,7 +604,7 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		}
 //		Collections.sort(possible_values);
 //		System.out.println("possibleSplitValuesGivenAttribute this.n_eta: " + this.n_eta + " X_" + this.splitAttributeM + 
-//				" min: " + min_split_value_lineage + " vals: " + Tools.StringJoin(possible_values, ", "));
+//				" vals: " + Tools.StringJoin(possible_values, ", "));
 		
 		if (possible_values.size() == 0){
 			System.out.println("lb: " + lower_bound + " upper_bound: " + upper_bound);

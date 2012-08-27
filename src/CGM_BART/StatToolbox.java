@@ -59,6 +59,7 @@ public class StatToolbox {
 		try {
 			return gamma_dist.inverseCumulativeProbability(StatToolbox.rand());
 		} catch (MathException e) {
+//			System.out.println("sample_from_inv_gamma failed: " + e.toString());
 			e.printStackTrace();
 		}
 		return ILLEGAL_FLAG;

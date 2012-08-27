@@ -62,7 +62,7 @@ public abstract class CGMBART_01_base extends Classifier implements Serializable
 	}
 
 	public void setNumTrees(int m){
-		System.out.println("set num trees = " + num_trees);
+//		System.out.println("set num trees = " + num_trees);
 		this.num_trees = m;
 	}
 	
@@ -72,12 +72,12 @@ public abstract class CGMBART_01_base extends Classifier implements Serializable
 	
 	
 	public void setAlpha(double alpha){
-		System.out.println("set alpha = " + alpha);
+//		System.out.println("set alpha = " + alpha);
 		ALPHA = alpha;
 	}
 	
 	public void setBeta(double beta){
-		System.out.println("set beta = " + beta);
+//		System.out.println("set beta = " + beta);
 		BETA = beta;
 	}	
 	

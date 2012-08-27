@@ -25,8 +25,7 @@ public abstract class CGMBART_03_debug extends CGMBART_02_hyperparams implements
 	protected static final boolean WRITE_DETAILED_DEBUG_FILES = false;
 	
 	public static final String DEBUG_DIR = "debug_output";
-	protected static final String CSVFileFromRName = "bart_data.csv";
-	protected static final String CSVFileFromRDirectory = "datasets";	
+
 	
 	static {
 		try {			
@@ -79,6 +78,7 @@ public abstract class CGMBART_03_debug extends CGMBART_02_hyperparams implements
 	}
 	
 	protected void DebugInitialization() {
+		System.out.println("DebugInitialization");
 		ArrayList<CGMBARTTreeNode> initial_trees = gibbs_samples_of_cgm_trees.get(0);
 			
 		if (TREE_ILLUST){
