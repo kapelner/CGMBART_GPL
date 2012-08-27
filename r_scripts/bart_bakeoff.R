@@ -14,34 +14,37 @@ graphics.off()
 PRINT_TREE_ILLUS = FALSE
 JAVA_LOG = FALSE
 
-run_model_N_times = 10
+run_model_N_times = 3
 real_regression_data_sets = c(
 #	"r_boston"
 #	"r_forestfires", 
 #	"r_concretedata"
 )
 simulated_data_sets = c(
-#	"univariate_linear",
-#	"bivariate_linear",
-#	"friedman",
-#	"simple_tree_structure_sigsq_hundredth",
-#	"simple_tree_structure_sigsq_tenth",
-#	"simple_tree_structure_sigsq_half",
-		"simple_tree_structure"
-#	"simple_tree_structure_sigsq_3",
-#	"simple_tree_structure_sigsq_5",
-#	"simple_tree_structure_sigsq_10",
-#	"simple_tree_structure_sigsq_30",
-#	"simple_tree_structure_sigsq_100"
+	"univariate_linear",
+	"bivariate_linear",
+	"friedman",
+	"simple_tree_structure_sigsq_hundredth",
+	"simple_tree_structure_sigsq_tenth",
+	"simple_tree_structure_sigsq_half",
+	"simple_tree_structure",
+	"simple_tree_structure_sigsq_3",
+	"simple_tree_structure_sigsq_5",
+	"simple_tree_structure_sigsq_10",
+	"simple_tree_structure_sigsq_30",
+	"simple_tree_structure_sigsq_100"
 )
 
 #nice to have data around for testing... should be overwritten...
-num_trees_of_interest = c(1)
+num_trees_of_interest = c(1, 2, 5)
 num_burn_ins_of_interest = c(2000)
 num_iterations_after_burn_ins_of_interest = c(2000)
 alphas_of_interest = c(0.95)
 betas_of_interest = c(2)
-total_num_runs = (length(real_regression_data_sets) + length(simulated_data_sets)) * run_model_N_times
+total_num_runs = (length(real_regression_data_sets) + length(simulated_data_sets)) * 
+		length(num_trees_of_interest) * length(num_burn_ins_of_interest) * 
+		length(num_iterations_after_burn_ins_of_interest) * length(alphas_of_interest) * 
+		length(betas_of_interest) * run_model_N_times
 num_trees = 1
 num_burn_in = 2000
 num_iterations_after_burn_in = 2000
@@ -71,7 +74,7 @@ colnames(simulation_results) = c(
 		"CART_rmse"
 )
 
-avg_simulation_results = as.data.frame(matrix(NA, nrow = 0, ncol = 13))
+avg_simulation_results = matrix(NA, nrow = 0, ncol = 13)
 colnames(avg_simulation_results) = c(
 		"data_model", 
 		"m",
@@ -88,9 +91,6 @@ colnames(avg_simulation_results) = c(
 		"RF_rmse_se"
 )
 
-
-
-#avg_simulation_results_pretty
 
 run_bart_bakeoff = function(){
 	current_run = 0
