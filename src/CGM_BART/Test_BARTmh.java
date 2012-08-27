@@ -12,7 +12,7 @@ import org.junit.Test;
 
 public class Test_BARTmh {
 
-	private static CGMBART_mh bart;
+	private static CGMBART_07_mh bart;
 	private static final int NB = 10;
 	private static final int NGAndNB = 20;
 	

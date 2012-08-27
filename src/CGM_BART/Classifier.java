@@ -28,6 +28,7 @@ package CGM_BART;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintStream;
 //import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.Serializable;
@@ -36,6 +37,8 @@ import java.util.logging.FileHandler;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
+
+import CustomLogging.*;
 
 /**
  * The base class for all machine learning / statistical-learning
@@ -118,14 +121,13 @@ public abstract class Classifier implements Serializable {
 	/** build the machine learning classifier, you must {@link #setData(ArrayList) set the data} first */
 	public abstract void Build();
 	
-	public void StartBuilding(){
-		new Thread(){
-			public void run(){
-				Build();
-			}
-		}.start();
+	public static void fixRandSeed(){
+		StatToolbox.R.setSeed(1984);
 	}
 	
+	/**
+	 * @see https://blogs.oracle.com/nickstephen/entry/java_redirecting_system_out_and
+	 */
 	public static void writeToDebugLog(){
 		//also handle the logging
         LogManager logManager = LogManager.getLogManager();
@@ -144,12 +146,12 @@ public abstract class Classifier implements Serializable {
         Logger.getLogger("").addHandler(fileHandler);
         
         // now rebind stdout/stderr to logger
-//        Logger logger = Logger.getLogger("stdout");         
-//        LoggingOutputStream  los = new LoggingOutputStream(logger, StdOutErrLevel.STDOUT);
-//        System.setOut(new PrintStream(los, true));
-//        logger = Logger.getLogger("stderr");                                    
-//        los= new LoggingOutputStream(logger, StdOutErrLevel.STDERR);            
-//        System.setErr(new PrintStream(los, true)); 		
+        Logger logger = Logger.getLogger("stdout");         
+        LoggingOutputStream  los = new LoggingOutputStream(logger, StdOutErrLevel.STDOUT);
+        System.setOut(new PrintStream(los, true));
+        logger = Logger.getLogger("stderr");                                    
+        los= new LoggingOutputStream(logger, StdOutErrLevel.STDERR);            
+        System.setErr(new PrintStream(los, true)); 		
 	}
 	
 	/** deletes all data that's unneeded to save memory */

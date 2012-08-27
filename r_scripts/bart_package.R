@@ -10,7 +10,7 @@ tryCatch(library(xtable), error = function(e){install.packages("xtable")}, final
 #constants
 NUM_GIGS_RAM_TO_USE = ifelse(.Platform$OS.type == "windows", 6, 8)
 PLOTS_DIR = "output_plots"
-JAR_DEPENDENCIES = c("bart_java.jar", "commons-math-2.1.jar", "jai_codec.jar", "jai_core.jar", "gemident_1_12_12.jar")
+JAR_DEPENDENCIES = c("bart_java.jar", "commons-math-2.1.jar", "jai_codec.jar", "jai_core.jar")
 DATA_FILENAME = "datasets/bart_data.csv"
 DEFAULT_ALPHA = 0.01
 DEFAULT_BETA = 10
@@ -43,6 +43,7 @@ debug_log = TRUE
 print_tree_illustrations = FALSE
 PRINT_TREE_ILLUS = FALSE
 print_out_every = NULL
+fix_seed = TRUE
 JAVA_LOG = TRUE #to be overwritten later
 #source("r_scripts/create_simulated_models.R")
 #simulated_data_model_name = simulated_data_sets[1]
@@ -56,7 +57,8 @@ bart_model = function(training_data,
 		alpha = DEFAULT_ALPHA,
 		beta = DEFAULT_BETA, 
 		class_or_regr = "r", 
-		debug_log = FALSE, 
+		debug_log = TRUE,
+		fix_seed = TRUE,
 		print_tree_illustrations = FALSE, 
 		print_out_every = NULL){
 	
@@ -75,7 +77,7 @@ bart_model = function(training_data,
 	write.csv(training_data, DATA_FILENAME, row.names = FALSE)
 	
 	#initialize the JVM
-	java_bart_machine = init_jvm_and_bart_object(debug_log, print_tree_illustrations, print_out_every)
+	java_bart_machine = init_jvm_and_bart_object(debug_log, print_tree_illustrations, print_out_every, fix_seed)
 	#make bart to spec with what the user wants
 	.jcall(java_bart_machine, "V", "setNumTrees", as.integer(num_trees))
 	.jcall(java_bart_machine, "V", "setNumGibbsBurnIn", as.integer(num_burn_in))
@@ -99,6 +101,30 @@ bart_model = function(training_data,
 		alpha = alpha,
 		beta = beta
 	)
+}
+
+
+init_jvm_and_bart_object = function(debug_log, print_tree_illustrations, print_out_every, fix_seed){
+	.jinit(parameters = paste("-Xmx", NUM_GIGS_RAM_TO_USE, "g", sep = ""))
+	for (dependency in JAR_DEPENDENCIES){
+		.jaddClassPath(paste(directory_where_code_is, "/", dependency, sep = ""))
+	}
+	java_bart_machine = .jnew("CGM_BART.CGMBARTRegression")
+	if (debug_log){
+#		cat("warning: printing out the log file will slow down the runtime perceptibly\n")
+		.jcall(java_bart_machine, "V", "writeToDebugLog")
+	}
+	if (print_tree_illustrations){
+		cat("warning: printing tree illustrations will slow down the runtime significantly\n")
+		.jcall(java_bart_machine, "V", "printTreeIllustations")
+	}
+	if (fix_seed){
+		.jcall(java_bart_machine, "V", "fixRandSeed")		
+	}
+	if (!is.null(print_out_every)){
+		.jcall(java_bart_machine, "V", "setPrintOutEveryNIter", as.integer(print_out_every))
+	}
+	java_bart_machine
 }
 
 clean_previous_bart_data = function(){
@@ -125,25 +151,6 @@ ensure_bart_is_done_in_java = function(java_bart_machine){
 	}
 }
 
-init_jvm_and_bart_object = function(debug_log, print_tree_illustrations, print_out_every){
-	.jinit(parameters = paste("-d32 -Xmx", NUM_GIGS_RAM_TO_USE, "g", sep = ""))
-	for (dependency in JAR_DEPENDENCIES){
-		.jaddClassPath(paste(directory_where_code_is, "/", dependency, sep = ""))
-	}
-	java_bart_machine = .jnew("CGM_BART.CGMBARTRegression")
-	if (debug_log){
-#		cat("warning: printing out the log file will slow down the runtime perceptibly\n")
-		.jcall(java_bart_machine, "V", "writeToDebugLog")
-	}
-	if (print_tree_illustrations){
-		cat("warning: printing tree illustrations will slow down the runtime significantly\n")
-		.jcall(java_bart_machine, "V", "printTreeIllustations")
-	}
-	if (!is.null(print_out_every)){
-		.jcall(java_bart_machine, "V", "setPrintOutEveryNIter", as.integer(print_out_every))
-	}
-	java_bart_machine
-}
 
 plot_sigsqs_convergence_diagnostics = function(bart_machine, extra_text = NULL, data_title = "data_model", save_plot = FALSE){
 	sigsqs = .jcall(bart_machine$java_bart_machine, "[D", "getGibbsSamplesSigsqs")

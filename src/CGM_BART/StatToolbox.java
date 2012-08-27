@@ -38,10 +38,7 @@ import org.apache.commons.math.special.Gamma;
  */
 public class StatToolbox {
 	
-	private static final Random R = new Random();
-	static {
-		R.setSeed(1984);
-	}
+	public static final Random R = new Random();
 	
 	public static double rand(){
 		return R.nextDouble();

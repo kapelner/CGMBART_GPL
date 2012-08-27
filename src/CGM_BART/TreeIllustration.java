@@ -163,15 +163,15 @@ public class TreeIllustration {
 	}	
 
 	public static void DeletePreviousTreeIllustrations(){
-		 String[] image_filenames = new File(CGMBART_debug.DEBUG_DIR).list(new ImageFileFilter());
+		 String[] image_filenames = new File(CGMBART_03_debug.DEBUG_DIR).list(new ImageFileFilter());
 		 for (String filename : image_filenames){
-			 new File(CGMBART_debug.DEBUG_DIR, filename).delete();
+			 new File(CGMBART_03_debug.DEBUG_DIR, filename).delete();
 		 }
 	}
 
 	private void saveImageFile(BufferedImage image, HashMap<String, String> info) {
 		String title = "r" + info.get("num_restart") + "_a" + (info.get("num_acceptances") == null ? 0 : Integer.parseInt(info.get("num_acceptances")));
-		JAI.create("filestore", image, CGMBART_debug.DEBUG_DIR + "//" + title + ".png", "PNG");
+		JAI.create("filestore", image, CGMBART_03_debug.DEBUG_DIR + "//" + title + ".png", "PNG");
 	}
 
 	private void initializeCanvas() {

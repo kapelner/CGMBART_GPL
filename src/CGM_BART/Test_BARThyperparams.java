@@ -12,7 +12,7 @@ import org.junit.Test;
 
 public class Test_BARThyperparams {
 
-	private static CGMBART_eval simple_bart;
+	private static CGMBART_08_eval simple_bart;
 
 
 	@BeforeClass

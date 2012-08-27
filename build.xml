@@ -1,4 +1,4 @@
-<project name="CGMBART" basedir="." default="clean">
+<project name="CGMBART_GPL" basedir="." default="clean">
     <description>
         This script builds the CGMBART code into the bart_java.jar file which gets called from R in the R package
     </description>	

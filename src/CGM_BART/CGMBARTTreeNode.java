@@ -44,7 +44,7 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 	private static final long serialVersionUID = -5584590448078741112L;
 
 	/** a link back to the overall bart model */
-	private CGMBART_hyperparams cgmbart;	
+	private CGMBART_02_hyperparams cgmbart;	
 	/** the parent node */
 	public CGMBARTTreeNode parent;
 	/** the left daughter node */
@@ -74,7 +74,7 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 
 
 
-	public CGMBARTTreeNode(CGMBARTTreeNode parent, List<double[]> data, CGMBART_hyperparams cgmbart){
+	public CGMBARTTreeNode(CGMBARTTreeNode parent, List<double[]> data, CGMBART_02_hyperparams cgmbart){
 		this.parent = parent;
 		this.data = clone_data_matrix_with_new_y_optional(data, null);
 		this.cgmbart = cgmbart;

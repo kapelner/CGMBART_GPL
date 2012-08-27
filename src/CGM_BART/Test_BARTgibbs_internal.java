@@ -14,7 +14,7 @@ import org.junit.Test;
 
 public class Test_BARTgibbs_internal {
 
-	private static CGMBART_gibbs_internal bart;
+	private static CGMBART_06_gibbs_internal bart;
 	private static final int NB = 10;
 	private static final int NGAndNB = 20;
 	
@@ -122,7 +122,7 @@ public class Test_BARTgibbs_internal {
 //		errors = bart.un_transform_y(errors);
 		double[] expected_errors = new double[bart.n];
 		for (int i = 0; i < bart.n; i++){
-			expected_errors[i] = bart.y[i] - num_trees * CGMBART_init.INITIAL_PRED;
+			expected_errors[i] = bart.y[i] - num_trees * CGMBART_04_init.INITIAL_PRED;
 		}
 		assertArrayEquals(errors, expected_errors, 0.0001);
 		

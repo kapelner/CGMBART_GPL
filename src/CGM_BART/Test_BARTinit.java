@@ -15,7 +15,7 @@ import org.junit.Test;
 
 public class Test_BARTinit {
 
-	private static CGMBART_init bart;
+	private static CGMBART_04_init bart;
 
 
 	@BeforeClass
