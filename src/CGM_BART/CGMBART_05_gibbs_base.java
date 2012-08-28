@@ -41,7 +41,7 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 		tree_liks.print(gibb_sample_num + ",");
 		//this array is the array of trees for this given sample
 		final ArrayList<CGMBARTTreeNode> cgm_trees = new ArrayList<CGMBARTTreeNode>(num_trees);				
-		final TreeArrayIllustration tree_array_illustration = new TreeArrayIllustration(gibb_sample_num);
+		final TreeArrayIllustration tree_array_illustration = new TreeArrayIllustration(gibb_sample_num, unique_name);
 		gibbs_samples_of_cgm_trees.add(null); //so I can set explicitly
 		//we cycle over each tree and update it according to formulas 15, 16 on p274
 		for (int t = 0; t < num_trees; t++){

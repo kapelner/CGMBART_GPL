@@ -26,7 +26,6 @@ public abstract class CGMBART_03_debug extends CGMBART_02_hyperparams implements
 	
 	public static final String DEBUG_DIR = "debug_output";
 
-	
 	static {
 		try {			
 			output = new PrintWriter(new BufferedWriter(new FileWriter(DEBUG_DIR + File.separatorChar + "output" + DEBUG_EXT)));
@@ -82,7 +81,7 @@ public abstract class CGMBART_03_debug extends CGMBART_02_hyperparams implements
 		ArrayList<CGMBARTTreeNode> initial_trees = gibbs_samples_of_cgm_trees.get(0);
 			
 		if (TREE_ILLUST){
-			TreeArrayIllustration tree_array_illustration = new TreeArrayIllustration(0);
+			TreeArrayIllustration tree_array_illustration = new TreeArrayIllustration(0, unique_name);
 			for (CGMBARTTreeNode tree : initial_trees){
 				tree_array_illustration.AddTree(tree);
 				tree_array_illustration.addLikelihood(0);			

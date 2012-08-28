@@ -36,14 +36,16 @@ public class TreeArrayIllustration {
 	private int sample_num;
 	private ArrayList<CGMBARTTreeNode> trees;
 	private ArrayList<Double> likelihoods;
+	private String unique_name;
 	
 	public static NumberFormat one_digit_format = NumberFormat.getInstance();
 	static {
 		one_digit_format.setMaximumFractionDigits(1);
 	}	
 
-	public TreeArrayIllustration(int sample_num) {
+	public TreeArrayIllustration(int sample_num, String unique_name) {
 		this.sample_num = sample_num;
+		this.unique_name = unique_name;
 		trees = new ArrayList<CGMBARTTreeNode>();
 		likelihoods = new ArrayList<Double>();
 	}
@@ -88,7 +90,7 @@ public class TreeArrayIllustration {
 	}
 	
 	private void saveImageFile(BufferedImage image) {
-		String title = "BART_trees_iter_" + LeadingZeroes(sample_num, 5);
+		String title = "BART_" + unique_name + "_iter_" + LeadingZeroes(sample_num, 5);
 		try {
 			JAI.create("filestore", image, CGMBART_03_debug.DEBUG_DIR + "//" + title + ".png", "PNG");
 		}

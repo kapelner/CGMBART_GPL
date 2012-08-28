@@ -37,7 +37,10 @@ Thumbs.db
 *.swp
 log
 log.lck
+log*
+log*.lck
 log~
+log*~
 bin/*
 .project
 .gitignore.swo
@@ -46,6 +49,7 @@ bin/*
 simulation_results.csv
 r_scripts/debug_only/*
 mathematica_scripts/*
+datasets/r_treemodel.csv
 debug_output/*.csv
 debug_output/*.png
 output_plots/*.pdf

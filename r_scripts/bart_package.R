@@ -59,6 +59,7 @@ bart_model = function(training_data,
 		class_or_regr = "r", 
 		debug_log = TRUE,
 		fix_seed = FALSE,
+		unique_name = "unnamed",
 		print_tree_illustrations = FALSE, 
 		print_out_every = NULL){
 	
@@ -77,13 +78,15 @@ bart_model = function(training_data,
 	write.csv(training_data, DATA_FILENAME, row.names = FALSE)
 	
 	#initialize the JVM
-	java_bart_machine = init_jvm_and_bart_object(debug_log, print_tree_illustrations, print_out_every, fix_seed)
+	java_bart_machine = init_jvm_and_bart_object(unique_name, debug_log, print_tree_illustrations, print_out_every, fix_seed)
 	#make bart to spec with what the user wants
 	.jcall(java_bart_machine, "V", "setNumTrees", as.integer(num_trees))
 	.jcall(java_bart_machine, "V", "setNumGibbsBurnIn", as.integer(num_burn_in))
 	.jcall(java_bart_machine, "V", "setNumGibbsTotalIterations", as.integer(num_gibbs))
 	.jcall(java_bart_machine, "V", "setAlpha", alpha)
 	.jcall(java_bart_machine, "V", "setBeta", beta)
+	
+	
 	
 	#build the bart machine for use later
 	#need http://math.acadiau.ca/ACMMaC/Rmpi/sample.html RMPI here
@@ -102,12 +105,16 @@ bart_model = function(training_data,
 }
 
 
-init_jvm_and_bart_object = function(debug_log, print_tree_illustrations, print_out_every, fix_seed){
+init_jvm_and_bart_object = function(unique_name, debug_log, print_tree_illustrations, print_out_every, fix_seed){
 	.jinit(parameters = paste("-Xmx", NUM_GIGS_RAM_TO_USE, "g", sep = ""))
 	for (dependency in JAR_DEPENDENCIES){
 		.jaddClassPath(paste(directory_where_code_is, "/", dependency, sep = ""))
 	}
 	java_bart_machine = .jnew("CGM_BART.CGMBARTRegression")
+	
+	#first set the name
+	.jcall(java_bart_machine, "V", "setUniqueName", unique_name)
+	#now set whether we want the program to log to a file
 	if (debug_log){
 		cat("warning: printing out the log file will slow down the runtime perceptibly\n")
 		.jcall(java_bart_machine, "V", "writeToDebugLog")
@@ -116,7 +123,8 @@ init_jvm_and_bart_object = function(debug_log, print_tree_illustrations, print_o
 	.jcall(java_bart_machine, "V", "setDataToDefaultForRPackage")
 	if (fix_seed){
 		.jcall(java_bart_machine, "V", "fixRandSeed")		
-	}	
+	}
+	#set whether we want there to be tree illustrations
 	if (print_tree_illustrations){
 		cat("warning: printing tree illustrations will slow down the runtime significantly\n")
 		.jcall(java_bart_machine, "V", "printTreeIllustations")

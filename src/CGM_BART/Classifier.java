@@ -63,6 +63,9 @@ public abstract class Classifier implements Serializable {
 	/** the number of features / predictors in the training set */
 	protected int p;
 	
+	/** the name of this classifier */
+	protected String unique_name = "unnamed";
+	
 	protected static PrintWriter output;
 	protected static final String DEBUG_EXT = ".csv";
 	
@@ -139,7 +142,7 @@ public abstract class Classifier implements Serializable {
 	/**
 	 * @see https://blogs.oracle.com/nickstephen/entry/java_redirecting_system_out_and
 	 */
-	public static void writeToDebugLog(){
+	public void writeToDebugLog(){
 		//also handle the logging
         LogManager logManager = LogManager.getLogManager();
         logManager.reset();
@@ -147,7 +150,7 @@ public abstract class Classifier implements Serializable {
         // create log file, no limit on size
         FileHandler fileHandler = null;
 		try {
-			fileHandler = new FileHandler("log", Integer.MAX_VALUE, 1, false);
+			fileHandler = new FileHandler("log_" + unique_name, Integer.MAX_VALUE, 1, false);
 		} catch (SecurityException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -298,4 +301,8 @@ public abstract class Classifier implements Serializable {
 		}		
 		output.close();
 	}
+	
+	public void setUniqueName(String unique_name) {
+		this.unique_name = unique_name;
+	}	
 }

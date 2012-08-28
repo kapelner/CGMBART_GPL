@@ -11,27 +11,31 @@ source("r_scripts/bart_package.R")
 source("r_scripts/create_simulated_models.R")
 graphics.off()
 
-PRINT_TREE_ILLUS = FALSE
-JAVA_LOG = FALSE
+if (FALSE){
+	run_bart_bakeoff()
+}
 
-run_model_N_times = 3
+PRINT_TREE_ILLUS = TRUE
+JAVA_LOG = TRUE
+
+run_model_N_times = 10
 real_regression_data_sets = c(
 #	"r_boston"
 #	"r_forestfires", 
 #	"r_concretedata"
 )
 simulated_data_sets = c(
-	"univariate_linear",
-	"bivariate_linear",
-	"friedman",
-	"simple_tree_structure_sigsq_hundredth",
+#	"univariate_linear",
+#	"bivariate_linear",
+#	"friedman",
+#	"simple_tree_structure_sigsq_hundredth",
 	"simple_tree_structure_sigsq_tenth",
-	"simple_tree_structure_sigsq_half",
+#	"simple_tree_structure_sigsq_half",
 	"simple_tree_structure",
-	"simple_tree_structure_sigsq_3",
-	"simple_tree_structure_sigsq_5",
+#	"simple_tree_structure_sigsq_3",
+#	"simple_tree_structure_sigsq_5",
 	"simple_tree_structure_sigsq_10",
-	"simple_tree_structure_sigsq_30",
+#	"simple_tree_structure_sigsq_30",
 	"simple_tree_structure_sigsq_100"
 )
 
@@ -52,19 +56,20 @@ alpha = 0.95
 beta = 2
 
 
-simulation_results = matrix(NA, nrow = 0, ncol = 18)
+simulation_results = matrix(NA, nrow = 0, ncol = 19)
 colnames(simulation_results) = c(
 		"data_model", 
 		"m",
 		"N_B", 
 		"N_G", 
 		"alpha", 
-		"beta", 		
+		"beta", 
+		"run_time",
 		"A_BART_L1", 
-		"A_BART_L2", 
-		"A_BART_rmse", 
 		"R_BART_L1", 
+		"A_BART_L2", 
 		"R_BART_L2", 
+		"A_BART_rmse",
 		"R_BART_rmse",
 		"RF_L1",
 		"RF_L2",
@@ -81,10 +86,10 @@ colnames(avg_simulation_results) = c(
 		"N_B", 
 		"N_G",
 		"alpha", 
-		"beta", 		
+		"beta",
 		"A_BART_rmse_avg", 
-		"A_BART_rmse_se", 
 		"R_BART_rmse_avg",
+		"A_BART_rmse_se",		
 		"R_BART_rmse_se",
 		"pval",		
 		"RF_rmse_avg",
@@ -108,20 +113,20 @@ run_bart_bakeoff = function(){
 							test_indices = setdiff(1 : nrow(raw_data), training_indices)
 							training_data = raw_data[training_indices, ]
 							test_data = raw_data[test_indices, ]							
-							for (mod in 1 : run_model_N_times){
+							for (duplicate_run in 1 : run_model_N_times){
 								current_run = current_run + 1
 								append_to_log(paste("starting model ", current_run, "\\", total_num_runs, "  \"", real_regression_data_set, "\", m = ", num_trees, ", n_B = ", num_burn_in, ", n_G_a = ", num_iterations_after_burn_in, " alpha = ", alpha, " beta = ", beta, sep = ""))
-								run_bart_model_and_save_diags_and_results(training_data, test_data, real_regression_data_set, num_trees, num_burn_in, num_iterations_after_burn_in, alpha, beta)
+								run_bart_model_and_save_diags_and_results(training_data, test_data, real_regression_data_set, num_trees, num_burn_in, num_iterations_after_burn_in, alpha, beta, duplicate_run)
 							}
 						}
 		
 						for (simulated_data_set in simulated_data_sets){
 							training_data = simulate_data_from_simulation_name(simulated_data_set)
 							test_data = simulate_data_from_simulation_name(simulated_data_set)							
-							for (mod in 1 : run_model_N_times){
+							for (duplicate_run in 1 : run_model_N_times){
 								current_run = current_run + 1
 								append_to_log(paste("starting model ", current_run, "\\", total_num_runs, "  \"", simulated_data_set, "\", m = ", num_trees, ", n_B = ", num_burn_in, ", n_G_a = ", num_iterations_after_burn_in, " alpha = ", alpha, " beta = ", beta, sep = ""))
-								run_bart_model_and_save_diags_and_results(training_data, test_data, simulated_data_set, num_trees, num_burn_in, num_iterations_after_burn_in, alpha, beta)
+								run_bart_model_and_save_diags_and_results(training_data, test_data, simulated_data_set, num_trees, num_burn_in, num_iterations_after_burn_in, alpha, beta, duplicate_run)
 							}
 						}
 					}
@@ -201,9 +206,9 @@ create_avg_sim_results_and_save_as_csv = function(){
 								num_iterations_after_burn_in,
 								alpha,
 								beta,
-								round(mean(all_results$A_BART_rmse), 1),
-								round(sd(all_results$A_BART_rmse), 2),
-								round(mean(all_results$R_BART_rmse), 1),
+								round(mean(all_results$A_BART_rmse), 2),
+								round(mean(all_results$R_BART_rmse), 2),
+								round(sd(all_results$A_BART_rmse), 2),								
 								round(sd(all_results$R_BART_rmse), 2),
 								round(pval_sign_test, 3),
 								round(mean(all_results$RF_rmse), 1),
@@ -234,12 +239,13 @@ training_data = simulate_data_from_simulation_name(data_title)
 test_data = simulate_data_from_simulation_name(data_title)
 
 
-run_bart_model_and_save_diags_and_results = function(training_data, test_data, data_title, num_trees, num_burn_in, num_iterations_after_burn_in, alpha, beta){
+run_bart_model_and_save_diags_and_results = function(training_data, test_data, data_title, num_trees, num_burn_in, num_iterations_after_burn_in, alpha, beta, duplicate_run){
 	save_plot = TRUE
 	extra_text = paste("on model \"", gsub("_", " ", data_title), "\" m = ", num_trees, " n_B = ", num_burn_in, ", n_G_a = ", 
 			num_iterations_after_burn_in, " ", expression(alpha), " = ", alpha,  " ", expression(beta), " = ", beta, sep = "")
 	
 	#generate the bart model
+	time_started = Sys.time()
 	bart_machine = bart_model(training_data, 
 		num_trees = num_trees, 
 		num_burn_in = num_burn_in, 
@@ -247,7 +253,9 @@ run_bart_model_and_save_diags_and_results = function(training_data, test_data, d
 		beta = beta,
 		print_tree_illustrations = PRINT_TREE_ILLUS,
 		debug_log = JAVA_LOG,
+		unique_name = paste0(data_title, "_m_", num_trees, "_run_", duplicate_run),
 		num_iterations_after_burn_in = num_iterations_after_burn_in)
+	time_finished = Sys.time()
 	assign("bart_machine", bart_machine, .GlobalEnv)
 	append_to_log("built")
 	
@@ -284,12 +292,13 @@ run_bart_model_and_save_diags_and_results = function(training_data, test_data, d
 		num_burn_in, 
 		num_iterations_after_burn_in,
 		alpha,
-		beta,			
+		beta,
+		round(as.numeric(time_finished - time_started), 2),
 		round(a_bart_predictions$L1_err, 0),
-		round(a_bart_predictions$L2_err, 0),
-		round(a_bart_predictions$rmse, 2),
 		round(r_bart_predictions$L1_err, 0),
+		round(a_bart_predictions$L2_err, 0),
 		round(r_bart_predictions$L2_err, 0),
+		round(a_bart_predictions$rmse, 2),
 		round(r_bart_predictions$rmse, 2),	
 		round(rf_predictions$L1_err, 0),
 		round(rf_predictions$L2_err, 0),
