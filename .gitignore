@@ -35,6 +35,7 @@ Thumbs.db
 # other stuff project specific
 
 *.swp
+*.log
 log
 log.lck
 log*

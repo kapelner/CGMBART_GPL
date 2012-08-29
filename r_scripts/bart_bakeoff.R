@@ -18,29 +18,29 @@ if (FALSE){
 PRINT_TREE_ILLUS = TRUE
 JAVA_LOG = TRUE
 
-run_model_N_times = 10
+run_model_N_times = 15
 real_regression_data_sets = c(
-#	"r_boston"
-#	"r_forestfires", 
-#	"r_concretedata"
+	"r_boston",
+	"r_forestfires", 
+	"r_concretedata"
 )
 simulated_data_sets = c(
-#	"univariate_linear",
-#	"bivariate_linear",
-#	"friedman",
-#	"simple_tree_structure_sigsq_hundredth",
+	"univariate_linear",
+	"bivariate_linear",
+	"friedman",
+	"simple_tree_structure_sigsq_hundredth",
 	"simple_tree_structure_sigsq_tenth",
-#	"simple_tree_structure_sigsq_half",
+	"simple_tree_structure_sigsq_half",
 	"simple_tree_structure",
-#	"simple_tree_structure_sigsq_3",
-#	"simple_tree_structure_sigsq_5",
+	"simple_tree_structure_sigsq_3",
+	"simple_tree_structure_sigsq_5",
 	"simple_tree_structure_sigsq_10",
-#	"simple_tree_structure_sigsq_30",
+	"simple_tree_structure_sigsq_30",
 	"simple_tree_structure_sigsq_100"
 )
 
-#nice to have data around for testing... should be overwritten...
-num_trees_of_interest = c(1, 2, 5)
+#nice to have data around for testing... should be overwritten for custom runs...
+num_trees_of_interest = c(1, 2, 5, 10, 20, 50)
 num_burn_ins_of_interest = c(2000)
 num_iterations_after_burn_ins_of_interest = c(2000)
 alphas_of_interest = c(0.95)
@@ -91,7 +91,7 @@ colnames(avg_simulation_results) = c(
 		"R_BART_rmse_avg",
 		"A_BART_rmse_se",		
 		"R_BART_rmse_se",
-		"pval",		
+		"pval_sign_test",		
 		"RF_rmse_avg",
 		"RF_rmse_se"
 )
@@ -145,6 +145,7 @@ calculate_cochran_global_pval = function(){
 	chi_sq = sum(-2 * log(avg_simulation_results_pretty$pval))
 	1 - pchisq(chi_sq, 2 * n)
 }
+calculate_cochran_global_pval()
 
 prettify_simulation_results_and_save_as_csv = function(){
 	#now update simulation results object
@@ -253,7 +254,7 @@ run_bart_model_and_save_diags_and_results = function(training_data, test_data, d
 		beta = beta,
 		print_tree_illustrations = PRINT_TREE_ILLUS,
 		debug_log = JAVA_LOG,
-		unique_name = paste0(data_title, "_m_", num_trees, "_run_", duplicate_run),
+		unique_name = paste0(data_title, "_m_", num_trees, "_run_", formatC(duplicate_run, width = 2, format = "d", flag = "0")),
 		num_iterations_after_burn_in = num_iterations_after_burn_in)
 	time_finished = Sys.time()
 	assign("bart_machine", bart_machine, .GlobalEnv)

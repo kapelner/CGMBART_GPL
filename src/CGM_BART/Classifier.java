@@ -150,7 +150,7 @@ public abstract class Classifier implements Serializable {
         // create log file, no limit on size
         FileHandler fileHandler = null;
 		try {
-			fileHandler = new FileHandler("log_" + unique_name, Integer.MAX_VALUE, 1, false);
+			fileHandler = new FileHandler(unique_name + ".log", Integer.MAX_VALUE, 1, false);
 		} catch (SecurityException e) {
 			e.printStackTrace();
 		} catch (IOException e) {

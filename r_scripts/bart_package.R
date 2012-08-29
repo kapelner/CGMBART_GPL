@@ -104,6 +104,7 @@ bart_model = function(training_data,
 	)
 }
 
+printed_out_warnings = FALSE
 
 init_jvm_and_bart_object = function(unique_name, debug_log, print_tree_illustrations, print_out_every, fix_seed){
 	.jinit(parameters = paste("-Xmx", NUM_GIGS_RAM_TO_USE, "g", sep = ""))
@@ -116,7 +117,9 @@ init_jvm_and_bart_object = function(unique_name, debug_log, print_tree_illustrat
 	.jcall(java_bart_machine, "V", "setUniqueName", unique_name)
 	#now set whether we want the program to log to a file
 	if (debug_log){
-		cat("warning: printing out the log file will slow down the runtime perceptibly\n")
+		if (!printed_out_warnings){
+			cat("warning: printing out the log file will slow down the runtime perceptibly\n")
+		}
 		.jcall(java_bart_machine, "V", "writeToDebugLog")
 	}
 	#now initialize the data
@@ -126,13 +129,16 @@ init_jvm_and_bart_object = function(unique_name, debug_log, print_tree_illustrat
 	}
 	#set whether we want there to be tree illustrations
 	if (print_tree_illustrations){
-		cat("warning: printing tree illustrations will slow down the runtime significantly\n")
+		if (!printed_out_warnings){
+			cat("warning: printing tree illustrations will slow down the runtime significantly\n")
+		}
 		.jcall(java_bart_machine, "V", "printTreeIllustations")
 	}
 
 	if (!is.null(print_out_every)){
 		.jcall(java_bart_machine, "V", "setPrintOutEveryNIter", as.integer(print_out_every))
 	}
+	printed_out_warnings = TRUE
 	java_bart_machine
 }
 
