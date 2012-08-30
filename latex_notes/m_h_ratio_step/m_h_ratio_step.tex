@@ -574,107 +574,103 @@ In log form this becomes:
 \eeqn
 }
 
-\subsection*{Change and Swap Proposals}
+\subsection*{Change}
 
-Due to the complexity of the bookkeeping, we do not consider these steps.
+Change would be picking one father node (a node with two leaves and no nodes of their own) and picking a new rule (\ie a new split attribute and new split value). Let's establish some new notation for this section:
 
-\subsection*{Implementation Details}
 
-We use what we have above to calculate $r$ for grow and prune steps. In practice, we just take the log to avoid numerical problems. \\
+\begin{itemize}
+\item $\eta, \eta_*$ --- the node destined to be changed on the original tree $T$ and the proposed tree $T^*$.
+\item $\etaone, \etatwo$ --- the left and right nodes on tree $T$ whose parent was chosen to be changed.
+\item $\etaonestar, \etatwostar$ --- the left and right nodes on tree $T^*$ after the parent was changed.
+\item $\Rones$ --- the residuals in the left leaf on tree $T$ whose parent was chosen to be changed.
+\item $\Rtwos$ --- the residuals in the right leaf on tree $T$ whose parent was chosen to be changed.
+\item $\Ronestars$ --- the residuals in the left leaf on tree $T^*$ after the parent was changed.
+\item $\Rtwostars$ --- the residuals in the right leaf on tree $T^*$ after the parent was changed.
+\item $\Ronebar$ --- the mean of the residuals on the left node on tree $T$ whose parent was chosen to be changed.
+\item $\Rtwobar$ --- the mean of the residuals on the right node on tree $T$ whose parent was chosen to be changed.
+\item $\Ronebarstar$ --- the mean of the residuals on the left node on tree $T^*$ after the parent was changed.
+\item $\Rtwobarstar$ --- the mean of the residuals on the right node on tree $T^*$ after the parent was changed.
+\end{itemize}
 
-One thing we would like to estimate is the likelihood of the trees over the lifetime of the Gibbs sampler.
+\subsubsection*{Transition Ratio}
+
+We're looking at two simple transitions:
+
+\beqn
+\prob{T \rightarrow T^*} &=& \prob{\text{CHANGE}} \prob{\text{selecting $\eta$ to change}} \times \\
+&& \prob{\text{selecting the new attribute to split on}} \times \\
+&& \prob{\text{selecting the new value to split on}} \\
+&=& \prob{\text{CHANGE}} \oneover{b} \oneover{p_{adj}} \frac{\nrepstar}{\nadjstar} \\
+\prob{T^* \rightarrow T} &=& \prob{\text{CHANGE}} \prob{\text{selecting $\etastar$ to change}} \times \\
+&& \prob{\text{selecting the original attribute to split on}} \times \\
+&& \prob{\text{selecting the original value to split on}} \\
+&=& \prob{\text{CHANGE}} \oneover{b} \oneover{p_{adj}} \frac{\nrep}{\nadj} \\
+\eeqn
+
+It is obvious that the majority of the above will cancel below to produce the ratio:
+
+\beqn
+\frac{\prob{T^* \rightarrow T^*}}{\prob{T \rightarrow T^*}} = \frac{\nrep}{\nrepstar} \frac{\nadjstar}{\nadj}
+\eeqn
+
+
+\subsubsection*{Likelihood Ratio}
+
+The proposal tree differs from the original by just having two different leaves where the residuals are apportioned differently. We begin with direct substitution to quantities derived previously:
+
+\beqn
+\frac{\cprob{\R}{T^*, \sigsq}}{\cprob{\R}{T, \sigsq}} &=& \frac{\cprob{\Ronestars}{\sigsq}\cprob{\Rtwostars}{\sigsq}}{\cprob{\Rones}{\sigsq}\cprob{\Rtwos}{\sigsq}} \\
+&=& \frac{\exp{-\oneover{2\sigsq} \sum_{i=1}^{\nonestar} \squared{R_{1^*,i} - \Ronebarstar}} \exp{\frac{\Ronebarstar^2 \nonestar^2}{2\sigsq\parens{\nonestar + \frac{\sigsq}{\sigsqmu}}}- \frac{\nonestar \Ronebarstar^2}{2\sigsq}}}{\exp{-\oneover{2\sigsq} \sum_{i=1}^{\none} \squared{R_{1,i} - \Ronebar}} \exp{\frac{\Ronebar^2 \none^2}{2\sigsq\parens{\none + \frac{\sigsq}{\sigsqmu}}}- \frac{\none \Ronebar^2}{2\sigsq}}} \times \\
+&& \frac{\exp{-\oneover{2\sigsq} \sum_{i=1}^{\ntwostar} \squared{R_{2^*,i} - \Rtwobarstar}} \exp{\frac{\Rtwobarstar^2 \ntwostar^2}{2\sigsq\parens{\ntwostar + \frac{\sigsq}{\sigsqmu}}}- \frac{\ntwostar \Rtwobarstar^2}{2\sigsq}}}{\exp{-\oneover{2\sigsq} \sum_{i=1}^{\ntwo} \squared{R_{1,i} - \Rtwobar}} \exp{\frac{\Rtwobar^2 \none^2}{2\sigsq\parens{\ntwo + \frac{\sigsq}{\sigsqmu}}}- \frac{\ntwo \Rtwobar^2}{2\sigsq}}}
+\eeqn
+
+The first exponential term can be combined among all four quantities and the second exponential term can be combined among all four quantities to yield:
+
+\beqn
+&=& \exp{\oneover{2\sigsq} \parens{\nonestar \Ronebarstar^2 + \ntwostar \Rtwobarstar^2 - \none \Ronebar^2 - \ntwo \Rtwobar^2}} \times \\
+&& \exp{\frac{\Ronebarstar^2 \nonestar^2}{2\sigsq\parens{\nonestar + \frac{\sigsq}{\sigsqmu}}}- \frac{\nonestar \Ronebarstar^2}{2\sigsq} + \frac{\Rtwobarstar^2 \ntwostar^2}{2\sigsq\parens{\ntwostar + \frac{\sigsq}{\sigsqmu}}}- \frac{\ntwostar \Rtwobarstar^2}{2\sigsq}} \times \\
+&& \exp{-\frac{\Ronebar^2 \none^2}{2\sigsq\parens{\none + \frac{\sigsq}{\sigsqmu}}} + \frac{\none \Ronebar^2}{2\sigsq} - \frac{\Rtwobar^2 \none^2}{2\sigsq\parens{\ntwo + \frac{\sigsq}{\sigsqmu}}} + \frac{\ntwo \Rtwobar^2}{2\sigsq}}
+\eeqn
+
+Factoring out the $\oneover{2\sigsq}$, we see that the top row cancels and we arrive at:
+
+\beqn
+\exp{\oneover{2\sigsq} \parens{\frac{\Ronebarstar^2 \nonestar^2}{\nonestar + \frac{\sigsq}{\sigsqmu}} + \frac{\Rtwobarstar^2 \ntwostar^2}{\ntwostar + \frac{\sigsq}{\sigsqmu}} - \frac{\Ronebar^2 \none^2}{\none + \frac{\sigsq}{\sigsqmu}} - \frac{\Rtwobar^2 \none^2}{\ntwo + \frac{\sigsq}{\sigsqmu}}}}
+\eeqn
+
+which in log form is just simply:
+
+\inblue{
+\beqn
+\oneover{2\sigsq} \parens{\frac{\Ronebarstar^2 \nonestar^2}{\nonestar + \frac{\sigsq}{\sigsqmu}} + \frac{\Rtwobarstar^2 \ntwostar^2}{\ntwostar + \frac{\sigsq}{\sigsqmu}} - \frac{\Ronebar^2 \none^2}{\none + \frac{\sigsq}{\sigsqmu}} - \frac{\Rtwobar^2 \none^2}{\ntwo + \frac{\sigsq}{\sigsqmu}}}
+\eeqn
+}
+\subsubsection*{Tree Structure Ratio}
+
+The proposal tree is the same shape as the original tree. Thus we only need to take into account the probabilities of the proposed split and the original split.
+
+\beqn
+\frac{\prob{T^*}}{\prob{T}} &=& \frac{\parens{1 - \prob{\text{splitting~} \etaonestar} \parens{1 - \prob{\text{splitting~} \etatwostar}}} \prob{\text{splitting~} \etastar} \prob{\text{rule~} \etastar}}{\parens{1 - \prob{\text{splitting~} \etaone} \parens{1 - \prob{\text{splitting~} \etatwo}}} \prob{\text{splitting~} \eta} \prob{\text{rule~} \eta}}
+\eeqn
+
+The one minus probability of splitting will cancel since it's computed based on $\alpha, \beta$ and depth of the leaves which are the same. The probabilities of splitting will cancel based on the same argument. Within the probability of the rule, the number of possible attributes will cancel since it's the same so we really only have to consider:
+
+\beqn
+\frac{\prob{T^*}}{\prob{T}} &=& \frac{\nrepstar}{\nrep} \frac{\nadj}{\nadjstar}
+\eeqn
+
+Note that this is the inverse of the transition ratio. Thus, only the likelihood ratio needs to be computed to determine $r$ for the change step.
+
+\subsection*{Swap}
+
+Due to the complexity of the bookkeeping, we do not consider this type of step.
+
+%\subsection*{Implementation Details}
+
+%We use what we have above to calculate $\natlog{r}$ for grow, prune, and change steps.
+
+%One thing we would like to estimate is the likelihood of the trees over the lifetime of the Gibbs sampler.
 
 
 \end{document}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-%The change proposal is quite different from the grow and prune. This is taking an internal node (any of the $v$ internal nodes where the root itself is included) and changing the rule by switching both the split attribute and the split rule value.\\
-%
-%Consider $\prob{T \rightarrow T^*} = \cprob{T^*}{T}$ during a change:
-%
-%\beqn
-%\cprob{T^*}{T} &=& \prob{\text{CHANGE}} \prob{\text{selecting the $\ell$th node to change}} \times \\
-%&& \prob{\text{selecting the $j$th attribute to split on}} \times \\
-%&& \prob{\text{selecting the $i$th value to split on}} \\
-%\eeqn
-%
-%Then going backwards have the same thing but we need to get back to the original node:
-%
-%\beqn
-%\cprob{T}{T^*} &=& \prob{\text{CHANGE}} \prob{\text{selecting the $\ell$th node to change}} \times \\
-%&& \prob{\text{selecting the original attribute to split on}} \times \\
-%&& \prob{\text{selecting the original value to split on}} \\
-%\eeqn
-%
-%The transition ratio will have many cancellations. The probability of picking a change proposal is obviously the same. The probability of picking the $\ell$th node is the same. Since there are only a certain number of attributes available to the $\ell$th node, that will be the same. This leaves us with:
-%
-%\beqn
-%\frac{\cprob{T}{T^*}}{\cprob{T^*}{T}} = \frac{n_{\text{original}}}{n_{\text{proposal}}}
-%\eeqn
-%
-%where $n_{\text{original}}$ is the number of split points available if the $\ell$th node's split attribute is the original attribute and $n_{\text{proposal}}$ is the number of split points available if the proposal split attribute is used instead.
-%
-%We now move on to the proportional likelihood ratio. We note that if we make a change, all daughter nodes are affected all the way down the lineage. Hence, we need to compare the likelihoods of all the daughter nodes underneath the $\ell$th node. There is no clean way to denote this, so I just spell it out:
-%
-%\beqn
-%\frac{\cprob{R}{T^*, \sigsq}}{\cprob{R}{T, \sigsq}} = \frac{\prod_{\ell^* \in \text{all leaf nodes under the $\ell$th node}} { \abss{\bSigma_{\ell^*}}^{-\half} \exp{-\half R_{\ell^*}^\top \bSigmainv_{\ell^*} R_{\ell^*}}}}{\prod_{\ell \in \text{all leaf nodes under the $\ell$th node}} { \abss{\bSigma_\ell}^{-\half} \exp{-\half R_\ell^\top \bSigmainv_\ell R_\ell}}}
-%\eeqn
-%
-%I leave out the $2\pi^{n_\cdot}$ terms because the total number $n$ at any given node will have to remain the same regardless as how it's apportioned in the nodes below it. \\
-%
-%\textbf{Question}: how is $R_\ell$ defined if the node is empty? \\
-%
-%Now we move on to the tree structure ratio. Recall that:
-%
-%\beqn
-%\prob{T^*} &=& \prod_{\eta \in H} \prob{\text{splitting~} \eta} \prod_{\eta \in H} \prob{\text{assigning a rule to~} \eta} \\
-%\eeqn
-%
-%Since both the proposal and original trees have the same structure, we can ignore the $\prob{\text{splitting~} \eta}$ terms when we form the ratio. And once again, only the nodes below the changed node need to be considered since all other nodes are the same for both the proposal and original. Thus we're left with:
-%
-%\beqn
-%\frac{\prob{T^*}}{\prob{T}} = \frac{\prod_{h \in \text{all nodes under $\eta$}} \prob{\text{assigning a rule to~} h ~|~ T^*}}{\prod_{h \in \text{all nodes under $\eta$}} \prob{\text{assigning a rule to~} h ~|~ T}} \equalsquestion \frac{\prob{\text{assigning a rule to~}  \eta ~|~ T^*}}{\prob{\text{assigning a rule to~} \eta ~|~ T}}
-%\eeqn
-%
-%The question is does is the $\equalsquestion$ above a true equality? I doubt it. Let's say your original split is $x_{37} < 89.2$ and the proposed change split is $x_{49} < 23.8$. It's possible that other $x_{49}$ rules are present underneath node $\eta$. These rule assignment probabilities will now change because the number of available split values will change. \\
-%
-%\textbf{Question}: what happens if the proposed change is a minimum value on an attribute, and there are nodes below with the same split attribute, that will force the numerator to be zero and the step should always be rejected? \\
-%
-%It seems that change steps are quite complicated when there is all this bookkeeping. This may be the reason Rob's new BART implementation only does GROWs and PRUNEs. \\
-%
-%I really would like to nail down this spec before I go ahead and implement these features, so if both of you could comment, that would be fantastic.
