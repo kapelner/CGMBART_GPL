@@ -40,6 +40,7 @@ log
 log.lck
 log*
 log*.lck
+*.log.lck
 log~
 log*~
 bin/*

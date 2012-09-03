@@ -8,21 +8,25 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 	private static final long serialVersionUID = 1825856510284398699L;
 
 
-	public enum Steps {GROW, PRUNE};
+	//this enum has to include all potential types of steps, even if they aren't used in this class's implementation
+	public enum Steps {GROW, PRUNE, CHANGE};
 	/**
 	 * Iterates the Metropolis-Hastings algorithm by one step
-	 * This is a public method because it gets called in the BART implementation
+	 * This does the MH
 	 * 
 	 * @param T_i				the original tree
 	 * @param iteration_name	we just use this when naming the image file of this illustration
 	 * @return 					the next tree (T_{i+1}) via one iteration of M-H
 	 */
+	@SuppressWarnings("incomplete-switch") //not all steps are used in this class's implementation
 	protected CGMBARTTreeNode metroHastingsPosteriorTreeSpaceIteration(CGMBARTTreeNode T_i) {
 //		System.out.println("iterateMHPosteriorTreeSpaceSearch");
 		final CGMBARTTreeNode T_star = T_i.clone(true);
 		//each proposal will calculate its own value, but this has to be initialized atop		
 		double log_r = 0;
-		switch (randomlyPickAmongTheTwoProposalSteps(T_i)){
+		
+		//if it's a stump force a GROW change, otherwise pick randomly according to the "hidden parameters"
+		switch (T_i.isStump() ? Steps.GROW : randomlyPickAmongTheProposalSteps(T_i)){
 			case GROW:
 				log_r = doMHGrowAndCalcLnR(T_i, T_star);
 				break;
@@ -134,7 +138,7 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 			return null;			
 		}
 		
-		ArrayList<CGMBARTTreeNode> prunable_nodes = CGMBARTTreeNode.getPrunableNodes(T);
+		ArrayList<CGMBARTTreeNode> prunable_nodes = T.getPrunableAndChangeableNodes();
 		if (prunable_nodes.size() == 0){
 			System.err.println("no prune nodes in PRUNE step!  T parent: " + T.parent + " T left: " + T.left + " T right: " + T.right);
 			return null;
@@ -203,7 +207,7 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 		return Math.log(b) + Math.log(p_adj) + Math.log(n_adj) - Math.log(w_2_star) - Math.log(n_repeat); 
 	}
 
-	private boolean acceptProposal(double ln_u_0_1, double log_r){
+	protected boolean acceptProposal(double ln_u_0_1, double log_r){
 		return ln_u_0_1 < log_r ? true : false;
 	}
 
@@ -235,9 +239,11 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 		return growth_node;
 	}
 	
-	protected Steps randomlyPickAmongTheTwoProposalSteps(CGMBARTTreeNode T) {
+	//a hidden parameter in the BART model, P(PRUNE) = 1 - P(GROW) so only one needs to be defined here
+	protected final static double PROB_GROW = 0.5;
+	protected Steps randomlyPickAmongTheProposalSteps(CGMBARTTreeNode T) {
 		double roll = StatToolbox.rand();
-		if (roll < 0.5)
+		if (roll < PROB_GROW)
 			return Steps.GROW;
 		return Steps.PRUNE;	
 	}

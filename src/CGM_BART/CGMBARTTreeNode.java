@@ -177,13 +177,19 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 //		return getTerminalNodesWithDataAboveOrEqualToN(node, n_rule).size();
 //	}
 	
-	public static ArrayList<CGMBARTTreeNode> getPrunableNodes(CGMBARTTreeNode node){
-		ArrayList<CGMBARTTreeNode> prunable_nodes = new ArrayList<CGMBARTTreeNode>();
-		findPrunableNodes(node, prunable_nodes);
-		return prunable_nodes;
+	public ArrayList<CGMBARTTreeNode> getPrunableAndChangeableNodes(){
+		ArrayList<CGMBARTTreeNode> prunable_and_changeable_nodes = new ArrayList<CGMBARTTreeNode>();
+		findPrunableAndChangeableNodes(this, prunable_and_changeable_nodes);
+		return prunable_and_changeable_nodes;
+	}
+	
+	private static ArrayList<CGMBARTTreeNode> getPrunableAndChangeableNodes(CGMBARTTreeNode node){
+		ArrayList<CGMBARTTreeNode> prunable_and_changeable_nodes = new ArrayList<CGMBARTTreeNode>();
+		findPrunableAndChangeableNodes(node, prunable_and_changeable_nodes);
+		return prunable_and_changeable_nodes;
 	}	
 
-	private static void findPrunableNodes(CGMBARTTreeNode node, ArrayList<CGMBARTTreeNode> prunable_nodes) {
+	private static void findPrunableAndChangeableNodes(CGMBARTTreeNode node, ArrayList<CGMBARTTreeNode> prunable_nodes) {
 		if (node.isLeaf){
 			return;
 		}
@@ -191,8 +197,8 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 			prunable_nodes.add(node);
 		}
 		else {
-			findPrunableNodes(node.left, prunable_nodes);
-			findPrunableNodes(node.right, prunable_nodes);
+			findPrunableAndChangeableNodes(node.left, prunable_nodes);
+			findPrunableAndChangeableNodes(node.right, prunable_nodes);
 		}
 	}
 
@@ -772,5 +778,24 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 	}
 	public void setNEta(int n_eta) {
 		this.n_eta = n_eta;
+	}
+
+	public CGMBARTTreeNode findCorrespondingNodeOnSimilarTree(CGMBARTTreeNode node) {
+		char[] location = node.stringLocation(true).toCharArray();
+		CGMBARTTreeNode corresponding_node = this;
+		if (location[0] == 'P' && location.length == 1){
+			return corresponding_node;
+		}
+		
+		for (int i = 0; i < location.length; i++){
+			if (location[i] == 'L'){
+				corresponding_node = corresponding_node.left;
+			}
+			else if (location[i] == 'R'){
+				corresponding_node = corresponding_node.right;
+			}			
+		}
+		
+		return corresponding_node;
 	}
 }

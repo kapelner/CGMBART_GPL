@@ -11,7 +11,7 @@ import org.junit.Test;
 
 public class Test_BARTbase {
 
-	private static CGMBART_08_eval simple_bart;
+	private static CGMBART_09_eval simple_bart;
 
 
 	@BeforeClass

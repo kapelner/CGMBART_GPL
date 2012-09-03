@@ -5,7 +5,7 @@ import CGM_BART.*;
 import java.util.ArrayList;
 
 
-public class CGMBART_FixedTreeAndSigsq extends CGMBART_08_eval {
+public class CGMBART_FixedTreeAndSigsq extends CGMBART_09_eval {
 	private static final long serialVersionUID = -331480664944699926L;
 	
 	public CGMBART_FixedTreeAndSigsq() {

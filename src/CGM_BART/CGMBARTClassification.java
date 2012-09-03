@@ -24,7 +24,7 @@
 
 package CGM_BART;
 
-public final class CGMBARTClassification extends CGMBART_08_eval {
+public final class CGMBARTClassification extends CGMBART_09_eval {
 	private static final long serialVersionUID = -9061432248755912576L;
 	
 	/** the number of classes */
