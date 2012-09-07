@@ -16,7 +16,6 @@ public abstract class CGMBART_04_init extends CGMBART_03_debug implements Serial
 	
 	public CGMBART_04_init() {		
 		super();
-		System.out.println("CGMBART_04_init");
 		num_gibbs_burn_in = DEFAULT_NUM_GIBBS_BURN_IN;
 		num_gibbs_total_iterations = DEFAULT_NUM_GIBBS_TOTAL_ITERATIONS;
 	}

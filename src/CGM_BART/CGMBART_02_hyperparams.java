@@ -48,7 +48,7 @@ public abstract class CGMBART_02_hyperparams extends CGMBART_01_base implements 
 		
 		//now we do a simple search for the best value of lambda
 		//if sig_sq ~ \nu\lambda * X where X is Inv chi sq, then sigsq ~ InvGamma(\nu/2, \nu\lambda/2) \neq InvChisq
-		double s_sq_y = StatToolbox.sample_variance(y_trans);
+		double s_sq_y = 0.00001;//StatToolbox.sample_variance(y_trans);
 //		double prob_diff = Double.MAX_VALUE;
 		
 //		double q = 0.9;

@@ -43,7 +43,7 @@ debug_log = TRUE
 print_tree_illustrations = FALSE
 PRINT_TREE_ILLUS = FALSE
 print_out_every = NULL
-fix_seed = TRUE
+fix_seed = FALSE
 JAVA_LOG = TRUE #to be overwritten later
 #source("r_scripts/create_simulated_models.R")
 #simulated_data_model_name = simulated_data_sets[1]

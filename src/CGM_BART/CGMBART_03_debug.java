@@ -150,7 +150,7 @@ public abstract class CGMBART_03_debug extends CGMBART_02_hyperparams implements
 //		final Thread illustrator_thread = new Thread(){
 //			public void run(){
 //		if (StatToolbox.rand() < 0.0333){
-			if (TREE_ILLUST && sample_num < 100){ //
+			if (TREE_ILLUST && sample_num > 3900 && sample_num < 4000 && num_trees == 1){ //
 				tree_array_illustration.CreateIllustrationAndSaveImage();
 			}
 //		}

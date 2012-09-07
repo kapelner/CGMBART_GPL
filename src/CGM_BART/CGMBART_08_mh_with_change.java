@@ -130,13 +130,13 @@ public abstract class CGMBART_08_mh_with_change extends CGMBART_07_mh {
 	
 	
 	//a hidden parameter in the BART model, P(PRUNE) = 1 - P(GROW) so only one needs to be defined here
-	protected final static double PROB_GROW = 0.1;
-	protected final static double PROB_CHANGE = 0.6;
+	protected final static double PROB_GROW = 0.5;
+	protected final static double PROB_CHANGE = 0.5;
 	protected Steps randomlyPickAmongTheProposalSteps(CGMBARTTreeNode T) {
 		double roll = StatToolbox.rand();
 		if (roll < PROB_GROW)
 			return Steps.GROW;
-		else if (roll < PROB_CHANGE)
+		else if (roll < PROB_GROW + PROB_CHANGE)
 			return Steps.CHANGE;
 		return Steps.PRUNE;	
 	}
