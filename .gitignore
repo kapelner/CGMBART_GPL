@@ -48,6 +48,7 @@ bin/*
 .gitignore.swo
 .gitignore~
 .settings/*
+debug_output/desktop.ini
 simulation_results.csv
 r_scripts/debug_only/*
 mathematica_scripts/*

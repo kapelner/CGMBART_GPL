@@ -15,7 +15,7 @@ if (FALSE){
 	run_bart_bakeoff()
 }
 
-PRINT_TREE_ILLUS = TRUE
+PRINT_TREE_ILLUS = FALSE
 JAVA_LOG = TRUE
 
 run_model_N_times = 10
@@ -25,26 +25,35 @@ real_regression_data_sets = c(
 #	"r_concretedata"
 )
 simulated_data_sets = c(
-	"univariate_linear",
+#	"univariate_linear",
 #	"bivariate_linear",
-	"friedman",
+#	"friedman",
 	"simple_tree_structure_sigsq_hundredth",
-#	"simple_tree_structure_sigsq_tenth",
-#	"simple_tree_structure_sigsq_half",
+	"simple_tree_structure_sigsq_tenth",
+	"simple_tree_structure_sigsq_half",
 	"simple_tree_structure",
-#	"simple_tree_structure_sigsq_3",
-#	"simple_tree_structure_sigsq_5",
-#	"simple_tree_structure_sigsq_10",
-#	"simple_tree_structure_sigsq_30",
+	"simple_tree_structure_sigsq_3",
+	"simple_tree_structure_sigsq_5",
+	"simple_tree_structure_sigsq_10",
+	"simple_tree_structure_sigsq_30",
 	"simple_tree_structure_sigsq_100"
 )
 
 #nice to have data around for testing... should be overwritten for custom runs...
-num_trees_of_interest = c(1, 5, 25)
-num_burn_ins_of_interest = c(2000)
-num_iterations_after_burn_ins_of_interest = c(2000)
+num_trees_of_interest = c(
+	1, 
+	5
+#	25
+)
+num_burn_ins_of_interest = c(
+	2000
+)
+num_iterations_after_burn_ins_of_interest = c(
+	2000
+)
 alphas_of_interest = c(0.95)
 betas_of_interest = c(2)
+
 total_num_runs = (length(real_regression_data_sets) + length(simulated_data_sets)) * 
 		length(num_trees_of_interest) * length(num_burn_ins_of_interest) * 
 		length(num_iterations_after_burn_ins_of_interest) * length(alphas_of_interest) * 

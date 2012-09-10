@@ -21,7 +21,7 @@ public abstract class CGMBART_03_debug extends CGMBART_02_hyperparams implements
 	protected static PrintWriter evaluations;
 	public static PrintWriter mh_iterations_full_record;
 	
-	protected static boolean TREE_ILLUST = true;
+	protected static boolean TREE_ILLUST = false;
 	protected static final boolean WRITE_DETAILED_DEBUG_FILES = false;
 	
 	public static final String DEBUG_DIR = "debug_output";
