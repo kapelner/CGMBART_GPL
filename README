@@ -2,7 +2,7 @@ BART - Bayesian Additive Regressive Trees
 Software for Supervised Statistical Learning
 (work in progress, not 100% finished yet)
 
-Copyright (C) 2012 Professor Ed George & Adam Kapelner, 
+Copyright (C) 2012 Professor Ed George & Adam Kapelner & Justin Bleich, 
 Dept of Statistics, The Wharton School of the University of Pennsylvania
 
 This is a Java implementation of the algorithm found in Chipman, George, & McCulloch 
