@@ -77,7 +77,6 @@ public abstract class CGMBART_03_debug extends CGMBART_02_hyperparams implements
 	}
 	
 	protected void DebugInitialization() {
-		System.out.println("DebugInitialization");
 		ArrayList<CGMBARTTreeNode> initial_trees = gibbs_samples_of_cgm_trees.get(0);
 			
 		if (TREE_ILLUST){

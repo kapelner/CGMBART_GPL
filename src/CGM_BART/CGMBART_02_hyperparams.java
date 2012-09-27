@@ -32,14 +32,14 @@ public abstract class CGMBART_02_hyperparams extends CGMBART_01_base implements 
 		double k = 2; //StatToolbox.inv_norm_dist(1 - (1 - CGMShared.MostOfTheDistribution) / 2.0);	
 //		y_min = StatToolbox.sample_minimum(y);
 //		y_max = StatToolbox.sample_maximum(y);
-		if (TRANSFORM_Y){
+//		if (TRANSFORM_Y){
 			hyper_mu_mu = 0;
 			hyper_sigsq_mu = Math.pow(YminAndYmaxHalfDiff / (k * Math.sqrt(num_trees)), 2);
-		}
-		else {
-			hyper_mu_mu = (y_min + y_max) / (2 * num_trees); //ie the "center" of the distribution
-			hyper_sigsq_mu = Math.pow((y_max - hyper_mu_mu) / (k * Math.sqrt(num_trees)), 2); //margin of error over confidence spread with a correction factor for num trees
-		}
+//		}
+//		else {
+//			hyper_mu_mu = (y_min + y_max) / (2 * num_trees); //ie the "center" of the distribution
+//			hyper_sigsq_mu = Math.pow((y_max - hyper_mu_mu) / (k * Math.sqrt(num_trees)), 2); //margin of error over confidence spread with a correction factor for num trees
+//		}
 		
 		//first calculate \sigma_\mu
 		
@@ -48,7 +48,7 @@ public abstract class CGMBART_02_hyperparams extends CGMBART_01_base implements 
 		
 		//now we do a simple search for the best value of lambda
 		//if sig_sq ~ \nu\lambda * X where X is Inv chi sq, then sigsq ~ InvGamma(\nu/2, \nu\lambda/2) \neq InvChisq
-		double s_sq_y = 0.00001;//StatToolbox.sample_variance(y_trans);
+		double s_sq_y = StatToolbox.sample_variance(y_trans); //0.00001;//
 //		double prob_diff = Double.MAX_VALUE;
 		
 //		double q = 0.9;

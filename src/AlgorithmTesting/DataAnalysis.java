@@ -62,7 +62,7 @@ public class DataAnalysis {
 				machine = new CGMBARTRegression();
 				machine.setData(data.getX_y());
 				machine.Build();
-				System.out.println("L1 error: " + Math.round(machine.calculateInSampleLoss(Classifier.ErrorTypes.L1)) + " L2 error: " + Math.round(machine.calculateInSampleLoss(Classifier.ErrorTypes.L2)));
+				System.out.println("(in sample) L1 error: " + Math.round(machine.calculateInSampleLoss(Classifier.ErrorTypes.L1)) + " L2 error: " + Math.round(machine.calculateInSampleLoss(Classifier.ErrorTypes.L2)));
 				//now we'll do 95% CI and error rates
 				machine.writeEvaluationDiagnostics();
 //			}
