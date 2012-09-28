@@ -34,6 +34,7 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.FileHandler;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
@@ -305,4 +306,12 @@ public abstract class Classifier implements Serializable {
 	public void setUniqueName(String unique_name) {
 		this.unique_name = unique_name;
 	}	
+	
+	public static ArrayList<Double> getColVector(List<double[]> X, int j){
+		ArrayList<Double> x_dot_j = new ArrayList<Double>(X.size());
+		for (int i = 0; i < X.size(); i++){
+			x_dot_j.add(X.get(i)[j]);
+		}
+		return x_dot_j;
+	}
 }

@@ -153,19 +153,16 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 		int b = T_i.numLeaves();
 		int p_adj = prune_node.pAdj();
 		int n_adj = prune_node.nAdj();
-		int n_repeat = prune_node.splitValuesRepeated();
-		return Math.log(w_2) + Math.log(n_repeat) - Math.log(b - 1) - Math.log(p_adj) - Math.log(n_adj); 
+		return Math.log(w_2) - Math.log(b - 1) - Math.log(p_adj) - Math.log(n_adj); 
 	}
 
 	protected double calcLnTreeStructureRatioGrow(CGMBARTTreeNode grow_node) {
-		int d_eta = grow_node.generation;
+		int d_eta = grow_node.depth;
 		int p_adj = grow_node.pAdj();
 		int n_adj = grow_node.nAdj();
-		int n_repeat = grow_node.splitValuesRepeated();
 //		System.out.println("calcLnTreeStructureRatioGrow d_eta: " + d_eta + " p_adj: " + p_adj + " n_adj: " + n_adj + " n_repeat: " + n_repeat + " ALPHA: " + ALPHA + " BETA: " + BETA);
 		return Math.log(ALPHA) 
 				+ 2 * Math.log(1 - ALPHA / Math.pow(2 + d_eta, BETA))
-				+ Math.log(n_repeat)
 				- Math.log(Math.pow(1 + d_eta, BETA) - ALPHA)
 				- Math.log(p_adj) 
 				- Math.log(n_adj);
@@ -202,9 +199,8 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 		int p_adj = node_grown_in_Tstar.pAdj();
 		int n_adj = node_grown_in_Tstar.nAdj();
 		int w_2_star = T_star.numPruneNodesAvailable();
-		int n_repeat = node_grown_in_Tstar.splitValuesRepeated();
 //		System.out.println("calcLnTransRatioGrow b:" + b + " p_adj: " + p_adj + " n_adj: " + n_adj + " w_2_star:" + w_2_star + " n_repeat:" + n_repeat);
-		return Math.log(b) + Math.log(p_adj) + Math.log(n_adj) - Math.log(w_2_star) - Math.log(n_repeat); 
+		return Math.log(b) + Math.log(p_adj) + Math.log(n_adj) - Math.log(w_2_star); 
 	}
 
 	protected boolean acceptProposal(double ln_u_0_1, double log_r){

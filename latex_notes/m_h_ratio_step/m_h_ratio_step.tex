@@ -106,12 +106,12 @@ So $\prob{T \rightarrow T^*}$ means the probability of transitioning from $T$ in
 We're picking from one of the terminal nodes, and then we're picking an attribute and split point, this becomes:
 
 \beqn
-\cprob{T^*}{T} &=& \prob{\text{GROW}} \oneover{b} \oneover{p_{adj}} \oneover{n_{adj}} \underbrace{\sum_{k=1}^{n_{adj}} \indic{X_{i_k j} = x^*}}_{\nrep} = \prob{\text{GROW}} \oneover{b} \oneover{p_{adj}} \frac{\nrep}{n_{adj}}
+\cprob{T^*}{T} &=& \prob{\text{GROW}} \oneover{b} \oneover{p_{adj}} \frac{1}{\nadj}
 \eeqn
 
 Now, $p_{adj}$ is the number of predictors left available to split on. This is \textit{from the perspective} of the $\ell$th node in tree $T$. Why would this be less than $p$? Because if you look up into the node's lineage, you may have already used all available split values for some attributes. Those would no longer be available to split from.
 
-Then, $\indic{X_{i_k j} = x^*}$ is whether or not a particular value of column $j$ is equal to the split point, $x^*$ we've chosen. $n_{adj}$ is the number of values left in the column after adjusting for previous splits. We can obtain this adjusted row count by looking at the node's lineage for any splits on $j$ and then taking the minimum of those split values, and then finding the subset of the design matrix whose values are less than that minimum for column $j$. In order to compute $\sum_{k=1}^{n_{adj}} \indic{X_{i_k j} = x^*}$ which we denote for short as $\nrep$, we just count the number of values in the column that are equal to the split point.\\
+$\nadj$ is the number of \textit{unique} values left in the $p$th column after adjusting for previous splits. We can obtain this adjusted row count by looking at the node's lineage for any splits on $j$ and then taking the minimum of those split values, and then finding the subset of the design matrix whose values are less than that minimum for column $j$. \\
 
 So now $\prob{T^* \rightarrow T}$ is the probability of transitioning from the new tree back to the old tree which would be:
 
@@ -123,14 +123,14 @@ So now $\prob{T^* \rightarrow T}$ is the probability of transitioning from the n
 Thus, the transition ratio will be:
 
 \beqn
-\frac{\prob{T^* \rightarrow T}}{\prob{T \rightarrow T^*}} = \frac{\prob{\text{PRUNE}}\oneover{w_2^*}}{\prob{\text{GROW}}\oneover{b} \oneover{p_{adj}} \frac{\nrep}{n_{adj}}} = \cancelto{?}{\frac{\prob{\text{PRUNE}}}{\prob{\text{GROW}}}} \frac{b ~ p_{adj} ~ n_{adj}}{w_2^* \nrep}
+\frac{\prob{T^* \rightarrow T}}{\prob{T \rightarrow T^*}} = \frac{\prob{\text{PRUNE}}\oneover{w_2^*}}{\prob{\text{GROW}}\oneover{b} \oneover{p_{adj}} \frac{1}{\nadj}} = \cancelto{?}{\frac{\prob{\text{PRUNE}}}{\prob{\text{GROW}}}} \frac{b ~ p_{adj} ~ \nadj}{w_2^*}
 \eeqn
 
 Why don't the probabilities of prune and grow cancel? Well, under the case where we cannot grow anymore (if we use all split variables), the probability of growth will be 0. Thus, those steps \textit{cannot} be considered since the ratio would be undefined. As long as they can be considered, that ratio will cancel. In log form, this becomes:
 
 \inblue{
 \beqn
-\natlog{b} + \natlog{p_{adj}} + \natlog{n_{adj}} - \natlog{w_2^*} - \natlog{\nrep}
+\natlog{b} + \natlog{p_{adj}} + \natlog{\nadj} - \natlog{w_2^*}
 \eeqn
 }
 
@@ -483,15 +483,15 @@ The probability of assigning the specific rule, $\prob{\text{rule~} \eta}$, is j
 
 \beqn
 \frac{\prob{T^*}}{\prob{T}} &=& \frac{\parens{1 - \prob{\text{splitting~} \eta_L}} \parens{1 - \prob{\text{splitting~} \eta_R}} \prob{\text{splitting~} \eta} \prob{\text{rule~} \eta}}{\parens{1 - \prob{\text{splitting~} \eta}}}\\
-&=& \frac{\parens{1 - \dfrac{\alpha}{\tothepow{1 + d_{\eta_L}}{\beta}}}\parens{1 - \dfrac{\alpha}{\tothepow{1 + d_{\eta_R}}{\beta}}} \dfrac{\alpha}{\tothepow{1 + d_{\eta}}{\beta}} \doneover{p_{adj}}\dfrac{\nrep}{n_{adj}}}{1 -\dfrac{\alpha}{\tothepow{1 + d_{\eta}}{\beta}}} \\
-&=& \alpha \frac{\squared{1 - \frac{\alpha}{\tothepow{2 + d_\eta}{\beta}}} \nrep}{\parens{\tothepow{1+d_\eta}{\beta} - \alpha} p_{adj} n_{adj}}
+&=& \frac{\parens{1 - \dfrac{\alpha}{\tothepow{1 + d_{\eta_L}}{\beta}}}\parens{1 - \dfrac{\alpha}{\tothepow{1 + d_{\eta_R}}{\beta}}} \dfrac{\alpha}{\tothepow{1 + d_{\eta}}{\beta}} \doneover{p_{adj}}\dfrac{1}{\nadj}}{1 -\dfrac{\alpha}{\tothepow{1 + d_{\eta}}{\beta}}} \\
+&=& \alpha \frac{\squared{1 - \frac{\alpha}{\tothepow{2 + d_\eta}{\beta}}}}{\parens{\tothepow{1+d_\eta}{\beta} - \alpha} p_{adj} \nadj}
 \eeqn
 
 With the last line following from the fact that the depth of the child nodes is just the depth of the parent node incremented by 1. In log form this becomes:
 
 \inblue{
 \beqn
-&&\natlog{\alpha} + 2 \natlog{1 - \frac{\alpha}{\tothepow{2 + d_\eta}{\beta}}} + \natlog{\nrep} - \natlog{\tothepow{1+d_\eta}{\beta} - \alpha} - \natlog{p_{adj}} - \natlog{n_{adj}}
+&&\natlog{\alpha} + 2 \natlog{1 - \frac{\alpha}{\tothepow{2 + d_\eta}{\beta}}} - \natlog{\tothepow{1+d_\eta}{\beta} - \alpha} - \natlog{p_{adj}} - \natlog{\nadj}
 \eeqn
 }
 
@@ -508,13 +508,13 @@ For prune proposals, we move in the opposite direction.  We need to hack off a n
 &=& \prob{\text{PRUNE}}\oneover{w_2}
 \eeqn
 
-To go the opposite direction, we need to make sure we grow the exact same node so $p_{adj}, n_{adj}$ need to be calculated based on whatever the $\ell$th node originally was:
+To go the opposite direction, we need to make sure we grow the exact same node so $p_{adj}, \nadj$ need to be calculated based on whatever the $\ell$th node originally was:
 
 \beqn
 \prob{T^* \rightarrow T} &=& \prob{\text{GROW}} \prob{\text{selecting the $\ell$th node to grow from}} \times \\
 && \prob{\text{selecting the original attribute to split on}} \times \\
 && \prob{\text{selecting the original value to split on}} \\
-&=& \prob{\text{GROW}} \oneover{b-1} \oneover{p_{adj}} \frac{\nrep}{n_{adj}}
+&=& \prob{\text{GROW}} \oneover{b-1} \oneover{p_{adj}} \frac{1}{\nadj}
 \eeqn
 
 We're using $b-1$ here because the proposed tree has one less terminal node due to the pruning than the original tree $T$ had.\\
@@ -522,14 +522,14 @@ We're using $b-1$ here because the proposed tree has one less terminal node due 
 Thus, the transition ratio becomes:
 
 \beqn
-\frac{\prob{T^* \rightarrow T}}{\prob{T \rightarrow T^*}} = \frac{\prob{\text{GROW}}  \oneover{b-1}\oneover{p_{adj}} \frac{\nrep}{n_{adj}}}{ \prob{\text{PRUNE}}\oneover{w_2}} = \cancelto{?}{\frac{\prob{\text{GROW}}}{\prob{\text{PRUNE}}}} \frac{w_2  \nrep}{(b-1) p_{adj} n_{adj}}
+\frac{\prob{T^* \rightarrow T}}{\prob{T \rightarrow T^*}} = \frac{\prob{\text{GROW}}  \oneover{b-1}\oneover{p_{adj}} \frac{1}{\nadj}}{ \prob{\text{PRUNE}}\oneover{w_2}} = \cancelto{?}{\frac{\prob{\text{GROW}}}{\prob{\text{PRUNE}}}} \frac{w_2 }{(b-1) p_{adj} \nadj}
 \eeqn
 
 and in log form this becomes:
 
 \inblue{
 \beqn
-\natlog{w_2} +\natlog{\nrep} - \natlog{b - 1} - \natlog{p_{adj}} - \natlog{n_{adj}}
+\natlog{w_2} - \natlog{b - 1} - \natlog{p_{adj}} - \natlog{\nadj}
 \eeqn
 }
 
@@ -552,7 +552,7 @@ and in log form:
 \inblue{
 \beqn
 && \half \parens{\natlog{\sigsq + n_{\ell_L} \sigsqmu} + \natlog{\sigsq + n_{\ell_R} \sigsqmu} - \natlog{\sigsq} - \natlog{\sigsq + n_\ell \sigsqmu} } + \\
-&& \frac{\sigsq_\mu}{2\sigsq} \parens{\frac{\squared{\sum_{i=1}^{n_{\ell_L}} R_{\ell_L, i}}}{\sigsq + n_{\ell_L}\sigsq_\mu} + \frac{\squared{\sum_{i=1}^{n_{\ell_R}} R_{\ell_R, i}}}{\sigsq + n_{\ell_R}\sigsq_\mu} - \frac{\squared{\sum_{i=1}^{n_{\ell}} R_{\ell, i}}}{\sigsq + n_\ell \sigsq_\mu}}
+&& \frac{\sigsq_\mu}{2\sigsq} \parens{\frac{\squared{\sum_{i=1}^{n_{\ell}} R_{\ell, i}}}{\sigsq + n_\ell \sigsq_\mu} - \frac{\squared{\sum_{i=1}^{n_{\ell_L}} R_{\ell_L, i}}}{\sigsq + n_{\ell_L}\sigsq_\mu} - \frac{\squared{\sum_{i=1}^{n_{\ell_R}} R_{\ell_R, i}}}{\sigsq + n_{\ell_R}\sigsq_\mu}}
 \eeqn
 }
 
@@ -561,8 +561,8 @@ and in log form:
 It is also clear this is just the inverse of the tree structure ratio for the grow step.
 
 \beqn
-\frac{\prob{T^*}}{\prob{T}} &=& \inverse{\alpha \frac{\squared{1 - \frac{\alpha}{\tothepow{2 + d_\eta}{\beta}}}\nrep}{\parens{\tothepow{1+d_\eta}{\beta} - \alpha} p_{adj} n_{adj}}}\\
-&=& \frac{\parens{\tothepow{1+d_\eta}{\beta} - \alpha} p_{adj} n_{adj}}{\alpha\squared{1 - \frac{\alpha}{\tothepow{2 + d_\eta}{\beta}}}\nrep}
+\frac{\prob{T^*}}{\prob{T}} &=& \inverse{\alpha \frac{\squared{1 - \frac{\alpha}{\tothepow{2 + d_\eta}{\beta}}}}{\parens{\tothepow{1+d_\eta}{\beta} - \alpha} p_{adj} \nadj}}\\
+&=& \frac{\parens{\tothepow{1+d_\eta}{\beta} - \alpha} p_{adj} \nadj}{\alpha\squared{1 - \frac{\alpha}{\tothepow{2 + d_\eta}{\beta}}}}
 \eeqn
 
 
@@ -570,7 +570,7 @@ In log form this becomes:
 
 \inblue{
 \beqn
-\natlog{\tothepow{1+d_\eta}{\beta} - \alpha} + \natlog{p_{adj}} + \natlog{n_{adj}} -\natlog{\alpha} - 2 \natlog{1 - \frac{\alpha}{\tothepow{2 + d_\eta}{\beta}}} - \natlog{\nrep}
+\natlog{\tothepow{1+d_\eta}{\beta} - \alpha} + \natlog{p_{adj}} + \natlog{\nadj} -\natlog{\alpha} - 2 \natlog{1 - \frac{\alpha}{\tothepow{2 + d_\eta}{\beta}}}
 \eeqn
 }
 
@@ -601,17 +601,17 @@ We're looking at two simple transitions:
 \prob{T \rightarrow T^*} &=& \prob{\text{CHANGE}} \prob{\text{selecting $\eta$ to change}} \times \\
 && \prob{\text{selecting the new attribute to split on}} \times \\
 && \prob{\text{selecting the new value to split on}} \\
-&=& \prob{\text{CHANGE}} \oneover{b} \oneover{p_{adj}} \frac{\nrepstar}{\nadjstar} \\
+&=& \prob{\text{CHANGE}} \oneover{b} \oneover{p_{adj}} \frac{1}{\nadjstar} \\
 \prob{T^* \rightarrow T} &=& \prob{\text{CHANGE}} \prob{\text{selecting $\etastar$ to change}} \times \\
 && \prob{\text{selecting the original attribute to split on}} \times \\
 && \prob{\text{selecting the original value to split on}} \\
-&=& \prob{\text{CHANGE}} \oneover{b} \oneover{p_{adj}} \frac{\nrep}{\nadj} \\
+&=& \prob{\text{CHANGE}} \oneover{b} \oneover{p_{adj}} \frac{1}{\nadj} \\
 \eeqn
 
 It is obvious that the majority of the above will cancel below to produce the ratio:
 
 \beqn
-\frac{\prob{T^* \rightarrow T^*}}{\prob{T \rightarrow T^*}} = \frac{\nrep}{\nrepstar} \frac{\nadjstar}{\nadj}
+\frac{\prob{T^* \rightarrow T^*}}{\prob{T \rightarrow T^*}} = \frac{\nadjstar}{\nadj}
 \eeqn
 
 
@@ -659,7 +659,7 @@ The proposal tree is the same shape as the original tree. Thus we only need to t
 The one minus probability of splitting will cancel since it's computed based on $\alpha, \beta$ and depth of the leaves which are the same. The probabilities of splitting will cancel based on the same argument. Within the probability of the rule, the number of possible attributes will cancel since it's the same so we really only have to consider:
 
 \beqn
-\frac{\prob{T^*}}{\prob{T}} &=& \frac{\nrepstar}{\nrep} \frac{\nadj}{\nadjstar}
+\frac{\prob{T^*}}{\prob{T}} &=& \frac{\nadj}{\nadjstar}
 \eeqn
 
 Note that this is the inverse of the transition ratio. Thus, only the likelihood ratio needs to be computed to determine $r$ for the change step.

@@ -61,7 +61,7 @@ public abstract class CGMBART_08_mh_with_change extends CGMBART_07_mh {
 		}		
 		
 		
-		CGMBARTTreeNode original_node = T_i.findCorrespondingNodeOnSimilarTree(changed_node);
+		CGMBARTTreeNode original_node = changed_node.clone();
 		
 		//now make the change
 		changed_node.splitAttributeM = changed_node.pickRandomPredictorThatCanBeAssigned();

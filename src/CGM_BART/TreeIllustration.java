@@ -211,7 +211,7 @@ public class TreeIllustration {
 			draw_x = (int)Math.round(x - node.stringID().length() / 2.0 * character_width_in_px);
 			g.drawString(node.stringID(), draw_x, y + 15);
 			//now we have to draw the left and right
-			int x_offset = length_in_px_per_half_split * (int)Math.pow(2, depth_in_num_splits - node.generation);
+			int x_offset = length_in_px_per_half_split * (int)Math.pow(2, depth_in_num_splits - node.depth);
 			g.drawLine(x, y, x - x_offset, y);
 			g.drawLine(x - x_offset, y, x - x_offset, y + depth_in_px_per_split);
 			drawSplit(node.left, x - x_offset, y + depth_in_px_per_split);

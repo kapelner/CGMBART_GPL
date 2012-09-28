@@ -52,11 +52,11 @@ public abstract class ClassificationAndRegressionTree extends Classifier {
 	 * Sorts a data matrix by an attribute from lowest record to highest record
 	 * 
 	 * @param data			the data matrix to be sorted
-	 * @param m				the attribute to sort on
+	 * @param j				the attribute to sort on
 	 */
 	@SuppressWarnings("unchecked")
-	public static void SortAtAttribute(List<double[]> data, int m){
-		Collections.sort(data, new AttributeComparator(m));
+	public static void SortAtAttribute(List<double[]> data, int j){
+		Collections.sort(data, new AttributeComparator(j));
 	}
 	
 	
@@ -69,13 +69,13 @@ public abstract class ClassificationAndRegressionTree extends Classifier {
 	private static class AttributeComparator implements Comparator {
 		
 		/** the specified attribute */
-		private int m;
+		private int j;
 		/**
 		 * Create a new comparator
-		 * @param m			the attribute in which to compare on
+		 * @param j			the attribute in which to compare on
 		 */
-		public AttributeComparator(int m){
-			this.m = m;
+		public AttributeComparator(int j){
+			this.j = j;
 		}
 		/**
 		 * Compare the two data records. They must be of type int[].
@@ -85,8 +85,8 @@ public abstract class ClassificationAndRegressionTree extends Classifier {
 		 * @return			-1 if A[m] < B[m], 1 if A[m] > B[m], 0 if equal
 		 */
 		public int compare(Object o1, Object o2){
-			double a = ((double[])o1)[m];
-			double b = ((double[])o2)[m];
+			double a = ((double[])o1)[j];
+			double b = ((double[])o2)[j];
 			if (a < b)
 				return -1;
 			if (a > b)
@@ -117,9 +117,9 @@ public abstract class ClassificationAndRegressionTree extends Classifier {
 	 * @return			the upper sub-data matrix
 	 */
 	public static List<double[]> getUpperPortion(List<double[]> data,int nSplit){
-		int N=data.size();
-		List<double[]> upper=new ArrayList<double[]>(N-nSplit);
-		for (int n=nSplit;n<N;n++)
+		int N = data.size();
+		List<double[]> upper = new ArrayList<double[]>(N - nSplit);
+		for (int n = nSplit; n < N; n++)
 			upper.add(data.get(n));
 		return upper;
 	}
@@ -132,8 +132,8 @@ public abstract class ClassificationAndRegressionTree extends Classifier {
 	 * @return			the lower sub-data matrix
 	 */
 	public static List<double[]> getLowerPortion(List<double[]> data,int nSplit){
-		List<double[]> lower=new ArrayList<double[]>(nSplit);
-		for (int n=0;n<nSplit;n++)
+		List<double[]> lower = new ArrayList<double[]>(nSplit);
+		for (int n = 0; n < nSplit; n++)
 			lower.add(data.get(n));
 		return lower;
 	}
