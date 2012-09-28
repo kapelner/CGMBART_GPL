@@ -28,15 +28,15 @@ simulated_data_sets = c(
 #	"univariate_linear",
 #	"bivariate_linear",
 #	"friedman",
-	"simple_tree_structure_sigsq_hundredth"
-#	"simple_tree_structure_sigsq_tenth",
-#	"simple_tree_structure_sigsq_half",
-#	"simple_tree_structure",
-#	"simple_tree_structure_sigsq_3",
-#	"simple_tree_structure_sigsq_5",
-#	"simple_tree_structure_sigsq_10",
-#	"simple_tree_structure_sigsq_30",
-#	"simple_tree_structure_sigsq_100"
+	"simple_tree_structure_sigsq_hundredth",
+	"simple_tree_structure_sigsq_tenth",
+	"simple_tree_structure_sigsq_half",
+	"simple_tree_structure",
+	"simple_tree_structure_sigsq_3",
+	"simple_tree_structure_sigsq_5",
+	"simple_tree_structure_sigsq_10",
+	"simple_tree_structure_sigsq_30",
+	"simple_tree_structure_sigsq_100"
 )
 
 #nice to have data around for testing... should be overwritten for custom runs...
