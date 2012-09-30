@@ -100,6 +100,15 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		return ys;
 	}
 	
+	public HashSet<Double> responsesAsHash(){
+		double[] ys = responses();
+		HashSet<Double> responses = new HashSet<Double>(ys.length);
+		for (int i = 0; i < ys.length; i++){
+			responses.add(ys[i]);
+		}
+		return responses;
+	}
+	
 	public double avgResponse(){
 		return StatToolbox.sample_average(responses());
 	}

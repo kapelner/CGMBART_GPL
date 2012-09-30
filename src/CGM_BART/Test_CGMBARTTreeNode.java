@@ -9,11 +9,12 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 
 
 public class Test_CGMBARTTreeNode {
 
-	public static double[] y = {0, 0, 2, 4, 5, 8, 9};
+	
 	
 	public static ArrayList<double[]> data;
 	
@@ -23,7 +24,7 @@ public class Test_CGMBARTTreeNode {
 
 	public static CGMBARTRegression bart;
 	
-	
+	public static double[] y = {0, 0, 2, 4, 5, 8, 9};
 	static {
 		data = new ArrayList<double[]>();
 		bart = new CGMBARTRegression();
@@ -50,14 +51,15 @@ public class Test_CGMBARTTreeNode {
 		double_tree = simple_tree.clone(true);
 		double_tree.left.isLeaf = false;
 		double_tree.left.splitAttributeM = 1;
-		double_tree.left.splitValue = 32.3;		
+		double_tree.left.splitValue = 31.2;		
 		double_tree.left.left = new CGMBARTTreeNode(double_tree.left);
 		double_tree.left.right = new CGMBARTTreeNode(double_tree.left);	
 		double_tree.right.isLeaf = false;
 		double_tree.right.splitAttributeM = 2;
 		double_tree.right.splitValue = 0.0;		
 		double_tree.right.left = new CGMBARTTreeNode(double_tree.right);
-		double_tree.right.right = new CGMBARTTreeNode(double_tree.right);		
+		double_tree.right.right = new CGMBARTTreeNode(double_tree.right);
+		CGMBARTTreeNode.propagateDataByChangedRule(double_tree, true);
 	}
 
 	@BeforeClass
@@ -148,10 +150,20 @@ public class Test_CGMBARTTreeNode {
 //		assertEquals(double_tree.widestGeneration(), 4);
 		assertEquals(double_tree.left.left.stringLocation(false), "LL");
 		assertEquals(double_tree.right.right.stringLocation(false), "RR");		
-		double[] left_responses = {0, 2, 5, 9};
-		double[] right_responses = {0, 4, 8};
-		assertArrayEquals(double_tree.left.responses(), left_responses, 0);
-		assertArrayEquals(double_tree.right.responses(), right_responses, 0);
+
+		HashSet<Double> left_responses = new HashSet<Double>();
+		left_responses.add(9.0);
+		left_responses.add(0.0);
+		left_responses.add(2.0);
+		left_responses.add(5.0);
+		HashSet<Double> right_responses = new HashSet<Double>();
+		right_responses.add(8.0);
+		right_responses.add(0.0);
+		right_responses.add(4.0);
+		
+		
+		assertEquals(left_responses, double_tree.left.responsesAsHash());
+		assertEquals(right_responses, double_tree.right.responsesAsHash());
 		assertEquals(double_tree.left.sumResponses(), 16, 0);
 		assertEquals(double_tree.right.sumResponses(), 12, 0);
 		assertEquals(double_tree.left.sumResponsesQuantitySqd(), 256, 0);
@@ -176,7 +188,7 @@ public class Test_CGMBARTTreeNode {
 		Integer[] all_predictors = {0, 1, 2};
 		assertArrayEquals(simple_tree.predictorsThatCouldBeUsedToSplitAtNode().toArray(), all_predictors);
 		assertEquals(simple_tree.pAdj(), 3);
-		Object[] vals_to_split = {0.0, 0.0, 0.0, 0.0}; //remember we can't split on 1 because it's the max value
+		Object[] vals_to_split = {0.0}; //remember we can't split on 1 because it's the max value
 		System.out.println("poss splits: " + Tools.StringJoin(simple_tree.possibleSplitValuesGivenAttribute().toArray(), ","));
 		assertArrayEquals(simple_tree.possibleSplitValuesGivenAttribute().toArray(), vals_to_split);
 		assertEquals(simple_tree.pAdj(), 3);
@@ -192,24 +204,45 @@ public class Test_CGMBARTTreeNode {
 	public void testDoubleTreePredictorsAtSplit(){
 		Integer[] all_predictors = {0, 1, 2};
 		assertArrayEquals(double_tree.predictorsThatCouldBeUsedToSplitAtNode().toArray(), all_predictors);
-		Integer[] predictors_left_on_left = {1, 2};
-		assertArrayEquals(double_tree.left.left.predictorsThatCouldBeUsedToSplitAtNode().toArray(), predictors_left_on_left);
-		Integer[] predictors_left_on_right = {1};
-		assertArrayEquals(double_tree.right.right.predictorsThatCouldBeUsedToSplitAtNode().toArray(), predictors_left_on_right);
+		assertEquals(3, double_tree.pAdj());
+		assertEquals(1,double_tree.nAdj());
+		
+		Integer[] predictors_left_left = {1, 2};
+		assertArrayEquals(double_tree.left.left.predictorsThatCouldBeUsedToSplitAtNode().toArray(), predictors_left_left);
+		assertEquals(double_tree.left.left.pAdj(), 2);
+		
+		Integer[] predictors_left_right = {};
+		assertArrayEquals(double_tree.left.right.predictorsThatCouldBeUsedToSplitAtNode().toArray(), predictors_left_right);
+		assertEquals(0, double_tree.left.right.pAdj());
+		
+		Integer[] predictors_right_right = {1};
+		assertArrayEquals(double_tree.right.right.predictorsThatCouldBeUsedToSplitAtNode().toArray(), predictors_right_right);
+		assertEquals(1, double_tree.right.right.pAdj());
+		
+		Integer[] predictors_right_left = {};
+		assertArrayEquals(double_tree.right.left.predictorsThatCouldBeUsedToSplitAtNode().toArray(), predictors_right_left);
+		assertEquals(0, double_tree.right.left.pAdj());
 		
 		//now take it a step further... extend the tree on the left left and see what happens
 		CGMBARTTreeNode double_tree_ext = buildDoubleTreeExt();
-		assertArrayEquals(double_tree_ext.left.left.left.predictorsThatCouldBeUsedToSplitAtNode().toArray(), predictors_left_on_left);
 		
+		Integer[] predictors_left_left_left = {1, 2};
+		assertArrayEquals(double_tree_ext.left.left.left.predictorsThatCouldBeUsedToSplitAtNode().toArray(), predictors_left_left_left);
+		assertEquals(double_tree_ext.left.left.left.pAdj(), 2);
+		
+		Integer[] predictors_left_left_right = {};
+		assertArrayEquals(double_tree_ext.left.left.right.predictorsThatCouldBeUsedToSplitAtNode().toArray(), predictors_left_left_right);
+		assertEquals(double_tree_ext.left.left.right.pAdj(), 0);		
 	}	
 	
 	private CGMBARTTreeNode buildDoubleTreeExt(){
 		CGMBARTTreeNode double_tree_ext = double_tree.clone(true);
 		double_tree_ext.left.left.isLeaf = false;
 		double_tree_ext.left.left.splitAttributeM = 1;
-		double_tree_ext.left.left.splitValue = 31.2;
+		double_tree_ext.left.left.splitValue = 15.3;
 		double_tree_ext.left.left.left = new CGMBARTTreeNode(double_tree_ext.left.left);
-		double_tree_ext.left.left.left.splitAttributeM = 1;
+		double_tree_ext.left.left.right = new CGMBARTTreeNode(double_tree_ext.left.left);
+		CGMBARTTreeNode.propagateDataByChangedRule(double_tree_ext, true);
 		//now we want to make sure it has the same num predictors
 		return double_tree_ext;				
 	}

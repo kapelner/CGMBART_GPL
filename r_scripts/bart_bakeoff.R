@@ -58,6 +58,7 @@ total_num_runs = (length(real_regression_data_sets) + length(simulated_data_sets
 		length(num_trees_of_interest) * length(num_burn_ins_of_interest) * 
 		length(num_iterations_after_burn_ins_of_interest) * length(alphas_of_interest) * 
 		length(betas_of_interest) * run_model_N_times
+
 num_trees = 1
 num_burn_in = 2000
 num_iterations_after_burn_in = 2000

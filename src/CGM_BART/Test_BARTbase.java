@@ -53,6 +53,5 @@ public class Test_BARTbase {
 	
 	@Test 
 	public void testHyperparams(){
-			
 	}
 }
