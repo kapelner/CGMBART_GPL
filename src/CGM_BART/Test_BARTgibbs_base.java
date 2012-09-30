@@ -17,6 +17,7 @@ public class Test_BARTgibbs_base {
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
+		
 	}
 
 	@AfterClass
