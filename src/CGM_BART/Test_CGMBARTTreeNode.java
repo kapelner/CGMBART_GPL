@@ -205,7 +205,7 @@ public class Test_CGMBARTTreeNode {
 		Integer[] all_predictors = {0, 1, 2};
 		assertArrayEquals(double_tree.predictorsThatCouldBeUsedToSplitAtNode().toArray(), all_predictors);
 		assertEquals(3, double_tree.pAdj());
-		assertEquals(1,double_tree.nAdj());
+		assertEquals(1, double_tree.nAdj());
 		
 		Integer[] predictors_left_left = {1, 2};
 		assertArrayEquals(double_tree.left.left.predictorsThatCouldBeUsedToSplitAtNode().toArray(), predictors_left_left);
@@ -245,17 +245,7 @@ public class Test_CGMBARTTreeNode {
 		CGMBARTTreeNode.propagateDataByChangedRule(double_tree_ext, true);
 		//now we want to make sure it has the same num predictors
 		return double_tree_ext;				
-	}
-	
-	@Test 
-	public void testDoubleTreeNadj(){
-		CGMBARTTreeNode double_tree_ext = buildDoubleTreeExt();
-		
-		assertEquals(double_tree_ext.nAdj(), 4);
-		assertEquals(double_tree_ext.right.nAdj(), 1);
-		assertEquals(double_tree_ext.left.nAdj(), 3);
-	}
-	
+	}	
 	
 	@Test
 	public void testPropagateDataByChangedRule(){

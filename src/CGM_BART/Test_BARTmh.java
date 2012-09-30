@@ -175,9 +175,8 @@ public class Test_BARTmh {
 		
 		//set up the stump as a tree
 		first_node_grown.splitAttributeM = 0;
-		assertEquals(first_node_grown.nAdj(), 4); //n_adj = 4 since there are 4 zeroes
+		assertEquals(first_node_grown.nAdj(), 1); //multiple zeroes, but one unique value
 		first_node_grown.splitValue = 0.0;
-//		assertEquals(first_node_grown.splitValuesRepeated(), 4); //n_repeat = 4 since the zero is repeated 4 times
 		first_node_grown.isLeaf = false;
 		first_node_grown.left = new CGMBARTTreeNode(T_star);
 		first_node_grown.right = new CGMBARTTreeNode(T_star);
@@ -196,7 +195,7 @@ public class Test_BARTmh {
 		assertEquals(second_node_grown.pAdj(), 2); //padj = 2
 		assertEquals(T_star.numPruneNodesAvailable(), 1); //w_2^* = 1
 		second_node_grown.splitAttributeM = 2;
-		assertEquals(second_node_grown.nAdj(), 2); //n_adj = 2 since there are 2 zeroes
+		assertEquals(second_node_grown.nAdj(), 1);  //multiple zeroes, but one unique value
 		second_node_grown.splitValue = 0.0;
 //		assertEquals(second_node_grown.splitValuesRepeated(), 2); //n_repeat = 2 since the zero is repeated 2 times at this juncture
 		second_node_grown.isLeaf = false;
@@ -216,8 +215,7 @@ public class Test_BARTmh {
 		assertEquals(T_i.numPruneNodesAvailable(), 1); //w_2 = 1
 		assertEquals(T_i.numLeaves(), 3); //b = 3
 		assertEquals(prune_node.pAdj(), 2); //padj = 2
-		assertEquals(prune_node.nAdj(), 2); //n_adj = 2 since there are 2 zeroes
-//		assertEquals(prune_node.splitValuesRepeated(), 2); //n_repeat = 2
+		assertEquals(prune_node.nAdj(), 1); //multiple zeroes, but one unique value
 		
 		trans_ratio = Math.exp(bart.calcLnTransRatioPrune(T_i, T_star, prune_node));
 		assertEquals(0.25, trans_ratio, 0.0001);	
@@ -231,7 +229,7 @@ public class Test_BARTmh {
 		assertEquals(T_i.numPruneNodesAvailable(), 1); //w_2 = 1
 		assertEquals(T_i.numLeaves(), 2); //b = 2
 		assertEquals(prune_node.pAdj(), 3); //padj = 3
-		assertEquals(prune_node.nAdj(), 4); //n_adj = 4 since there are 4 zeroes
+		assertEquals(prune_node.nAdj(), 1); //multiple zeroes, but one unique value
 //		assertEquals(prune_node.splitValuesRepeated(), 4); //n_repeat = 4	
 		
 		trans_ratio = Math.exp(bart.calcLnTransRatioPrune(T_i, T_star, prune_node));
@@ -249,9 +247,8 @@ public class Test_BARTmh {
 		
 		//set up the stump as a tree
 		first_node_grown.splitAttributeM = 0;
-		assertEquals(first_node_grown.nAdj(), 4); //n_adj = 4 since there are 4 zeroes
+		assertEquals(first_node_grown.nAdj(), 1);  //multiple zeroes, but one unique value
 		first_node_grown.splitValue = 0.0;
-//		assertEquals(first_node_grown.splitValuesRepeated(), 4); //n_repeat = 4 since the zero is repeated 4 times
 		first_node_grown.isLeaf = false;
 		first_node_grown.left = new CGMBARTTreeNode(T_star);
 		first_node_grown.right = new CGMBARTTreeNode(T_star);
@@ -268,7 +265,7 @@ public class Test_BARTmh {
 		assertEquals(second_node_grown.pAdj(), 2); //padj = 2
 		assertEquals(1, second_node_grown.depth); //d_eta = 1
 		second_node_grown.splitAttributeM = 2;
-		assertEquals(second_node_grown.nAdj(), 2); //n_adj = 2 since there are 2 zeroes
+		assertEquals(second_node_grown.nAdj(), 1);  //multiple zeroes, but one unique value
 		second_node_grown.splitValue = 0.0;
 //		assertEquals(second_node_grown.splitValuesRepeated(), 2); //n_repeat = 2 since the zero is repeated 2 times at this juncture
 		second_node_grown.isLeaf = false;
@@ -286,8 +283,7 @@ public class Test_BARTmh {
 		CGMBARTTreeNode prune_node = second_node_grown;
 		
 		assertEquals(prune_node.pAdj(), 2); //padj = 2
-		assertEquals(prune_node.nAdj(), 2); //n_adj = 2 since there are 2 zeroes
-//		assertEquals(prune_node.splitValuesRepeated(), 2); //n_repeat = 2
+		assertEquals(prune_node.nAdj(), 1);  //multiple zeroes, but one unique value
 		assertEquals(1, prune_node.depth);
 		
 		
@@ -302,8 +298,7 @@ public class Test_BARTmh {
 		
 		assertEquals(prune_node.depth, 0); //padj = 3
 		assertEquals(prune_node.pAdj(), 3); //padj = 3
-		assertEquals(prune_node.nAdj(), 4); //n_adj = 4 since there are 4 zeroes
-//		assertEquals(prune_node.splitValuesRepeated(), 4); //n_repeat = 4	
+		assertEquals(prune_node.nAdj(), 1);  //multiple zeroes, but one unique value
 		
 		tree_structure_ratio = Math.exp(-bart.calcLnTreeStructureRatioGrow(prune_node));
 		assertEquals(0.271573855, tree_structure_ratio, 0.0001);	
