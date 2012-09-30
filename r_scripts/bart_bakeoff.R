@@ -262,7 +262,7 @@ run_bart_model_and_save_diags_and_results = function(training_data, test_data, d
 		beta = beta,
 		print_tree_illustrations = PRINT_TREE_ILLUS,
 		debug_log = JAVA_LOG,
-		unique_name = paste0(data_title, "_m_", num_trees, "_run_", formatC(duplicate_run, width = 2, format = "d", flag = "0")),
+		unique_name = paste(data_title, "_m_", num_trees, "_run_", formatC(duplicate_run, width = 2, format = "d", flag = "0")),
 		num_iterations_after_burn_in = num_iterations_after_burn_in)
 	time_finished = Sys.time()
 	assign("bart_machine", bart_machine, .GlobalEnv)
