@@ -207,6 +207,10 @@ public class Test_CGMBARTTreeNode {
 		assertEquals(3, double_tree.pAdj());
 		assertEquals(1, double_tree.nAdj());
 		
+		//Test double.tree n.adj at second nodes
+		assertEquals(3, double_tree.left.nAdj());
+		assertEquals(1, double_tree.right.nAdj());	
+		
 		Integer[] predictors_left_left = {1, 2};
 		assertArrayEquals(double_tree.left.left.predictorsThatCouldBeUsedToSplitAtNode().toArray(), predictors_left_left);
 		assertEquals(double_tree.left.left.pAdj(), 2);
@@ -250,6 +254,10 @@ public class Test_CGMBARTTreeNode {
 	@Test
 	public void testPropagateDataByChangedRule(){
 		CGMBARTTreeNode double_tree_ext = buildDoubleTreeExt();
+		assertEquals(2, double_tree_ext.left.left.pAdj());
+		assertEquals(2, double_tree_ext.left.left.nAdj());
+		assertEquals(9,double_tree_ext.left.left.left.sumResponses(),0);
+		assertEquals(2,double_tree_ext.left.left.right.sumResponses(),0);
 		//TODO
 	}	
 	
