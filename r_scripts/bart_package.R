@@ -733,6 +733,7 @@ run_bayes_tree_bart_impl_and_plot_y_vs_yhat = function(training_data, test_data,
 		numcut = length(y), #this is a tiny bit different...check with Ed
 		verbose = TRUE)
 		
+#	out = list(yhat = bayes_tree_bart_mod$yhat.test.mean, sigmas = bayes_tree_bart_mod$sigma)
 	y_hat = bayes_tree_bart_mod$yhat.test.mean
 	run_other_model_and_plot_y_vs_yhat(y_hat, "R_BART", test_data, extra_text, data_title, save_plot, bart_machine)
 }
