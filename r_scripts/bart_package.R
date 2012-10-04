@@ -3,9 +3,14 @@
 options(repos = "http://lib.stat.cmu.edu/R/CRAN")
 tryCatch(library(randomForest), error = function(e){install.packages("randomForest")}, finally = library(randomForest))
 tryCatch(library(rJava), error = function(e){install.packages("rJava")}, finally = library(rJava))
-tryCatch(library(BayesTree), error = function(e){install.packages("BayesTree")}, finally = library(BayesTree))
 tryCatch(library(rpart), error = function(e){install.packages("rpart")}, finally = library(rpart))
 tryCatch(library(xtable), error = function(e){install.packages("xtable")}, finally = library(xtable))
+
+if (.Platform$OS.type == "windows"){
+	tryCatch(library(BayesTree), error = function(e){install.packages("BayesTree")}, finally = library(BayesTree))
+} else {
+	library(BayesTree, lib.loc = "~/R/")
+}
 
 #constants
 NUM_GIGS_RAM_TO_USE = ifelse(.Platform$OS.type == "windows", 6, 8)
@@ -726,7 +731,7 @@ run_bayes_tree_bart_impl_and_plot_y_vs_yhat = function(training_data, test_data,
 		nskip = bart_machine$num_burn_in, #keep it the same --- default is 100 in BayesTree -- huh??
 		usequants = TRUE, #this is a tiny bit different...check with Ed
 		numcut = length(y), #this is a tiny bit different...check with Ed
-		verbose = FALSE)
+		verbose = TRUE)
 		
 	y_hat = bayes_tree_bart_mod$yhat.test.mean
 	run_other_model_and_plot_y_vs_yhat(y_hat, "R_BART", test_data, extra_text, data_title, save_plot, bart_machine)

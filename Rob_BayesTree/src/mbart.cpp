@@ -64,6 +64,7 @@ double pChange;
 CPriParams PriParams;
 EndNodeModel* endNodeModel=0;
 
+
 extern "C" {
 void mbart(int *iNumObs, int *iNumX, int *inrowTest,
            double *iXDat, double *iYDat,
@@ -84,6 +85,7 @@ void mbart(int *iNumObs, int *iNumX, int *inrowTest,
    double binary_offset = *ibinary_offset;
 
    if(*verbose) {
+	   Rprintf("hello Justin and Adam");
       if(binary)
          Rprintf("\n\nRunning BART with binary y\n\n");
       else
@@ -233,6 +235,7 @@ void mbart(int *iNumObs, int *iNumX, int *inrowTest,
       }
    }
    if(*verbose) {
+	   Rprintf("hello Justin and Adam");
    Rprintf("\nCutoff rules c in x<=c vs x>c\n");
    Rprintf("Number of cutoffs: (var: number of possible c):\n");
    for(int i=1;i<=NumX;i++) {
