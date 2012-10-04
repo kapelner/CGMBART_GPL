@@ -24,6 +24,9 @@
  
 package CGM_BART;
 
+import java.util.logging.Logger;
+import java.util.logging.StreamHandler;
+
 import CGM_BART_DEBUG.*; //sample #21
 
 public class CGMBARTRegression extends CGMBART_09_eval {
@@ -36,8 +39,10 @@ public class CGMBARTRegression extends CGMBART_09_eval {
 	 * @param datumSetupForEntireRun
 	 * @param buildProgress
 	 */
-	public CGMBARTRegression() {
+	public CGMBARTRegression() {		
 		super();
+		Logger.getLogger("").addHandler(new StreamHandler()); //turn off std out
+		writeToDebugLog();
 //		System.out.println("CGMBARTRegression init\n");
 	}	
 	 

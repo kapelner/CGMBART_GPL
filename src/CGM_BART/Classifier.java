@@ -36,9 +36,11 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.FileHandler;
+import java.util.logging.Handler;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
+import java.util.logging.StreamHandler;
 
 import AlgorithmTesting.DataSetupForCSVFile;
 import CustomLogging.*;
@@ -149,16 +151,17 @@ public abstract class Classifier implements Serializable {
         logManager.reset();
 
         // create log file, no limit on size
-//        FileHandler fileHandler = null;
-//		try {
-//			fileHandler = new FileHandler(unique_name + ".log", Integer.MAX_VALUE, 1, false);
-//		} catch (SecurityException e) {
-//			e.printStackTrace();
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
-//        fileHandler.setFormatter(new SuperSimpleFormatter());
-//        Logger.getLogger("").addHandler(fileHandler);
+        FileHandler fileHandler = null;
+		try {
+			fileHandler = new FileHandler(unique_name + ".log", Integer.MAX_VALUE, 1, false);
+		} catch (SecurityException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+        fileHandler.setFormatter(new SuperSimpleFormatter());
+        Logger.getLogger("").addHandler(fileHandler);
+        
         
         // now rebind stdout/stderr to logger
         Logger logger = Logger.getLogger("stdout");         
