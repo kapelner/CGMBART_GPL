@@ -3,9 +3,15 @@
 options(repos = "http://lib.stat.cmu.edu/R/CRAN")
 tryCatch(library(randomForest), error = function(e){install.packages("randomForest")}, finally = library(randomForest))
 tryCatch(library(rJava), error = function(e){install.packages("rJava")}, finally = library(rJava))
-tryCatch(library(BayesTree), error = function(e){install.packages("BayesTree")}, finally = library(BayesTree))
 tryCatch(library(rpart), error = function(e){install.packages("rpart")}, finally = library(rpart))
 tryCatch(library(xtable), error = function(e){install.packages("xtable")}, finally = library(xtable))
+
+if (.Platform$OS.type == "windows"){
+	tryCatch(library(BayesTree), error = function(e){install.packages("BayesTree")}, finally = library(BayesTree))
+} else {
+	library(BayesTree, lib.loc = "~/R/")
+}
+
 
 #constants
 NUM_GIGS_RAM_TO_USE = ifelse(.Platform$OS.type == "windows", 6, 8)
