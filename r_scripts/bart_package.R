@@ -49,7 +49,7 @@ print_tree_illustrations = FALSE
 PRINT_TREE_ILLUS = FALSE
 print_out_every = NULL
 fix_seed = FALSE
-JAVA_LOG = TRUE #to be overwritten later
+JAVA_LOG = FALSE #to be overwritten later
 #source("r_scripts/create_simulated_models.R")
 #simulated_data_model_name = simulated_data_sets[1]
 #training_data = simulate_data_from_simulation_name(simulated_data_model_name)

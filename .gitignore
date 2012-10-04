@@ -32,7 +32,7 @@ Icon?
 Thumbs.db
 
 # other stuff project specific
-
+Rob_BayesTree.Rcheck/*
 *.swp
 *.log
 log

@@ -16,24 +16,24 @@ if (FALSE){
 }
 
 PRINT_TREE_ILLUS = FALSE
-JAVA_LOG = TRUE
+JAVA_LOG = FALSE
 
-run_model_N_times = 5
+run_model_N_times = 20
 real_regression_data_sets = c(
-#	"r_boston",
+	"r_boston"
 #	"r_forestfires"
 #	"r_concretedata"
 )
 simulated_data_sets = c(
-#	"univariate_linear",
+	"univariate_linear",
 #	"bivariate_linear",
-#	"friedman",
+	"friedman",
 #	"simple_tree_structure_sigsq_hundredth",
-#	"simple_tree_structure_sigsq_tenth",
+	"simple_tree_structure_sigsq_tenth",
 #	"simple_tree_structure_sigsq_half",
-	"simple_tree_structure"
+	"simple_tree_structure",
 #	"simple_tree_structure_sigsq_3",
-#	"simple_tree_structure_sigsq_5"
+	"simple_tree_structure_sigsq_5"
 #	"simple_tree_structure_sigsq_10",
 #	"simple_tree_structure_sigsq_30",
 #	"simple_tree_structure_sigsq_100"
@@ -41,9 +41,9 @@ simulated_data_sets = c(
 
 #nice to have data around for testing... should be overwritten for custom runs...
 num_trees_of_interest = c(
-	1
-#	5
-#	25
+	1,
+	5,
+	10
 )
 num_burn_ins_of_interest = c(
 	2000
