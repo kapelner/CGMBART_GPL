@@ -64,6 +64,7 @@ double pChange;
 CPriParams PriParams;
 EndNodeModel* endNodeModel=0;
 
+
 extern "C" {
 void mbart(int *iNumObs, int *iNumX, int *inrowTest,
            double *iXDat, double *iYDat,
@@ -84,6 +85,7 @@ void mbart(int *iNumObs, int *iNumX, int *inrowTest,
    double binary_offset = *ibinary_offset;
 
    if(*verbose) {
+	   Rprintf("J & A Ver. 11 pm 10/3 BD Only")
       if(binary)
          Rprintf("\n\nRunning BART with binary y\n\n");
       else

@@ -12,7 +12,6 @@ if (.Platform$OS.type == "windows"){
 	library(BayesTree, lib.loc = "~/R/")
 }
 
-
 #constants
 NUM_GIGS_RAM_TO_USE = ifelse(.Platform$OS.type == "windows", 6, 8)
 PLOTS_DIR = "output_plots"
@@ -50,7 +49,7 @@ print_tree_illustrations = FALSE
 PRINT_TREE_ILLUS = FALSE
 print_out_every = NULL
 fix_seed = FALSE
-JAVA_LOG = TRUE #to be overwritten later
+JAVA_LOG = FALSE #to be overwritten later
 #source("r_scripts/create_simulated_models.R")
 #simulated_data_model_name = simulated_data_sets[1]
 #training_data = simulate_data_from_simulation_name(simulated_data_model_name)
@@ -732,7 +731,7 @@ run_bayes_tree_bart_impl_and_plot_y_vs_yhat = function(training_data, test_data,
 		nskip = bart_machine$num_burn_in, #keep it the same --- default is 100 in BayesTree -- huh??
 		usequants = TRUE, #this is a tiny bit different...check with Ed
 		numcut = length(y), #this is a tiny bit different...check with Ed
-		verbose = FALSE)
+		verbose = TRUE)
 		
 	y_hat = bayes_tree_bart_mod$yhat.test.mean
 	run_other_model_and_plot_y_vs_yhat(y_hat, "R_BART", test_data, extra_text, data_title, save_plot, bart_machine)

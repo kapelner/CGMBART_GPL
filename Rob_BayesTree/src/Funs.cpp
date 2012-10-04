@@ -563,16 +563,17 @@ double Metrop(Node **top,int *Done,int *step)
 
 	//double u = ran1(&idum);
 //	double u = unif_rand();
-//	if(u<pBD) {
+//	if(u < 0.9) {
 		alpha = BirthDeath(*top,&BD,Done);
 		if(BD) {
 			*step = BIRTH;
 		} else {
 			*step = DEATH;
 		}
-//	} else if(u<pBD+pSwap) {
+//	} else {
 //		alpha = SwapRule(*top,Done);
 //		*step=SWAP;
+//	}
 //	} else {
 //		alpha = ChangeRule(*top,Done);
 //		*step = CHANGE;
