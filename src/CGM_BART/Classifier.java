@@ -149,23 +149,23 @@ public abstract class Classifier implements Serializable {
         logManager.reset();
 
         // create log file, no limit on size
-        FileHandler fileHandler = null;
-		try {
-			fileHandler = new FileHandler(unique_name + ".log", Integer.MAX_VALUE, 1, false);
-		} catch (SecurityException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-        fileHandler.setFormatter(new SuperSimpleFormatter());
-        Logger.getLogger("").addHandler(fileHandler);
+//        FileHandler fileHandler = null;
+//		try {
+//			fileHandler = new FileHandler(unique_name + ".log", Integer.MAX_VALUE, 1, false);
+//		} catch (SecurityException e) {
+//			e.printStackTrace();
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
+//        fileHandler.setFormatter(new SuperSimpleFormatter());
+//        Logger.getLogger("").addHandler(fileHandler);
         
         // now rebind stdout/stderr to logger
         Logger logger = Logger.getLogger("stdout");         
         LoggingOutputStream  los = new LoggingOutputStream(logger, StdOutErrLevel.STDOUT);
         System.setOut(new PrintStream(los, true));
         logger = Logger.getLogger("stderr");                                    
-        los= new LoggingOutputStream(logger, StdOutErrLevel.STDERR);            
+        los = new LoggingOutputStream(logger, StdOutErrLevel.STDERR);            
         System.setErr(new PrintStream(los, true)); 		
 	}
 	
