@@ -16,6 +16,7 @@ R CMD INSTALL -l ~/R --build pkg ~/workspace/CGMBART_GPL/Rob_BayesTree
  	
 
 #fire up an R session
+cd ~/workspace/CGMBART_GPL/
 R --interactive
 library(BayesTree, lib.loc="~/R/")
 
