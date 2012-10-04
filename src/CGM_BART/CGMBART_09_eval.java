@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 
-public abstract class CGMBART_09_eval extends CGMBART_08_mh_with_change implements Serializable {
+public abstract class CGMBART_09_eval extends CGMBART_07_mh implements Serializable {
 	private static final long serialVersionUID = -6670611007413531590L;
 
 	public double Evaluate(double[] record) { //posterior sample median (it's what Rob uses)		
