@@ -779,6 +779,6 @@ save_plot_function = function(bart_machine, identifying_text, data_title){
 	alpha = bart_machine$alpha
 	beta = bart_machine$beta
 	plot_filename = paste(PLOTS_DIR, "/", data_title, "_", identifying_text, "_m_", num_trees, "_n_B_", num_burn_in, "_n_G_a_", num_iterations_after_burn_in, "_alpha_", alpha, "_beta_", beta, ".pdf", sep = "")
-	pdf(file = plot_filename)
+	tryCatch({pdf(file = plot_filename)}, error = function(e){})
 	append_to_log(paste("plot saved as", plot_filename))
 }
