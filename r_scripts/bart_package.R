@@ -109,7 +109,9 @@ build_a_bart_model = function(training_data,
 	
 	y_hat_train = calc_y_hat_from_gibbs_samples(y_hat_train_posterior_samples)
 	L2_err_train = sum((training_data$y - y_hat_train)^2)
-	rmse_train = sqrt(L2_err_train / length(y_hat_train))	
+	rmse_train = sqrt(L2_err_train / length(y_hat_train))
+	
+	avg_num_splits_by_vars = .jcall(java_bart_machine, "[D", "getAvgCountsByAttribute")
 
 	#now once it's done, let's extract things that are related to diagnosing the build of the BART model
 	list(java_bart_machine = java_bart_machine, 
@@ -119,7 +121,8 @@ build_a_bart_model = function(training_data,
 		num_gibbs = num_gibbs,
 		alpha = alpha,
 		beta = beta,
-		rmse_train = rmse_train
+		rmse_train = rmse_train,
+		avg_num_splits_by_vars = avg_num_splits_by_vars
 	)
 }
 

@@ -267,5 +267,6 @@ public class Test_CGMBARTTreeNode {
 	//getTerminalNodesWithDataAboveOrEqualToN
 	//evaluate
 	//splitValuesRepeated
+	//numTimesAttrUsed
 	
 }

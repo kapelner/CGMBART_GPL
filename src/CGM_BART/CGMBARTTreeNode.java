@@ -697,6 +697,13 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		this.n_eta = n_eta;
 	}
 
+	public int numTimesAttrUsed(int j) {
+		if (this.isLeaf){
+			return 0;
+		}
+		return (this.splitAttributeM == j ? 1 : 0) + this.left.numTimesAttrUsed(j) + this.right.numTimesAttrUsed(j);
+	}
+
 //	public CGMBARTTreeNode findCorrespondingNodeOnSimilarTree(CGMBARTTreeNode node) {
 //		char[] location = node.stringLocation(true).toCharArray();
 //		CGMBARTTreeNode corresponding_node = this;

@@ -337,7 +337,7 @@ run_bart_model_and_save_diags_and_results = function(training_data, test_data, d
 		round(mean(r_bart_predictions$sigsqs), 3),
 		round(bart_machine$rmse_train, 2),
 		round(r_bart_predictions$rmse_train, 2),
-		9999, #round(bart_machine$tot_var_count, 1),
+		round(sum(bart_machine$avg_num_splits_by_vars), 1),
 		round(sum(r_bart_predictions$avg_num_splits_by_vars), 1),
 		round(rf_predictions$L1_err, 0),
 		round(rf_predictions$L2_err, 0),
