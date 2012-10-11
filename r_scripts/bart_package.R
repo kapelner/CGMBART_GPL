@@ -10,7 +10,7 @@ if (.Platform$OS.type == "windows"){
 	tryCatch(library(rJava), error = function(e){install.packages("rJava")}, finally = library(rJava))
 	tryCatch(library(BayesTree), error = function(e){install.packages("BayesTree")}, finally = library(BayesTree))
 } else {
-	library(rJava, lib.loc = "~/R/")
+	tryCatch(library(rJava), error = function(e){library(rJava, lib.loc = "~/R/")})	
 	library(BayesTree, lib.loc = "~/R/")
 }
 
