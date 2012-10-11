@@ -9,7 +9,7 @@ public abstract class CGMBART_09_eval extends CGMBART_07_mh implements Serializa
 	private static final long serialVersionUID = -6670611007413531590L;
 
 	public double Evaluate(double[] record) { //posterior sample median (it's what Rob uses)		
-		return EvaluateViaSampMed(record);
+		return EvaluateViaSampAvg(record);
 	}	
 	
 	public double EvaluateViaSampMed(double[] record) { //posterior sample average		

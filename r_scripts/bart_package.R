@@ -2,18 +2,20 @@
 #libraries and dependencies
 options(repos = "http://lib.stat.cmu.edu/R/CRAN")
 tryCatch(library(randomForest), error = function(e){install.packages("randomForest")}, finally = library(randomForest))
-tryCatch(library(rJava), error = function(e){install.packages("rJava")}, finally = library(rJava))
+
 tryCatch(library(rpart), error = function(e){install.packages("rpart")}, finally = library(rpart))
 tryCatch(library(xtable), error = function(e){install.packages("xtable")}, finally = library(xtable))
 
 if (.Platform$OS.type == "windows"){
+	tryCatch(library(rJava), error = function(e){install.packages("rJava")}, finally = library(rJava))
 	tryCatch(library(BayesTree), error = function(e){install.packages("BayesTree")}, finally = library(BayesTree))
 } else {
+	tryCatch(library(rJava), error = function(e){library(rJava, lib.loc = "~/R/")})	
 	library(BayesTree, lib.loc = "~/R/")
 }
 
 #constants
-NUM_GIGS_RAM_TO_USE = ifelse(.Platform$OS.type == "windows", 6, 8)
+NUM_GIGS_RAM_TO_USE = ifelse(.Platform$OS.type == "windows", 6, 1)
 PLOTS_DIR = "output_plots"
 JAR_DEPENDENCIES = c("bart_java.jar", "commons-math-2.1.jar", "jai_codec.jar", "jai_core.jar")
 DATA_FILENAME = "datasets/bart_data.csv"
@@ -55,7 +57,7 @@ JAVA_LOG = FALSE #to be overwritten later
 #training_data = simulate_data_from_simulation_name(simulated_data_model_name)
 #test_data = simulate_data_from_simulation_name(simulated_data_model_name)
 
-bart_model = function(training_data, 
+build_a_bart_model = function(training_data, 
 		num_trees = 50, 
 		num_burn_in = 1000, 
 		num_iterations_after_burn_in = 1000, 
@@ -97,6 +99,19 @@ bart_model = function(training_data,
 	#need http://math.acadiau.ca/ACMMaC/Rmpi/sample.html RMPI here
 	#or better yet do this in pieces and plot slowly
 	.jcall(java_bart_machine, "V", "Build")
+	
+	#once its done gibbs sampling, see how the training data does
+	y_hat_train_posterior_samples = matrix(NA, nrow = nrow(training_data), ncol = num_iterations_after_burn_in) 
+	for (i in 1 : nrow(training_data)){
+		y_hat_train_posterior_samples[i, ] = 
+			.jcall(java_bart_machine, "[D", "getGibbsSamplesForPrediction", c(as.numeric(training_data[i, ]), NA))
+	}
+	
+	y_hat_train = calc_y_hat_from_gibbs_samples(y_hat_train_posterior_samples)
+	L2_err_train = sum((training_data$y - y_hat_train)^2)
+	rmse_train = sqrt(L2_err_train / length(y_hat_train))
+	
+	avg_num_splits_by_vars = .jcall(java_bart_machine, "[D", "getAvgCountsByAttribute")
 
 	#now once it's done, let's extract things that are related to diagnosing the build of the BART model
 	list(java_bart_machine = java_bart_machine, 
@@ -105,7 +120,9 @@ bart_model = function(training_data,
 		num_iterations_after_burn_in = num_iterations_after_burn_in, 
 		num_gibbs = num_gibbs,
 		alpha = alpha,
-		beta = beta
+		beta = beta,
+		rmse_train = rmse_train,
+		avg_num_splits_by_vars = avg_num_splits_by_vars
 	)
 }
 
@@ -165,16 +182,8 @@ clean_previous_bart_data = function(){
 	}
 }
 
-#ensure_bart_is_done_in_java = function(java_bart_machine){
-#	if (!.jcall(java_bart_machine, "Z", "gibbsFinished")){
-#		stop("BART model not finished building yet", call. = FALSE)
-#	}
-#}
-
-
 plot_sigsqs_convergence_diagnostics = function(bart_machine, extra_text = NULL, data_title = "data_model", save_plot = FALSE){
 	sigsqs = .jcall(bart_machine$java_bart_machine, "[D", "getGibbsSamplesSigsqs")
-	assign("sigsqs", sigsqs, .GlobalEnv)
 	
 	num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in
 	num_burn_in = bart_machine$num_burn_in
@@ -210,11 +219,12 @@ plot_sigsqs_convergence_diagnostics = function(bart_machine, extra_text = NULL, 
 	if (save_plot){	
 		dev.off()
 	}
+	
+	sigsqs_after_burnin
 }
 
 hist_sigsqs = function(bart_machine, extra_text = NULL, data_title = "data_model", save_plot = FALSE){
 	sigsqs = .jcall(bart_machine$java_bart_machine, "[D", "getGibbsSamplesSigsqs")
-	assign("sigsqs", sigsqs, .GlobalEnv)
 	
 	num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in
 	num_burn_in = bart_machine$num_burn_in
@@ -245,6 +255,8 @@ hist_sigsqs = function(bart_machine, extra_text = NULL, data_title = "data_model
 	if (save_plot){	
 		dev.off()
 	}
+	
+	sigsqs_after_burnin
 }
 
 maximum_nodes_over_all_trees = function(bart_machine){
@@ -568,7 +580,7 @@ hist_tree_liks = function(bart_machine, extra_text = NULL, data_title = "data_mo
 	}	
 }
 
-plot_y_vs_yhat = function(bart_predictions, extra_text = NULL, data_title = "data_model", save_plot = FALSE, bart_machine = NULL){
+plot_y_vs_yhat_a_bart = function(bart_predictions, extra_text = NULL, data_title = "data_model", save_plot = FALSE, bart_machine = NULL){
 	y = bart_predictions[["y"]]
 	n = length(y)
 	y_hat = bart_predictions[["y_hat"]]
@@ -605,7 +617,7 @@ plot_y_vs_yhat = function(bart_predictions, extra_text = NULL, data_title = "dat
 	abline(a = 0, b = 1, col = "blue")
 	if (save_plot){	
 		dev.off()
-	}	
+	}		
 }
 
 look_at_sample_of_test_data = function(bart_predictions, grid_len = 3, extra_text = NULL){
@@ -627,7 +639,7 @@ look_at_sample_of_test_data = function(bart_predictions, grid_len = 3, extra_tex
 	}	
 }
 
-predict_and_calc_ppis = function(bart_machine, test_data, ppi_conf = 0.95){
+predict_and_calc_ppis = function(bart_machine, test_data, training_data, ppi_conf = 0.95){
 	#pull out data objects for convenience
 	java_bart_machine = bart_machine$java_bart_machine
 	num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in
@@ -646,11 +658,7 @@ predict_and_calc_ppis = function(bart_machine, test_data, ppi_conf = 0.95){
 	ppi_a = array(NA, n)
 	ppi_b = array(NA, n)	
 	for (i in 1 : n){
-#		tryCatch({
 		samps = .jcall(java_bart_machine, "[D", "getGibbsSamplesForPrediction", c(as.numeric(test_data[i, ]), NA))
-#		},
-#		error = function(exc){return},
-#		finally = function(exc){})		
 		y_hat_posterior_samples[i, ] = samps
 
 		ppi_a[i] = quantile(sort(samps), (1 - ppi_conf) / 2)
@@ -682,13 +690,25 @@ predict_and_calc_ppis = function(bart_machine, test_data, ppi_conf = 0.95){
 
 #let's do sample medians like Rob
 calc_y_hat_from_gibbs_samples = function(y_hat_posterior_samples){
-	apply(y_hat_posterior_samples, 1, function(row){median(row)})
+	apply(y_hat_posterior_samples, 1, mean)
 }
 
-run_other_model_and_plot_y_vs_yhat = function(y_hat, model_name, test_data, extra_text = NULL, data_title = "data_model", save_plot = FALSE, bart_machine = NULL){
-	L1_err = round(sum(abs(test_data$y - y_hat)), 1)
-	L2_err = round(sum((test_data$y - y_hat)^2), 1)	
+run_other_model_and_plot_y_vs_yhat = function(y_hat, 
+		model_name, 
+		test_data, 
+		training_data,
+		extra_text = NULL, 
+		data_title = "data_model", 
+		save_plot = FALSE, 
+		bart_machine = NULL, 
+		sigsqs = NULL,
+		avg_num_splits_by_vars = NULL,
+		y_hat_train = NULL){
+	L1_err = sum(abs(test_data$y - y_hat))
+	L2_err = sum((test_data$y - y_hat)^2)	
 	rmse = sqrt(L2_err / length(y_hat))
+	L2_err_train = sum((training_data$y - y_hat_train)^2)
+	rmse_train = sqrt(L2_err_train / length(y_hat_train))
 	
 	if (save_plot){
 		save_plot_function(bart_machine, paste("yvyhat_", model_name, sep = ""), data_title)
@@ -698,28 +718,33 @@ run_other_model_and_plot_y_vs_yhat = function(y_hat, model_name, test_data, extr
 	}		
 	plot(test_data$y, 
 			y_hat, 
-			main = paste("y/yhat ", model_name, " model L1/2 = ", L1_err, "/", L2_err, " rmse = ", round(rmse, 2), ifelse(is.null(extra_text), "", paste("\n", extra_text)), sep = ""), 
+			main = paste("y/yhat ", model_name, " model L1/2 = ", round(L1_err, 1), "/", round(L2_err, 1), " rmse = ", round(rmse, 2), ifelse(is.null(extra_text), "", paste("\n", extra_text)), sep = ""), 
 			xlab = "y", 
 			ylab = "y_hat")	
 	if (save_plot){	
 		dev.off()
-	}
+	}	
 	
-	list(y_hat = y_hat, L1_err = L1_err, L2_err = L2_err, rmse = rmse)		
+	list(y_hat = y_hat, 
+		L1_err = L1_err, 
+		L2_err = L2_err, 
+		rmse = rmse, 
+		sigsqs = sigsqs,
+		avg_num_splits_by_vars = avg_num_splits_by_vars,
+		rmse_train = rmse_train)		
 }
 
 run_random_forests_and_plot_y_vs_yhat = function(training_data, test_data, extra_text = NULL, data_title = "data_model", save_plot = FALSE, bart_machine = NULL){
 	rf_mod = randomForest(y ~., training_data)
 	y_hat = predict(rf_mod, test_data)
-	run_other_model_and_plot_y_vs_yhat(y_hat, "RF", test_data, extra_text, data_title, save_plot, bart_machine)
+	run_other_model_and_plot_y_vs_yhat(y_hat, "RF", test_data, training_data, extra_text, data_title, save_plot, bart_machine)
 }
 
-run_bayes_tree_bart_impl_and_plot_y_vs_yhat = function(training_data, test_data, extra_text = NULL, data_title = "data_model", save_plot = FALSE, bart_machine = NULL){
+run_bayes_tree_bart_and_plot_y_vs_yhat = function(training_data, test_data, extra_text = NULL, data_title = "data_model", save_plot = FALSE, bart_machine = NULL){
 	p = ncol(training_data) - 1
-	y = training_data[, p + 1]
 	bayes_tree_bart_mod = bart(x.train = training_data[, 1 : p],
-		y.train = y,
-		sigest = sd(y), #we force the sigma estimate to be the std dev of y
+		y.train = training_data$y,
+		sigest = sd(training_data$y), #we force the sigma estimate to be the std dev of y
 		x.test = test_data[, 1 : p],
 		sigdf = 3, #$\nu = 3$, this is the same value we used in the implementation
 		sigquant = 0.9, 
@@ -730,18 +755,31 @@ run_bayes_tree_bart_impl_and_plot_y_vs_yhat = function(training_data, test_data,
 		ndpost = bart_machine$num_iterations_after_burn_in, #keep it the same
 		nskip = bart_machine$num_burn_in, #keep it the same --- default is 100 in BayesTree -- huh??
 		usequants = TRUE, #this is a tiny bit different...check with Ed
-		numcut = length(y), #this is a tiny bit different...check with Ed
+		numcut = length(training_data$y), #this is a tiny bit different...check with Ed
 		verbose = TRUE)
 		
 #	out = list(yhat = bayes_tree_bart_mod$yhat.test.mean, sigmas = bayes_tree_bart_mod$sigma)
 	y_hat = bayes_tree_bart_mod$yhat.test.mean
-	run_other_model_and_plot_y_vs_yhat(y_hat, "R_BART", test_data, extra_text, data_title, save_plot, bart_machine)
+	sigsqs = (bayes_tree_bart_mod$sigma)^2
+	avg_num_splits_by_vars = apply(bayes_tree_bart_mod$varcount, 2, mean)
+	y_hat_train = bayes_tree_bart_mod$yhat.train.mean
+	run_other_model_and_plot_y_vs_yhat(y_hat, 
+			"R_BART", 
+			test_data, 
+			training_data,
+			extra_text, 
+			data_title, 
+			save_plot, 
+			bart_machine, 
+			sigsqs = sigsqs, 
+			avg_num_splits_by_vars = avg_num_splits_by_vars,
+			y_hat_train = y_hat_train)
 }
 
 run_cart_and_plot_y_vs_yhat = function(training_data, test_data, extra_text = NULL, data_title = "data_model", save_plot = FALSE, bart_machine = NULL){
 	cart_model = rpart(y ~ ., training_data)
 	y_hat = predict(cart_model, test_data)
-	run_other_model_and_plot_y_vs_yhat(y_hat, "CART", test_data, extra_text, data_title, save_plot, bart_machine)
+	run_other_model_and_plot_y_vs_yhat(y_hat, "CART", test_data, training_data, extra_text, data_title, save_plot, bart_machine)
 }
 
 error_in_data = function(data){
@@ -779,6 +817,6 @@ save_plot_function = function(bart_machine, identifying_text, data_title){
 	alpha = bart_machine$alpha
 	beta = bart_machine$beta
 	plot_filename = paste(PLOTS_DIR, "/", data_title, "_", identifying_text, "_m_", num_trees, "_n_B_", num_burn_in, "_n_G_a_", num_iterations_after_burn_in, "_alpha_", alpha, "_beta_", beta, ".pdf", sep = "")
-	pdf(file = plot_filename)
+	tryCatch({pdf(file = plot_filename)}, error = function(e){})
 	append_to_log(paste("plot saved as", plot_filename))
 }

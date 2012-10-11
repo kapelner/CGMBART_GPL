@@ -134,4 +134,19 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 //		return mu_vals;
 //	}	
 	
+	public double[] getAvgCountsByAttribute(){
+		double[] avg_counts = new double[p];
+		for (int j = 0; j < p; j++){
+			int tot_for_attr_j = 0;
+			for (int g = 0; g < numSamplesAfterBurningAndThinning(); g++){
+				for (CGMBARTTreeNode root_node : gibbs_samples_of_cgm_trees_after_burn_in.get(g)){
+					tot_for_attr_j += root_node.numTimesAttrUsed(j);
+				}		
+			}			
+			avg_counts[j] = tot_for_attr_j / (double)numSamplesAfterBurningAndThinning();
+		}
+		
+		return avg_counts;
+	}
+	
 }

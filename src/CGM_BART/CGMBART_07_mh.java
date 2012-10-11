@@ -208,7 +208,7 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 	}
 
 	/** The number of data points in a node that we can split on */
-	protected static int N_RULE = 2;	
+	protected static int N_RULE = 5;	
 
 	protected CGMBARTTreeNode pickGrowNode(CGMBARTTreeNode T) {
 		ArrayList<CGMBARTTreeNode> growth_nodes = CGMBARTTreeNode.getTerminalNodesWithDataAboveOrEqualToN(T, N_RULE);
