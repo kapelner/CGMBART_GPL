@@ -18,20 +18,20 @@ if (FALSE){
 PRINT_TREE_ILLUS = FALSE
 JAVA_LOG = FALSE
 
-run_model_N_times = 50
+run_model_N_times = 1
 real_regression_data_sets = c(
-	"r_boston"
+#	"r_boston"
 #	"r_forestfires"
 #	"r_concretedata"
 )
 simulated_data_sets = c(
-	"univariate_linear",
+#	"univariate_linear",
 #	"bivariate_linear",
-	"friedman",
+#	"friedman",
 #	"simple_tree_structure_sigsq_hundredth",
-	"simple_tree_structure_sigsq_tenth",
+#	"simple_tree_structure_sigsq_tenth",
 #	"simple_tree_structure_sigsq_half",
-	"simple_tree_structure",
+#	"simple_tree_structure",
 #	"simple_tree_structure_sigsq_3",
 	"simple_tree_structure_sigsq_5"
 #	"simple_tree_structure_sigsq_10",
@@ -41,7 +41,9 @@ simulated_data_sets = c(
 
 #nice to have data around for testing... should be overwritten for custom runs...
 num_trees_of_interest = c(
-	1,5,10
+	1
+#	5,
+#	10
 )
 num_burn_ins_of_interest = c(
 	2000
@@ -63,8 +65,7 @@ num_iterations_after_burn_in = 2000
 alpha = 0.95
 beta = 2
 
-simulation_results = matrix(NA, nrow = 0, ncol = 19)
-colnames(simulation_results) = c(
+simulation_results_cols = c(
 		"data_model", 
 		"m",
 		"N_B", 
@@ -78,6 +79,12 @@ colnames(simulation_results) = c(
 		"R_BART_L2", 
 		"A_BART_rmse",
 		"R_BART_rmse",
+		"A_sigsq_post_mean",
+		"R_sigsq_post_mean",
+		"A_BART_rmse_train",
+		"R_BART_rmse_train",
+		"A_BART_tot_var_count",
+		"R_BART_tot_var_count",
 		"RF_L1",
 		"RF_L2",
 		"RF_rmse",
@@ -85,6 +92,8 @@ colnames(simulation_results) = c(
 		"CART_L2",
 		"CART_rmse"
 )
+simulation_results = matrix(NA, nrow = 0, ncol = length(simulation_results_cols))
+colnames(simulation_results) = simulation_results_cols
 
 sigsqs_log = matrix(NA, nrow = 0, ncol = 4 + num_burn_in + num_iterations_after_burn_in)
 
@@ -143,7 +152,7 @@ prettify_simulation_results_and_save_as_csv = function(){
 	#now update simulation results object
 	rownames(simulation_results) = NULL
 	simulation_results = as.data.frame(simulation_results)
-	for (j in 2 : 16){
+	for (j in 2 : ncol(simulation_results)){
 		simulation_results[, j] = as.numeric(as.character(simulation_results[, j]))
 	}
 	#assign it to the object
@@ -182,8 +191,7 @@ draw_one_boxplot_and_save = function(data_set, num_trees, num_iterations_after_b
 }
 
 
-avg_simulation_results = matrix(NA, nrow = 0, ncol = 12)
-colnames(avg_simulation_results) = c(
+avg_simulation_results_cols = c(
 		"data_model", 
 		"m",
 		"N_B", 
@@ -195,8 +203,16 @@ colnames(avg_simulation_results) = c(
 		"RF_rmse_avg",
 		"A_BART_rmse_se",		
 		"R_BART_rmse_se",
+		"A_BART_sigsq",		
+		"R_BART_sigsq",	
+		"A_BART_rmse_train",		
+		"R_BART_rmse_train",
+		"A_BART_tot_var_count",		
+		"R_BART_tot_var_count",			
 		"pval_sign_test"
 )
+avg_simulation_results = matrix(NA, nrow = 0, ncol = length(avg_simulation_results_cols))
+colnames(avg_simulation_results) = avg_simulation_results_cols
 
 create_avg_sim_results_and_save_as_csv = function(){
 	for (alpha in alphas_of_interest){
@@ -205,9 +221,9 @@ create_avg_sim_results_and_save_as_csv = function(){
 				for (num_iterations_after_burn_in in num_iterations_after_burn_ins_of_interest){
 					for (num_trees in num_trees_of_interest){				
 						for (data_set in c(real_regression_data_sets, simulated_data_sets)){
-							all_results = simulation_results_pretty[simulation_results_pretty$data_model == data_set & simulation_results_pretty$m == num_trees & simulation_results_pretty$N_B == num_burn_in & simulation_results_pretty$N_G == num_iterations_after_burn_in, ]
-							num_a_bart_beats_r_bart = sum(all_results$A_BART_rmse > all_results$R_BART_rmse)
-							pval_sign_test = 1 - pbinom(num_a_bart_beats_r_bart, run_model_N_times, 0.5) #we assume we have an equal chance of beating each other
+							all_results_for_run = simulation_results_pretty[simulation_results_pretty$data_model == data_set & simulation_results_pretty$m == num_trees & simulation_results_pretty$N_B == num_burn_in & simulation_results_pretty$N_G == num_iterations_after_burn_in, ]
+							num_a_bart_beats_r_bart = sum(all_results_for_run$A_BART_rmse > all_results_for_run$R_BART_rmse)
+							pval_sign_test = binom.test(num_a_bart_beats_r_bart, run_model_N_times, 0.5)$p.value
 							new_simul_row = c(
 								data_set, 
 								num_trees, 
@@ -215,11 +231,17 @@ create_avg_sim_results_and_save_as_csv = function(){
 								num_iterations_after_burn_in,
 								alpha,
 								beta,
-								round(mean(all_results$A_BART_rmse), 2),
-								round(mean(all_results$R_BART_rmse), 2),
-								round(mean(all_results$RF_rmse), 1),
-								round(sd(all_results$A_BART_rmse), 2),								
-								round(sd(all_results$R_BART_rmse), 2),
+								round(mean(all_results_for_run$A_BART_rmse), 2),
+								round(mean(all_results_for_run$R_BART_rmse), 2),
+								round(mean(all_results_for_run$RF_rmse), 1),
+								round(sd(all_results_for_run$A_BART_rmse), 2),								
+								round(sd(all_results_for_run$R_BART_rmse), 2),
+								round(mean(all_results_for_run$A_sigsq_post_mean), 2),
+								round(mean(all_results_for_run$R_sigsq_post_mean), 2),
+								round(mean(all_results_for_run$A_BART_rmse_train), 2),
+								round(mean(all_results_for_run$R_BART_rmse_train), 2),	
+								round(mean(all_results_for_run$A_BART_tot_var_count), 2),
+								round(mean(all_results_for_run$R_BART_tot_var_count), 2),								
 								round(pval_sign_test, 3)		
 							)
 							avg_simulation_results = rbind(avg_simulation_results, new_simul_row)					
@@ -234,7 +256,7 @@ create_avg_sim_results_and_save_as_csv = function(){
 	#now update simulation results object
 	rownames(avg_simulation_results) = NULL
 	avg_simulation_results = as.data.frame(avg_simulation_results)
-	for (j in 2 : 11){
+	for (j in 2 : ncol(avg_simulation_results)){
 		avg_simulation_results[, j] = as.numeric(as.character(avg_simulation_results[, j]))
 	}
 	#write it to file
@@ -254,7 +276,7 @@ run_bart_model_and_save_diags_and_results = function(training_data, test_data, d
 	
 	#generate the bart model
 	time_started = Sys.time()
-	bart_machine = bart_model(training_data, 
+	bart_machine = build_a_bart_model(training_data, 
 		num_trees = num_trees, 
 		num_burn_in = num_burn_in, 
 		alpha = alpha, 
@@ -270,10 +292,10 @@ run_bart_model_and_save_diags_and_results = function(training_data, test_data, d
 	#now use the bart model to predict y_hat's for the test data
 	a_bart_predictions = predict_and_calc_ppis(bart_machine, test_data)
 	#diagnose how good the y_hat's from the bart model are
-	plot_y_vs_yhat(a_bart_predictions, extra_text = extra_text, data_title = data_title, save_plot = save_plot, bart_machine = bart_machine)
+	plot_y_vs_yhat_a_bart(a_bart_predictions, extra_text = extra_text, data_title = data_title, save_plot = save_plot, bart_machine = bart_machine)
 	
 	#now see how Rob's algorithm does
-	r_bart_predictions = run_bayes_tree_bart_impl_and_plot_y_vs_yhat(training_data, test_data, extra_text = extra_text, data_title = data_title, save_plot = save_plot, bart_machine = bart_machine)
+	r_bart_predictions = run_bayes_tree_bart_and_plot_y_vs_yhat(training_data, test_data, extra_text = extra_text, data_title = data_title, save_plot = save_plot, bart_machine = bart_machine)
 	
 	#now see how good random forests and CART does in comparison
 	rf_predictions = run_random_forests_and_plot_y_vs_yhat(training_data, test_data, extra_text = extra_text, data_title = data_title, save_plot = save_plot, bart_machine = bart_machine)
@@ -281,9 +303,9 @@ run_bart_model_and_save_diags_and_results = function(training_data, test_data, d
 	
 	#do some plots and histograms to diagnose convergence
 	plot_sigsqs_convergence_diagnostics(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)
-	hist_sigsqs(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)
-	sigsqs_log = rbind(sigsqs_log, c(data_title, num_trees, num_burn_in, num_iterations_after_burn_in, sigsqs))
-	assign("sigsqs_log", sigsqs_log, .GlobalEnv)
+	a_bart_sigsqs = hist_sigsqs(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)
+#	sigsqs_log = rbind(sigsqs_log, c(data_title, num_trees, num_burn_in, num_iterations_after_burn_in, a_bart_sigsqs))
+#	assign("sigsqs_log", sigsqs_log, .GlobalEnv)
 
 #	plot_tree_liks_convergence_diagnostics(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)
 #	hist_tree_liks(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)
@@ -311,6 +333,12 @@ run_bart_model_and_save_diags_and_results = function(training_data, test_data, d
 		round(r_bart_predictions$L2_err, 0),
 		round(a_bart_predictions$rmse, 2),
 		round(r_bart_predictions$rmse, 2),	
+		round(mean(a_bart_sigsqs), 3),
+		round(mean(r_bart_predictions$sigsqs), 3),
+		round(bart_machine$rmse_train, 2),
+		round(r_bart_predictions$rmse_train, 2),
+		9999, #round(bart_machine$tot_var_count, 1),
+		round(sum(r_bart_predictions$avg_num_splits_by_vars), 1),
 		round(rf_predictions$L1_err, 0),
 		round(rf_predictions$L2_err, 0),
 		round(rf_predictions$rmse, 2),
@@ -318,10 +346,7 @@ run_bart_model_and_save_diags_and_results = function(training_data, test_data, d
 		round(cart_predictions$L2_err, 0),
 		round(cart_predictions$rmse, 2)		
 	)
-#		print(new_simul_row)
 	simulation_results = rbind(simulation_results, new_simul_row)	
-#		print(paste("simulation results updated n =", nrow(simulation_results), " p =", ncol(simulation_results), " class =", class(simulation_results), " class =", class(new_simul_row)))
 	assign("simulation_results", simulation_results, .GlobalEnv)
-#	}, finally = function(){})
-
+	"A BART DONE"
 }
