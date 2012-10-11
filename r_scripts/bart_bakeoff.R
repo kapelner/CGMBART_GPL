@@ -35,15 +35,13 @@ simulated_data_sets = c(
 #	"simple_tree_structure_sigsq_3",
 	"simple_tree_structure_sigsq_5"
 #	"simple_tree_structure_sigsq_10",
-#	"simple_tree_structure_sigsq_30",
+#	"simple_tree_structure_sigsq_30"
 #	"simple_tree_structure_sigsq_100"
 )
 
 #nice to have data around for testing... should be overwritten for custom runs...
 num_trees_of_interest = c(
-	1,
-	5,
-	10
+	1,5,10
 )
 num_burn_ins_of_interest = c(
 	2000
