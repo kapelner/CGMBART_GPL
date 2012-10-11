@@ -18,7 +18,7 @@ if (FALSE){
 PRINT_TREE_ILLUS = FALSE
 JAVA_LOG = FALSE
 
-run_model_N_times = 20
+run_model_N_times = 50
 real_regression_data_sets = c(
 	"r_boston"
 #	"r_forestfires"
