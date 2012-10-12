@@ -106,12 +106,12 @@ So $\prob{T \rightarrow T^*}$ means the probability of transitioning from $T$ in
 We're picking from one of the terminal nodes, and then we're picking an attribute and split point, this becomes:
 
 \beqn
-\cprob{T^*}{T} &=& \prob{\text{GROW}} \oneover{b} \oneover{p_{adj}} \frac{1}{\nadj}
+\cprob{T^*}{T} &=& \prob{\text{GROW}} \oneover{b} \oneover{\padjetastar} \frac{1}{\nadjetastar}
 \eeqn
 
-Now, $p_{adj}$ is the number of predictors left available to split on. This is \textit{from the perspective} of the $\ell$th node in tree $T$. Why would this be less than $p$? Because if you look up into the node's lineage, you may have already used all available split values for some attributes. Those would no longer be available to split from.
+Now, $\padjetastar$ is the number of predictors left available to split on. This is \textit{from the perspective} of the $\ell$th node in tree $T$. Why would this be less than $p$? Because if you look up into the node's lineage, you may have already used all available split values for some attributes. Those would no longer be available to split from.
 
-$\nadj$ is the number of \textit{unique} values left in the $p$th column after adjusting for previous splits. We can obtain this adjusted row count by looking at the node's lineage for any splits on $j$ and then taking the minimum of those split values, and then finding the subset of the design matrix whose values are less than that minimum for column $j$. \\
+$\nadjetastar$ is the number of \textit{unique} values left in the $p$th column after adjusting for previous splits. We can obtain this adjusted row count by looking at the node's lineage for any splits on $j$ and then taking the minimum of those split values, and then finding the subset of the design matrix whose values are less than that minimum for column $j$. \\
 
 So now $\prob{T^* \rightarrow T}$ is the probability of transitioning from the new tree back to the old tree which would be:
 
@@ -123,14 +123,14 @@ So now $\prob{T^* \rightarrow T}$ is the probability of transitioning from the n
 Thus, the transition ratio will be:
 
 \beqn
-\frac{\prob{T^* \rightarrow T}}{\prob{T \rightarrow T^*}} = \frac{\prob{\text{PRUNE}}\oneover{w_2^*}}{\prob{\text{GROW}}\oneover{b} \oneover{p_{adj}} \frac{1}{\nadj}} = \cancelto{?}{\frac{\prob{\text{PRUNE}}}{\prob{\text{GROW}}}} \frac{b ~ p_{adj} ~ \nadj}{w_2^*}
+\frac{\prob{T^* \rightarrow T}}{\prob{T \rightarrow T^*}} = \frac{\prob{\text{PRUNE}}\oneover{w_2^*}}{\prob{\text{GROW}}\oneover{b} \oneover{\padjetastar} \frac{1}{\nadjetastar}} = \cancelto{?}{\frac{\prob{\text{PRUNE}}}{\prob{\text{GROW}}}} \frac{b ~ \padjetastar ~ \nadjetastar}{w_2^*}
 \eeqn
 
 Why don't the probabilities of prune and grow cancel? Well, under the case where we cannot grow anymore (if we use all split variables), the probability of growth will be 0. Thus, those steps \textit{cannot} be considered since the ratio would be undefined. As long as they can be considered, that ratio will cancel. In log form, this becomes:
 
 \inblue{
 \beqn
-\natlog{b} + \natlog{p_{adj}} + \natlog{\nadj} - \natlog{w_2^*}
+\natlog{b} + \natlog{\padjetastar} + \natlog{\nadjetastar} - \natlog{w_2^*}
 \eeqn
 }
 
@@ -470,28 +470,28 @@ In log form, this becomes:
 Remember the prior form on trees: 
 
 \beqn
-\prob{T} &=& \prod_{\eta \in \Hleaves} \parens{1 - \prob{\text{splitting~} \eta}}  \prod_{\eta \in \Hint} \prob{\text{splitting~} \eta} \prod_{\eta \in \Hint} \prob{\text{rule~} \eta} \\
+\prob{T} &=& \prod_{\eta \in \Hleaves} \parens{1 - \probsplit{\eta}}  \prod_{\eta \in \Hint} \probsplit{\eta} \prod_{\eta \in \Hint} \probrule{\eta} \\
 \eeqn
 
 Remember from CGM98 that the probability of splitting on a given node $\eta$ is driven by two hyperparameters, $\alpha$ and $\beta$ in the following way where $d_\eta$ is the depth of the $\eta$ node:
 
 \beqn
-\prob{\text{splitting~} \eta} = \frac{\alpha}{\tothepow{1 + d_\eta}{\beta}}
+\probsplit{\eta} = \frac{\alpha}{\tothepow{1 + d_\eta}{\beta}}
 \eeqn
 
 The probability of assigning the specific rule, $\prob{\text{rule~} \eta}$, is just picking from all available attributes and then from all available unique splits with the modifications discussed in the previous section. Once again, the proposal tree differs from the original tree by only the $\ell$th node in the original becoming the $\ell_L$ and $\ell_R$ nodes in the proposal. This simplifies the tree structure ratio to just:
 
 \beqn
-\frac{\prob{T^*}}{\prob{T}} &=& \frac{\parens{1 - \prob{\text{splitting~} \eta_L}} \parens{1 - \prob{\text{splitting~} \eta_R}} \prob{\text{splitting~} \eta} \prob{\text{rule~} \eta}}{\parens{1 - \prob{\text{splitting~} \eta}}}\\
-&=& \frac{\parens{1 - \dfrac{\alpha}{\tothepow{1 + d_{\eta_L}}{\beta}}}\parens{1 - \dfrac{\alpha}{\tothepow{1 + d_{\eta_R}}{\beta}}} \dfrac{\alpha}{\tothepow{1 + d_{\eta}}{\beta}} \doneover{p_{adj}}\dfrac{1}{\nadj}}{1 -\dfrac{\alpha}{\tothepow{1 + d_{\eta}}{\beta}}} \\
-&=& \alpha \frac{\squared{1 - \frac{\alpha}{\tothepow{2 + d_\eta}{\beta}}}}{\parens{\tothepow{1+d_\eta}{\beta} - \alpha} p_{adj} \nadj}
+\frac{\prob{T^*}}{\prob{T}} &=& \frac{\parens{1 - \probsplit{\eta_L}} \parens{1 - \probsplit{\eta_R}} \probsplit{\eta} \probrule{\eta}}{\parens{1 - \probsplit{\eta}}}\\
+&=& \frac{\parens{1 - \dfrac{\alpha}{\tothepow{1 + d_{\eta_L}}{\beta}}}\parens{1 - \dfrac{\alpha}{\tothepow{1 + d_{\eta_R}}{\beta}}} \dfrac{\alpha}{\tothepow{1 + d_{\eta}}{\beta}} \doneover{\padjeta}\dfrac{1}{\nadjeta}}{1 -\dfrac{\alpha}{\tothepow{1 + d_{\eta}}{\beta}}} \\
+&=& \alpha \frac{\squared{1 - \frac{\alpha}{\tothepow{2 + d_\eta}{\beta}}}}{\parens{\tothepow{1+d_\eta}{\beta} - \alpha} \padjeta \nadjeta}
 \eeqn
 
 With the last line following from the fact that the depth of the child nodes is just the depth of the parent node incremented by 1. In log form this becomes:
 
 \inblue{
 \beqn
-&&\natlog{\alpha} + 2 \natlog{1 - \frac{\alpha}{\tothepow{2 + d_\eta}{\beta}}} - \natlog{\tothepow{1+d_\eta}{\beta} - \alpha} - \natlog{p_{adj}} - \natlog{\nadj}
+&&\natlog{\alpha} + 2 \natlog{1 - \frac{\alpha}{\tothepow{2 + d_\eta}{\beta}}} - \natlog{\tothepow{1+d_\eta}{\beta} - \alpha} - \natlog{\padjeta} - \natlog{\nadjeta}
 \eeqn
 }
 
@@ -508,13 +508,13 @@ For prune proposals, we move in the opposite direction.  We need to hack off a n
 &=& \prob{\text{PRUNE}}\oneover{w_2}
 \eeqn
 
-To go the opposite direction, we need to make sure we grow the exact same node so $p_{adj}, \nadj$ need to be calculated based on whatever the $\ell$th node originally was:
+To go the opposite direction, we need to make sure we grow the exact same node so $\padjeta, \nadjeta$ need to be calculated based on whatever the $\ell$th node originally was:
 
 \beqn
 \prob{T^* \rightarrow T} &=& \prob{\text{GROW}} \prob{\text{selecting the $\ell$th node to grow from}} \times \\
 && \prob{\text{selecting the original attribute to split on}} \times \\
 && \prob{\text{selecting the original value to split on}} \\
-&=& \prob{\text{GROW}} \oneover{b-1} \oneover{p_{adj}} \frac{1}{\nadj}
+&=& \prob{\text{GROW}} \oneover{b-1} \oneover{\padjeta} \frac{1}{\nadjeta}
 \eeqn
 
 We're using $b-1$ here because the proposed tree has one less terminal node due to the pruning than the original tree $T$ had.\\
@@ -522,14 +522,14 @@ We're using $b-1$ here because the proposed tree has one less terminal node due 
 Thus, the transition ratio becomes:
 
 \beqn
-\frac{\prob{T^* \rightarrow T}}{\prob{T \rightarrow T^*}} = \frac{\prob{\text{GROW}}  \oneover{b-1}\oneover{p_{adj}} \frac{1}{\nadj}}{ \prob{\text{PRUNE}}\oneover{w_2}} = \cancelto{?}{\frac{\prob{\text{GROW}}}{\prob{\text{PRUNE}}}} \frac{w_2 }{(b-1) p_{adj} \nadj}
+\frac{\prob{T^* \rightarrow T}}{\prob{T \rightarrow T^*}} = \frac{\prob{\text{GROW}}  \oneover{b-1}\oneover{\padjetastar} \frac{1}{\nadjetastar}}{ \prob{\text{PRUNE}}\oneover{w_2}} = \cancelto{?}{\frac{\prob{\text{GROW}}}{\prob{\text{PRUNE}}}} \frac{w_2 }{(b-1) \padjetastar \nadjetastar}
 \eeqn
 
 and in log form this becomes:
 
 \inblue{
 \beqn
-\natlog{w_2} - \natlog{b - 1} - \natlog{p_{adj}} - \natlog{\nadj}
+\natlog{w_2} - \natlog{b - 1} - \natlog{\padjetastar} - \natlog{\nadjetastar}
 \eeqn
 }
 
@@ -561,8 +561,8 @@ and in log form:
 It is also clear this is just the inverse of the tree structure ratio for the grow step.
 
 \beqn
-\frac{\prob{T^*}}{\prob{T}} &=& \inverse{\alpha \frac{\squared{1 - \frac{\alpha}{\tothepow{2 + d_\eta}{\beta}}}}{\parens{\tothepow{1+d_\eta}{\beta} - \alpha} p_{adj} \nadj}}\\
-&=& \frac{\parens{\tothepow{1+d_\eta}{\beta} - \alpha} p_{adj} \nadj}{\alpha\squared{1 - \frac{\alpha}{\tothepow{2 + d_\eta}{\beta}}}}
+\frac{\prob{T^*}}{\prob{T}} &=& \inverse{\alpha \frac{\squared{1 - \frac{\alpha}{\tothepow{2 + d_\eta}{\beta}}}}{\parens{\tothepow{1+d_\eta}{\beta} - \alpha} \padjetastar \nadjetastar}}\\
+&=& \frac{\parens{\tothepow{1+d_\eta}{\beta} - \alpha} \padjetastar \nadjetastar}{\alpha\squared{1 - \frac{\alpha}{\tothepow{2 + d_\eta}{\beta}}}}
 \eeqn
 
 
@@ -570,99 +570,160 @@ In log form this becomes:
 
 \inblue{
 \beqn
-\natlog{\tothepow{1+d_\eta}{\beta} - \alpha} + \natlog{p_{adj}} + \natlog{\nadj} -\natlog{\alpha} - 2 \natlog{1 - \frac{\alpha}{\tothepow{2 + d_\eta}{\beta}}}
+\natlog{\tothepow{1+d_\eta}{\beta} - \alpha} + \natlog{\padjetastar} + \natlog{\nadjetastar} -\natlog{\alpha} - 2 \natlog{1 - \frac{\alpha}{\tothepow{2 + d_\eta}{\beta}}}
 \eeqn
 }
 
-\subsection*{Change}
-
-Change would be picking one father node (a node with two leaves and no nodes of their own) and picking a new rule (\ie a new split attribute and new split value). Let's establish some new notation for this section:
-
-
-\begin{itemize}
-\item $\eta, \eta_*$ --- the node destined to be changed on the original tree $T$ and the proposed tree $T^*$.
-\item $\etaone, \etatwo$ --- the left and right nodes on tree $T$ whose parent was chosen to be changed.
-\item $\etaonestar, \etatwostar$ --- the left and right nodes on tree $T^*$ after the parent was changed.
-\item $\Rones$ --- the residuals in the left leaf on tree $T$ whose parent was chosen to be changed.
-\item $\Rtwos$ --- the residuals in the right leaf on tree $T$ whose parent was chosen to be changed.
-\item $\Ronestars$ --- the residuals in the left leaf on tree $T^*$ after the parent was changed.
-\item $\Rtwostars$ --- the residuals in the right leaf on tree $T^*$ after the parent was changed.
-\item $\Ronebar$ --- the mean of the residuals on the left node on tree $T$ whose parent was chosen to be changed.
-\item $\Rtwobar$ --- the mean of the residuals on the right node on tree $T$ whose parent was chosen to be changed.
-\item $\Ronebarstar$ --- the mean of the residuals on the left node on tree $T^*$ after the parent was changed.
-\item $\Rtwobarstar$ --- the mean of the residuals on the right node on tree $T^*$ after the parent was changed.
-\end{itemize}
+\subsection*{Change (for any internal node)}
 
 \subsubsection*{Transition Ratio}
 
-We're looking at two simple transitions:
+We compute the probabilities for changing the $\etastar$ node which then affects all children. Note that the number of split points is different now because we cannot make splits which ostensibly render child nodes empty. This means that if there's a child on the left with a certain split rule for the variable selected, we can only have split points \textit{higher} than that rule; if there's a child on the right with a certain split rule for the variable selected, we can only have split points \textit{lower} than that rule.
 
 \beqn
-\prob{T \rightarrow T^*} &=& \prob{\text{CHANGE}} \prob{\text{selecting $\eta$ to change}} \times \\
-&& \prob{\text{selecting the new attribute to split on}} \times \\
-&& \prob{\text{selecting the new value to split on}} \\
-&=& \prob{\text{CHANGE}} \oneover{b} \oneover{p_{adj}} \frac{1}{\nadjstar} \\
-\prob{T^* \rightarrow T} &=& \prob{\text{CHANGE}} \prob{\text{selecting $\etastar$ to change}} \times \\
-&& \prob{\text{selecting the original attribute to split on}} \times \\
-&& \prob{\text{selecting the original value to split on}} \\
-&=& \prob{\text{CHANGE}} \oneover{b} \oneover{p_{adj}} \frac{1}{\nadj} \\
+\prob{T^*\rightarrow T} &=& \prob{\text{CHANGE}} \oneover{\abss{\Hint}} \oneover{\padjetastar} \oneover{\nadjchetastar} \\
+\prob{T \rightarrow T^*} &=& \prob{\text{CHANGE}} \oneover{\abss{\Hint}} \oneover{\padjeta} \oneover{\nadjcheta}
 \eeqn
 
-It is obvious that the majority of the above will cancel below to produce the ratio:
+Everything cancels except for the ratio of $n$'s.
 
 \beqn
-\frac{\prob{T^* \rightarrow T^*}}{\prob{T \rightarrow T^*}} = \frac{\nadjstar}{\nadj}
+\frac{\prob{T^*\rightarrow T}}{\prob{T \rightarrow T^*}} = \frac{\nadjchetastar}{\nadjcheta}
 \eeqn
+
+and in log form:
+
+\inblue{
+\beqn
+\natlog{\nadjchetastar} - \natlog{\nadjcheta}
+\eeqn
+}
 
 
 \subsubsection*{Likelihood Ratio}
 
-The proposal tree differs from the original by just having two different leaves where the residuals are apportioned differently. We begin with direct substitution to quantities derived previously:
+Recall the following result which we can further simplify:
 
 \beqn
-\frac{\cprob{\R}{T^*, \sigsq}}{\cprob{\R}{T, \sigsq}} &=& \frac{\cprob{\Ronestars}{\sigsq}\cprob{\Rtwostars}{\sigsq}}{\cprob{\Rones}{\sigsq}\cprob{\Rtwos}{\sigsq}} \\
-&=& \frac{\exp{-\oneover{2\sigsq} \sum_{i=1}^{\nonestar} \squared{R_{1^*,i} - \Ronebarstar}} \exp{\frac{\Ronebarstar^2 \nonestar^2}{2\sigsq\parens{\nonestar + \frac{\sigsq}{\sigsqmu}}}- \frac{\nonestar \Ronebarstar^2}{2\sigsq}}}{\exp{-\oneover{2\sigsq} \sum_{i=1}^{\none} \squared{R_{1,i} - \Ronebar}} \exp{\frac{\Ronebar^2 \none^2}{2\sigsq\parens{\none + \frac{\sigsq}{\sigsqmu}}}- \frac{\none \Ronebar^2}{2\sigsq}}} \times \\
-&& \frac{\exp{-\oneover{2\sigsq} \sum_{i=1}^{\ntwostar} \squared{R_{2^*,i} - \Rtwobarstar}} \exp{\frac{\Rtwobarstar^2 \ntwostar^2}{2\sigsq\parens{\ntwostar + \frac{\sigsq}{\sigsqmu}}}- \frac{\ntwostar \Rtwobarstar^2}{2\sigsq}}}{\exp{-\oneover{2\sigsq} \sum_{i=1}^{\ntwo} \squared{R_{1,i} - \Rtwobar}} \exp{\frac{\Rtwobar^2 \none^2}{2\sigsq\parens{\ntwo + \frac{\sigsq}{\sigsqmu}}}- \frac{\ntwo \Rtwobar^2}{2\sigsq}}}
+\cprob{\Rlonetonl}{\sigsq} &=& \exp{-\oneover{2\sigsq} \sum_{i=1}^{n_\ell} \squared{R_{\ell_i} - \Rbar_\ell}} \exp{\frac{\Rbar_\ell^2 n_\ell^2}{2\sigsq\parens{n_\ell + \frac{\sigsq}{\sigsqmu}}} - \frac{n_\ell \Rbar_\ell^2}{2\sigsq}} \\
+&=& \exp{-\oneover{2\sigsq} \parens{\sum_{i=1}^{n_\ell} \squared{R_{\ell_i} - \Rbar_\ell} - \frac{\Rbar_\ell^2 n_\ell^2}{n_\ell + \frac{\sigsq}{\sigsqmu}} + n_\ell \Rbar_\ell^2}} \\
+&=& \exp{-\oneover{2\sigsq} \parens{\sum_{i=1}^{n_\ell} \squared{R_{\ell_i}} - \cancel{2n_\ell \Rbar_\ell^2} + \cancel{n_\ell \Rbar_\ell^2} - \frac{\Rbar_\ell^2 n_\ell^2}{n_\ell + \frac{\sigsq}{\sigsqmu}} + \cancel{n_\ell \Rbar_\ell^2}}} \\
+&=& \exp{-\oneover{2\sigsq} \parens{\sum_{i=1}^{n_\ell} \squared{R_{\ell_i}} - \frac{\Rbar_\ell^2 n_\ell^2}{n_\ell + \frac{\sigsq}{\sigsqmu}}}} \\
 \eeqn
 
-The first exponential term can be combined among all four quantities and the second exponential term can be combined among all four quantities to yield:
+Now, we need to account for the likelihood ratio between the leaves that changed \ie the change leaf and everything below (which we call $\etastar \in \Hleaves^*$ in this case):
 
 \beqn
-&=& \exp{\oneover{2\sigsq} \parens{\nonestar \Ronebarstar^2 + \ntwostar \Rtwobarstar^2 - \none \Ronebar^2 - \ntwo \Rtwobar^2}} \times \\
-&& \exp{\frac{\Ronebarstar^2 \nonestar^2}{2\sigsq\parens{\nonestar + \frac{\sigsq}{\sigsqmu}}}- \frac{\nonestar \Ronebarstar^2}{2\sigsq} + \frac{\Rtwobarstar^2 \ntwostar^2}{2\sigsq\parens{\ntwostar + \frac{\sigsq}{\sigsqmu}}}- \frac{\ntwostar \Rtwobarstar^2}{2\sigsq}} \times \\
-&& \exp{-\frac{\Ronebar^2 \none^2}{2\sigsq\parens{\none + \frac{\sigsq}{\sigsqmu}}} + \frac{\none \Ronebar^2}{2\sigsq} - \frac{\Rtwobar^2 \none^2}{2\sigsq\parens{\ntwo + \frac{\sigsq}{\sigsqmu}}} + \frac{\ntwo \Rtwobar^2}{2\sigsq}}
+\frac{\cprob{\R}{T^*, \sigsq}}{\cprob{\R}{T, \sigsq}} &=& \frac{\prod_{\etastar \in \Hleavesbelow^*} \cprob{R_{\etastar, 1}, \ldots, R_{\etastar, n_{\etastar}}}{\sigsq}}{\prod_{\eta \in \Hleavesbelow} \cprob{R_{\eta, 1}, \ldots, R_{\eta, n_{\eta}}}{\sigsq}}
 \eeqn
 
-Factoring out the $\oneover{2\sigsq}$, we see that the top row cancels and we arrive at:
-
-\beqn
-&& \exp{\oneover{2\sigsq} \parens{\frac{\Ronebarstar^2 \nonestar^2}{\nonestar + \frac{\sigsq}{\sigsqmu}} + \frac{\Rtwobarstar^2 \ntwostar^2}{\ntwostar + \frac{\sigsq}{\sigsqmu}} - \frac{\Ronebar^2 \none^2}{\none + \frac{\sigsq}{\sigsqmu}} - \frac{\Rtwobar^2 \none^2}{\ntwo + \frac{\sigsq}{\sigsqmu}}}} \\
-&=& \exp{\oneover{2\sigsq} \parens{\frac{\squared{\sum_{i=1}^{\nonestar} R_{1^*, i}}}{\nonestar + \frac{\sigsq}{\sigsqmu}} + \frac{\squared{\sum_{i=1}^{\ntwostar} R_{2^*, i}}}{\ntwostar + \frac{\sigsq}{\sigsqmu}} - \frac{\squared{\sum_{i=1}^{\none} R_{1, i}}}{\none + \frac{\sigsq}{\sigsqmu}} - \frac{\squared{\sum_{i=1}^{\ntwo} R_{2, i}}}{\ntwo + \frac{\sigsq}{\sigsqmu}}}} \\
-\eeqn
-
-
-which in log form is just simply:
+In two equations above, we have a sum of $R_i^2$ term. Note that these $R_i$'s have to be apportioned among the leaves. During a change, they'll go to different leaves, but if you aggregate the terms, they'll still sum up to the total sum of squared. Hence, that term will cancel, and you are left with a ratio that looks like something below (in log form):
 
 \inblue{
 \beqn
-\oneover{2\sigsq} \parens{\frac{\squared{\sum_{i=1}^{\nonestar} R_{1^*, i}}}{\nonestar + \frac{\sigsq}{\sigsqmu}} + \frac{\squared{\sum_{i=1}^{\ntwostar} R_{2^*, i}}}{\ntwostar + \frac{\sigsq}{\sigsqmu}} - \frac{\squared{\sum_{i=1}^{\none} R_{1, i}}}{\none + \frac{\sigsq}{\sigsqmu}} - \frac{\squared{\sum_{i=1}^{\ntwo} R_{2, i}}}{\ntwo + \frac{\sigsq}{\sigsqmu}}}
+\oneover{2\sigsq} \parens{\sum_{\etastar ~\in~ \Hleavesbelow^*} \frac{\displaystyle\squared{\sum_{i=1}^{n_{\etastar}} R_{n_{\etastar}, i}}}{n_{\etastar} + \frac{\sigsq}{\sigsqmu}} ~~- \sum_{\eta ~\in~ \Hleavesbelow} \frac{\displaystyle\squared{\sum_{i=1}^{n_{\eta}} R_{n_{\eta}, i}}}{n_{\eta} + \frac{\sigsq}{\sigsqmu}}}
 \eeqn
 }
+
+
 \subsubsection*{Tree Structure Ratio}
 
-The proposal tree is the same shape as the original tree. Thus we only need to take into account the probabilities of the proposed split and the original split.
+Since both the proposal and original tree have the same structure, we just have to examine the rules:
 
 \beqn
-\frac{\prob{T^*}}{\prob{T}} &=& \frac{\parens{1 - \prob{\text{splitting~} \etaonestar} \parens{1 - \prob{\text{splitting~} \etatwostar}}} \prob{\text{splitting~} \etastar} \prob{\text{rule~} \etastar}}{\parens{1 - \prob{\text{splitting~} \etaone} \parens{1 - \prob{\text{splitting~} \etatwo}}} \prob{\text{splitting~} \eta} \prob{\text{rule~} \eta}}
+\frac{\prob{T^*}}{\prob{T}} &=& \frac{\displaystyle \prod_{\etastar ~\in~ \Hleavesbelow^*} \probrule{\etastar} }{\displaystyle \prod_{\eta ~\in~ \Hleavesbelow} \probrule{\eta}} = \frac{\displaystyle\prod_{\eta ~\in~ \Hleavesbelow} \padjeta \nadjeta }{\displaystyle\prod_{\etastar ~\in~ \Hleavesbelow^*} \padjetastar \nadjetastar}
 \eeqn
 
-The one minus probability of splitting will cancel since it's computed based on $\alpha, \beta$ and depth of the leaves which are the same. The probabilities of splitting will cancel based on the same argument. Within the probability of the rule, the number of possible attributes will cancel since it's the same so we really only have to consider:
 
-\beqn
-\frac{\prob{T^*}}{\prob{T}} &=& \frac{\nadj}{\nadjstar}
-\eeqn
-
-Note that this is the inverse of the transition ratio. Thus, only the likelihood ratio needs to be computed to determine $r$ for the change step.
+%\subsection*{Change (for just a singly internal node)}
+%
+%Change would be picking one father node (a node with two leaves and no nodes of their own) and picking a new rule (\ie a new split attribute and new split value). Let's establish some new notation for this section:
+%
+%
+%\begin{itemize}
+%\item $\eta, \eta_*$ --- the node destined to be changed on the original tree $T$ and the proposed tree $T^*$.
+%\item $\etaone, \etatwo$ --- the left and right nodes on tree $T$ whose parent was chosen to be changed.
+%\item $\etaonestar, \etatwostar$ --- the left and right nodes on tree $T^*$ after the parent was changed.
+%\item $\Rones$ --- the residuals in the left leaf on tree $T$ whose parent was chosen to be changed.
+%\item $\Rtwos$ --- the residuals in the right leaf on tree $T$ whose parent was chosen to be changed.
+%\item $\Ronestars$ --- the residuals in the left leaf on tree $T^*$ after the parent was changed.
+%\item $\Rtwostars$ --- the residuals in the right leaf on tree $T^*$ after the parent was changed.
+%\item $\Ronebar$ --- the mean of the residuals on the left node on tree $T$ whose parent was chosen to be changed.
+%\item $\Rtwobar$ --- the mean of the residuals on the right node on tree $T$ whose parent was chosen to be changed.
+%\item $\Ronebarstar$ --- the mean of the residuals on the left node on tree $T^*$ after the parent was changed.
+%\item $\Rtwobarstar$ --- the mean of the residuals on the right node on tree $T^*$ after the parent was changed.
+%\end{itemize}
+%
+%\subsubsection*{Transition Ratio}
+%
+%We're looking at two simple transitions:
+%
+%\beqn
+%\prob{T \rightarrow T^*} &=& \prob{\text{CHANGE}} \prob{\text{selecting $\eta$ to change}} \times \\
+%&& \prob{\text{selecting the new attribute to split on}} \times \\
+%&& \prob{\text{selecting the new value to split on}} \\
+%&=& \prob{\text{CHANGE}} \oneover{b} \oneover{\padjetastar} \frac{1}{\nadjetastar} \\
+%\prob{T^* \rightarrow T} &=& \prob{\text{CHANGE}} \prob{\text{selecting $\etastar$ to change}} \times \\
+%&& \prob{\text{selecting the original attribute to split on}} \times \\
+%&& \prob{\text{selecting the original value to split on}} \\
+%&=& \prob{\text{CHANGE}} \oneover{b} \oneover{\padjetastar} \frac{1}{\nadjetastar} \\
+%\eeqn
+%
+%It is obvious that the majority of the above will cancel below to produce the ratio:
+%
+%\beqn
+%\frac{\prob{T^* \rightarrow T^*}}{\prob{T \rightarrow T^*}} = \frac{\nadjetastar}{\nadjeta}
+%\eeqn
+%
+%
+%\subsubsection*{Likelihood Ratio}
+%
+%The proposal tree differs from the original by just having two different leaves where the residuals are apportioned differently. We begin with direct substitution to quantities derived previously:
+%
+%\beqn
+%\frac{\cprob{\R}{T^*, \sigsq}}{\cprob{\R}{T, \sigsq}} &=& \frac{\cprob{\Ronestars}{\sigsq}\cprob{\Rtwostars}{\sigsq}}{\cprob{\Rones}{\sigsq}\cprob{\Rtwos}{\sigsq}} \\
+%&=& \frac{\exp{-\oneover{2\sigsq} \sum_{i=1}^{\nonestar} \squared{R_{1^*,i} - \Ronebarstar}} \exp{\frac{\Ronebarstar^2 \nonestar^2}{2\sigsq\parens{\nonestar + \frac{\sigsq}{\sigsqmu}}}- \frac{\nonestar \Ronebarstar^2}{2\sigsq}}}{\exp{-\oneover{2\sigsq} \sum_{i=1}^{\none} \squared{R_{1,i} - \Ronebar}} \exp{\frac{\Ronebar^2 \none^2}{2\sigsq\parens{\none + \frac{\sigsq}{\sigsqmu}}}- \frac{\none \Ronebar^2}{2\sigsq}}} \times \\
+%&& \frac{\exp{-\oneover{2\sigsq} \sum_{i=1}^{\ntwostar} \squared{R_{2^*,i} - \Rtwobarstar}} \exp{\frac{\Rtwobarstar^2 \ntwostar^2}{2\sigsq\parens{\ntwostar + \frac{\sigsq}{\sigsqmu}}}- \frac{\ntwostar \Rtwobarstar^2}{2\sigsq}}}{\exp{-\oneover{2\sigsq} \sum_{i=1}^{\ntwo} \squared{R_{1,i} - \Rtwobar}} \exp{\frac{\Rtwobar^2 \none^2}{2\sigsq\parens{\ntwo + \frac{\sigsq}{\sigsqmu}}}- \frac{\ntwo \Rtwobar^2}{2\sigsq}}}
+%\eeqn
+%
+%The first exponential term can be combined among all four quantities and the second exponential term can be combined among all four quantities to yield:
+%
+%\beqn
+%&=& \exp{\oneover{2\sigsq} \parens{\nonestar \Ronebarstar^2 + \ntwostar \Rtwobarstar^2 - \none \Ronebar^2 - \ntwo \Rtwobar^2}} \times \\
+%&& \exp{\frac{\Ronebarstar^2 \nonestar^2}{2\sigsq\parens{\nonestar + \frac{\sigsq}{\sigsqmu}}}- \frac{\nonestar \Ronebarstar^2}{2\sigsq} + \frac{\Rtwobarstar^2 \ntwostar^2}{2\sigsq\parens{\ntwostar + \frac{\sigsq}{\sigsqmu}}}- \frac{\ntwostar \Rtwobarstar^2}{2\sigsq}} \times \\
+%&& \exp{-\frac{\Ronebar^2 \none^2}{2\sigsq\parens{\none + \frac{\sigsq}{\sigsqmu}}} + \frac{\none \Ronebar^2}{2\sigsq} - \frac{\Rtwobar^2 \none^2}{2\sigsq\parens{\ntwo + \frac{\sigsq}{\sigsqmu}}} + \frac{\ntwo \Rtwobar^2}{2\sigsq}}
+%\eeqn
+%
+%Factoring out the $\oneover{2\sigsq}$, we see that the top row cancels and we arrive at:
+%
+%\beqn
+%&& \exp{\oneover{2\sigsq} \parens{\frac{\Ronebarstar^2 \nonestar^2}{\nonestar + \frac{\sigsq}{\sigsqmu}} + \frac{\Rtwobarstar^2 \ntwostar^2}{\ntwostar + \frac{\sigsq}{\sigsqmu}} - \frac{\Ronebar^2 \none^2}{\none + \frac{\sigsq}{\sigsqmu}} - \frac{\Rtwobar^2 \none^2}{\ntwo + \frac{\sigsq}{\sigsqmu}}}} \\
+%&=& \exp{\oneover{2\sigsq} \parens{\frac{\squared{\sum_{i=1}^{\nonestar} R_{1^*, i}}}{\nonestar + \frac{\sigsq}{\sigsqmu}} + \frac{\squared{\sum_{i=1}^{\ntwostar} R_{2^*, i}}}{\ntwostar + \frac{\sigsq}{\sigsqmu}} - \frac{\squared{\sum_{i=1}^{\none} R_{1, i}}}{\none + \frac{\sigsq}{\sigsqmu}} - \frac{\squared{\sum_{i=1}^{\ntwo} R_{2, i}}}{\ntwo + \frac{\sigsq}{\sigsqmu}}}} \\
+%\eeqn
+%
+%
+%which in log form is just simply:
+%
+%\inblue{
+%\beqn
+%\oneover{2\sigsq} \parens{\frac{\squared{\sum_{i=1}^{\nonestar} R_{1^*, i}}}{\nonestar + \frac{\sigsq}{\sigsqmu}} + \frac{\squared{\sum_{i=1}^{\ntwostar} R_{2^*, i}}}{\ntwostar + \frac{\sigsq}{\sigsqmu}} - \frac{\squared{\sum_{i=1}^{\none} R_{1, i}}}{\none + \frac{\sigsq}{\sigsqmu}} - \frac{\squared{\sum_{i=1}^{\ntwo} R_{2, i}}}{\ntwo + \frac{\sigsq}{\sigsqmu}}}
+%\eeqn
+%}
+%\subsubsection*{Tree Structure Ratio}
+%
+%The proposal tree is the same shape as the original tree. Thus we only need to take into account the probabilities of the proposed split and the original split.
+%
+%\beqn
+%\frac{\prob{T^*}}{\prob{T}} &=& \frac{\parens{1 - \prob{\text{splitting~} \etaonestar} \parens{1 - \prob{\text{splitting~} \etatwostar}}} \prob{\text{splitting~} \etastar} \prob{\text{rule~} \etastar}}{\parens{1 - \prob{\text{splitting~} \etaone} \parens{1 - \prob{\text{splitting~} \etatwo}}} \prob{\text{splitting~} \eta} \prob{\text{rule~} \eta}}
+%\eeqn
+%
+%The one minus probability of splitting will cancel since it's computed based on $\alpha, \beta$ and depth of the leaves which are the same. The probabilities of splitting will cancel based on the same argument. Within the probability of the rule, the number of possible attributes will cancel since it's the same so we really only have to consider:
+%
+%\beqn
+%\frac{\prob{T^*}}{\prob{T}} &=& \frac{\nadjeta}{\nadjstar}
+%\eeqn
+%
+%Note that this is the inverse of the transition ratio. Thus, only the likelihood ratio needs to be computed to determine $r$ for the change step.
 
 \subsection*{Swap}
 

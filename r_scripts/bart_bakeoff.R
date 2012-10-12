@@ -142,7 +142,7 @@ run_bart_bakeoff = function(){
 
 calculate_cochran_global_pval = function(){
 	n = nrow(avg_simulation_results)
-	chi_sq = sum(-2 * log(avg_simulation_results_pretty$pval))
+	chi_sq = sum(-2 * log(as.numeric(avg_simulation_results[, "pval_sign_test"])))
 	1 - pchisq(chi_sq, 2 * n)
 }
 
