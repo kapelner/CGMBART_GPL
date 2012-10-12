@@ -30,7 +30,8 @@ public abstract class CGMBART_06_gibbs_internal extends CGMBART_05_gibbs_base im
 	
 	protected double[] getResidualsBySubtractingTrees(List<CGMBARTTreeNode> trees_to_subtract) {
 		double[] sum_ys_without_jth_tree = new double[n];
-
+		double[] Rjs = new double[n];
+		
 		for (int i = 0; i < n; i++){
 			sum_ys_without_jth_tree[i] = 0; //initialize at zero, then add it up over all trees except the jth
 			for (int t = 0; t < trees_to_subtract.size(); t++){
@@ -39,12 +40,8 @@ public abstract class CGMBART_06_gibbs_internal extends CGMBART_05_gibbs_base im
 				sum_ys_without_jth_tree[i] += y_i;
 //				System.out.println(y_i);
 			}
-		}
-		//now we need to subtract this from y
-		double[] Rjs = new double[n];
-		for (int i = 0; i < n; i++){ 
+			//now we need to subtract this from y
 			Rjs[i] = y_trans[i] - sum_ys_without_jth_tree[i];
-//			Rjs[i] = transform_y(Rjs[i]);
 		}
 //		System.out.println("getResidualsForAllTreesExcept one " +  Tools.StringJoin(Rjs, ", "));
 		return Rjs;
@@ -106,28 +103,6 @@ public abstract class CGMBART_06_gibbs_internal extends CGMBART_05_gibbs_base im
 //		sigsqs_draws.println(sample_num + "," + hyper_nu + "," + hyper_lambda + "," + n + "," + sum_sq_errors + "," + (sigsq * (TRANSFORM_Y ? y_range_sq : 1)) + "," + y_range_sq + "," + IOTools.StringJoin(posterior_sigma_simus, ","));
 		
 		return sigsq;
-	}
-	
-	protected double[] getResidualsForAllTreesExcept(int j, int sample_num){		
-		double[] sum_ys_without_jth_tree = new double[n];
-		ArrayList<CGMBARTTreeNode> trees = gibbs_samples_of_cgm_trees.get(sample_num);
-
-		for (int i = 0; i < n; i++){
-			sum_ys_without_jth_tree[i] = 0; //initialize at zero, then add it up over all trees except the jth
-			for (int t = 0; t < trees.size(); t++){
-				if (t != j){
-					//obviously y_vec - \sum_i g_i = \sum_i y_i - g_i
-					sum_ys_without_jth_tree[i] += trees.get(t).Evaluate(X_y.get(i)); //first tree for now
-				}
-			}
-		}
-		//now we need to subtract this from y
-		double[] Rjs = new double[n];
-		for (int i = 0; i < n; i++){
-			Rjs[i] = y_trans[i] - sum_ys_without_jth_tree[i];
-		}
-//		System.out.println("getResidualsForAllTreesExcept " + (j+1) + "th tree:  " +  new DoubleMatrix(Rjs).transpose().toString(2));
-		return Rjs;
 	}
 	
 	protected double[] getErrorsForAllTrees(int sample_num){

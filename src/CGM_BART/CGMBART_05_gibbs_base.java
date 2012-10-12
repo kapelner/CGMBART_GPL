@@ -90,7 +90,7 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 		
 		//sample from T_j | R_j, \sigma
 		//now we will run one M-H step on this tree with the y as the R_j
-		CGMBARTTreeNode tree_star = metroHastingsPosteriorTreeSpaceIteration(copy_of_old_jth_tree);
+		CGMBARTTreeNode new_jth_tree = metroHastingsPosteriorTreeSpaceIteration(copy_of_old_jth_tree);
 		
 		//DEBUG
 //		System.err.println("tree star: " + tree_star.stringID() + " tree num leaves: " + tree_star.numLeaves() + " tree depth:" + tree_star.deepestNode());
@@ -99,12 +99,12 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 //		tree_array_illustration.addLikelihood(lik);
 //		all_tree_liks[t][sample_num] = lik;
 		
-		cgm_trees.add(t, tree_star);
+		cgm_trees.add(t, new_jth_tree);
 		//now set the new trees in the gibbs sample pantheon, keep updating it...
 		gibbs_samples_of_cgm_trees.set(sample_num, cgm_trees);
 //		System.out.println("SampleTree sample_num " + sample_num + " cgm_trees " + cgm_trees);
 
-		tree_array_illustration.AddTree(tree_star);
+		tree_array_illustration.AddTree(new_jth_tree);
 	}
 	
 	protected abstract double[] getResidualsBySubtractingTrees(List<CGMBARTTreeNode> findOtherTrees);
