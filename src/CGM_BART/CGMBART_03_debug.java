@@ -159,12 +159,7 @@ public abstract class CGMBART_03_debug extends CGMBART_02_hyperparams implements
 		
 		tree_liks.print("\n");	
 		
-		if (TRANSFORM_Y){
-			sigsqs.println(sample_num + "," + gibbs_samples_of_sigsq.get(sample_num) * y_range_sq);	
-		}
-		else {
-			sigsqs.println(sample_num + "," + gibbs_samples_of_sigsq.get(sample_num));
-		}
+		sigsqs.println(sample_num + "," + gibbs_samples_of_sigsq.get(sample_num) * y_range_sq);	
 
 		//now close and open all debug
 		if (StatToolbox.rand() < 0.0333){
@@ -176,7 +171,7 @@ public abstract class CGMBART_03_debug extends CGMBART_02_hyperparams implements
 	public double[] getGibbsSamplesSigsqs(){
 		double[] sigsqs_to_export = new double[gibbs_samples_of_sigsq.size()];
 		for (int n_g = 0; n_g < gibbs_samples_of_sigsq.size(); n_g++){			
-			sigsqs_to_export[n_g] = gibbs_samples_of_sigsq.get(n_g) * (TRANSFORM_Y ? y_range_sq : 1);			
+			sigsqs_to_export[n_g] = gibbs_samples_of_sigsq.get(n_g) * y_range_sq;	//Var[y^t] = Var[y / R_y] = 1/R_y^2 Var[y]		
 		}
 		return sigsqs_to_export;
 	}	

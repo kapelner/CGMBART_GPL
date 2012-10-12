@@ -82,9 +82,9 @@ public class Test_BARTgibbs_internal {
 		System.out.println("rjs = " + Tools.StringJoin(resids, ","));
 		double[] expected_resids = new double[bart.n];
 		for (int i = 0; i < bart.n; i++){
-			expected_resids[i] = bart.y[i] - (num_trees - 1) * y_pred_initial;
+			expected_resids[i] = bart.y_trans[i] - (num_trees - 1) * y_pred_initial;
 		}
-		assertArrayEquals(resids, expected_resids, 0.0001);
+		assertArrayEquals(expected_resids, resids, 0.0001);
 	}
 	
 	@Test
@@ -109,9 +109,9 @@ public class Test_BARTgibbs_internal {
 		int num_trees = 10;
 		bart.setNumTrees(num_trees);
 		bart.InitGibbsSamplingData();
-		bart.InitiatizeTrees();
+		bart.InitializeTrees();
 
-		double[] errors = bart.getErrorsForAllTrees(0);
+		double[] residuals = bart.getResidualsFromFullSumModel(0);
 		
 //		System.out.println("Y(" + CGMBART_init.INITIAL_PRED + ") = " + bart.un_transform_y(CGMBART_init.INITIAL_PRED));
 //		System.out.println("Y = " + Tools.StringJoin(bart.y, ",") + "  avg_y = " + StatToolbox.sample_average(bart.y));
@@ -122,9 +122,9 @@ public class Test_BARTgibbs_internal {
 //		errors = bart.un_transform_y(errors);
 		double[] expected_errors = new double[bart.n];
 		for (int i = 0; i < bart.n; i++){
-			expected_errors[i] = bart.y[i] - num_trees * CGMBART_04_init.INITIAL_PRED;
+			expected_errors[i] = bart.y_trans[i] - num_trees * CGMBART_04_init.INITIAL_PRED;
 		}
-		assertArrayEquals(errors, expected_errors, 0.0001);
+		assertArrayEquals(expected_errors, residuals, 0.0001);
 		
 
 	}

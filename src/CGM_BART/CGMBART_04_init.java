@@ -24,7 +24,7 @@ public abstract class CGMBART_04_init extends CGMBART_03_debug implements Serial
 //		System.out.println("SetupGibbsSampling");
 		InitGibbsSamplingData();	
 		InitizializeSigsq();
-		InitiatizeTrees();
+		InitializeTrees();
 		InitializeMus();		
 		DebugInitialization();	
 		gibb_sample_num = 1;
@@ -42,7 +42,7 @@ public abstract class CGMBART_04_init extends CGMBART_03_debug implements Serial
 	}
 	
 	protected static final double INITIAL_PRED = 0; //median, doesn't matter anyway
-	protected void InitiatizeTrees() {
+	protected void InitializeTrees() {
 //		System.out.println("InitiatizeTrees");
 		//create the array of trees for the zeroth gibbs sample
 		ArrayList<CGMBARTTreeNode> cgm_trees = new ArrayList<CGMBARTTreeNode>(num_trees);		

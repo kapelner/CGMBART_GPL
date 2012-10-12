@@ -16,7 +16,7 @@ public class CGMBART_FixedTreeInitially extends CGMBART_09_eval {
 	}
 
 	//only the simple tree as the initial seed
-	protected void InitiatizeTrees() {
+	protected void InitializeTrees() {
 		ArrayList<CGMBARTTreeNode> cgm_trees = new ArrayList<CGMBARTTreeNode>(num_trees);
 		cgm_trees.add(CGMBART_FixedTree.CreateTheSimpleTreeModel(this));	
 		gibbs_samples_of_cgm_trees.add(0, cgm_trees);		

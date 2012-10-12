@@ -80,7 +80,7 @@ public abstract class CGMBART_06_gibbs_internal extends CGMBART_05_gibbs_base im
 	protected double drawSigsqFromPosterior(int sample_num) {
 		//first calculate the SSE
 		double sum_sq_errors = 0;
-		double[] es = getErrorsForAllTrees(sample_num);
+		double[] es = getResidualsFromFullSumModel(sample_num);
 		if (WRITE_DETAILED_DEBUG_FILES){		
 			remainings.println((sample_num) + ",,e," + Tools.StringJoin(es, ","));
 			evaluations.println((sample_num) + ",,e," + Tools.StringJoin(es, ","));
@@ -105,9 +105,11 @@ public abstract class CGMBART_06_gibbs_internal extends CGMBART_05_gibbs_base im
 		return sigsq;
 	}
 	
-	protected double[] getErrorsForAllTrees(int sample_num){
+	protected double[] getResidualsFromFullSumModel(int sample_num){
 //		System.out.println("getErrorsForAllTrees");
 		double[] sum_ys_trans = new double[n];
+		double[] residuals = new double[n];
+		
 		for (int i = 0; i < n; i++){
 			sum_ys_trans[i] = 0; //initialize at zero, then add it up over all trees except the jth
 			for (int t = 0; t < num_trees; t++){
@@ -119,16 +121,12 @@ public abstract class CGMBART_06_gibbs_internal extends CGMBART_05_gibbs_base im
 //				System.out.println("i = " + (i + 1) + " y: " + y[i] + " y_hat: " + y_hat + " e: " + (y[i] - y_hat)+ " tree " + t);
 				sum_ys_trans[i] += y_hat_trans;
 			}
-		}
-		//now we need to subtract this from y
-		double[] error_js = new double[n];
-		for (int i = 0; i < n; i++){
-			error_js[i] = y_trans[i] - sum_ys_trans[i];
-//			errorjs[i] = transform_y(errorjs[i]);
+			//now we need to subtract this from y
+			residuals[i] = y_trans[i] - sum_ys_trans[i];
 		}
 //		System.out.println("sum_ys " + IOTools.StringJoin(sum_ys, ","));
 //		System.out.println("y_trans " + IOTools.StringJoin(y_trans, ","));
 //		System.out.println("errorjs " + IOTools.StringJoin(errorjs, ","));
-		return error_js;
+		return residuals;
 	}	
 }

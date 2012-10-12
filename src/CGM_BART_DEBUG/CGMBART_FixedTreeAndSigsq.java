@@ -20,7 +20,7 @@ public class CGMBART_FixedTreeAndSigsq extends CGMBART_09_eval {
 		fixed_sigsq = 1 / y_range_sq;
 	}
 	
-	protected void InitiatizeTrees() {
+	protected void InitializeTrees() {
 		ArrayList<CGMBARTTreeNode> cgm_trees = new ArrayList<CGMBARTTreeNode>(num_trees);
 		cgm_trees.add(CGMBART_FixedTree.CreateTheSimpleTreeModel(this));	
 		gibbs_samples_of_cgm_trees.add(0, cgm_trees);		

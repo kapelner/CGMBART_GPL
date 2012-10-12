@@ -6,9 +6,8 @@ import java.util.ArrayList;
 
 public abstract class CGMBART_02_hyperparams extends CGMBART_01_base implements Serializable {
 	private static final long serialVersionUID = -7460897154338844402L;
-
-	//do not set this to FALSE!!! The whole thing will break...
-	protected static final boolean TRANSFORM_Y = true;
+	
+	protected static final double YminAndYmaxHalfDiff = 0.5;
 	
 	/** all the hyperparameters */
 	protected double hyper_mu_mu;
@@ -32,14 +31,8 @@ public abstract class CGMBART_02_hyperparams extends CGMBART_01_base implements 
 		double k = 2; //StatToolbox.inv_norm_dist(1 - (1 - CGMShared.MostOfTheDistribution) / 2.0);	
 //		y_min = StatToolbox.sample_minimum(y);
 //		y_max = StatToolbox.sample_maximum(y);
-//		if (TRANSFORM_Y){
-			hyper_mu_mu = 0;
-			hyper_sigsq_mu = Math.pow(YminAndYmaxHalfDiff / (k * Math.sqrt(num_trees)), 2);
-//		}
-//		else {
-//			hyper_mu_mu = (y_min + y_max) / (2 * num_trees); //ie the "center" of the distribution
-//			hyper_sigsq_mu = Math.pow((y_max - hyper_mu_mu) / (k * Math.sqrt(num_trees)), 2); //margin of error over confidence spread with a correction factor for num trees
-//		}
+		hyper_mu_mu = 0;
+		hyper_sigsq_mu = Math.pow(YminAndYmaxHalfDiff / (k * Math.sqrt(num_trees)), 2);
 		
 		//first calculate \sigma_\mu
 		
@@ -71,7 +64,7 @@ public abstract class CGMBART_02_hyperparams extends CGMBART_01_base implements 
 	
 	
 	//make sure you get the prior correct if you don't transform
-	protected static final double YminAndYmaxHalfDiff = 0.5;
+	
 	protected void transformResponseVariable() {
 		System.out.println("CGMBART transformResponseVariable");
 		//make sure to initialize the y_trans to be y first
@@ -81,10 +74,8 @@ public abstract class CGMBART_02_hyperparams extends CGMBART_01_base implements 
 		y_max = StatToolbox.sample_maximum(y);
 		y_range_sq = Math.pow(y_max - y_min, 2);
 	
-		if (TRANSFORM_Y){
-			for (int i = 0; i < n; i++){
-				y_trans[i] = transform_y(y[i]);
-			}
+		for (int i = 0; i < n; i++){
+			y_trans[i] = transform_y(y[i]);
 		}
 		//debug stuff
 	//	y_and_y_trans.println("y,y_trans");
@@ -108,13 +99,7 @@ public abstract class CGMBART_02_hyperparams extends CGMBART_01_base implements 
 	}
 	
 	public double un_transform_y(double yt_i){
-		if (TRANSFORM_Y){
-	//		System.out.println("un_transform_y TRANSFORM_Y");
-			return (yt_i + YminAndYmaxHalfDiff) * (y_max - y_min) + y_min;
-		}
-		else {
-			return yt_i;
-		}
+		return (yt_i + YminAndYmaxHalfDiff) * (y_max - y_min) + y_min;
 	}
 	
 	public double un_transform_y(Double yt_i){

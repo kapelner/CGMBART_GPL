@@ -27,7 +27,7 @@ public class CGMBART_FixedSigsqAndTreeStructureJustChanges extends CGMBART_09_ev
 	}	
 
 	//start the tree with no information
-	protected void InitiatizeTrees() {
+	protected void InitializeTrees() {
 		ArrayList<CGMBARTTreeNode> cgm_trees = new ArrayList<CGMBARTTreeNode>(num_trees);
 		CGMBARTTreeNode tree = CGMBART_FixedTree.CreateTheSimpleTreeModel(this);
 		tree.splitAttributeM = 0;

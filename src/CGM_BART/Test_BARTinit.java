@@ -56,7 +56,7 @@ public class Test_BARTinit {
 	@Test
 	public void testInitiatizeTrees(){
 		bart.InitGibbsSamplingData();
-		bart.InitiatizeTrees();
+		bart.InitializeTrees();
 		assertEquals(bart.gibbs_samples_of_cgm_trees.size(), 1);
 		ArrayList<CGMBARTTreeNode> trees = bart.gibbs_samples_of_cgm_trees.get(0);
 		assertEquals(trees.size(), bart.num_trees);
@@ -73,7 +73,7 @@ public class Test_BARTinit {
 	public void testInitializeMus(){
 		bart.InitGibbsSamplingData();
 		bart.InitizializeSigsq();
-		bart.InitiatizeTrees();
+		bart.InitializeTrees();
 		bart.InitializeMus();
 		CGMBARTTreeNode tree = bart.gibbs_samples_of_cgm_trees.get(0).get(0);
 		assertThat(tree.y_prediction, not(0.0));
