@@ -61,7 +61,7 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 		CGMBARTTreeNode grow_node = pickGrowNode(T_star);
 		//if we can't grow, reject offhand
 		if (grow_node == null){ // || grow_node.generation >= 2
-			System.out.println("  proposal ln(r) = -oo DUE TO CANNOT GROW\n\n");
+			System.out.println("no valid grow nodes    proposal ln(r) = -oo DUE TO CANNOT GROW\n\n");
 			return Double.NEGATIVE_INFINITY;					
 		}
 		
@@ -85,7 +85,7 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 
 
 		if (grow_node.left.n_eta <= N_RULE || grow_node.right.n_eta <= N_RULE){
-			System.out.println("ERR: cannot split a node where daughter only has one data point");
+			System.out.println("ERR: cannot split a node where daughter only has one data point   proposal ln(r) = -oo DUE TO CANNOT GROW\n\n");
 			return Double.NEGATIVE_INFINITY;
 		}
 //		System.out.print("grow_node.splitValue = " + grow_node.splitValue);
