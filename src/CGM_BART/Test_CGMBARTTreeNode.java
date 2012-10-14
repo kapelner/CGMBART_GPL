@@ -112,6 +112,7 @@ public class Test_CGMBARTTreeNode {
 		assertEquals(stump.getTerminalNodes(), just_stump);
 		assertEquals(CGMBARTTreeNode.getTerminalNodesWithDataAboveOrEqualToN(stump, 5), just_stump);
 		assertEquals(CGMBARTTreeNode.getTerminalNodesWithDataAboveOrEqualToN(stump, 7), just_stump);
+		System.out.println("testTerminalNodesStump:  " + CGMBARTTreeNode.getTerminalNodesWithDataAboveOrEqualToN(stump, 8).size());
 		assertTrue(CGMBARTTreeNode.getTerminalNodesWithDataAboveOrEqualToN(stump, 8).size() == 0);
 	}
 	

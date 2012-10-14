@@ -369,6 +369,7 @@ public class Test_BARTmh {
 		assertEquals(2, second_node_grown.right.n_eta);
 		assertEquals(196, second_node_grown.left.sumResponsesQuantitySqd(), 0.001);
 		assertEquals(4, second_node_grown.right.sumResponsesQuantitySqd(), 0.001);	
+		assertEquals(256, second_node_grown.sumResponsesQuantitySqd(), 0.001);
 		
 		sigsq_plus_n_ell_hyper_sisgsq_mu = sigsq + 4 * bart.hyper_sigsq_mu;
 		sigsq_plus_n_ell_L_hyper_sisgsq_mu = sigsq + 2 * bart.hyper_sigsq_mu;
@@ -379,14 +380,14 @@ public class Test_BARTmh {
 				- Math.log(sigsq_plus_n_ell_L_hyper_sisgsq_mu) 
 				- Math.log(sigsq_plus_n_ell_R_hyper_sisgsq_mu));
 		d = bart.hyper_sigsq_mu / (2 * sigsq);
-		e = 192 / sigsq_plus_n_ell_L_hyper_sisgsq_mu
+		e = 196 / sigsq_plus_n_ell_L_hyper_sisgsq_mu
 				+ 4 / sigsq_plus_n_ell_R_hyper_sisgsq_mu
 				- 256 / sigsq_plus_n_ell_hyper_sisgsq_mu;
 		
 		
-		lik_ratio = Math.exp(bart.calcLnLikRatioGrow(second_node_grown));
 		double second_split_lik_ratio = Math.exp(c + d * e);
-		assertEquals(second_split_lik_ratio, lik_ratio, 0.0001);	
+		System.out.println("BEFORE FAILURE:" + second_split_lik_ratio + "  " + Math.exp(bart.calcLnLikRatioGrow(second_node_grown)));
+		assertEquals(second_split_lik_ratio, Math.exp(bart.calcLnLikRatioGrow(second_node_grown)), 0.0001);	
 		
 		//now test the prune function
 		CGMBARTTreeNode temp = T_i;
