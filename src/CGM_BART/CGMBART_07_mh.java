@@ -173,7 +173,9 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 		int n_ell = grow_node.n_eta;
 		int n_ell_L = grow_node.left.n_eta;
 		int n_ell_R = grow_node.right.n_eta;
-		
+		if(n_ell_L<=2 || n_ell_R<=2){
+			return(Double.NEGATIVE_INFINITY);
+		}
 //		System.out.println(" sigsq: " + sigsq);
 //		System.out.println("calcLnLikRatioGrow n_ell: " + n_ell + " n_ell_L: " + n_ell_L + " n_ell_R: " + n_ell_R);
 

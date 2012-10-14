@@ -18,7 +18,7 @@ if (FALSE){
 PRINT_TREE_ILLUS = FALSE
 JAVA_LOG = FALSE
 
-run_model_N_times = 2
+run_model_N_times = 15
 real_regression_data_sets = c(
 	"r_boston"
 #	"r_forestfires"
@@ -41,8 +41,7 @@ simulated_data_sets = c(
 
 #nice to have data around for testing... should be overwritten for custom runs...
 num_trees_of_interest = c(
-	25,
-	50
+	1,5,10
 )
 num_burn_ins_of_interest = c(
 	2000
