@@ -145,7 +145,7 @@ public abstract class Classifier implements Serializable {
 	/**
 	 * @see https://blogs.oracle.com/nickstephen/entry/java_redirecting_system_out_and
 	 */
-	public void writeToDebugLog(){
+	public void suppressOrWriteToDebugLog(){
 		//also handle the logging
         LogManager logManager = LogManager.getLogManager();
         logManager.reset();

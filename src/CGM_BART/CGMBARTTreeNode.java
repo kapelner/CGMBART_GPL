@@ -68,9 +68,9 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 	public Double y_prediction;
 	/** the remaining data records at this point in the tree construction (freed after tree is constructed) */
 	public transient List<double[]> data;
-
+	/** this caches the possible split variables */
 	private ArrayList<Integer> possible_rule_variables;
-
+	/** this caches the possible split values BY variable */
 	private HashMap<Integer, ArrayList<Double>> possible_split_vals_by_attr;	
 
 	public CGMBARTTreeNode(CGMBARTTreeNode parent, List<double[]> data, CGMBART_02_hyperparams cgmbart){
@@ -147,8 +147,8 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		copy.splitValue = splitValue;
 		copy.klass = klass;	
 		copy.n_eta = n_eta;
-//		copy.predictors_that_can_be_assigned = predictors_that_can_be_assigned;
-//		copy.possible_split_values = possible_split_values;
+		copy.possible_rule_variables = possible_rule_variables; //IS THIS RIGHT?? SHOULD WE REALLY CLONE OR DO A SHALLOW COPY?
+		copy.possible_split_vals_by_attr = possible_split_vals_by_attr;
 		return copy;
 	}
 	
