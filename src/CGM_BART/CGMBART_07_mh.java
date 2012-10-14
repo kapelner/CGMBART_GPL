@@ -82,13 +82,19 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 		grow_node.left = new CGMBARTTreeNode(grow_node);
 		grow_node.right = new CGMBARTTreeNode(grow_node);
 		CGMBARTTreeNode.propagateDataByChangedRule(grow_node, true);	
-		
+
+
+		if (grow_node.left.n_eta <= N_RULE || grow_node.right.n_eta <= N_RULE){
+			System.out.println("ERR: cannot split a node where daughter only has one data point");
+			return Double.NEGATIVE_INFINITY;
+		}
 //		System.out.print("grow_node.splitValue = " + grow_node.splitValue);
 		
 //		System.out.println("grow_node: " + grow_node.stringID() + " new depth: " + T_star.deepestNode() + " " + grow_node.deepestNode());
 		double ln_transition_ratio_grow = calcLnTransRatioGrow(T_i, T_star, grow_node);
 		double ln_likelihood_ratio_grow = calcLnLikRatioGrow(grow_node);
 		double ln_tree_structure_ratio_grow = calcLnTreeStructureRatioGrow(grow_node);
+		
 		
 		System.out.println("GROW  <<" + grow_node.stringLocation(true) + ">> ---- X_" + (grow_node.splitAttributeM + 1) + 
 			" < " + TreeIllustration.two_digit_format.format(grow_node.splitValue) + 
@@ -167,12 +173,21 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 				- Math.log(p_adj) 
 				- Math.log(n_adj);
 	}
+	
+
+	/** The number of data points in a node that we can split on */
+	protected static int N_RULE = 1;	
 
 	protected double calcLnLikRatioGrow(CGMBARTTreeNode grow_node) {
 		double sigsq = gibbs_samples_of_sigsq.get(gibb_sample_num - 1);
 		int n_ell = grow_node.n_eta;
 		int n_ell_L = grow_node.left.n_eta;
-		int n_ell_R = grow_node.right.n_eta;
+		int n_ell_R = grow_node.right.n_eta;		
+		
+		if (n_ell_L <= N_RULE || n_ell_R <= N_RULE){
+			System.out.println("ERR: cannot split a node where daughter only has one data point");
+			return Double.NEGATIVE_INFINITY;
+		}		
 		
 //		System.out.println(" sigsq: " + sigsq);
 //		System.out.println("calcLnLikRatioGrow n_ell: " + n_ell + " n_ell_L: " + n_ell_L + " n_ell_R: " + n_ell_R);
@@ -206,9 +221,6 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 	protected boolean acceptProposal(double ln_u_0_1, double log_r){
 		return ln_u_0_1 < log_r ? true : false;
 	}
-
-	/** The number of data points in a node that we can split on */
-	protected static int N_RULE = 1;	
 
 	protected CGMBARTTreeNode pickGrowNode(CGMBARTTreeNode T) {
 		ArrayList<CGMBARTTreeNode> growth_nodes = CGMBARTTreeNode.getTerminalNodesWithDataAboveOrEqualToN(T, N_RULE);

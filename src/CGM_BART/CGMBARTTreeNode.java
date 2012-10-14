@@ -164,7 +164,7 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 	}
 	
 	private static void findTerminalNodesDataAboveOrEqualToN(CGMBARTTreeNode node, ArrayList<CGMBARTTreeNode> terminal_nodes, int n_rule) {
-		if (node.isLeaf && node.data.size() >= n_rule){
+		if (node.isLeaf){
 			terminal_nodes.add(node);
 		}
 		else if (!node.isLeaf){ //as long as we're not in a leaf we should recurse
