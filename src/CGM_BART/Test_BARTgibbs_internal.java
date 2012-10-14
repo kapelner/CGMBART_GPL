@@ -76,7 +76,6 @@ public class Test_BARTgibbs_internal {
 			old_tree.y_prediction = y_pred_initial;
 		}
 		double[] resids = bart.getResidualsBySubtractingTrees(old_trees_all_but_one);
-//		resids = bart.un_transform_y(resids);
 		System.out.println("Y = " + Tools.StringJoin(bart.y, ",") + "  avg_y = " + StatToolbox.sample_average(bart.y));
 		System.out.println("Y_t = " + Tools.StringJoin(bart.y_trans, ",") + "  avg_y_t = " + StatToolbox.sample_average(bart.y_trans));
 		System.out.println("rjs = " + Tools.StringJoin(resids, ","));
@@ -85,6 +84,7 @@ public class Test_BARTgibbs_internal {
 			expected_resids[i] = bart.y_trans[i] - (num_trees - 1) * y_pred_initial;
 		}
 		assertArrayEquals(expected_resids, resids, 0.0001);
+		//make this test less basic
 	}
 	
 	@Test
@@ -97,9 +97,12 @@ public class Test_BARTgibbs_internal {
 		for (int t = 0; t < num_trees; t++){
 			CGMBARTTreeNode tree = trees.get(t);
 			double posterior_sigsq = bart.calcLeafPosteriorVar(tree, sigsq);
+			assertEquals(1 / (1 / bart.hyper_sigsq_mu + bart.n / sigsq), posterior_sigsq, 0.0001);
 			//draw from posterior distribution
-			double posterior_mean = bart.calcLeafPosteriorMean(tree, sigsq, posterior_sigsq);			
+			double posterior_mean = bart.calcLeafPosteriorMean(tree, sigsq, posterior_sigsq);
 			bart.assignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsq(tree, sigsq);
+			double moe = 4 * Math.sqrt(posterior_sigsq);
+			assertTrue(tree.y_prediction <= posterior_mean + moe && tree.y_prediction >= posterior_mean - moe);
 			System.out.println("sigsq = " + sigsq + " sigsq_post = " + posterior_sigsq + " mu_post = " + posterior_mean + " avg_y_node = " + tree.avg_response_untransformed() + " ypred = " + bart.un_transform_y(tree.y_prediction));
 		}		
 	}

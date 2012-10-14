@@ -67,7 +67,11 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 	/** if this is a leaf node, then the result of the prediction for regression, otherwise null */
 	public Double y_prediction;
 	/** the remaining data records at this point in the tree construction (freed after tree is constructed) */
-	public transient List<double[]> data;	
+	public transient List<double[]> data;
+
+	private ArrayList<Integer> possible_rule_variables;
+
+	private HashMap<Integer, ArrayList<Double>> possible_split_vals_by_attr;	
 
 	public CGMBARTTreeNode(CGMBARTTreeNode parent, List<double[]> data, CGMBART_02_hyperparams cgmbart){
 		this.parent = parent;
@@ -535,17 +539,18 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 	}
 	
 	protected ArrayList<Integer> predictorsThatCouldBeUsedToSplitAtNode() {
-		ArrayList<Integer> possible_rule_variables = new ArrayList<Integer>();
-		
-		for (int j = 0; j < cgmbart.getP(); j++){
-			//if size of unique of x_i > 1
-			ArrayList<Double> x_dot_j = Classifier.getColVector(data, j);
-			HashSet<Double> unique_x_dot_j = new HashSet<Double>(x_dot_j);
-			if (unique_x_dot_j.size() >= 2){
-				possible_rule_variables.add(j);
+		if (possible_rule_variables == null){
+			possible_rule_variables = new ArrayList<Integer>();
+			
+			for (int j = 0; j < cgmbart.getP(); j++){
+				//if size of unique of x_i > 1
+				ArrayList<Double> x_dot_j = Classifier.getColVector(data, j);
+				HashSet<Double> unique_x_dot_j = new HashSet<Double>(x_dot_j);
+				if (unique_x_dot_j.size() >= 2){
+					possible_rule_variables.add(j);
+				}
 			}
-		}	
-		
+		}
 		return possible_rule_variables;
 	}
 
@@ -558,12 +563,17 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 	}	
 	
 	protected ArrayList<Double> possibleSplitValuesGivenAttribute() {
-		ArrayList<Double> x_dot_j = Classifier.getColVector(data, splitAttributeM);
-		Double max = Collections.max(x_dot_j);
-		HashSet<Double> unique_x_dot_j = new HashSet<Double>(x_dot_j);
-		unique_x_dot_j.remove(max);
-		
-		return new ArrayList<Double>(unique_x_dot_j);
+		if (possible_split_vals_by_attr == null){
+			possible_split_vals_by_attr = new HashMap<Integer, ArrayList<Double>>();
+		}
+		if (possible_split_vals_by_attr.get(splitAttributeM) == null){
+			ArrayList<Double> x_dot_j = Classifier.getColVector(data, splitAttributeM);
+			Double max = Collections.max(x_dot_j);
+			HashSet<Double> unique_x_dot_j = new HashSet<Double>(x_dot_j);
+			unique_x_dot_j.remove(max);
+			possible_split_vals_by_attr.put(splitAttributeM, new ArrayList<Double>(unique_x_dot_j));
+		}
+		return possible_split_vals_by_attr.get(splitAttributeM);
 	}
 
 	/**

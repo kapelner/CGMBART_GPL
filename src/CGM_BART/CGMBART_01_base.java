@@ -10,7 +10,7 @@ public abstract class CGMBART_01_base extends Classifier implements Serializable
 	private static final long serialVersionUID = -7068937615952180038L;
 
 
-	protected static final int DEFAULT_NUM_TREES = 1;
+	protected static final int DEFAULT_NUM_TREES = 20;
 	//this burn in number needs to be computed via some sort of moving average or time series calculation
 	protected static final int DEFAULT_NUM_GIBBS_BURN_IN = 500;
 	protected static final int DEFAULT_NUM_GIBBS_TOTAL_ITERATIONS = 2000; //this must be larger than the number of burn in!!!
