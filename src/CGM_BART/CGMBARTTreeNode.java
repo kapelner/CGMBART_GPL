@@ -86,8 +86,6 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		isLeaf = true; //default is that it is a leaf
 	}
 	
-	public CGMBARTTreeNode(){}	
-	
 	public CGMBARTTreeNode(CGMBARTTreeNode parent){
 		this(parent, null, parent.cgmbart);
 	}
@@ -121,34 +119,22 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 	
 	/** clones this node (if you clone the root, you clone the entire tree) */
 	public CGMBARTTreeNode clone(boolean clone_data){ //"data" element always null in clone
-//		List<double[]> new_data = new ArrayList<double[]>(data == null ? 0 : data.size());
-//		//first clone the data
-//		if (clone_data && data != null){
-//			for (double[] record : data){
-//				double[] new_record = new double[record.length];
-//				for (int i = 0; i < record.length; i++){
-//					new_record[i] = record[i];
-//				}
-//				new_data.add(new_record);
-//			}
-//		}
-//		else {
-//			new_data = data;
-//		}
-		CGMBARTTreeNode copy = new CGMBARTTreeNode();
-		//copy all the superficial stuff
-		copy.parent = parent;
-		copy.cgmbart = cgmbart;
-		copy.depth = depth;
-		copy.data = data;
-		copy.n_eta = n_eta;
+		List<double[]> new_data = new ArrayList<double[]>(data == null ? 0 : data.size());
+		//first clone the data
+		if (clone_data && data != null){
+			for (double[] record : data){
+				double[] new_record = new double[record.length];
+				for (int i = 0; i < record.length; i++){
+					new_record[i] = record[i];
+				}
+				new_data.add(new_record);
+			}
+		}
+		else {
+			new_data = data;
+		}
+		CGMBARTTreeNode copy = new CGMBARTTreeNode(parent, new_data, cgmbart);
 		copy.isLeaf = isLeaf;
-		copy.splitAttributeM = splitAttributeM;
-		copy.splitValue = splitValue;
-		copy.klass = klass;
-		copy.possible_rule_variables = possible_rule_variables; //IS THIS RIGHT?? SHOULD WE REALLY CLONE OR DO A SHALLOW COPY?
-		copy.possible_split_vals_by_attr = possible_split_vals_by_attr;		
-		//now recursively copy the children
 		if (left != null){ //we need to clone the child and mark parent correctly
 			copy.left = left.clone(clone_data);
 			copy.left.parent = copy;
@@ -157,7 +143,12 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 			copy.right = right.clone(clone_data);
 			copy.right.parent = copy;
 		}
-
+		copy.splitAttributeM = splitAttributeM;
+		copy.splitValue = splitValue;
+		copy.klass = klass;	
+		copy.n_eta = n_eta;
+		copy.possible_rule_variables = possible_rule_variables; //IS THIS RIGHT?? SHOULD WE REALLY CLONE OR DO A SHALLOW COPY?
+		copy.possible_split_vals_by_attr = possible_split_vals_by_attr;
 		return copy;
 	}
 	
@@ -363,8 +354,7 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 			this.right.flushNodeData();
 	}
 	
-	//NOTE: we don't need to copy the DATA over
-	public static void propagateDataByChangedRule(CGMBARTTreeNode node) {
+	public static void propagateDataByChangedRule(CGMBARTTreeNode node, boolean clean_cache) {
 		//only propagate if we are in a split node and NOT a leaf
 		if (node.isLeaf){
 			return;
@@ -384,18 +374,28 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 //			System.out.println("left avg: " + StatToolbox.sample_average(node.left.get_ys_in_data())); 
 		node.right.data = ClassificationAndRegressionTree.getUpperPortion(node.data, n_split);
 		node.right.n_eta = node.right.data.size();
-		propagateDataByChangedRule(node.left);
-		propagateDataByChangedRule(node.right);
+//			for (int i = 0; i < node.right.n; i++){
+//				System.out.println("parent " + node.stringID() + " right node " + node.right.stringID()+ " record num " + (i+1) + " " + IOTools.StringJoin(node.right.data.get(i), ","));
+//			}		
+//			System.out.println("right avg: " + StatToolbox.sample_average(node.right.get_ys_in_data())); 
+		///////////////////////////NO PRUNING!!!!
+//			if (node.left.n == 0 || node.right.n == 0){
+//				//gotta prune if one of the children is empty
+//				CGMTreeNode.pruneTreeAt(node);
+//			}
+//			else {
+			//now recursively take care of the children
+			propagateDataByChangedRule(node.left, clean_cache);
+			propagateDataByChangedRule(node.right, clean_cache);
+//			}
 	}
 
 	//////CHECK THIS LATER
-	public void updateWithNewResponsesAndPropagate(double[] y_new, int p) {
+	public void updateWithNewResponsesAndPropagate(ArrayList<double[]> X_y, double[] y_new, int p) {
 		//set the root node data
-		for (int i = 0; i < cgmbart.n; i++){
-			this.data.get(i)[cgmbart.p] = y_new[i];
-		}
+		this.data = clone_data_matrix_with_new_y_optional(X_y, y_new);
 		//now just propagate away
-		propagateDataByChangedRule(this);
+		propagateDataByChangedRule(this, true);
 	}
 	
 	public static ArrayList<double[]> clone_data_matrix_with_new_y_optional(List<double[]> X_y, double[] y_new){
