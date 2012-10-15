@@ -15,6 +15,7 @@ if (FALSE){
 	run_bart_bakeoff()
 }
 
+<<<<<<< HEAD
 PRINT_TREE_ILLUS = FALSE
 JAVA_LOG = FALSE
 
@@ -52,6 +53,9 @@ num_iterations_after_burn_ins_of_interest = c(
 )
 alphas_of_interest = c(0.95)
 betas_of_interest = c(2)
+=======
+source("r_scripts/bart_bakeoff_params.R")
+>>>>>>> c388dfb525baa1e8aed5a8662b6ffa1e860e645b
 
 total_num_runs = (length(real_regression_data_sets) + length(simulated_data_sets)) * 
 		length(num_trees_of_interest) * length(num_burn_ins_of_interest) * 
