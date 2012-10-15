@@ -23,7 +23,7 @@ public class CGMBART_FixedTree extends CGMBART_09_eval {
 
 	protected void SampleTree(int sample_num, int t, ArrayList<CGMBARTTreeNode> cgm_trees, TreeArrayIllustration tree_array_illustration) {
 		CGMBARTTreeNode tree = CreateTheSimpleTreeModel(this);
-		tree.updateWithNewResponsesAndPropagate(y_trans, p); //no need for new y vector (which is usually the residuals from other trees)
+		tree.updateWithNewResponsesAndPropagate(X_y, y_trans, p); //no need for new y vector (which is usually the residuals from other trees)
 		cgm_trees.add(tree);
 		gibbs_samples_of_cgm_trees.set(sample_num, cgm_trees);
 		
@@ -83,7 +83,7 @@ public class CGMBART_FixedTree extends CGMBART_09_eval {
 		rightright.y_prediction = bart.transform_y(70);
 
 		//make sure there's data in there
-		root.updateWithNewResponsesAndPropagate(bart.getYTrans(), bart.getP());
+		root.updateWithNewResponsesAndPropagate(bart.getData(), bart.getYTrans(), bart.getP());
 		return root;
 	}
 }
