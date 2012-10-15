@@ -29,20 +29,35 @@ public abstract class CGMBART_06_gibbs_internal extends CGMBART_05_gibbs_base im
 	}
 	
 	protected double[] getResidualsBySubtractingTrees(List<CGMBARTTreeNode> trees_to_subtract) {
-		double[] sum_ys_without_jth_tree = new double[n];
+//		double[] sum_ys_without_jth_tree = new double[n];
 		double[] Rjs = new double[n];
 		
+		//initialize Rjs to be y
 		for (int i = 0; i < n; i++){
-			sum_ys_without_jth_tree[i] = 0; //initialize at zero, then add it up over all trees except the jth
-			for (int t = 0; t < trees_to_subtract.size(); t++){
-//				double y_i = un_transform_y(trees_to_subtract.get(t).Evaluate(X_y.get(i)));
-				double y_i = trees_to_subtract.get(t).Evaluate(X_y.get(i));
-				sum_ys_without_jth_tree[i] += y_i;
-//				System.out.println(y_i);
-			}
-			//now we need to subtract this from y
-			Rjs[i] = y_trans[i] - sum_ys_without_jth_tree[i];
+			Rjs[i] = y_trans[i];
 		}
+		
+		//now go through and get the yhats for each tree and subtract them from Rjs
+		for (CGMBARTTreeNode tree : trees_to_subtract){
+			double[] y_hat_vec = new double[n];
+			tree.getYhatsByDataIndex(y_hat_vec);
+			//subtract them from Rjs
+			for (int i = 0; i < n; i++){
+				Rjs[i] -= y_hat_vec[i];
+			}			
+		}
+		
+//		for (int i = 0; i < n; i++){
+//			sum_ys_without_jth_tree[i] = 0; //initialize at zero, then add it up over all trees except the jth
+//			for (CGMBARTTreeNode tree : trees_to_subtract){
+////				double y_i = un_transform_y(trees_to_subtract.get(t).Evaluate(X_y.get(i)));
+//				double y_i = tree.Evaluate(X_y.get(i));
+//				sum_ys_without_jth_tree[i] += y_i;
+////				System.out.println(y_i);
+//			}
+//			//now we need to subtract this from y
+//			Rjs[i] = y_trans[i] - sum_ys_without_jth_tree[i];
+//		}
 //		System.out.println("getResidualsForAllTreesExcept one " +  Tools.StringJoin(Rjs, ", "));
 		return Rjs;
 	}
@@ -50,11 +65,11 @@ public abstract class CGMBART_06_gibbs_internal extends CGMBART_05_gibbs_base im
 	protected void assignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsq(CGMBARTTreeNode node, double sigsq) {
 //		System.out.println("assignLeafValsUsingPosteriorMeanAndCurrentSigsq sigsq: " + sigsq);
 		if (node.isLeaf){
-			double posterior_sigsq = calcLeafPosteriorVar(node, sigsq);
+			double posterior_var = calcLeafPosteriorVar(node, sigsq);
 			//draw from posterior distribution
-			double posterior_mean = calcLeafPosteriorMean(node, sigsq, posterior_sigsq);
-//			System.out.println("posterior_mean = " + posterior_mean + " node.avg_response = " + node.avg_response_untransformed());
-			node.y_prediction = StatToolbox.sample_from_norm_dist(posterior_mean, posterior_sigsq);
+			double posterior_mean = calcLeafPosteriorMean(node, sigsq, posterior_var);
+//			System.out.println("assignLeafVals posterior_mean = " + posterior_mean + " posterior_sigsq = " + posterior_var + " node.avg_response = " + node.avg_response_untransformed());
+			node.y_prediction = StatToolbox.sample_from_norm_dist(posterior_mean, posterior_var);
 			if (node.y_prediction == StatToolbox.ILLEGAL_FLAG){				
 				node.y_prediction = 0.0; //this could happen on an empty node
 				System.err.println("ERROR assignLeafFINAL " + node.y_prediction + " (sigsq = " + sigsq + ")");
@@ -73,7 +88,7 @@ public abstract class CGMBART_06_gibbs_internal extends CGMBART_05_gibbs_base im
 	}
 
 	protected double calcLeafPosteriorVar(CGMBARTTreeNode node, double sigsq) {
-//		System.out.println("leafPosteriorVar sigsq " + sigsq + " var " + 1 / (1 / hyper_sigsq_mu + node.n * m / sigsq));
+		System.out.println("calcLeafPosteriorVar: node.n_eta = " + node.n_eta);
 		return 1 / (1 / hyper_sigsq_mu + node.n_eta / sigsq);
 	}
 	

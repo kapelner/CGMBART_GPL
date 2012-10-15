@@ -57,7 +57,7 @@ public abstract class Classifier implements Serializable {
 	/** the raw training data consisting of xi = [xi1,...,xiM, yi] that will be used to construct the classifier */
 	protected transient ArrayList<double[]> X_y;
 	/** just the responses */
-	protected transient double[] y;
+	protected transient double[] y_orig;
 	protected transient double[] y_trans;
 //	/** just the design matrix */
 //	protected transient ArrayList<double[]> X;	
@@ -97,17 +97,16 @@ public abstract class Classifier implements Serializable {
 	 * 
 	 */
 	public void setData(ArrayList<double[]> X_y){
-		this.X_y = X_y;
 		n = X_y.size();
 		p = X_y.get(0).length - 1;
 		System.out.println("setData n:" + n + " p:" + p);
-		y = extractResponseFromRawData(X_y);
-		y_trans = new double[y.length];
+		y_orig = extractResponseFromRawData(X_y);
 //		for (int i = 0; i < n; i++){
 //			System.out.println("i:" + i + " yi:" + y[i]);
 //		}
 		transformResponseVariable();
 //		X = extractDesignMatrixFromRawData(X_y);
+		this.X_y = addIndicesToDataMatrix(X_y);
 	}
 	
 //	private ArrayList<double[]> extractDesignMatrixFromRawData(ArrayList<double[]> X_y) {
@@ -122,6 +121,21 @@ public abstract class Classifier implements Serializable {
 //		return X;
 //	}
 
+	private ArrayList<double[]> addIndicesToDataMatrix(ArrayList<double[]> X_y_old) {
+		ArrayList<double[]> X_y_new = new ArrayList<double[]>(n);
+		for (int i = 0; i < n; i++){
+			double[] x = new double[p + 2];
+			for (int j = 0; j < p + 1; j++){
+				x[j] = X_y_old.get(i)[j];
+			}
+			x[p + 1] = i;
+			X_y_new.add(x);
+			System.out.println("row " + i + ": " + Tools.StringJoin(x));
+		}
+		return X_y_new;
+	}
+
+
 	private double[] extractResponseFromRawData(ArrayList<double[]> X_y) {
 		double[] y = new double[X_y.size()];
 		for (int i = 0; i < X_y.size(); i++){
@@ -130,6 +144,33 @@ public abstract class Classifier implements Serializable {
 		}
 		return y;
 	}
+	
+	public static ArrayList<double[]> clone_data_matrix_with_new_y_optional(List<double[]> X_y, double[] y_new){
+		if (X_y == null){
+			return null;
+		}
+		ArrayList<double[]> X_y_new = new ArrayList<double[]>(X_y.size());
+		for (int i = 0; i < X_y.size(); i++){
+			double[] original_record = X_y.get(i);
+			int num_cols = original_record.length;
+			double[] new_record = new double[num_cols];
+			for (int j = 0; j < num_cols; j++){
+				
+				if (j == num_cols - 2 && y_new != null){
+//					System.out.println("clone_data_matrix_with_new_y_optional y_new");
+					new_record[j] = y_new[i];
+				}
+				else {
+					new_record[j] = original_record[j];
+				}
+			}
+			X_y_new.add(new_record);
+
+//			System.out.println("original_record: " + IOTools.StringJoin(original_record, ","));
+//			System.out.println("new_record: " + IOTools.StringJoin(new_record, ","));
+		}
+		return X_y_new; 
+	}	
 	
 	public ArrayList<double[]> getData() {
 		return X_y;
@@ -257,9 +298,10 @@ public abstract class Classifier implements Serializable {
 	}
 	
 	protected void transformResponseVariable() {
+		y_trans = new double[y_orig.length];
 		//default is to do nothing... ie just copy the y's into y_trans's
 		for (int i = 0; i < n; i++){
-			y_trans[i] = y[i];
+			y_trans[i] = y_orig[i];
 		}		
 	}	
 	

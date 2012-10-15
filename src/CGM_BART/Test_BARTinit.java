@@ -62,7 +62,6 @@ public class Test_BARTinit {
 		assertEquals(trees.size(), bart.num_trees);
 		CGMBARTTreeNode tree = trees.get(0);
 		assertTrue(tree.isStump());
-		assertEquals(tree.y_prediction, 0, 0);
 		assertEquals(tree.data.size(), Test_CGMBARTTreeNode.data.size());
 		assertEquals(tree.data.get(0)[0], Test_CGMBARTTreeNode.data.get(0)[0], 0);
 		assertEquals(tree.data.get(0)[1], Test_CGMBARTTreeNode.data.get(0)[1], 0);
@@ -76,6 +75,6 @@ public class Test_BARTinit {
 		bart.InitializeTrees();
 		bart.InitializeMus();
 		CGMBARTTreeNode tree = bart.gibbs_samples_of_cgm_trees.get(0).get(0);
-		assertThat(tree.y_prediction, not(0.0));
+		assertTrue(tree.y_prediction == CGMBART_04_init.INITIAL_PRED);
 	}	
 }

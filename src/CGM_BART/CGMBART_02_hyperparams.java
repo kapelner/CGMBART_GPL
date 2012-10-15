@@ -70,12 +70,12 @@ public abstract class CGMBART_02_hyperparams extends CGMBART_01_base implements 
 		//make sure to initialize the y_trans to be y first
 		super.transformResponseVariable();
 		//make data we need later
-		y_min = StatToolbox.sample_minimum(y);
-		y_max = StatToolbox.sample_maximum(y);
+		y_min = StatToolbox.sample_minimum(y_orig);
+		y_max = StatToolbox.sample_maximum(y_orig);
 		y_range_sq = Math.pow(y_max - y_min, 2);
 	
 		for (int i = 0; i < n; i++){
-			y_trans[i] = transform_y(y[i]);
+			y_trans[i] = transform_y(y_orig[i]);
 		}
 		//debug stuff
 	//	y_and_y_trans.println("y,y_trans");
