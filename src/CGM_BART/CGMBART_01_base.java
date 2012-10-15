@@ -48,8 +48,8 @@ public abstract class CGMBART_01_base extends Classifier implements Serializable
 	
 	public CGMBART_01_base() {
 		super();
-//		System.out.println("CGMBART constructor");
 		num_trees = DEFAULT_NUM_TREES;
+//		System.out.println("CGMBART_01_base init\n");
 	}	
 	
 	

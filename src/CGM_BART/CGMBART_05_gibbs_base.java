@@ -53,7 +53,9 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 		}
 		SampleSigsq(gibb_sample_num);
 		DebugSample(gibb_sample_num, tree_array_illustration);
-		FlushDataForSample(cgm_trees);
+		//now flush the previous previous gibbs sample
+//		ArrayList<CGMBARTTreeNode> old_trees = gibbs_samples_of_cgm_trees.get(gibb_sample_num - 1);
+//		FlushDataForSample(old_trees);
 		gibb_sample_num++;
 	}
 
@@ -86,7 +88,7 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 		}
 		
 		//now, (important!) set the R_j's as this tree's data.
-		copy_of_old_jth_tree.updateWithNewResponsesAndPropagate(X_y, R_j, p);
+		copy_of_old_jth_tree.updateWithNewResponsesAndPropagate(R_j, p);
 		
 		//sample from T_j | R_j, \sigma
 		//now we will run one M-H step on this tree with the y as the R_j

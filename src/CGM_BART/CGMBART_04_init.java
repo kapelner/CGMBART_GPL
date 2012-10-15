@@ -18,6 +18,7 @@ public abstract class CGMBART_04_init extends CGMBART_03_debug implements Serial
 		super();
 		num_gibbs_burn_in = DEFAULT_NUM_GIBBS_BURN_IN;
 		num_gibbs_total_iterations = DEFAULT_NUM_GIBBS_TOTAL_ITERATIONS;
+//		System.out.println("CGMBART_04_init init\n");
 	}
 	
 	protected void SetupGibbsSampling(){
@@ -50,8 +51,6 @@ public abstract class CGMBART_04_init extends CGMBART_03_debug implements Serial
 //			System.out.println("CGMBART create prior on tree: " + (i + 1));
 			CGMBARTTreeNode stump = new CGMBARTTreeNode(null, X_y, this);
 			stump.y_prediction = INITIAL_PRED;
-//			modifyTreeForDebugging(tree);
-			stump.updateWithNewResponsesAndPropagate(X_y, y_trans, p);
 			cgm_trees.add(stump);
 		}	
 		gibbs_samples_of_cgm_trees.add(cgm_trees);	

@@ -9,6 +9,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 
 
@@ -28,7 +30,6 @@ public class Test_CGMBARTTreeNode {
 	static {
 		data = new ArrayList<double[]>();
 		bart = new CGMBARTRegression();
-		
 		double[] x_0 = {0, 1, 0, 1, 0, 1, 0};
 		double[] x_1 = {15.3, 45.8, 31.2, 9.3, 65.9, 32.3, 9.3};
 		double[] x_2 = {1, 1, 1, 1, 0, 0, 0};
@@ -46,7 +47,7 @@ public class Test_CGMBARTTreeNode {
 		simple_tree.isLeaf = false;
 		simple_tree.left = new CGMBARTTreeNode(simple_tree);
 		simple_tree.right = new CGMBARTTreeNode(simple_tree);
-		CGMBARTTreeNode.propagateDataByChangedRule(simple_tree, true);	
+		CGMBARTTreeNode.propagateDataByChangedRule(simple_tree);
 		
 		double_tree = simple_tree.clone(true);
 		double_tree.left.isLeaf = false;
@@ -59,7 +60,7 @@ public class Test_CGMBARTTreeNode {
 		double_tree.right.splitValue = 0.0;		
 		double_tree.right.left = new CGMBARTTreeNode(double_tree.right);
 		double_tree.right.right = new CGMBARTTreeNode(double_tree.right);
-		CGMBARTTreeNode.propagateDataByChangedRule(double_tree, true);
+		CGMBARTTreeNode.propagateDataByChangedRule(double_tree);
 	}
 
 	@BeforeClass
@@ -81,7 +82,15 @@ public class Test_CGMBARTTreeNode {
 
 	@Test
 	public void testResponses() {
-		assertArrayEquals(stump.responses(), y, 0);
+		double[] responses = stump.responses();
+		Arrays.sort(responses);
+//		for (int i = 0; i < stump.data.size(); i++){
+//			System.out.println("x row " + i + " = " + Tools.StringJoin(stump.data.get(i), ", "));
+//		}
+//		System.out.println("y = " + Tools.StringJoin(y, ", "));
+//		System.out.println("responses = " + Tools.StringJoin(responses, ", "));
+		
+		assertArrayEquals(responses, y, 0);
 	}
 	
 	@Test
@@ -247,7 +256,7 @@ public class Test_CGMBARTTreeNode {
 		double_tree_ext.left.left.splitValue = 15.3;
 		double_tree_ext.left.left.left = new CGMBARTTreeNode(double_tree_ext.left.left);
 		double_tree_ext.left.left.right = new CGMBARTTreeNode(double_tree_ext.left.left);
-		CGMBARTTreeNode.propagateDataByChangedRule(double_tree_ext, true);
+		CGMBARTTreeNode.propagateDataByChangedRule(double_tree_ext);
 		//now we want to make sure it has the same num predictors
 		return double_tree_ext;				
 	}	

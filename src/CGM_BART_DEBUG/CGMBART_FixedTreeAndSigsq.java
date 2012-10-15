@@ -37,7 +37,7 @@ public class CGMBART_FixedTreeAndSigsq extends CGMBART_09_eval {
 
 	protected void SampleTree(int sample_num, int t, ArrayList<CGMBARTTreeNode> cgm_trees, TreeArrayIllustration tree_array_illustration) {
 		CGMBARTTreeNode tree = CGMBART_FixedTree.CreateTheSimpleTreeModel(this);
-		tree.updateWithNewResponsesAndPropagate(X_y, y_trans, p); //no need for new y vector (which is usually the residuals from other trees)
+		tree.updateWithNewResponsesAndPropagate(y_trans, p); //no need for new y vector (which is usually the residuals from other trees)
 		cgm_trees.add(tree);
 		gibbs_samples_of_cgm_trees.set(sample_num, cgm_trees);
 		
