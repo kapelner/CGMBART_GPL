@@ -76,7 +76,7 @@ public class Test_BARTgibbs_internal {
 			old_tree.y_prediction = y_pred_initial;
 		}
 		double[] resids = bart.getResidualsBySubtractingTrees(old_trees_all_but_one);
-		System.out.println("Y = " + Tools.StringJoin(bart.y, ",") + "  avg_y = " + StatToolbox.sample_average(bart.y));
+		System.out.println("Y = " + Tools.StringJoin(bart.y_orig, ",") + "  avg_y = " + StatToolbox.sample_average(bart.y_orig));
 		System.out.println("Y_t = " + Tools.StringJoin(bart.y_trans, ",") + "  avg_y_t = " + StatToolbox.sample_average(bart.y_trans));
 		System.out.println("rjs = " + Tools.StringJoin(resids, ","));
 		double[] expected_resids = new double[bart.n];
@@ -97,13 +97,15 @@ public class Test_BARTgibbs_internal {
 		for (int t = 0; t < num_trees; t++){
 			CGMBARTTreeNode tree = trees.get(t);
 			double posterior_sigsq = bart.calcLeafPosteriorVar(tree, sigsq);
+			System.out.println("testAssignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsq: bart.n = " + bart.n);
 			assertEquals(1 / (1 / bart.hyper_sigsq_mu + bart.n / sigsq), posterior_sigsq, 0.0001);
 			//draw from posterior distribution
 			double posterior_mean = bart.calcLeafPosteriorMean(tree, sigsq, posterior_sigsq);
 			bart.assignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsq(tree, sigsq);
 			double moe = 4 * Math.sqrt(posterior_sigsq);
+			System.out.println("testAssignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsq\n sigsq = " + sigsq + " sigsq_post = " + posterior_sigsq + " mu_post = " + posterior_mean + " avg_y_node = " + tree.avg_response_untransformed() + " ypred = " + bart.un_transform_y(tree.y_prediction));
 			assertTrue(tree.y_prediction <= posterior_mean + moe && tree.y_prediction >= posterior_mean - moe);
-			System.out.println("sigsq = " + sigsq + " sigsq_post = " + posterior_sigsq + " mu_post = " + posterior_mean + " avg_y_node = " + tree.avg_response_untransformed() + " ypred = " + bart.un_transform_y(tree.y_prediction));
+			
 		}		
 	}
 	
@@ -113,6 +115,7 @@ public class Test_BARTgibbs_internal {
 		bart.setNumTrees(num_trees);
 		bart.InitGibbsSamplingData();
 		bart.InitializeTrees();
+		bart.InitializeMus();
 
 		double[] residuals = bart.getResidualsFromFullSumModel(0);
 		

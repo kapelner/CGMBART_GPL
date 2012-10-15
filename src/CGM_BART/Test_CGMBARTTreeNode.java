@@ -37,6 +37,7 @@ public class Test_CGMBARTTreeNode {
 			data.add(datum);
 		}
 		bart.setData(data);
+		data = bart.getData();
 		
 		stump = new CGMBARTTreeNode(null, data, bart);
 		
@@ -46,7 +47,7 @@ public class Test_CGMBARTTreeNode {
 		simple_tree.isLeaf = false;
 		simple_tree.left = new CGMBARTTreeNode(simple_tree);
 		simple_tree.right = new CGMBARTTreeNode(simple_tree);
-		CGMBARTTreeNode.propagateDataByChangedRule(simple_tree, true);	
+		CGMBARTTreeNode.propagateDataByChangedRule(simple_tree, true);
 		
 		double_tree = simple_tree.clone(true);
 		double_tree.left.isLeaf = false;
@@ -81,7 +82,7 @@ public class Test_CGMBARTTreeNode {
 
 	@Test
 	public void testResponses() {
-		assertArrayEquals(stump.responses(), y, 0);
+		assertArrayEquals(y, stump.responses(), 0);
 	}
 	
 	@Test
@@ -130,8 +131,8 @@ public class Test_CGMBARTTreeNode {
 		double[] right_responses = {0, 4, 8};
 		assertArrayEquals(simple_tree.left.responses(), left_responses, 0);
 		assertArrayEquals(simple_tree.right.responses(), right_responses, 0);
-		assertEquals(simple_tree.left.sumResponses(), 16, 0);
 		assertEquals(simple_tree.right.sumResponses(), 12, 0);
+		assertEquals(simple_tree.left.sumResponses(), 16, 0);		
 		assertEquals(simple_tree.left.sumResponsesQuantitySqd(), 256, 0);
 		assertEquals(simple_tree.right.sumResponsesQuantitySqd(), 144, 0);	
 		ArrayList<CGMBARTTreeNode> internal_nodes = new ArrayList<CGMBARTTreeNode>(1);

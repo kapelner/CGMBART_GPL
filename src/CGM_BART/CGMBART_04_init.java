@@ -27,6 +27,7 @@ public abstract class CGMBART_04_init extends CGMBART_03_debug implements Serial
 		InitializeTrees();
 		InitializeMus();		
 		DebugInitialization();	
+		//the zeroth gibbs sample is the initialization we just did; now we're onto the first in the chain
 		gibb_sample_num = 1;
 	}
 	
@@ -41,32 +42,35 @@ public abstract class CGMBART_04_init extends CGMBART_03_debug implements Serial
 		gibbs_samples_of_sigsq_after_burn_in = new ArrayList<Double>(num_gibbs_total_iterations - num_gibbs_burn_in);		
 	}
 	
-	protected static final double INITIAL_PRED = 0; //median, doesn't matter anyway
+	
 	protected void InitializeTrees() {
-//		System.out.println("InitiatizeTrees");
 		//create the array of trees for the zeroth gibbs sample
 		ArrayList<CGMBARTTreeNode> cgm_trees = new ArrayList<CGMBARTTreeNode>(num_trees);		
 		for (int i = 0; i < num_trees; i++){
-//			System.out.println("CGMBART create prior on tree: " + (i + 1));
-			CGMBARTTreeNode stump = new CGMBARTTreeNode(null, X_y, this);
-			stump.y_prediction = INITIAL_PRED;
-//			modifyTreeForDebugging(tree);
+			CGMBARTTreeNode stump = new CGMBARTTreeNode(this);
 			stump.updateWithNewResponsesAndPropagate(X_y, y_trans, p);
 			cgm_trees.add(stump);
 		}	
 		gibbs_samples_of_cgm_trees.add(cgm_trees);	
 	}
 
+	protected static final double INITIAL_PRED = 0; //median, doesn't matter anyway
 	protected void InitializeMus() {
 //		System.out.println("InitializeMus");
-		for (CGMBARTTreeNode tree : gibbs_samples_of_cgm_trees.get(0)){
-			assignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsq(tree, gibbs_samples_of_sigsq.get(0));
-		}		
+		//we don't want to do this
+//		for (CGMBARTTreeNode tree : gibbs_samples_of_cgm_trees.get(0)){
+//			assignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsq(tree, gibbs_samples_of_sigsq.get(0));
+//		}	
+		for (CGMBARTTreeNode stump : gibbs_samples_of_cgm_trees.get(0)){
+			stump.y_prediction = INITIAL_PRED;
+		}
 	}
 	
+	protected static final double INITIAL_SIGSQ = Math.pow(0.5 / 3, 2); //median, doesn't matter anyway
 	protected void InitizializeSigsq() {
 //		System.out.println("InitizializeSigsq");
-		gibbs_samples_of_sigsq.add(0, sampleInitialSigsqByDrawingFromThePrior());		
+		gibbs_samples_of_sigsq.add(0, INITIAL_SIGSQ);
+//		gibbs_samples_of_sigsq.add(0, sampleInitialSigsqByDrawingFromThePrior());
 	}
 	
 	protected double sampleInitialSigsqByDrawingFromThePrior() {

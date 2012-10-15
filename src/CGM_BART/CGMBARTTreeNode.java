@@ -71,11 +71,13 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 	/** this caches the possible split variables */
 	private ArrayList<Integer> possible_rule_variables;
 	/** this caches the possible split values BY variable */
-	private HashMap<Integer, ArrayList<Double>> possible_split_vals_by_attr;	
+	private HashMap<Integer, ArrayList<Double>> possible_split_vals_by_attr;
+	
+	public CGMBARTTreeNode(){}	
 
 	public CGMBARTTreeNode(CGMBARTTreeNode parent, List<double[]> data, CGMBART_02_hyperparams cgmbart){
 		this.parent = parent;
-		this.data = clone_data_matrix_with_new_y_optional(data, null);
+		this.data = Classifier.clone_data_matrix_with_new_y_optional(data, null);
 		this.cgmbart = cgmbart;
 		if (data != null){
 			n_eta = data.size();
@@ -90,6 +92,12 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		this(parent, null, parent.cgmbart);
 	}
 	
+	public CGMBARTTreeNode(CGMBART_02_hyperparams cgmbart) {
+		this.cgmbart = cgmbart;
+		isLeaf = true;
+		depth = 0;
+	}
+
 	public CGMBARTTreeNode clone(){
 		return clone(false);
 	}
@@ -98,7 +106,7 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		double[] ys = new double[n_eta];
 		for (int i = 0; i < n_eta; i++){
 			double[] record = data.get(i);
-			ys[i] = record[record.length - 1];
+			ys[i] = record[record.length - 2];
 		}
 //		System.out.println("ys: " + Tools.StringJoin(ys, ", "));
 		return ys;
@@ -359,7 +367,7 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		if (node.isLeaf){
 			return;
 		}
-//		System.out.println("propagate changes " + node.stringID() + "  new n:" + node.n);
+//		System.out.println("propagate changes " + node.stringLocation(true) + "  new n:" + node.n_eta);
 
 //		System.out.println("propagate changes in node that is not leaf");
 		//split the data correctly
@@ -389,38 +397,28 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 			propagateDataByChangedRule(node.right, clean_cache);
 //			}
 	}
+	
+	public void getYhatsByDataIndex(double[] y_hats_by_index){
+		if (this.isLeaf){
+			double y_hat = classification_or_regression_prediction();
+//			System.out.println("getYhatsByDataIndex for " + this.stringLocation(true) + " yhat = " + y_hat + " n_eta = " + (this.data == null ? "NULL" : this.data.size()));
+			for (double[] datum : this.data){
+				y_hats_by_index[(int) datum[cgmbart.p + 1]] = y_hat;
+			}
+		}
+		else {
+			this.left.getYhatsByDataIndex(y_hats_by_index);
+			this.right.getYhatsByDataIndex(y_hats_by_index);
+		}
+	}
 
 	//////CHECK THIS LATER
 	public void updateWithNewResponsesAndPropagate(ArrayList<double[]> X_y, double[] y_new, int p) {
 		//set the root node data
-		this.data = clone_data_matrix_with_new_y_optional(X_y, y_new);
+		this.data = Classifier.clone_data_matrix_with_new_y_optional(X_y, y_new);
+		this.n_eta = this.data.size(); //make sure the parent has the right size
 		//now just propagate away
 		propagateDataByChangedRule(this, true);
-	}
-	
-	public static ArrayList<double[]> clone_data_matrix_with_new_y_optional(List<double[]> X_y, double[] y_new){
-		if (X_y == null){
-			return null;
-		}
-		ArrayList<double[]> X_y_new = new ArrayList<double[]>(X_y.size());
-		for (int i = 0; i < X_y.size(); i++){
-			double[] original_record = X_y.get(i);
-			int p = original_record.length - 1;
-			double[] new_record = new double[p + 1];
-			for (int j = 0; j <= p; j++){
-				if (j == p && y_new != null){
-					new_record[j] = y_new[i];
-				}
-				else {
-					new_record[j] = original_record[j];
-				}
-			}
-			X_y_new.add(new_record);
-
-//			System.out.println("original_record: " + IOTools.StringJoin(original_record, ","));
-//			System.out.println("new_record: " + IOTools.StringJoin(new_record, ","));
-		}
-		return X_y_new; 
 	}
 	
 	public int numLeaves(){
@@ -522,9 +520,9 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 
 	public double sumResponses() {
 		double sum = 0;
+		double[] responses = responses();
 		for (int i = 0; i < n_eta; i++){
-			double[] record = data.get(i);
-			sum += record[record.length - 1];
+			sum += responses[i];
 		}
 		return sum;
 	}	
