@@ -565,6 +565,7 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 			possible_split_vals_by_attr = new HashMap<Integer, ArrayList<Double>>();
 		}
 		if (possible_split_vals_by_attr.get(splitAttributeM) == null){
+			//super inefficient
 			ArrayList<Double> x_dot_j = Classifier.getColVector(data, splitAttributeM);
 			Double max = Collections.max(x_dot_j);
 			HashSet<Double> unique_x_dot_j = new HashSet<Double>(x_dot_j);

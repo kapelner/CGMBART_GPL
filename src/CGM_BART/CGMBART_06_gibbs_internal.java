@@ -92,10 +92,10 @@ public abstract class CGMBART_06_gibbs_internal extends CGMBART_05_gibbs_base im
 		return 1 / (1 / hyper_sigsq_mu + node.n_eta / sigsq);
 	}
 	
-	protected double drawSigsqFromPosterior(int sample_num) {
+	protected double drawSigsqFromPosterior(int sample_num, double[] residual_vec_excluding_last_tree) {
 		//first calculate the SSE
 		double sum_sq_errors = 0;
-		double[] es = getResidualsFromFullSumModel(sample_num);
+		double[] es = getResidualsFromFullSumModel(sample_num, residual_vec_excluding_last_tree);
 		if (WRITE_DETAILED_DEBUG_FILES){		
 			remainings.println((sample_num) + ",,e," + Tools.StringJoin(es, ","));
 			evaluations.println((sample_num) + ",,e," + Tools.StringJoin(es, ","));
@@ -120,25 +120,35 @@ public abstract class CGMBART_06_gibbs_internal extends CGMBART_05_gibbs_base im
 		return sigsq;
 	}
 	
-	protected double[] getResidualsFromFullSumModel(int sample_num){
-//		System.out.println("getErrorsForAllTrees");
-		double[] sum_ys_trans = new double[n];
+	protected double[] getResidualsFromFullSumModel(int sample_num, double[] residual_vec_excluding_last_tree){
 		double[] residuals = new double[n];
 		
+		//spider down tree
+		double[] residual_last_tree = new double[n];
+		CGMBARTTreeNode last_tree = gibbs_samples_of_cgm_trees.get(sample_num).get(num_trees - 1);
+		last_tree.getYhatsByDataIndex(residual_last_tree);
 		for (int i = 0; i < n; i++){
-			sum_ys_trans[i] = 0; //initialize at zero, then add it up over all trees except the jth
-			for (int t = 0; t < num_trees; t++){
-//				System.out.println("getErrorsForAllTrees m = " + m);
-				//obviously y_vec - \sum_i g_i = \sum_i y_i - g_i
-				CGMBARTTreeNode tree = gibbs_samples_of_cgm_trees.get(sample_num).get(t);
-				double y_hat_trans = tree.Evaluate(X_y.get(i));
-//				double y_hat = un_transform_y(tree.Evaluate(X_y.get(i)));
-//				System.out.println("i = " + (i + 1) + " y: " + y[i] + " y_hat: " + y_hat + " e: " + (y[i] - y_hat)+ " tree " + t);
-				sum_ys_trans[i] += y_hat_trans;
-			}
-			//now we need to subtract this from y
-			residuals[i] = y_trans[i] - sum_ys_trans[i];
+			residuals[i] = y_trans[i] - residual_vec_excluding_last_tree[i] - residual_last_tree[i];
 		}
+		
+//		System.out.println("getErrorsForAllTrees");
+//		double[] sum_ys_trans = new double[n];
+//		
+//		
+//		for (int i = 0; i < n; i++){
+//			sum_ys_trans[i] = 0; //initialize at zero, then add it up over all trees except the jth
+//			for (int t = 0; t < num_trees; t++){
+////				System.out.println("getErrorsForAllTrees m = " + m);
+//				//obviously y_vec - \sum_i g_i = \sum_i y_i - g_i
+//				CGMBARTTreeNode tree = gibbs_samples_of_cgm_trees.get(sample_num).get(t);
+//				double y_hat_trans = tree.Evaluate(X_y.get(i));
+////				double y_hat = un_transform_y(tree.Evaluate(X_y.get(i)));
+////				System.out.println("i = " + (i + 1) + " y: " + y[i] + " y_hat: " + y_hat + " e: " + (y[i] - y_hat)+ " tree " + t);
+//				sum_ys_trans[i] += y_hat_trans;
+//			}
+//			//now we need to subtract this from y
+//			residuals[i] = y_trans[i] - sum_ys_trans[i];
+//		}
 //		System.out.println("sum_ys " + IOTools.StringJoin(sum_ys, ","));
 //		System.out.println("y_trans " + IOTools.StringJoin(y_trans, ","));
 //		System.out.println("errorjs " + IOTools.StringJoin(errorjs, ","));
