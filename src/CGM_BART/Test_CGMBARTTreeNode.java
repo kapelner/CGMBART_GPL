@@ -42,11 +42,9 @@ public class Test_CGMBARTTreeNode {
 		
 		stump = new CGMBARTTreeNode(bart);
 		stump.data = data;
-		stump.n_eta = data.size();
 		
 		simple_tree = new CGMBARTTreeNode(bart);
 		simple_tree.data = data;
-		simple_tree.n_eta = data.size();
 		simple_tree.splitAttributeM = 0;
 		simple_tree.splitValue = 0.0;
 		simple_tree.isLeaf = false;
@@ -68,9 +66,9 @@ public class Test_CGMBARTTreeNode {
 		
 		CGMBARTTreeNode.propagateDataByChangedRule(double_tree);
 		System.out.println("create double_tree n_eta's\nP: " + 
-				double_tree.n_eta + " L: " + double_tree.left.n_eta + " R: " + double_tree.right.n_eta + 
-				" LL: " + double_tree.left.left.n_eta + " LR: " + double_tree.left.right.n_eta + 
-				" RL: " + double_tree.right.left.n_eta + " RR: " + double_tree.right.right.n_eta);
+				double_tree.nEta() + " L: " + double_tree.left.nEta() + " R: " + double_tree.right.nEta() + 
+				" LL: " + double_tree.left.left.nEta() + " LR: " + double_tree.left.right.nEta() + 
+				" RL: " + double_tree.right.left.nEta() + " RR: " + double_tree.right.right.nEta());
 	}
 
 	@BeforeClass
@@ -111,13 +109,13 @@ public class Test_CGMBARTTreeNode {
 	@Test
 	public void testCloneStump() {
 		CGMBARTTreeNode cloned_stump = stump.clone();
-		assertEquals(cloned_stump.n_eta, stump.n_eta);
+		assertEquals(cloned_stump.nEta(), stump.nEta());
 		double[] stump_responses = stump.getResponses().clone();
 		double[] cloned_stump_responses = cloned_stump.getResponses().clone();
 		Arrays.sort(stump_responses);
 		Arrays.sort(cloned_stump_responses);
 		assertArrayEquals(stump_responses, cloned_stump_responses, 0);
-		for (int i = 0; i < stump.n_eta; i++){
+		for (int i = 0; i < stump.nEta(); i++){
 			assertArrayEquals(stump.data.get(i), cloned_stump.data.get(i), 0);
 		}
 		assertTrue(cloned_stump.isLeaf);
@@ -180,9 +178,6 @@ public class Test_CGMBARTTreeNode {
 		right_responses.add(0.0);
 		right_responses.add(4.0);
 
-		
-		assertEquals(left_responses, double_tree.left.responsesAsHash());
-		assertEquals(right_responses, double_tree.right.responsesAsHash());
 		assertEquals(double_tree.left.sumResponses(), 16, 0);
 		assertEquals(double_tree.right.sumResponses(), 12, 0);
 		assertEquals(double_tree.left.sumResponsesQuantitySqd(), 256, 0);

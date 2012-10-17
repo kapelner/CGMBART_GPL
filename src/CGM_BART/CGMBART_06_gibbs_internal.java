@@ -86,18 +86,18 @@ public abstract class CGMBART_06_gibbs_internal extends CGMBART_05_gibbs_base im
 
 	protected double calcLeafPosteriorMean(CGMBARTTreeNode node, double sigsq, double posterior_var) {
 //		System.out.println("leafPosteriorMean hyper_sigsq_mu " + hyper_sigsq_mu + " node.n " + node.n + " sigsq " + sigsq + " node.avg_response() " + node.avg_response() + " posterior_var " + posterior_var);
-		return (hyper_mu_mu / hyper_sigsq_mu + node.n_eta / sigsq * node.avgResponse()) / (1 / posterior_var);
+		return (hyper_mu_mu / hyper_sigsq_mu + node.nEta() / sigsq * node.avgResponse()) / (1 / posterior_var);
 	}
 
 	protected double calcLeafPosteriorVar(CGMBARTTreeNode node, double sigsq) {
-		System.out.println("calcLeafPosteriorVar: node.n_eta = " + node.n_eta);
-		return 1 / (1 / hyper_sigsq_mu + node.n_eta / sigsq);
+		System.out.println("calcLeafPosteriorVar: node.n_eta = " + node.nEta());
+		return 1 / (1 / hyper_sigsq_mu + node.nEta() / sigsq);
 	}
 	
-	protected double drawSigsqFromPosterior(int sample_num, double[] residual_vec_excluding_last_tree) {
+	protected double drawSigsqFromPosterior(int sample_num) {
 		//first calculate the SSE
 		double sse = 0;
-		double[] es = getResidualsFromFullSumModel(sample_num, residual_vec_excluding_last_tree);
+		double[] es = getResidualsFromFullSumModel(sample_num);
 		if (WRITE_DETAILED_DEBUG_FILES){		
 			remainings.println((sample_num) + ",,e," + Tools.StringJoin(es, ","));
 			evaluations.println((sample_num) + ",,e," + Tools.StringJoin(es, ","));
@@ -105,30 +105,20 @@ public abstract class CGMBART_06_gibbs_internal extends CGMBART_05_gibbs_base im
 		for (double e : es){
 			sse += Math.pow(e, 2); 
 		}
-//		System.out.println("sample: " + sample_num + " sse = " + sum_sq_errors);
 		//we're sampling from sigsq ~ InvGamma((nu + n) / 2, 1/2 * (sum_i error^2_i + lambda * nu))
 		//which is equivalent to sampling (1 / sigsq) ~ Gamma((nu + n) / 2, 2 / (sum_i error^2_i + lambda * nu))
-		double sigsq = StatToolbox.sample_from_inv_gamma((hyper_nu + n) / 2, 2 / (sse + hyper_nu * hyper_lambda));
-//		System.out.println("\n\nSample posterior from trees " + treeIDsInCurrentSample(sample_num) + "  SSE=" + sum_sq_errors + " post_sigsq_sample: " + sigsq);
-//		
-//		//debug
-//		double[] posterior_sigma_simus = new double[1000];
-//		for (int i = 0; i < 1000; i++){
-//			posterior_sigma_simus[i] = StatToolbox.sample_from_inv_gamma((hyper_nu + n) / 2, 2 / (sum_sq_errors + hyper_nu * hyper_lambda)) * (TRANSFORM_Y ? y_range_sq : 1);
-//		}
-//		System.out.print("\n\n\n");
-//		sigsqs_draws.println(sample_num + "," + hyper_nu + "," + hyper_lambda + "," + n + "," + sum_sq_errors + "," + (sigsq * (TRANSFORM_Y ? y_range_sq : 1)) + "," + y_range_sq + "," + IOTools.StringJoin(posterior_sigma_simus, ","));
-		
-		return sigsq;
+		return StatToolbox.sample_from_inv_gamma((hyper_nu + n) / 2, 2 / (sse + hyper_nu * hyper_lambda));
 	}
 	
-	protected double[] getResidualsFromFullSumModel(int sample_num, double[] residual_vec_excluding_last_tree){
-		double[] residuals = new double[n];
-		
-		CGMBARTTreeNode last_tree = gibbs_samples_of_cgm_trees.get(sample_num).get(num_trees - 1);
-		double[] residual_last_tree = last_tree.yhats;
+	protected double[] getResidualsFromFullSumModel(int sample_num){
+		double[] residuals = new double[n];		
 		for (int i = 0; i < n; i++){
-			residuals[i] = y_trans[i] - residual_vec_excluding_last_tree[i] - residual_last_tree[i];
+			residuals[i] = y_trans[i];
+		}		
+		for (int i = 0; i < n; i++){
+			for (CGMBARTTreeNode tree : gibbs_samples_of_cgm_trees.get(sample_num)){
+				residuals[i] -= tree.yhats[i];
+			}
 		}
 		return residuals;
 	}	

@@ -81,7 +81,7 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 		CGMBARTTreeNode.propagateDataByChangedRule(grow_node);	
 
 
-		if (grow_node.left.n_eta <= N_RULE || grow_node.right.n_eta <= N_RULE){
+		if (grow_node.left.nEta() <= N_RULE || grow_node.right.nEta() <= N_RULE){
 			System.out.println("ERR: cannot split a node where daughter only has one data point   proposal ln(r) = -oo DUE TO CANNOT GROW\n\n");
 			return Double.NEGATIVE_INFINITY;
 		}
@@ -177,9 +177,9 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 
 	protected double calcLnLikRatioGrow(CGMBARTTreeNode grow_node) {
 		double sigsq = gibbs_samples_of_sigsq.get(gibb_sample_num - 1);
-		int n_ell = grow_node.n_eta;
-		int n_ell_L = grow_node.left.n_eta;
-		int n_ell_R = grow_node.right.n_eta;		
+		int n_ell = grow_node.nEta();
+		int n_ell_L = grow_node.left.nEta();
+		int n_ell_R = grow_node.right.nEta();		
 		
 		if (n_ell_L <= N_RULE || n_ell_R <= N_RULE){
 			System.out.println("ERR: cannot split a node where daughter only has one data point");

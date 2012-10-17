@@ -44,17 +44,15 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 		final TreeArrayIllustration tree_array_illustration = new TreeArrayIllustration(gibb_sample_num, unique_name);
 		gibbs_samples_of_cgm_trees.add(null); //so I can set explicitly
 		//we cycle over each tree and update it according to formulas 15, 16 on p274
-		double[] residual_vec_excluding_last_tree = new double[n];
 		for (int t = 0; t < num_trees; t++){
 			if (t == 0){
 				System.out.println("Sampling M_" + (t + 1) + "/" + num_trees + " iter " + gibb_sample_num + "/" + num_gibbs_total_iterations);
 			}
-			residual_vec_excluding_last_tree = 
-				SampleTree(gibb_sample_num, t, cgm_trees, tree_array_illustration);
+			SampleTree(gibb_sample_num, t, cgm_trees, tree_array_illustration);
 			SampleMus(gibb_sample_num, t);				
 		}
 		//now we have the last residual vector which we pass on to sample sigsq		
-		SampleSigsq(gibb_sample_num, residual_vec_excluding_last_tree);
+		SampleSigsq(gibb_sample_num);
 		DebugSample(gibb_sample_num, tree_array_illustration);
 		//now flush the previous previous gibbs sample
 		ArrayList<CGMBARTTreeNode> old_trees = gibbs_samples_of_cgm_trees.get(gibb_sample_num - 1);
@@ -62,12 +60,12 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 		gibb_sample_num++;
 	}
 
-	protected void SampleSigsq(int sample_num, double[] residual_vec_excluding_last_tree) {
-		double sigsq = drawSigsqFromPosterior(sample_num, residual_vec_excluding_last_tree);
+	protected void SampleSigsq(int sample_num) {
+		double sigsq = drawSigsqFromPosterior(sample_num);
 		gibbs_samples_of_sigsq.add(sample_num, sigsq);
 	}
 
-	protected abstract double drawSigsqFromPosterior(int sample_num, double[] residual_vec_excluding_last_tree);
+	protected abstract double drawSigsqFromPosterior(int sample_num);
 
 	protected void SampleMus(int sample_num, int t) {
 //		System.out.println("SampleMu sample_num " +  sample_num + " t " + t + " gibbs array " + gibbs_samples_of_cgm_trees.get(sample_num));

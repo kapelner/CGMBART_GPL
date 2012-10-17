@@ -109,10 +109,10 @@ public abstract class CGMBART_08_mh_with_change extends CGMBART_07_mh {
 	protected double calcLnLikRatioChange(CGMBARTTreeNode original_node, CGMBARTTreeNode changed_node) {
 		double sigsq = gibbs_samples_of_sigsq.get(gibb_sample_num - 1);
 		double sigsq_over_hyper_sigsq_mu = sigsq / hyper_sigsq_mu;
-		int n_1_star = changed_node.left.n_eta;
-		int n_2_star = changed_node.right.n_eta;
-		int n_1 = original_node.left.n_eta;
-		int n_2 = original_node.right.n_eta;
+		int n_1_star = changed_node.left.nEta();
+		int n_2_star = changed_node.right.nEta();
+		int n_1 = original_node.left.nEta();
+		int n_2 = original_node.right.nEta();
 		
 		double sum_R_1_star_i_s = changed_node.left.sumResponsesQuantitySqd();
 		double sum_R_2_star_i_s = changed_node.right.sumResponsesQuantitySqd();

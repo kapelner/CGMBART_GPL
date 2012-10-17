@@ -118,8 +118,7 @@ public class Test_BARTgibbs_internal {
 		bart.InitGibbsSamplingData();
 		bart.InitializeTrees();
 		bart.InitializeMus();
-		double[] response_vec = new double[bart.n];
-		double[] residuals = bart.getResidualsFromFullSumModel(0, response_vec);
+		double[] residuals = bart.getResidualsFromFullSumModel(0);
 		
 //		System.out.println("Y(" + CGMBART_init.INITIAL_PRED + ") = " + bart.un_transform_y(CGMBART_init.INITIAL_PRED));
 //		System.out.println("Y = " + Tools.StringJoin(bart.y, ",") + "  avg_y = " + StatToolbox.sample_average(bart.y));

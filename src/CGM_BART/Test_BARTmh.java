@@ -329,9 +329,9 @@ public class Test_BARTmh {
 		CGMBARTTreeNode.propagateDataByChangedRule(first_node_grown);
 		
 		//now ensure the proper n's
-		assertEquals(7, first_node_grown.n_eta);
-		assertEquals(4, first_node_grown.left.n_eta);
-		assertEquals(3, first_node_grown.right.n_eta);
+		assertEquals(7, first_node_grown.nEta());
+		assertEquals(4, first_node_grown.left.nEta());
+		assertEquals(3, first_node_grown.right.nEta());
 		assertEquals(256, first_node_grown.left.sumResponsesQuantitySqd(), 0.001);
 		assertEquals(144, first_node_grown.right.sumResponsesQuantitySqd(), 0.001);
 		
@@ -365,9 +365,9 @@ public class Test_BARTmh {
 		CGMBARTTreeNode.propagateDataByChangedRule(T_star);
 		
 		//now ensure the proper n's
-		assertEquals(4, second_node_grown.n_eta);
-		assertEquals(2, second_node_grown.left.n_eta);
-		assertEquals(2, second_node_grown.right.n_eta);
+		assertEquals(4, second_node_grown.nEta());
+		assertEquals(2, second_node_grown.left.nEta());
+		assertEquals(2, second_node_grown.right.nEta());
 		assertEquals(196, second_node_grown.left.sumResponsesQuantitySqd(), 0.001);
 		assertEquals(4, second_node_grown.right.sumResponsesQuantitySqd(), 0.001);	
 		assertEquals(256, second_node_grown.sumResponsesQuantitySqd(), 0.001);

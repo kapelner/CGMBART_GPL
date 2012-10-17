@@ -54,8 +54,6 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 	public CGMBARTTreeNode right;
 	/** the generation of this node from the top node (root note has generation = 0 by definition) */
 	public int depth;
-	/** the amount of data points at this node */
-	public int n_eta;
 	/** is this node a terminal leaf? */
 	public boolean isLeaf;
 	/** the attribute this node makes a decision on */
@@ -76,8 +74,6 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 	private transient int[] indicies;	
 	/** the y's in this node */
 	private transient double[] responses;
-	/** a unique hashset of the y's in this node */
-	private transient HashSet<Double> response_hash;
 	/** self-explanatory */
 	private transient Double sum_responses_qty_sqd;
 	/** self-explanatory */
@@ -94,9 +90,6 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		this.yhats = parent.yhats;
 		this.cgmbart = cgmbart;
 		
-		if (data != null){
-			n_eta = data.size();
-		}
 		if (parent != null){
 			depth = parent.depth + 1;
 		}
@@ -120,8 +113,7 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		copy.isLeaf = isLeaf;
 		copy.splitAttributeM = splitAttributeM;
 		copy.splitValue = splitValue;
-		copy.klass = klass;	
-		copy.n_eta = n_eta;
+		copy.klass = klass;
 		copy.possible_rule_variables = possible_rule_variables;
 		copy.possible_split_vals_by_attr = possible_split_vals_by_attr;
 		copy.depth = depth;
@@ -161,18 +153,6 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 			System.out.println("getResponses internal on " + this.stringLocation(true) + " " + Tools.StringJoin(responses));
 		}
 		return responses;
-	}
-	
-	public HashSet<Double> responsesAsHash(){		
-		if (response_hash == null){
-			response_hash = new HashSet<Double>();
-			double[] responses = getResponses();
-			for (int i = 0; i < responses.length; i++){
-				response_hash.add(responses[i]);
-			}
-			System.out.println("responsesAsHash internal on " + this.stringLocation(true) + " num_unique: " + response_hash.size());
-		}
-		return response_hash;
 	}
 	
 	public double avgResponse(){
@@ -390,9 +370,7 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		int n_split = ClassificationAndRegressionTree.getSplitPoint(node.data, node.splitAttributeM, node.splitValue);
 		//now set the data in the offspring
 		node.left.data = ClassificationAndRegressionTree.getLowerPortion(node.data, n_split); //WARNING: SHALLOW COPY			
-		node.left.n_eta = node.left.data.size();
 		node.right.data = ClassificationAndRegressionTree.getUpperPortion(node.data, n_split); //WARNING: SHALLOW COPY
-		node.right.n_eta = node.right.data.size();
 		propagateDataByChangedRule(node.left);
 		propagateDataByChangedRule(node.right);
 	}
@@ -524,7 +502,7 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		if (sum_responses_qty == null){
 			sum_responses_qty = 0.0;
 			double[] responses = getResponses();
-			for (int i = 0; i < n_eta; i++){
+			for (int i = 0; i < nEta(); i++){
 				sum_responses_qty += responses[i];
 			}
 //			System.out.println("sum_responses_qty " + sum_responses_qty);
@@ -706,12 +684,6 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 	public void setKlass(Double klass) {
 		this.klass = klass;
 	}
-	public int getNEta() {
-		return n_eta;
-	}
-	public void setNEta(int n_eta) {
-		this.n_eta = n_eta;
-	}
 
 	public int numTimesAttrUsed(int j) {
 		if (this.isLeaf){
@@ -737,7 +709,6 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 			}
 			data.add(x_i_dot_new);
 		}
-		n_eta = data.size();
 		
 		//initialize the yhats
 		yhats = new double[n];
@@ -748,12 +719,11 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 	public void updateWithNewResponsesRecursively(double[] new_respones) {
 		//nuke previous responses and sums
 		responses = null;
-		response_hash = null;
 		sum_responses_qty_sqd = null;
 		sum_responses_qty = null;
 		//copy all the new data in appropriately
 		int[] indices = getIndices();
-		for (int i = 0; i < n_eta; i++){
+		for (int i = 0; i < nEta(); i++){
 			setResponse(i, new_respones[indices[i]]);
 		}
 		if (this.isLeaf){
@@ -771,6 +741,10 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		for (int index : getIndices()){
 			yhats[index] = y_pred;
 		}
+	}
+	
+	public int nEta(){
+		return data.size();
 	}
 
 //	public CGMBARTTreeNode findCorrespondingNodeOnSimilarTree(CGMBARTTreeNode node) {

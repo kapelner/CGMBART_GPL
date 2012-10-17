@@ -200,12 +200,12 @@ public class TreeIllustration {
 		if (node.isLeaf && node.y_pred != null){
 			String pred = two_digit_format.format(node.prediction_untransformed());//;
 			int draw_x = (int)Math.round(x - pred.length() / 2.0 * character_width_in_px);
-			g.drawString(pred + " (" + node.n_eta + ") ", draw_x, y + 16);
+			g.drawString(pred + " (" + node.nEta() + ") ", draw_x, y + 16);
 		}
 		else if (node.splitAttributeM != null && node.splitValue != null) {
 			int attr = node.splitAttributeM;
 			double val = node.splitValue;
-			String rule_and_n = "X_" + (attr + 1) + " < " + two_digit_format.format(val) + " (" + node.n_eta + ") " + two_digit_format.format(node.avg_response_untransformed());
+			String rule_and_n = "X_" + (attr + 1) + " < " + two_digit_format.format(val) + " (" + node.nEta() + ") " + two_digit_format.format(node.avg_response_untransformed());
 			int draw_x = (int)Math.round(x - rule_and_n.length() / 2.0 * character_width_in_px);
 			g.drawString(rule_and_n, draw_x, y - 5);
 			draw_x = (int)Math.round(x - node.stringID().length() / 2.0 * character_width_in_px);
