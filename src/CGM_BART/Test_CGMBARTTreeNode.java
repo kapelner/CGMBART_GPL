@@ -94,9 +94,9 @@ public class Test_CGMBARTTreeNode {
 	@Test
 	public void testResponses() {
 		System.out.println("y: " + Tools.StringJoin(y));
-		System.out.println("stump.getResponses(): " + Tools.StringJoin(stump.getResponses()));
-		Arrays.sort(stump.getResponses());
-		assertArrayEquals(y, stump.getResponses(), 0);
+		System.out.println("stump.getResponses(): " + Tools.StringJoin(stump.responses));
+		Arrays.sort(stump.responses);
+		assertArrayEquals(y, stump.responses, 0);
 	}
 	
 	@Test
@@ -113,8 +113,8 @@ public class Test_CGMBARTTreeNode {
 	public void testCloneStump() {
 		CGMBARTTreeNode cloned_stump = stump.clone();
 		assertEquals(cloned_stump.n_eta, stump.n_eta);
-		double[] stump_responses = stump.getResponses().clone();
-		double[] cloned_stump_responses = cloned_stump.getResponses().clone();
+		double[] stump_responses = stump.responses.clone();
+		double[] cloned_stump_responses = cloned_stump.responses.clone();
 		Arrays.sort(stump_responses);
 		Arrays.sort(cloned_stump_responses);
 		assertArrayEquals(stump_responses, cloned_stump_responses, 0);
@@ -147,8 +147,8 @@ public class Test_CGMBARTTreeNode {
 		assertEquals(simple_tree.right.stringLocation(false), "R");		
 		double[] left_responses = {0, 2, 5, 9};
 		double[] right_responses = {0, 4, 8};
-		assertArrayEquals(simple_tree.left.getResponses(), left_responses, 0);
-		assertArrayEquals(simple_tree.right.getResponses(), right_responses, 0);
+		assertArrayEquals(simple_tree.left.responses, left_responses, 0);
+		assertArrayEquals(simple_tree.right.responses, right_responses, 0);
 		assertEquals(simple_tree.right.sumResponses(), 12, 0);
 		assertEquals(simple_tree.left.sumResponses(), 16, 0);		
 		assertEquals(simple_tree.left.sumResponsesQuantitySqd(), 256, 0);
@@ -205,9 +205,12 @@ public class Test_CGMBARTTreeNode {
 		Integer[] all_predictors = {0, 1, 2};
 		assertArrayEquals(simple_tree.predictorsThatCouldBeUsedToSplitAtNode().toArray(), all_predictors);
 		assertEquals(simple_tree.pAdj(), 3);
-		Object[] vals_to_split = {0.0}; //remember we can't split on 1 because it's the max value
+		double[] vals_to_split = {0.0}; //remember we can't split on 1 because it's the max value
 		System.out.println("poss splits: " + Tools.StringJoin(simple_tree.possibleSplitValuesGivenAttribute().toArray(), ","));
-		assertArrayEquals(simple_tree.possibleSplitValuesGivenAttribute().toArray(), vals_to_split);
+		double[] arr1 = simple_tree.possibleSplitValuesGivenAttribute().toArray();
+		for (int i = 0; i < arr1.length; i++){
+			assertEquals(arr1[i], vals_to_split[i], 0.0001);
+		}
 		assertEquals(simple_tree.pAdj(), 3);
 		//now go into the leaves and see what else we can split on
 		Integer[] predictors_left = {1, 2};

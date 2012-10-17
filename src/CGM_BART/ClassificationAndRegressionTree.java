@@ -114,13 +114,20 @@ public abstract class ClassificationAndRegressionTree extends Classifier {
 	 * 
 	 * @param data		the data matrix to be split
 	 * @param nSplit	return all data records above this index in a sub-data matrix
+	 * @param p 
+	 * @param node_left_indicies 
+	 * @param node_left_responses 
 	 * @return			the upper sub-data matrix
 	 */
-	public static List<double[]> getUpperPortion(List<double[]> data,int nSplit){
+	public static List<double[]> getUpperPortion(List<double[]> data, int nSplit, double[] responses, int[] indicies, int p){
 		int N = data.size();
 		List<double[]> upper = new ArrayList<double[]>(N - nSplit);
-		for (int n = nSplit; n < N; n++)
-			upper.add(data.get(n));
+		for (int n = nSplit; n < N; n++){
+			double[] record = data.get(n);
+			upper.add(record);
+			responses[n - nSplit] = record[p];
+			indicies[n - nSplit] = (int)record[p + 1];			
+		}
 		return upper;
 	}
 	
@@ -129,12 +136,19 @@ public abstract class ClassificationAndRegressionTree extends Classifier {
 	 * 
 	 * @param data		the data matrix to be split
 	 * @param nSplit	return all data records equal to or below this index in a sub-data matrix
+	 * @param node_left_indicies 
+	 * @param node_left_responses 
+	 * @param p 
 	 * @return			the lower sub-data matrix
 	 */
-	public static List<double[]> getLowerPortion(List<double[]> data,int nSplit){
+	public static List<double[]> getLowerPortion(List<double[]> data, int nSplit, double[] responses, int[] indicies, int p){
 		List<double[]> lower = new ArrayList<double[]>(nSplit);
-		for (int n = 0; n < nSplit; n++)
-			lower.add(data.get(n));
+		for (int n = 0; n < nSplit; n++){
+			double[] record = data.get(n);
+			lower.add(record);
+			responses[n] = record[p];
+			indicies[n] = (int)record[p + 1];
+		}
 		return lower;
 	}
 }

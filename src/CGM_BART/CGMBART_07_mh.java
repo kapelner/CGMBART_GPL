@@ -23,6 +23,12 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 	protected CGMBARTTreeNode metroHastingsPosteriorTreeSpaceIteration(CGMBARTTreeNode T_i) {
 //		System.out.println("iterateMHPosteriorTreeSpaceSearch");
 		final CGMBARTTreeNode T_star = T_i.clone();
+//		System.out.println("SampleTree T_i \n responses: " + 
+//				Tools.StringJoin(T_i.responses) + 
+//				"\n indicies " + Tools.StringJoin(T_i.indicies));		
+//		System.out.println("SampleTree T_star \n responses: " + 
+//				Tools.StringJoin(T_star.responses) + 
+//				"\n indicies " + Tools.StringJoin(T_star.indicies)); 		
 		//each proposal will calculate its own value, but this has to be initialized atop		
 		double log_r = 0;
 		
