@@ -153,21 +153,24 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 	
 	public double[] getResponses(){
 		if (responses == null){
+			
 			responses = new double[data.size()];
 			for (int i = 0; i < data.size(); i++){
 				responses[i] = data.get(i)[cgmbart.p];
 			}
+			System.out.println("getResponses internal on " + this.stringLocation(true) + " " + Tools.StringJoin(responses));
 		}
 		return responses;
 	}
 	
 	public HashSet<Double> responsesAsHash(){		
-		response_hash = new HashSet<Double>();
 		if (response_hash == null){
+			response_hash = new HashSet<Double>();
 			double[] responses = getResponses();
 			for (int i = 0; i < responses.length; i++){
 				response_hash.add(responses[i]);
 			}
+			System.out.println("responsesAsHash internal on " + this.stringLocation(true) + " num_unique: " + response_hash.size());
 		}
 		return response_hash;
 	}
@@ -524,6 +527,7 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 			for (int i = 0; i < n_eta; i++){
 				sum_responses_qty += responses[i];
 			}
+//			System.out.println("sum_responses_qty " + sum_responses_qty);
 		}
 		return sum_responses_qty;
 	}	
@@ -717,7 +721,6 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 	}
 
 	public void setStumpData(ArrayList<double[]> X, double[] y, int p) {
-//		System.out.println("setStumpData  X is " + X.size() + " x " + X.get(0).length + "  y is " + y.length + " x " + 1);
 		//pull out X data and set y's appropriately
 		int n = X.size();
 		data = new ArrayList<double[]>(n);
@@ -734,8 +737,12 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 			}
 			data.add(x_i_dot_new);
 		}
+		n_eta = data.size();
+		
 		//initialize the yhats
 		yhats = new double[n];
+		System.out.println("setStumpData  X is " + data.size() + " x " + data.get(0).length + "  y is " + y.length + " x " + 1);
+		
 	}
 
 	public void updateWithNewResponsesRecursively(double[] new_respones) {
@@ -758,6 +765,12 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 
 	private void setResponse(int i, double y) {
 		this.data.get(i)[cgmbart.p] = y;
+	}
+
+	public void updateYHatsWithPrediction() {
+		for (int index : getIndices()){
+			yhats[index] = y_pred;
+		}
 	}
 
 //	public CGMBARTTreeNode findCorrespondingNodeOnSimilarTree(CGMBARTTreeNode node) {

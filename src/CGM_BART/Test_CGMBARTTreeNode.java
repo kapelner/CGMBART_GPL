@@ -9,6 +9,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 
 
@@ -41,9 +42,11 @@ public class Test_CGMBARTTreeNode {
 		
 		stump = new CGMBARTTreeNode(bart);
 		stump.data = data;
+		stump.n_eta = data.size();
 		
 		simple_tree = new CGMBARTTreeNode(bart);
 		simple_tree.data = data;
+		simple_tree.n_eta = data.size();
 		simple_tree.splitAttributeM = 0;
 		simple_tree.splitValue = 0.0;
 		simple_tree.isLeaf = false;
@@ -62,7 +65,12 @@ public class Test_CGMBARTTreeNode {
 		double_tree.right.splitValue = 0.0;		
 		double_tree.right.left = new CGMBARTTreeNode(double_tree.right);
 		double_tree.right.right = new CGMBARTTreeNode(double_tree.right);
+		
 		CGMBARTTreeNode.propagateDataByChangedRule(double_tree);
+		System.out.println("create double_tree n_eta's\nP: " + 
+				double_tree.n_eta + " L: " + double_tree.left.n_eta + " R: " + double_tree.right.n_eta + 
+				" LL: " + double_tree.left.left.n_eta + " LR: " + double_tree.left.right.n_eta + 
+				" RL: " + double_tree.right.left.n_eta + " RR: " + double_tree.right.right.n_eta);
 	}
 
 	@BeforeClass
@@ -84,6 +92,9 @@ public class Test_CGMBARTTreeNode {
 
 	@Test
 	public void testResponses() {
+		System.out.println("y: " + Tools.StringJoin(y));
+		System.out.println("stump.getResponses(): " + Tools.StringJoin(stump.getResponses()));
+		Arrays.sort(stump.getResponses());
 		assertArrayEquals(y, stump.getResponses(), 0);
 	}
 	
@@ -101,7 +112,11 @@ public class Test_CGMBARTTreeNode {
 	public void testCloneStump() {
 		CGMBARTTreeNode cloned_stump = stump.clone();
 		assertEquals(cloned_stump.n_eta, stump.n_eta);
-		assertArrayEquals(stump.getResponses(), cloned_stump.getResponses(), 0);
+		double[] stump_responses = stump.getResponses().clone();
+		double[] cloned_stump_responses = cloned_stump.getResponses().clone();
+		Arrays.sort(stump_responses);
+		Arrays.sort(cloned_stump_responses);
+		assertArrayEquals(stump_responses, cloned_stump_responses, 0);
 		for (int i = 0; i < stump.n_eta; i++){
 			assertArrayEquals(stump.data.get(i), cloned_stump.data.get(i), 0);
 		}
@@ -164,7 +179,7 @@ public class Test_CGMBARTTreeNode {
 		right_responses.add(8.0);
 		right_responses.add(0.0);
 		right_responses.add(4.0);
-		
+
 		
 		assertEquals(left_responses, double_tree.left.responsesAsHash());
 		assertEquals(right_responses, double_tree.right.responsesAsHash());

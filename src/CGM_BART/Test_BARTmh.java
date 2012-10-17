@@ -311,10 +311,11 @@ public class Test_BARTmh {
 		double sigsq = 0.01;
 		bart.gibb_sample_num = 1;
 		bart.InitGibbsSamplingData();
-		bart.gibbs_samples_of_sigsq.add(0.01);
+		bart.gibbs_samples_of_sigsq.add(sigsq);
 		
 		//we're going to test the stump's transition ratio
 		CGMBARTTreeNode T_i = Test_CGMBARTTreeNode.stump;
+		assertEquals(784, T_i.sumResponsesQuantitySqd(), 0.001);
 		CGMBARTTreeNode T_star = Test_CGMBARTTreeNode.stump.clone();
 		CGMBARTTreeNode first_node_grown = T_star;
 		assertEquals(784, first_node_grown.sumResponsesQuantitySqd(), 0.001);

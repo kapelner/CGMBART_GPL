@@ -74,6 +74,7 @@ public class Test_BARTgibbs_internal {
 		List<CGMBARTTreeNode> old_trees_all_but_one = bart.gibbs_samples_of_cgm_trees.get(0).subList(0, num_trees - 1);
 		for (CGMBARTTreeNode old_tree : old_trees_all_but_one){
 			old_tree.y_pred = y_pred_initial;
+			old_tree.updateYHatsWithPrediction();
 		}
 		double[] resids = bart.getResidualsBySubtractingTrees(old_trees_all_but_one);
 		System.out.println("Y = " + Tools.StringJoin(bart.y_orig, ",") + "  avg_y = " + StatToolbox.sample_average(bart.y_orig));
@@ -89,10 +90,11 @@ public class Test_BARTgibbs_internal {
 	
 	@Test
 	public void testAssignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsq(){
+		System.out.println("testAssignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsq");
 		int num_trees = 10;
 		bart.setNumTrees(num_trees);
 		bart.SetupGibbsSampling();	
-		double sigsq = bart.gibbs_samples_of_sigsq.get(0);
+		double sigsq = CGMBART_04_init.INITIAL_SIGSQ;
 		List<CGMBARTTreeNode> trees = bart.gibbs_samples_of_cgm_trees.get(0);
 		for (int t = 0; t < num_trees; t++){
 			CGMBARTTreeNode tree = trees.get(t);

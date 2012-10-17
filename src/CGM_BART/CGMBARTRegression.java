@@ -43,8 +43,8 @@ public class CGMBARTRegression extends CGMBART_09_eval {
 		super();
 //		System.out.println("CGMBARTRegression init\n");
 		try {
-			Logger.getLogger("").addHandler(new StreamHandler()); //turn off std out
-			suppressOrWriteToDebugLog();
+//			Logger.getLogger("").addHandler(new StreamHandler()); //turn off std out
+//			suppressOrWriteToDebugLog();
 		} 
 		catch (Error e){
 			System.out.println("Logger and or suppressOrWriteToDebugLog FAILING\n");

@@ -75,9 +75,7 @@ public abstract class CGMBART_06_gibbs_internal extends CGMBART_05_gibbs_base im
 				System.err.println("ERROR assignLeafFINAL " + node.y_pred + " (sigsq = " + sigsq + ")");
 			}
 			//now update yhats
-			for (int index : node.getIndices()){
-				node.yhats[index] = node.y_pred;
-			}
+			node.updateYHatsWithPrediction();
 //			System.out.println("assignLeafFINAL " + un_transform_y(node.y_prediction) + " (sigsq = " + sigsq * y_range_sq + ")");
 		}
 		else {
@@ -92,7 +90,7 @@ public abstract class CGMBART_06_gibbs_internal extends CGMBART_05_gibbs_base im
 	}
 
 	protected double calcLeafPosteriorVar(CGMBARTTreeNode node, double sigsq) {
-//		System.out.println("calcLeafPosteriorVar: node.n_eta = " + node.n_eta);
+		System.out.println("calcLeafPosteriorVar: node.n_eta = " + node.n_eta);
 		return 1 / (1 / hyper_sigsq_mu + node.n_eta / sigsq);
 	}
 	
