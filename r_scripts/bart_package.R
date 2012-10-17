@@ -761,7 +761,7 @@ run_bayes_tree_bart_and_plot_y_vs_yhat = function(training_data, test_data, extr
 #	out = list(yhat = bayes_tree_bart_mod$yhat.test.mean, sigmas = bayes_tree_bart_mod$sigma)
 	y_hat = bayes_tree_bart_mod$yhat.test.mean
 	sigsqs = (bayes_tree_bart_mod$sigma)^2
-	avg_num_splits_by_vars = apply(bayes_tree_bart_mod$varcount, 2, mean)
+	avg_num_splits_by_vars = tryCatch({apply(bayes_tree_bart_mod$varcount, 2, mean)}, error = function(e){NA})
 	y_hat_train = bayes_tree_bart_mod$yhat.train.mean
 	run_other_model_and_plot_y_vs_yhat(y_hat, 
 			"R_BART", 
