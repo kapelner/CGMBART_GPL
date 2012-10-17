@@ -12,6 +12,9 @@ public class Tools {
 	 * @return			the final product: str1 + joinby + str2 + . . . + strN
 	 */	
 	public static String StringJoin(double[] all, String joinby){
+		if (all == null){
+			return " NULL ARRAY ";
+		}		
 		String joined = "";
 		for (int i = 0; i < all.length; i++){
 			joined += all[i];
@@ -20,6 +23,21 @@ public class Tools {
 		}
 		return joined;
 	}
+	public static String StringJoin(int[] all, String joinby){
+		if (all == null){
+			return " NULL ARRAY ";
+		}		
+		String joined = "";
+		for (int i = 0; i < all.length; i++){
+			joined += all[i];
+			if (i < all.length - 1)
+				joined += joinby;
+		}
+		return joined;
+	}
+	public static String StringJoin(int[] all){
+		return StringJoin(all, ", ");
+	}	
 	public static String StringJoin(double[] all){
 		return StringJoin(all, ", ");
 	}

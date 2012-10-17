@@ -77,7 +77,10 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 	protected double[] SampleTree(int sample_num, int t, ArrayList<CGMBARTTreeNode> cgm_trees, TreeArrayIllustration tree_array_illustration) {
 		
 		final CGMBARTTreeNode copy_of_old_jth_tree_root = gibbs_samples_of_cgm_trees.get(sample_num - 1).get(t).clone();
-//		System.out.println("copy_of_old_jth_tree.data:" + copy_of_old_jth_tree.data + "\n orig_tree.data:" + gibbs_samples_of_cgm_trees.get(sample_num - 1).get(t).data);
+//		System.out.println("SampleTree copy_of_old_jth_tree_root \n responses: " + 
+//				Tools.StringJoin(copy_of_old_jth_tree_root.responses) + 
+//				"\n indicies " + Tools.StringJoin(copy_of_old_jth_tree_root.indicies)); 
+	//		System.out.println("copy_of_old_jth_tree.data:" + copy_of_old_jth_tree.data + "\n orig_tree.data:" + gibbs_samples_of_cgm_trees.get(sample_num - 1).get(t).data);
 //		System.out.println("SampleTreeByCalculatingRemainingsAndDrawingFromTreeDist t:" + t + " of m:" + m);
 		//okay so first we need to get "y" that this tree sees. This is defined as R_j
 		//in formula 12 on p274
@@ -90,6 +93,10 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 		
 		//now, (important!) set the R_j's as this tree's data.
 		copy_of_old_jth_tree_root.updateWithNewResponsesRecursively(R_j);
+		
+//		System.out.println("SampleTree copy_of_old_jth_tree_root \n responses: " + 
+//				Tools.StringJoin(copy_of_old_jth_tree_root.responses) + 
+//				"\n indicies " + Tools.StringJoin(copy_of_old_jth_tree_root.indicies)); 		
 		
 		//sample from T_j | R_j, \sigma
 		//now we will run one M-H step on this tree with the y as the R_j

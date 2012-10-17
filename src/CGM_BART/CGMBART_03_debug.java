@@ -130,26 +130,26 @@ public abstract class CGMBART_03_debug extends CGMBART_02_hyperparams implements
 		}			
 	}	
 
-	protected void DebugSample(int sample_num, TreeArrayIllustration tree_array_illustration) {
+	protected void DebugSample(int gibbs_sample_num, TreeArrayIllustration tree_array_illustration) {
 
 		if (WRITE_DETAILED_DEBUG_FILES){	
-			remainings.println((sample_num) + ",,y," + Tools.StringJoin(y_trans, ","));
+			remainings.println((gibbs_sample_num) + ",,y," + Tools.StringJoin(y_trans, ","));
 			
-			ArrayList<CGMBARTTreeNode> current_trees = gibbs_samples_of_cgm_trees.get(sample_num);
+			ArrayList<CGMBARTTreeNode> current_trees = gibbs_samples_of_cgm_trees.get(gibbs_sample_num);
 			for (int t = 0; t < num_trees; t++){
 				CGMBARTTreeNode tree = current_trees.get(t);
 				ArrayList<String> all_results = new ArrayList<String>(n);
 				for (int i = 0; i < n; i++){
 					all_results.add("" + tree.Evaluate(X_y.get(i)));
 				}
-				evaluations.println(sample_num + "," + t + "," + tree.stringID() + "," + Tools.StringJoin(all_results, ","));
+				evaluations.println(gibbs_sample_num + "," + t + "," + tree.stringID() + "," + Tools.StringJoin(all_results, ","));
 			}	
-			evaluations.println((sample_num) + ",,y," + Tools.StringJoin(y_trans, ","));
+			evaluations.println((gibbs_sample_num) + ",,y," + Tools.StringJoin(y_trans, ","));
 		}
 //		final Thread illustrator_thread = new Thread(){
 //			public void run(){
 //		if (StatToolbox.rand() < 0.0333){
-			if (TREE_ILLUST && sample_num > 3900 && sample_num < 4000 && num_trees == 1){ //
+			if (TREE_ILLUST && gibbs_sample_num > 3900 && gibbs_sample_num < 4000 && num_trees == 1){ //
 				tree_array_illustration.CreateIllustrationAndSaveImage();
 			}
 //		}
@@ -159,12 +159,11 @@ public abstract class CGMBART_03_debug extends CGMBART_02_hyperparams implements
 		
 		tree_liks.print("\n");	
 		
-		sigsqs.println(sample_num + "," + gibbs_samples_of_sigsq.get(sample_num) * y_range_sq);	
+		sigsqs.println(gibbs_sample_num + "," + gibbs_samples_of_sigsq.get(gibbs_sample_num) * y_range_sq);	
 
 		//now close and open all debug
-		if (StatToolbox.rand() < 0.0333){
+		if (gibbs_sample_num == num_gibbs_total_iterations){
 			CloseDebugFiles();
-			OpenDebugFiles();
 		}
 	}
 	
