@@ -29,9 +29,9 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 			if (stop_bit){ //rounded to the nearest gibbs sample
 				return;
 			}	
-			if (PrintOutEvery != null && gibb_sample_num % PrintOutEvery == 0){
-				System.out.println("gibbs iter: " + gibb_sample_num + "/" + num_gibbs_total_iterations);
-			}
+//			if (PrintOutEvery != null && gibb_sample_num % PrintOutEvery == 0){
+//				System.out.println("gibbs iter: " + gibb_sample_num + "/" + num_gibbs_total_iterations);
+//			}
 			
 			DoOneGibbsSampleAndIncrement();
 		}
@@ -45,7 +45,7 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 		gibbs_samples_of_cgm_trees.add(null); //so I can set explicitly
 		//we cycle over each tree and update it according to formulas 15, 16 on p274
 		for (int t = 0; t < num_trees; t++){
-			if (t == 0){
+			if (t == 0 && gibb_sample_num % 100 == 0){
 				System.out.println("Sampling M_" + (t + 1) + "/" + num_trees + " iter " + gibb_sample_num + "/" + num_gibbs_total_iterations);
 			}
 			SampleTree(gibb_sample_num, t, cgm_trees, tree_array_illustration);

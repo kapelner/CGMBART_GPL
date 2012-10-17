@@ -86,12 +86,12 @@ public abstract class CGMBART_06_gibbs_internal extends CGMBART_05_gibbs_base im
 
 	protected double calcLeafPosteriorMean(CGMBARTTreeNode node, double sigsq, double posterior_var) {
 //		System.out.println("leafPosteriorMean hyper_sigsq_mu " + hyper_sigsq_mu + " node.n " + node.n + " sigsq " + sigsq + " node.avg_response() " + node.avg_response() + " posterior_var " + posterior_var);
-		return (hyper_mu_mu / hyper_sigsq_mu + node.nEta() / sigsq * node.avgResponse()) / (1 / posterior_var);
+		return (hyper_mu_mu / hyper_sigsq_mu + node.n_eta / sigsq * node.avgResponse()) / (1 / posterior_var);
 	}
 
 	protected double calcLeafPosteriorVar(CGMBARTTreeNode node, double sigsq) {
-		System.out.println("calcLeafPosteriorVar: node.n_eta = " + node.nEta());
-		return 1 / (1 / hyper_sigsq_mu + node.nEta() / sigsq);
+//		System.out.println("calcLeafPosteriorVar: node.n_eta = " + node.nEta());
+		return 1 / (1 / hyper_sigsq_mu + node.n_eta / sigsq);
 	}
 	
 	protected double drawSigsqFromPosterior(int sample_num) {

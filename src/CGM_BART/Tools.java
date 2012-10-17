@@ -71,4 +71,14 @@ public class Tools {
 	public static String StringJoin(Collection<String> all){
 		return StringJoin(all, ", ");
 	}	
+	
+    public static double max(double[] values) {
+    	double max = Double.MIN_VALUE;
+        for (double value : values) {
+        	if (value > max){
+        		max = value;
+        	}
+        }
+        return max;
+}	
 }

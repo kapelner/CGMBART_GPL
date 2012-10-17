@@ -352,10 +352,10 @@ public abstract class Classifier implements Serializable {
 		this.unique_name = unique_name;
 	}	
 	
-	public static ArrayList<Double> getColVector(List<double[]> X, int j){
-		ArrayList<Double> x_dot_j = new ArrayList<Double>(X.size());
+	public static double[] getColVector(List<double[]> X, int j){
+		double[] x_dot_j = new double[X.size()];
 		for (int i = 0; i < X.size(); i++){
-			x_dot_j.add(X.get(i)[j]);
+			x_dot_j[i] = X.get(i)[j];
 		}
 		return x_dot_j;
 	}
