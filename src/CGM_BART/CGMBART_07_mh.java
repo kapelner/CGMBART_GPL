@@ -21,7 +21,7 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 	@SuppressWarnings("incomplete-switch") //not all steps are used in this class's implementation
 	protected CGMBARTTreeNode metroHastingsPosteriorTreeSpaceIteration(CGMBARTTreeNode T_i) {
 //		System.out.println("iterateMHPosteriorTreeSpaceSearch");
-		final CGMBARTTreeNode T_star = T_i.clone(true);
+		final CGMBARTTreeNode T_star = T_i.clone();
 		//each proposal will calculate its own value, but this has to be initialized atop		
 		double log_r = 0;
 		
@@ -66,22 +66,19 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 		}
 		
 		//now start the growth process
-		//first pick the attribute
+		//first pick the attribute and then the split
 		grow_node.splitAttributeM = grow_node.pickRandomPredictorThatCanBeAssigned();
-		
-		Double split_value = grow_node.pickRandomSplitValue();
+		grow_node.splitValue = grow_node.pickRandomSplitValue();
 //		System.out.print("split_value = " + split_value);
-		if (split_value == null){
+		//inform the user if things go awry
+		if (grow_node.splitValue == null){
 			System.out.print("ERROR!!! GROW <<" + grow_node.stringLocation(true) + ">> ---- X_" + (grow_node.splitAttributeM + 1) + "  proposal ln(r) = -oo DUE TO NO SPLIT VALUES\n\n");
 			return Double.NEGATIVE_INFINITY;					
-		}		
-		
-		//now we can go off and take care of the split
-		grow_node.splitValue = split_value;
+		}			
 		grow_node.isLeaf = false;
 		grow_node.left = new CGMBARTTreeNode(grow_node);
-		grow_node.right = new CGMBARTTreeNode(grow_node);
-		CGMBARTTreeNode.propagateDataByChangedRule(grow_node, true);	
+		grow_node.right = new CGMBARTTreeNode(grow_node);	
+		CGMBARTTreeNode.propagateDataByChangedRule(grow_node);	
 
 
 		if (grow_node.left.n_eta <= N_RULE || grow_node.right.n_eta <= N_RULE){

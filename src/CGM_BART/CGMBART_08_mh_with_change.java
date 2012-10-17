@@ -15,7 +15,7 @@ public abstract class CGMBART_08_mh_with_change extends CGMBART_07_mh {
 	 */
 	protected CGMBARTTreeNode metroHastingsPosteriorTreeSpaceIteration(CGMBARTTreeNode T_i) {
 //		System.out.println("iterateMHPosteriorTreeSpaceSearch");
-		final CGMBARTTreeNode T_star = T_i.clone(true);
+		final CGMBARTTreeNode T_star = T_i.clone();
 		//each proposal will calculate its own value, but this has to be initialized atop		
 		double log_r = 0;
 		switch (T_i.isStump() ? Steps.GROW : randomlyPickAmongTheProposalSteps(T_i)){
@@ -69,7 +69,7 @@ public abstract class CGMBART_08_mh_with_change extends CGMBART_07_mh {
 		changed_node.isLeaf = false;
 		changed_node.left = new CGMBARTTreeNode(changed_node);
 		changed_node.right = new CGMBARTTreeNode(changed_node);
-		CGMBARTTreeNode.propagateDataByChangedRule(changed_node, true);
+		CGMBARTTreeNode.propagateDataByChangedRule(changed_node);
 		
 		//now calculate only the likelihood ratio of this MH step (since the tree structure and the transition ratios cancel out)
 		double ln_likelihood_ratio_change = calcLnLikRatioChange(original_node, changed_node);

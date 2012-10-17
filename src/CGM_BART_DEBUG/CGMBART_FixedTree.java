@@ -21,9 +21,9 @@ public class CGMBART_FixedTree extends CGMBART_09_eval {
 		gibbs_samples_of_cgm_trees.add(0, cgm_trees);		
 	}
 
-	protected void SampleTree(int sample_num, int t, ArrayList<CGMBARTTreeNode> cgm_trees, TreeArrayIllustration tree_array_illustration) {
+	protected double[] SampleTree(int sample_num, int t, ArrayList<CGMBARTTreeNode> cgm_trees, TreeArrayIllustration tree_array_illustration) {
 		CGMBARTTreeNode tree = CreateTheSimpleTreeModel(this);
-		tree.updateWithNewResponsesAndPropagate(X_y, y_trans, p); //no need for new y vector (which is usually the residuals from other trees)
+		tree.updateWithNewResponsesRecursively(y_trans); //no need for new y vector (which is usually the residuals from other trees)
 		cgm_trees.add(tree);
 		gibbs_samples_of_cgm_trees.set(sample_num, cgm_trees);
 		
@@ -33,18 +33,20 @@ public class CGMBART_FixedTree extends CGMBART_09_eval {
 		tree_array_illustration.addLikelihood(lik);
 		System.out.println("Running BART Gibbs sampler fixed tree and mu's, iteration " + sample_num + " lik = " + lik);
 		tree_liks.print(lik + "," + tree.stringID() + ",");
-		all_tree_liks[0][sample_num] = lik;		
+		all_tree_liks[0][sample_num] = lik;	
+		
+		return y_trans;
 	}	
 	
 	
 	public static CGMBARTTreeNode CreateTheSimpleTreeModel(CGMBART_09_eval bart) {
-		CGMBARTTreeNode root = new CGMBARTTreeNode(null, null, bart);
-		CGMBARTTreeNode left = new CGMBARTTreeNode(null, null, bart);
-		CGMBARTTreeNode leftleft = new CGMBARTTreeNode(null, null, bart);
-		CGMBARTTreeNode leftright = new CGMBARTTreeNode(null, null, bart);
-		CGMBARTTreeNode right = new CGMBARTTreeNode(null, null, bart);
-		CGMBARTTreeNode rightleft = new CGMBARTTreeNode(null, null, bart);
-		CGMBARTTreeNode rightright = new CGMBARTTreeNode(null, null, bart);
+		CGMBARTTreeNode root = new CGMBARTTreeNode(null, bart);
+		CGMBARTTreeNode left = new CGMBARTTreeNode(null, bart);
+		CGMBARTTreeNode leftleft = new CGMBARTTreeNode(null, bart);
+		CGMBARTTreeNode leftright = new CGMBARTTreeNode(null, bart);
+		CGMBARTTreeNode right = new CGMBARTTreeNode(null, bart);
+		CGMBARTTreeNode rightleft = new CGMBARTTreeNode(null, bart);
+		CGMBARTTreeNode rightright = new CGMBARTTreeNode(null, bart);
 
 		root.isLeaf = false;
 		root.splitAttributeM = 0;
@@ -61,11 +63,11 @@ public class CGMBART_FixedTree extends CGMBART_09_eval {
 
 		leftleft.parent = left;
 		leftleft.isLeaf = true;
-		leftleft.y_prediction = bart.transform_y(10);		
+		leftleft.y_pred = bart.transform_y(10);		
 
 		leftright.parent = left;
 		leftright.isLeaf = true;
-		leftright.y_prediction = bart.transform_y(30);
+		leftright.y_pred = bart.transform_y(30);
 
 		right.parent = root;
 		right.isLeaf = false;
@@ -76,14 +78,14 @@ public class CGMBART_FixedTree extends CGMBART_09_eval {
 
 		rightleft.parent = right;
 		rightleft.isLeaf = true;
-		rightleft.y_prediction = bart.transform_y(50);		
+		rightleft.y_pred = bart.transform_y(50);		
 
 		rightright.parent = right;
 		rightright.isLeaf = true;
-		rightright.y_prediction = bart.transform_y(70);
+		rightright.y_pred = bart.transform_y(70);
 
 		//make sure there's data in there
-		root.updateWithNewResponsesAndPropagate(bart.getData(), bart.getYTrans(), bart.getP());
+		root.updateWithNewResponsesRecursively(bart.getYTrans());
 		return root;
 	}
 }

@@ -39,8 +39,7 @@ public abstract class CGMBART_06_gibbs_internal extends CGMBART_05_gibbs_base im
 		
 		//now go through and get the yhats for each tree and subtract them from Rjs
 		for (CGMBARTTreeNode tree : trees_to_subtract){
-			double[] y_hat_vec = new double[n];
-			tree.getYhatsByDataIndex(y_hat_vec);
+			double[] y_hat_vec = tree.yhats;
 			//subtract them from Rjs
 			for (int i = 0; i < n; i++){
 				Rjs[i] -= y_hat_vec[i];
@@ -62,23 +61,28 @@ public abstract class CGMBART_06_gibbs_internal extends CGMBART_05_gibbs_base im
 		return Rjs;
 	}
 	
-	protected void assignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsq(CGMBARTTreeNode node, double sigsq) {
+	protected void assignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsqAndUpdateYhats(CGMBARTTreeNode node, double sigsq) {
 //		System.out.println("assignLeafValsUsingPosteriorMeanAndCurrentSigsq sigsq: " + sigsq);
 		if (node.isLeaf){
+			//update ypred
 			double posterior_var = calcLeafPosteriorVar(node, sigsq);
 			//draw from posterior distribution
 			double posterior_mean = calcLeafPosteriorMean(node, sigsq, posterior_var);
 //			System.out.println("assignLeafVals posterior_mean = " + posterior_mean + " posterior_sigsq = " + posterior_var + " node.avg_response = " + node.avg_response_untransformed());
-			node.y_prediction = StatToolbox.sample_from_norm_dist(posterior_mean, posterior_var);
-			if (node.y_prediction == StatToolbox.ILLEGAL_FLAG){				
-				node.y_prediction = 0.0; //this could happen on an empty node
-				System.err.println("ERROR assignLeafFINAL " + node.y_prediction + " (sigsq = " + sigsq + ")");
+			node.y_pred = StatToolbox.sample_from_norm_dist(posterior_mean, posterior_var);
+			if (node.y_pred == StatToolbox.ILLEGAL_FLAG){				
+				node.y_pred = 0.0; //this could happen on an empty node
+				System.err.println("ERROR assignLeafFINAL " + node.y_pred + " (sigsq = " + sigsq + ")");
+			}
+			//now update yhats
+			for (int index : node.getIndices()){
+				node.yhats[index] = node.y_pred;
 			}
 //			System.out.println("assignLeafFINAL " + un_transform_y(node.y_prediction) + " (sigsq = " + sigsq * y_range_sq + ")");
 		}
 		else {
-			assignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsq(node.left, sigsq);
-			assignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsq(node.right, sigsq);
+			assignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsqAndUpdateYhats(node.left, sigsq);
+			assignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsqAndUpdateYhats(node.right, sigsq);
 		}
 	}
 
@@ -88,25 +92,25 @@ public abstract class CGMBART_06_gibbs_internal extends CGMBART_05_gibbs_base im
 	}
 
 	protected double calcLeafPosteriorVar(CGMBARTTreeNode node, double sigsq) {
-		System.out.println("calcLeafPosteriorVar: node.n_eta = " + node.n_eta);
+//		System.out.println("calcLeafPosteriorVar: node.n_eta = " + node.n_eta);
 		return 1 / (1 / hyper_sigsq_mu + node.n_eta / sigsq);
 	}
 	
 	protected double drawSigsqFromPosterior(int sample_num, double[] residual_vec_excluding_last_tree) {
 		//first calculate the SSE
-		double sum_sq_errors = 0;
+		double sse = 0;
 		double[] es = getResidualsFromFullSumModel(sample_num, residual_vec_excluding_last_tree);
 		if (WRITE_DETAILED_DEBUG_FILES){		
 			remainings.println((sample_num) + ",,e," + Tools.StringJoin(es, ","));
 			evaluations.println((sample_num) + ",,e," + Tools.StringJoin(es, ","));
 		}
 		for (double e : es){
-			sum_sq_errors += Math.pow(e, 2); 
+			sse += Math.pow(e, 2); 
 		}
 //		System.out.println("sample: " + sample_num + " sse = " + sum_sq_errors);
 		//we're sampling from sigsq ~ InvGamma((nu + n) / 2, 1/2 * (sum_i error^2_i + lambda * nu))
 		//which is equivalent to sampling (1 / sigsq) ~ Gamma((nu + n) / 2, 2 / (sum_i error^2_i + lambda * nu))
-		double sigsq = StatToolbox.sample_from_inv_gamma((hyper_nu + n) / 2, 2 / (sum_sq_errors + hyper_nu * hyper_lambda));
+		double sigsq = StatToolbox.sample_from_inv_gamma((hyper_nu + n) / 2, 2 / (sse + hyper_nu * hyper_lambda));
 //		System.out.println("\n\nSample posterior from trees " + treeIDsInCurrentSample(sample_num) + "  SSE=" + sum_sq_errors + " post_sigsq_sample: " + sigsq);
 //		
 //		//debug
@@ -123,35 +127,11 @@ public abstract class CGMBART_06_gibbs_internal extends CGMBART_05_gibbs_base im
 	protected double[] getResidualsFromFullSumModel(int sample_num, double[] residual_vec_excluding_last_tree){
 		double[] residuals = new double[n];
 		
-		//spider down tree
-		double[] residual_last_tree = new double[n];
 		CGMBARTTreeNode last_tree = gibbs_samples_of_cgm_trees.get(sample_num).get(num_trees - 1);
-		last_tree.getYhatsByDataIndex(residual_last_tree);
+		double[] residual_last_tree = last_tree.yhats;
 		for (int i = 0; i < n; i++){
 			residuals[i] = y_trans[i] - residual_vec_excluding_last_tree[i] - residual_last_tree[i];
 		}
-		
-//		System.out.println("getErrorsForAllTrees");
-//		double[] sum_ys_trans = new double[n];
-//		
-//		
-//		for (int i = 0; i < n; i++){
-//			sum_ys_trans[i] = 0; //initialize at zero, then add it up over all trees except the jth
-//			for (int t = 0; t < num_trees; t++){
-////				System.out.println("getErrorsForAllTrees m = " + m);
-//				//obviously y_vec - \sum_i g_i = \sum_i y_i - g_i
-//				CGMBARTTreeNode tree = gibbs_samples_of_cgm_trees.get(sample_num).get(t);
-//				double y_hat_trans = tree.Evaluate(X_y.get(i));
-////				double y_hat = un_transform_y(tree.Evaluate(X_y.get(i)));
-////				System.out.println("i = " + (i + 1) + " y: " + y[i] + " y_hat: " + y_hat + " e: " + (y[i] - y_hat)+ " tree " + t);
-//				sum_ys_trans[i] += y_hat_trans;
-//			}
-//			//now we need to subtract this from y
-//			residuals[i] = y_trans[i] - sum_ys_trans[i];
-//		}
-//		System.out.println("sum_ys " + IOTools.StringJoin(sum_ys, ","));
-//		System.out.println("y_trans " + IOTools.StringJoin(y_trans, ","));
-//		System.out.println("errorjs " + IOTools.StringJoin(errorjs, ","));
 		return residuals;
 	}	
 }
