@@ -6,6 +6,7 @@ import java.util.ArrayList;
 
 public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements Serializable {
 	private static final long serialVersionUID = 1825856510284398699L;
+	private static final boolean DEBUG_MH = false;
 
 
 	//this enum has to include all potential types of steps, even if they aren't used in this class's implementation
@@ -36,23 +37,29 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 		}		
 		double ln_u_0_1 = Math.log(StatToolbox.rand());
 //		if (log_r > Double.MIN_VALUE){
-			System.out.println("u = " + Math.exp(ln_u_0_1) + 
-					" <? r = " + 
-					(Math.exp(log_r) < 0.00001 ? "damn small" : Math.exp(log_r)));		
+		if (DEBUG_MH){
+			System.out.println("ln u = " + ln_u_0_1 + 
+					" <? ln(r) = " + 
+					(log_r < -99999 ? "damn small" : log_r));
+		}
 //		}
 		//ACCEPT/REJECT,STEP_name,log_prop_lik_o,log_prop_lik_f,log_r 
-		CGMBART_03_debug.mh_iterations_full_record.println(
-			(acceptProposal(ln_u_0_1, log_r) ? "A" : "R") + "," +  
-			TreeIllustration.one_digit_format.format(log_r) + "," +
-			TreeIllustration.two_digit_format.format(ln_u_0_1)
-		);		
+//		CGMBART_03_debug.mh_iterations_full_record.println(
+//			(acceptProposal(ln_u_0_1, log_r) ? "A" : "R") + "," +  
+//			TreeIllustration.one_digit_format.format(log_r) + "," +
+//			TreeIllustration.two_digit_format.format(ln_u_0_1)
+//		);		
 //		System.out.println("ln_u_0_1: " + ln_u_0_1 + " ln_r: " + log_r);
 		if (acceptProposal(ln_u_0_1, log_r)){ //accept proposal
-			System.out.println("proposal ACCEPTED\n\n");
+			if (DEBUG_MH){
+				System.out.println("proposal ACCEPTED\n\n");
+			}
 			return T_star;
 		}		
 		//reject proposal
-		System.out.println("proposal REJECTED\n\n");
+		if (DEBUG_MH){
+			System.out.println("proposal REJECTED\n\n");
+		}
 		return T_i;
 	}
 
@@ -82,7 +89,9 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 
 
 		if (grow_node.left.n_eta <= N_RULE || grow_node.right.n_eta <= N_RULE){
-			System.out.println("ERR: cannot split a node where daughter only has one data point   proposal ln(r) = -oo DUE TO CANNOT GROW\n\n");
+			if (DEBUG_MH){
+				System.out.println("ERR: cannot split a node where daughter only has one data point   proposal ln(r) = -oo DUE TO CANNOT GROW\n\n");
+			}
 			return Double.NEGATIVE_INFINITY;
 		}
 //		System.out.print("grow_node.splitValue = " + grow_node.splitValue);
@@ -92,16 +101,17 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 		double ln_likelihood_ratio_grow = calcLnLikRatioGrow(grow_node);
 		double ln_tree_structure_ratio_grow = calcLnTreeStructureRatioGrow(grow_node);
 		
-		
-		System.out.println("GROW  <<" + grow_node.stringLocation(true) + ">> ---- X_" + (grow_node.splitAttributeM + 1) + 
-			" < " + TreeIllustration.two_digit_format.format(grow_node.splitValue) + 
-			"\n  ln trans ratio: " + ln_transition_ratio_grow + " ln lik ratio: " + ln_likelihood_ratio_grow + " ln structure ratio: " + ln_tree_structure_ratio_grow +			
-			"\n  trans ratio: " + 
-			(Math.exp(ln_transition_ratio_grow) < 0.00001 ? "damn small" : Math.exp(ln_transition_ratio_grow)) +
-			"  lik ratio: " + 
-			(Math.exp(ln_likelihood_ratio_grow) < 0.00001 ? "damn small" : Math.exp(ln_likelihood_ratio_grow)) +
-			"  structure ratio: " + 
-			(Math.exp(ln_tree_structure_ratio_grow) < 0.00001 ? "damn small" : Math.exp(ln_tree_structure_ratio_grow)));		
+		if (DEBUG_MH){
+			System.out.println("GROW  <<" + grow_node.stringLocation(true) + ">> ---- X_" + (grow_node.splitAttributeM + 1) + 
+				" < " + TreeIllustration.two_digit_format.format(grow_node.splitValue) + 
+				"\n  ln trans ratio: " + ln_transition_ratio_grow + " ln lik ratio: " + ln_likelihood_ratio_grow + " ln structure ratio: " + ln_tree_structure_ratio_grow +			
+				"\n  trans ratio: " + 
+				(Math.exp(ln_transition_ratio_grow) < 0.00001 ? "damn small" : Math.exp(ln_transition_ratio_grow)) +
+				"  lik ratio: " + 
+				(Math.exp(ln_likelihood_ratio_grow) < 0.00001 ? "damn small" : Math.exp(ln_likelihood_ratio_grow)) +
+				"  structure ratio: " + 
+				(Math.exp(ln_tree_structure_ratio_grow) < 0.00001 ? "damn small" : Math.exp(ln_tree_structure_ratio_grow)));
+		}
 		return ln_transition_ratio_grow + ln_likelihood_ratio_grow + ln_tree_structure_ratio_grow;
 	}
 	
@@ -116,16 +126,17 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 		double ln_likelihood_ratio_prune = -calcLnLikRatioGrow(prune_node); //inverse of before (will speed up later)
 		double ln_tree_structure_ratio_prune = -calcLnTreeStructureRatioGrow(prune_node);
 		
-		
-		System.out.println("PRUNE <<" + prune_node.stringLocation(true) + 
-				">> ---- X_" + (prune_node.splitAttributeM == null ? "null" : (prune_node.splitAttributeM + 1)) + " < " + TreeIllustration.two_digit_format.format(prune_node.splitValue == null ? Double.NaN : prune_node.splitValue) + 
-			"\n  ln trans ratio: " + ln_transition_ratio_prune + " ln lik ratio: " + ln_likelihood_ratio_prune + " ln structure ratio: " + ln_tree_structure_ratio_prune +
-			"\n  trans ratio: " + 
-			(Math.exp(ln_transition_ratio_prune) < 0.00001 ? "damn small" : Math.exp(ln_transition_ratio_prune)) +
-			"  lik ratio: " + 
-			(Math.exp(ln_likelihood_ratio_prune) < 0.00001 ? "damn small" : Math.exp(ln_likelihood_ratio_prune)) +
-			"  structure ratio: " + 
-			(Math.exp(ln_tree_structure_ratio_prune) < 0.00001 ? "damn small" : Math.exp(ln_tree_structure_ratio_prune)));
+		if (DEBUG_MH){
+			System.out.println("PRUNE <<" + prune_node.stringLocation(true) + 
+					">> ---- X_" + (prune_node.splitAttributeM == null ? "null" : (prune_node.splitAttributeM + 1)) + " < " + TreeIllustration.two_digit_format.format(prune_node.splitValue == null ? Double.NaN : prune_node.splitValue) + 
+				"\n  ln trans ratio: " + ln_transition_ratio_prune + " ln lik ratio: " + ln_likelihood_ratio_prune + " ln structure ratio: " + ln_tree_structure_ratio_prune +
+				"\n  trans ratio: " + 
+				(Math.exp(ln_transition_ratio_prune) < 0.00001 ? "damn small" : Math.exp(ln_transition_ratio_prune)) +
+				"  lik ratio: " + 
+				(Math.exp(ln_likelihood_ratio_prune) < 0.00001 ? "damn small" : Math.exp(ln_likelihood_ratio_prune)) +
+				"  structure ratio: " + 
+				(Math.exp(ln_tree_structure_ratio_prune) < 0.00001 ? "damn small" : Math.exp(ln_tree_structure_ratio_prune)));
+		}
 		CGMBARTTreeNode.pruneTreeAt(prune_node);
 		return ln_transition_ratio_prune + ln_likelihood_ratio_prune + ln_tree_structure_ratio_prune;
 	}	
@@ -179,12 +190,7 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 		double sigsq = gibbs_samples_of_sigsq.get(gibb_sample_num - 1);
 		int n_ell = grow_node.n_eta;
 		int n_ell_L = grow_node.left.n_eta;
-		int n_ell_R = grow_node.right.n_eta;		
-		
-		if (n_ell_L <= N_RULE || n_ell_R <= N_RULE){
-			System.out.println("ERR: cannot split a node where daughter only has one data point");
-			return Double.NEGATIVE_INFINITY;
-		}
+		int n_ell_R = grow_node.right.n_eta;
 		
 //		System.out.println(" sigsq: " + sigsq);
 //		System.out.println("calcLnLikRatioGrow n_ell: " + n_ell + " n_ell_L: " + n_ell_L + " n_ell_R: " + n_ell_R);

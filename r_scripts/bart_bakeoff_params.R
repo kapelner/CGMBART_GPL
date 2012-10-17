@@ -9,11 +9,11 @@ real_regression_data_sets = c(
 #	"r_concretedata"
 )
 simulated_data_sets = c(
-	"univariate_linear",
+#	"univariate_linear",
 #	"bivariate_linear",
-	"friedman",
+#	"friedman",
 #	"simple_tree_structure_sigsq_hundredth",
-	"simple_tree_structure_sigsq_tenth",
+#	"simple_tree_structure_sigsq_tenth",
 #	"simple_tree_structure_sigsq_half",
 	"simple_tree_structure",
 #	"simple_tree_structure_sigsq_3",
@@ -25,7 +25,7 @@ simulated_data_sets = c(
 
 #nice to have data around for testing... should be overwritten for custom runs...
 num_trees_of_interest = c(
-	1, 5
+	1
 )
 num_burn_ins_of_interest = c(
 	2000
