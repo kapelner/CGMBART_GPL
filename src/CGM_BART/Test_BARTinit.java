@@ -75,6 +75,6 @@ public class Test_BARTinit {
 		bart.InitializeTrees();
 		bart.InitializeMus();
 		CGMBARTTreeNode tree = bart.gibbs_samples_of_cgm_trees.get(0).get(0);
-		assertTrue(tree.y_prediction == CGMBART_04_init.INITIAL_PRED);
+		assertTrue(tree.y_pred == CGMBART_04_init.INITIAL_PRED);
 	}	
 }

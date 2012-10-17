@@ -73,7 +73,7 @@ public class Test_BARTgibbs_internal {
 		bart.SetupGibbsSampling();
 		List<CGMBARTTreeNode> old_trees_all_but_one = bart.gibbs_samples_of_cgm_trees.get(0).subList(0, num_trees - 1);
 		for (CGMBARTTreeNode old_tree : old_trees_all_but_one){
-			old_tree.y_prediction = y_pred_initial;
+			old_tree.y_pred = y_pred_initial;
 		}
 		double[] resids = bart.getResidualsBySubtractingTrees(old_trees_all_but_one);
 		System.out.println("Y = " + Tools.StringJoin(bart.y_orig, ",") + "  avg_y = " + StatToolbox.sample_average(bart.y_orig));
@@ -101,10 +101,10 @@ public class Test_BARTgibbs_internal {
 			assertEquals(1 / (1 / bart.hyper_sigsq_mu + bart.n / sigsq), posterior_sigsq, 0.0001);
 			//draw from posterior distribution
 			double posterior_mean = bart.calcLeafPosteriorMean(tree, sigsq, posterior_sigsq);
-			bart.assignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsq(tree, sigsq);
+			bart.assignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsqAndUpdateYhats(tree, sigsq);
 			double moe = 4 * Math.sqrt(posterior_sigsq);
-			System.out.println("testAssignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsq\n sigsq = " + sigsq + " sigsq_post = " + posterior_sigsq + " mu_post = " + posterior_mean + " avg_y_node = " + tree.avg_response_untransformed() + " ypred = " + bart.un_transform_y(tree.y_prediction));
-			assertTrue(tree.y_prediction <= posterior_mean + moe && tree.y_prediction >= posterior_mean - moe);
+			System.out.println("testAssignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsq\n sigsq = " + sigsq + " sigsq_post = " + posterior_sigsq + " mu_post = " + posterior_mean + " avg_y_node = " + tree.avg_response_untransformed() + " ypred = " + bart.un_transform_y(tree.y_pred));
+			assertTrue(tree.y_pred <= posterior_mean + moe && tree.y_pred >= posterior_mean - moe);
 			
 		}		
 	}
@@ -116,8 +116,8 @@ public class Test_BARTgibbs_internal {
 		bart.InitGibbsSamplingData();
 		bart.InitializeTrees();
 		bart.InitializeMus();
-
-		double[] residuals = bart.getResidualsFromFullSumModel(0);
+		double[] response_vec = new double[bart.n];
+		double[] residuals = bart.getResidualsFromFullSumModel(0, response_vec);
 		
 //		System.out.println("Y(" + CGMBART_init.INITIAL_PRED + ") = " + bart.un_transform_y(CGMBART_init.INITIAL_PRED));
 //		System.out.println("Y = " + Tools.StringJoin(bart.y, ",") + "  avg_y = " + StatToolbox.sample_average(bart.y));

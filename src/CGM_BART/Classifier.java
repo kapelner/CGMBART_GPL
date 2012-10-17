@@ -130,7 +130,7 @@ public abstract class Classifier implements Serializable {
 			}
 			x[p + 1] = i;
 			X_y_new.add(x);
-			System.out.println("row " + i + ": " + Tools.StringJoin(x));
+//			System.out.println("row " + i + ": " + Tools.StringJoin(x));
 		}
 		return X_y_new;
 	}

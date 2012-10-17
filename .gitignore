@@ -53,6 +53,7 @@ r_scripts/bart_bakeoff_params.R
 mathematica_scripts/*
 datasets/r_treemodel.csv
 debug_output/*.csv
+bart_java.jar
 debug_output/*.png
 output_plots/*.pdf
 output_plots/*.csv

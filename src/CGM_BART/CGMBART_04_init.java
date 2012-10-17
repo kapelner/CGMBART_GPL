@@ -48,7 +48,7 @@ public abstract class CGMBART_04_init extends CGMBART_03_debug implements Serial
 		ArrayList<CGMBARTTreeNode> cgm_trees = new ArrayList<CGMBARTTreeNode>(num_trees);		
 		for (int i = 0; i < num_trees; i++){
 			CGMBARTTreeNode stump = new CGMBARTTreeNode(this);
-			stump.updateWithNewResponsesAndPropagate(X_y, y_trans, p);
+			stump.setStumpData(X_y, y_trans, p);
 			cgm_trees.add(stump);
 		}	
 		gibbs_samples_of_cgm_trees.add(cgm_trees);	
@@ -62,7 +62,7 @@ public abstract class CGMBART_04_init extends CGMBART_03_debug implements Serial
 //			assignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsq(tree, gibbs_samples_of_sigsq.get(0));
 //		}	
 		for (CGMBARTTreeNode stump : gibbs_samples_of_cgm_trees.get(0)){
-			stump.y_prediction = INITIAL_PRED;
+			stump.y_pred = INITIAL_PRED;
 		}
 	}
 	
@@ -79,7 +79,7 @@ public abstract class CGMBART_04_init extends CGMBART_03_debug implements Serial
 		return StatToolbox.sample_from_inv_gamma(hyper_nu / 2, 2 / (hyper_nu * hyper_lambda)); 
 	}	
 
-	protected abstract void assignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsq(CGMBARTTreeNode node, double sigsq);
+	protected abstract void assignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsqAndUpdateYhats(CGMBARTTreeNode node, double sigsq);
 	
 	
 	public void setNumGibbsBurnIn(int num_gibbs_burn_in){

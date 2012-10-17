@@ -35,9 +35,9 @@ public class CGMBART_FixedTreeAndSigsq extends CGMBART_09_eval {
 		gibbs_samples_of_sigsq.add(sample_num, fixed_sigsq); //fix it forever
 	}
 
-	protected void SampleTree(int sample_num, int t, ArrayList<CGMBARTTreeNode> cgm_trees, TreeArrayIllustration tree_array_illustration) {
+	protected double[] SampleTree(int sample_num, int t, ArrayList<CGMBARTTreeNode> cgm_trees, TreeArrayIllustration tree_array_illustration) {
 		CGMBARTTreeNode tree = CGMBART_FixedTree.CreateTheSimpleTreeModel(this);
-		tree.updateWithNewResponsesAndPropagate(X_y, y_trans, p); //no need for new y vector (which is usually the residuals from other trees)
+		tree.updateWithNewResponsesRecursively(y_trans); //no need for new y vector (which is usually the residuals from other trees)
 		cgm_trees.add(tree);
 		gibbs_samples_of_cgm_trees.set(sample_num, cgm_trees);
 		
@@ -47,7 +47,9 @@ public class CGMBART_FixedTreeAndSigsq extends CGMBART_09_eval {
 		tree_array_illustration.addLikelihood(lik);
 		System.out.println("Running BART Gibbs sampler fixed tree and sigsq, iteration " + sample_num + " lik = " + lik);
 		tree_liks.print(lik + "," + tree.stringID() + ",");
-		all_tree_liks[0][sample_num] = lik;		
+		all_tree_liks[0][sample_num] = lik;	
+		
+		return y_trans;
 	}
 
 }

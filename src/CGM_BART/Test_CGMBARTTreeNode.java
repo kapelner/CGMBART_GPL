@@ -39,17 +39,19 @@ public class Test_CGMBARTTreeNode {
 		bart.setData(data);
 		data = bart.getData();
 		
-		stump = new CGMBARTTreeNode(null, data, bart);
+		stump = new CGMBARTTreeNode(bart);
+		stump.data = data;
 		
-		simple_tree = new CGMBARTTreeNode(null, data, bart);
+		simple_tree = new CGMBARTTreeNode(bart);
+		simple_tree.data = data;
 		simple_tree.splitAttributeM = 0;
 		simple_tree.splitValue = 0.0;
 		simple_tree.isLeaf = false;
 		simple_tree.left = new CGMBARTTreeNode(simple_tree);
 		simple_tree.right = new CGMBARTTreeNode(simple_tree);
-		CGMBARTTreeNode.propagateDataByChangedRule(simple_tree, true);
+		CGMBARTTreeNode.propagateDataByChangedRule(simple_tree);
 		
-		double_tree = simple_tree.clone(true);
+		double_tree = simple_tree.clone();
 		double_tree.left.isLeaf = false;
 		double_tree.left.splitAttributeM = 1;
 		double_tree.left.splitValue = 31.2;		
@@ -60,7 +62,7 @@ public class Test_CGMBARTTreeNode {
 		double_tree.right.splitValue = 0.0;		
 		double_tree.right.left = new CGMBARTTreeNode(double_tree.right);
 		double_tree.right.right = new CGMBARTTreeNode(double_tree.right);
-		CGMBARTTreeNode.propagateDataByChangedRule(double_tree, true);
+		CGMBARTTreeNode.propagateDataByChangedRule(double_tree);
 	}
 
 	@BeforeClass
@@ -82,7 +84,7 @@ public class Test_CGMBARTTreeNode {
 
 	@Test
 	public void testResponses() {
-		assertArrayEquals(y, stump.responses(), 0);
+		assertArrayEquals(y, stump.getResponses(), 0);
 	}
 	
 	@Test
@@ -99,7 +101,7 @@ public class Test_CGMBARTTreeNode {
 	public void testCloneStump() {
 		CGMBARTTreeNode cloned_stump = stump.clone();
 		assertEquals(cloned_stump.n_eta, stump.n_eta);
-		assertArrayEquals(stump.responses(), cloned_stump.responses(), 0);
+		assertArrayEquals(stump.getResponses(), cloned_stump.getResponses(), 0);
 		for (int i = 0; i < stump.n_eta; i++){
 			assertArrayEquals(stump.data.get(i), cloned_stump.data.get(i), 0);
 		}
@@ -129,8 +131,8 @@ public class Test_CGMBARTTreeNode {
 		assertEquals(simple_tree.right.stringLocation(false), "R");		
 		double[] left_responses = {0, 2, 5, 9};
 		double[] right_responses = {0, 4, 8};
-		assertArrayEquals(simple_tree.left.responses(), left_responses, 0);
-		assertArrayEquals(simple_tree.right.responses(), right_responses, 0);
+		assertArrayEquals(simple_tree.left.getResponses(), left_responses, 0);
+		assertArrayEquals(simple_tree.right.getResponses(), right_responses, 0);
 		assertEquals(simple_tree.right.sumResponses(), 12, 0);
 		assertEquals(simple_tree.left.sumResponses(), 16, 0);		
 		assertEquals(simple_tree.left.sumResponsesQuantitySqd(), 256, 0);
@@ -242,13 +244,13 @@ public class Test_CGMBARTTreeNode {
 	}	
 	
 	private CGMBARTTreeNode buildDoubleTreeExt(){
-		CGMBARTTreeNode double_tree_ext = double_tree.clone(true);
+		CGMBARTTreeNode double_tree_ext = double_tree.clone();
 		double_tree_ext.left.left.isLeaf = false;
 		double_tree_ext.left.left.splitAttributeM = 1;
 		double_tree_ext.left.left.splitValue = 15.3;
 		double_tree_ext.left.left.left = new CGMBARTTreeNode(double_tree_ext.left.left);
 		double_tree_ext.left.left.right = new CGMBARTTreeNode(double_tree_ext.left.left);
-		CGMBARTTreeNode.propagateDataByChangedRule(double_tree_ext, true);
+		CGMBARTTreeNode.propagateDataByChangedRule(double_tree_ext);
 		//now we want to make sure it has the same num predictors
 		return double_tree_ext;				
 	}	

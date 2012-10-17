@@ -53,8 +53,9 @@ public class Test_BARTgibbs_base {
 	@Test
 	public void testSampleSigsq(){
 		bart.Build();
+		double[] response_vec = new double[bart.n];
 		for (int i = 1; i <= NGAndNB; i++){
-			bart.SampleSigsq(i);
+			bart.SampleSigsq(i, response_vec);
 			assertTrue(bart.gibbs_samples_of_sigsq.get(i) > 0);
 		}
 	}	
