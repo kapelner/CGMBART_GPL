@@ -54,9 +54,8 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 		//now we have the last residual vector which we pass on to sample sigsq		
 		SampleSigsq(gibb_sample_num);
 		DebugSample(gibb_sample_num, tree_array_illustration);
-		//now flush the previous previous gibbs sample
-		ArrayList<CGMBARTTreeNode> old_trees = gibbs_samples_of_cgm_trees.get(gibb_sample_num - 1);
-		FlushDataForSample(old_trees);
+		//now flush the previous previous gibbs sample to not leak memory
+		FlushDataForSample(gibbs_samples_of_cgm_trees.get(gibb_sample_num - 1));
 		gibb_sample_num++;
 	}
 
