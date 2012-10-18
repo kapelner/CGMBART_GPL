@@ -95,7 +95,7 @@ public abstract class CGMBART_03_debug extends CGMBART_02_hyperparams implements
 				for (int i = 0; i < n; i++){
 					all_results.add("" + tree.Evaluate(X_y.get(i))); //TreeIllustration.one_digit_format.format(
 				} 
-				evaluations.println(0 + "," + t + "," + tree.stringID() + "," + Tools.StringJoin(all_results, ","));
+//				evaluations.println(0 + "," + t + "," + tree.stringID() + "," + Tools.StringJoin(all_results, ","));
 			}
 		}
 	}	
@@ -142,7 +142,7 @@ public abstract class CGMBART_03_debug extends CGMBART_02_hyperparams implements
 				for (int i = 0; i < n; i++){
 					all_results.add("" + tree.Evaluate(X_y.get(i)));
 				}
-				evaluations.println(gibbs_sample_num + "," + t + "," + tree.stringID() + "," + Tools.StringJoin(all_results, ","));
+//				evaluations.println(gibbs_sample_num + "," + t + "," + tree.stringID() + "," + Tools.StringJoin(all_results, ","));
 			}	
 			evaluations.println((gibbs_sample_num) + ",,y," + Tools.StringJoin(y_trans, ","));
 		}
@@ -221,14 +221,14 @@ public abstract class CGMBART_03_debug extends CGMBART_02_hyperparams implements
 		return depth_by_tree;
 	}
 	
-	public String getRootSplits(int n_g){
-		ArrayList<CGMBARTTreeNode> trees = gibbs_samples_of_cgm_trees.get(n_g);
-		ArrayList<String> root_splits = new ArrayList<String>(trees.size());
-		for (int t = 0; t < trees.size(); t++){
-			root_splits.add(trees.get(t).splitToString());
-		}
-		return Tools.StringJoin(root_splits, "   ||   ");		
-	}	
+//	public String getRootSplits(int n_g){
+//		ArrayList<CGMBARTTreeNode> trees = gibbs_samples_of_cgm_trees.get(n_g);
+//		ArrayList<String> root_splits = new ArrayList<String>(trees.size());
+//		for (int t = 0; t < trees.size(); t++){
+//			root_splits.add(trees.get(t).splitToString());
+//		}
+//		return Tools.StringJoin(root_splits, "   ||   ");		
+//	}	
 
 //	protected String treeIDsInCurrentSample(int sample_num){
 //		ArrayList<CGMBARTTreeNode> trees = gibbs_samples_of_cgm_trees.get(sample_num);

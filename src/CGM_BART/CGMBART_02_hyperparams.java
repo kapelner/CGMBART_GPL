@@ -108,6 +108,18 @@ public abstract class CGMBART_02_hyperparams extends CGMBART_01_base implements 
 		}
 		return un_transform_y((double)yt_i);
 	}	
+	
+	public double un_transform_y_and_round(double yt_i){
+		return Double.parseDouble(TreeArrayIllustration.one_digit_format.format((yt_i + YminAndYmaxHalfDiff) * (y_max - y_min) + y_min));
+	}
+	
+	public double[] un_transform_y_and_round(double[] yt){
+		double[] y = new double[yt.length];
+		for (int i = 0; i < yt.length; i++){
+			y[i] = un_transform_y_and_round(yt[i]);
+		}
+		return y;
+	}		
 
 	
 	public double getHyper_mu_mu() {
