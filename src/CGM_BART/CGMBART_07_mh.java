@@ -6,7 +6,7 @@ import java.util.ArrayList;
 
 public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements Serializable {
 	private static final long serialVersionUID = 1825856510284398699L;
-	private static final boolean DEBUG_MH = true;
+	private static final boolean DEBUG_MH = false;
 
 
 	//this enum has to include all potential types of steps, even if they aren't used in this class's implementation

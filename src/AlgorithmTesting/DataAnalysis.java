@@ -33,8 +33,8 @@ public class DataAnalysis {
 	
 	/** this is a file that is in CSV format (csv extension) with/out a header named c_<name> or r_<name> for classification or regression respectively */
 //	private static final String DataSetFilename = "r_simple";
-//	private static final String DataSetFilename = "r_treemodel";
-	private static final String DataSetFilename = "r_treemodel_low_n";	
+	private static final String DataSetFilename = "r_treemodel";
+//	private static final String DataSetFilename = "r_treemodel_low_n";	
 //	private static final String DataSetFilename = "r_friedman";
 //	private static final String DataSetFilename = "r_univariatelinear";
 //	private static final String DataSetFilename = "r_bivariatelinear";
