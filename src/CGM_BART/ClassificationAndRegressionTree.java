@@ -48,16 +48,7 @@ public abstract class ClassificationAndRegressionTree extends Classifier {
 	
 	//convenience methods for all tree building...
 	
-	/**
-	 * Sorts a data matrix by an attribute from lowest record to highest record
-	 * 
-	 * @param data			the data matrix to be sorted
-	 * @param j				the attribute to sort on
-	 */
-	@SuppressWarnings("unchecked")
-	public static void SortAtAttribute(List<double[]> data, int j){
-		Collections.sort(data, new AttributeComparator(j));
-	}
+
 	
 	
 	/**
@@ -66,7 +57,7 @@ public abstract class ClassificationAndRegressionTree extends Classifier {
 	 * @author Adam Kapelner
 	 */
 	@SuppressWarnings("rawtypes")
-	private static class AttributeComparator implements Comparator {
+	protected static class AttributeComparator implements Comparator {
 		
 		/** the specified attribute */
 		private int j;

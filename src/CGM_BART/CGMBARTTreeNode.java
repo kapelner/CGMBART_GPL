@@ -35,6 +35,8 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 
+import CGM_BART.ClassificationAndRegressionTree.AttributeComparator;
+
 /**
  * A dumb struct to store information about a 
  * node in the Bayesian decision tree.
@@ -46,6 +48,8 @@ import java.util.List;
  */
 public class CGMBARTTreeNode implements Cloneable, Serializable {
 	private static final long serialVersionUID = -5584590448078741112L;
+	
+	public static final boolean DEBUG_NODES = false;
 
 	/** a link back to the overall bart model */
 	private CGMBART_02_hyperparams cgmbart;	
@@ -66,7 +70,8 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 	/** if this is a leaf node, then the result of the classification, otherwise null */
 	public Double klass;
 	/** if this is a leaf node, then the result of the prediction for regression, otherwise null */
-	public Double y_pred;
+	protected static final double BAD_PRED_FLAG = -Double.MAX_VALUE;
+	public double y_pred = BAD_PRED_FLAG;
 	/** the remaining data records at this point in the tree construction cols: x_1, ..., x_p, y, index */
 	public transient List<double[]> data;
 	/** the number of data points */
@@ -370,12 +375,28 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 			this.right.flushNodeData();
 	}
 	
+	/**
+	 * Sorts a data matrix by an attribute from lowest record to highest record
+	 * 
+	 * @param data			the data matrix to be sorted
+	 * @param j				the attribute to sort on
+	 */
+	@SuppressWarnings("unchecked")
+	protected void SortAtAttribute(){
+		Collections.sort(data, new AttributeComparator(splitAttributeM));
+		//update indicies after sort
+		for (int i = 0; i < n_eta; i++){
+			indicies[i] = (int)data.get(i)[cgmbart.p + 1];
+		}
+	}	
+	
 	public static void propagateDataByChangedRule(CGMBARTTreeNode node) {		
 		if (node.isLeaf){ //only propagate if we are in a split node and NOT a leaf
+			node.printNodeDebugInfo("propagateDataByChangedRule LEAF");
 			return;
 		}
 		//split the data correctly
-		ClassificationAndRegressionTree.SortAtAttribute(node.data, node.splitAttributeM);
+		node.SortAtAttribute();
 		int n_split = ClassificationAndRegressionTree.getSplitPoint(node.data, node.splitAttributeM, node.splitValue);
 		//now set the data in the offspring
 		double[] node_left_responses = new double[n_split];
@@ -473,9 +494,9 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 //	}
 	
 	//CHECK as well
-	public Double prediction_untransformed(){
-		if (y_pred == null){
-			return null;
+	public double prediction_untransformed(){
+		if (y_pred == BAD_PRED_FLAG){
+			return BAD_PRED_FLAG;
 		}
 		return cgmbart.un_transform_y(y_pred);
 	}
@@ -745,30 +766,79 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		//initialize the yhats
 		yhats = new double[n];
 //		System.out.println("setStumpData  X is " + data.size() + " x " + data.get(0).length + "  y is " + y.length + " x " + 1);
-		
+		printNodeDebugInfo("setStumpData");
+	}
+
+	public void printNodeDebugInfo(String title) {
+		if (DEBUG_NODES){
+			System.out.println("\n" + title + " node debug info for " + this.stringLocation(true) + (isLeaf ? " (LEAF) " : " (INTERNAL NODE) ") + " d = " + depth);
+			System.out.println("-----------------------------------------");
+			
+			System.out.println("cgmbart = " + cgmbart + " parent = " + parent + " left = " + left + " right = " + right);
+			System.out.println("----- RULE:   X_" + splitAttributeM + " <= " + splitValue + " ------");
+			System.out.println("n_eta = " + n_eta + " y_pred = " + (y_pred == BAD_PRED_FLAG ? "BLANK" : cgmbart.un_transform_y_and_round(y_pred)));
+			System.out.println("sum_responses_qty = " + sum_responses_qty + " sum_responses_qty_sqd = " + sum_responses_qty_sqd);
+			
+			System.out.println("possible_rule_variables: [" + Tools.StringJoin(possible_rule_variables, ", ") + "]");
+			System.out.print("possible_split_vals_by_attr: {");
+			if (possible_split_vals_by_attr != null){
+				for (int key : possible_split_vals_by_attr.keySet()){
+					System.out.print(" " + key + " -> [" + Tools.StringJoin(possible_split_vals_by_attr.get(key).toArray()) + "]");
+				}
+				System.out.print(" }\n");
+			}
+			else {
+				System.out.println(" NULL MAP }");
+			}
+			
+			System.out.println("X is " + data.size() + " x " + data.get(0).length + " and below:");
+			for (int i = 0; i < data.size(); i++){
+				double[] record = data.get(i).clone();
+				record[cgmbart.p] = cgmbart.un_transform_y_and_round(record[cgmbart.p]);
+				System.out.println("  " + Tools.StringJoin(record));
+			}
+			
+			System.out.println("responses: (size " + responses.length + ") [" + Tools.StringJoin(cgmbart.un_transform_y_and_round(responses)) + "]");
+			System.out.println("indicies: (size " + indicies.length + ") [" + Tools.StringJoin(indicies) + "]");
+			if (Arrays.equals(yhats, new double[yhats.length])){
+				System.out.println("y_hat_vec: (size " + yhats.length + ") [ BLANK ]");
+			}
+			else {
+				System.out.println("y_hat_vec: (size " + yhats.length + ") [" + Tools.StringJoin(cgmbart.un_transform_y_and_round(yhats)) + "]");
+			}
+			System.out.println("-----------------------------------------\n\n\n");
+		}
 	}
 
 	public void updateWithNewResponsesRecursively(double[] new_responses) {
+		
 //		System.out.println("updateWithNewResponsesRecursively " + this.stringLocation(true) + " indicies: " + Tools.StringJoin(indicies));
 		//nuke previous responses and sums
-		responses = new_responses;
+		responses = new double[n_eta]; //ensure correct dimension
 		sum_responses_qty_sqd = 0; //need to be primitives
 		sum_responses_qty = 0; //need to be primitives
 		//copy all the new data in appropriately
 		for (int i = 0; i < n_eta; i++){
-			this.data.get(i)[cgmbart.p] = new_responses[indicies[i]];
+			double y_new = new_responses[indicies[i]];
+			this.data.get(i)[cgmbart.p] = y_new;
+			responses[i] = y_new;
 		}
+		if (DEBUG_NODES){
+			System.out.println("new_responses: (size " + new_responses.length + ") [" + Tools.StringJoin(cgmbart.un_transform_y_and_round(new_responses)) + "]");
+		}
+		printNodeDebugInfo("updateWithNewResponsesRecursively");
 		if (this.isLeaf){
 			return;
-		}
+		}		
 		this.left.updateWithNewResponsesRecursively(new_responses);
 		this.right.updateWithNewResponsesRecursively(new_responses);
 	}
 
-	public void updateYHatsWithPrediction() {
+	public void updateYHatsWithPrediction() {		
 		for (int index : indicies){
 			yhats[index] = y_pred;
 		}
+		printNodeDebugInfo("updateYHatsWithPrediction");
 	}
 
 //	public CGMBARTTreeNode findCorrespondingNodeOnSimilarTree(CGMBARTTreeNode node) {
