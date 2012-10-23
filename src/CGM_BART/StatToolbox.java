@@ -24,6 +24,10 @@
 
 package CGM_BART;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Random;
 
@@ -75,16 +79,54 @@ public class StatToolbox {
 		return ILLEGAL_FLAG;
 	}
 	
-	public static double sample_from_norm_dist(double mu, double sigsq){
-//		System.out.println("sample_from_norm_dist mu=" + mu + " sigsq=" + sigsq);
+	private static double[] NORM_SAMPS;
+	private static int NUM_NORM_SAMPS;
+	private static int START_POS;
+	private static final String norm_samps_file = "randsamps/rnorm.csv";
+	static {
+		BufferedReader in;
 		try {
-			return new NormalDistributionImpl(mu, Math.sqrt(sigsq)).inverseCumulativeProbability(StatToolbox.rand());
-		} catch (MathException e) {
-//			System.err.println("ERROR sample_from_norm_dist mu=" + mu + " sigsq=" + sigma);
-//			e.printStackTrace();
+			in = new BufferedReader(new FileReader(norm_samps_file));
+			try {
+				String raw = in.readLine();
+				String[] random_samps = raw.split(",");
+				NUM_NORM_SAMPS = random_samps.length;
+				NORM_SAMPS = new double[NUM_NORM_SAMPS];
+				START_POS = (int)Math.floor(rand() * NUM_NORM_SAMPS);
+				for (int i = 0; i < NUM_NORM_SAMPS; i++){
+					NORM_SAMPS[i] = Double.parseDouble(random_samps[i]);
+				}	
+				System.out.println("NUM_NORM_SAMPS: " + NUM_NORM_SAMPS);
+//				System.out.println("START_POS: " + START_POS);
+//				System.out.println("NORM_SAMPS: " + Tools.StringJoin(NORM_SAMPS));
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}			
+		} catch (FileNotFoundException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
 		}
-		return ILLEGAL_FLAG;		
+					
 	}
+	
+	public static double sample_from_norm_dist(double mu, double sigsq){
+		double std_norm_realization = NORM_SAMPS[START_POS % NUM_NORM_SAMPS];
+//		System.out.println("sample_from_norm_dist S = " + START_POS + " P = " + START_POS % NUM_NORM_SAMPS + "real = " + std_norm_realization);
+		START_POS++;
+		return mu + Math.sqrt(sigsq) * std_norm_realization;
+	}	
+	
+//	public static double sample_from_norm_dist(double mu, double sigsq){
+////		System.out.println("sample_from_norm_dist mu=" + mu + " sigsq=" + sigsq);
+//		try {
+//			return new NormalDistributionImpl(mu, Math.sqrt(sigsq)).inverseCumulativeProbability(StatToolbox.rand());
+//		} catch (MathException e) {
+////			System.err.println("ERROR sample_from_norm_dist mu=" + mu + " sigsq=" + sigma);
+////			e.printStackTrace();
+//		}
+//		return ILLEGAL_FLAG;		
+//	}
 	
 	// test the sampling of the normal
 //	static {

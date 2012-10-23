@@ -66,7 +66,7 @@ public abstract class CGMBART_02_hyperparams extends CGMBART_01_base implements 
 	//make sure you get the prior correct if you don't transform
 	
 	protected void transformResponseVariable() {
-		System.out.println("CGMBART transformResponseVariable");
+//		System.out.println("CGMBART transformResponseVariable");
 		//make sure to initialize the y_trans to be y first
 		super.transformResponseVariable();
 		//make data we need later

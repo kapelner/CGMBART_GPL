@@ -54,7 +54,7 @@ public class Test_BARTgibbs_base {
 	public void testSampleSigsq(){
 		bart.Build();
 		for (int i = 1; i <= NGAndNB; i++){
-			bart.SampleSigsq(i);
+			bart.SampleSigsq(i, new double[bart.n]);
 			assertTrue(bart.gibbs_samples_of_sigsq.get(i) > 0);
 		}
 	}	

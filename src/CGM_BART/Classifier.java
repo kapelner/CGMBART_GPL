@@ -53,6 +53,8 @@ import CustomLogging.*;
  */
 public abstract class Classifier implements Serializable {
 	private static final long serialVersionUID = -2857913059676679308L;	
+	
+	public static final int NUM_CORES = Runtime.getRuntime().availableProcessors() - 1;
 
 	/** the raw training data consisting of xi = [xi1,...,xiM, yi] that will be used to construct the classifier */
 	protected transient ArrayList<double[]> X_y;
