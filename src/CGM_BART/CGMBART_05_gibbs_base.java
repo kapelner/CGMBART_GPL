@@ -44,27 +44,28 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 		final TreeArrayIllustration tree_array_illustration = new TreeArrayIllustration(gibb_sample_num, unique_name);
 		gibbs_samples_of_cgm_trees.add(null); //so I can set explicitly
 		//we cycle over each tree and update it according to formulas 15, 16 on p274
+		double[] R_j = new double[n];
 		for (int t = 0; t < num_trees; t++){
 			if (t == 0 && gibb_sample_num % 100 == 0){
 				System.out.println("Sampling M_" + (t + 1) + "/" + num_trees + " iter " + gibb_sample_num + "/" + num_gibbs_total_iterations);
 			}
-			SampleTree(gibb_sample_num, t, cgm_trees, tree_array_illustration);
+			R_j = SampleTree(gibb_sample_num, t, cgm_trees, tree_array_illustration);
 			SampleMus(gibb_sample_num, t);				
 		}
-		//now we have the last residual vector which we pass on to sample sigsq		
-		SampleSigsq(gibb_sample_num);
+		//now we have the last residual vector which we pass on to sample sigsq
+		SampleSigsq(gibb_sample_num, R_j);
 		DebugSample(gibb_sample_num, tree_array_illustration);
 		//now flush the previous previous gibbs sample to not leak memory
 		FlushDataForSample(gibbs_samples_of_cgm_trees.get(gibb_sample_num - 1));
 		gibb_sample_num++;
 	}
 
-	protected void SampleSigsq(int sample_num) {
-		double sigsq = drawSigsqFromPosterior(sample_num);
+	protected void SampleSigsq(int sample_num, double[] R_j) {
+		double sigsq = drawSigsqFromPosterior(sample_num, R_j);
 		gibbs_samples_of_sigsq.add(sample_num, sigsq);
 	}
 
-	protected abstract double drawSigsqFromPosterior(int sample_num);
+	protected abstract double drawSigsqFromPosterior(int sample_num, double[] R_j);
 
 	protected void SampleMus(int sample_num, int t) {
 //		System.out.println("SampleMu sample_num " +  sample_num + " t " + t + " gibbs array " + gibbs_samples_of_cgm_trees.get(sample_num));
@@ -74,18 +75,11 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 	}
 	
 	protected double[] SampleTree(int sample_num, int t, ArrayList<CGMBARTTreeNode> cgm_trees, TreeArrayIllustration tree_array_illustration) {
-		
+		//first copy the tree from the previous gibbs position
 		final CGMBARTTreeNode copy_of_old_jth_tree_root = gibbs_samples_of_cgm_trees.get(sample_num - 1).get(t).clone();
-//		System.out.println("SampleTree copy_of_old_jth_tree_root \n responses: " + 
-//				Tools.StringJoin(copy_of_old_jth_tree_root.responses) + 
-//				"\n indicies " + Tools.StringJoin(copy_of_old_jth_tree_root.indicies)); 
-	//		System.out.println("copy_of_old_jth_tree.data:" + copy_of_old_jth_tree.data + "\n orig_tree.data:" + gibbs_samples_of_cgm_trees.get(sample_num - 1).get(t).data);
-//		System.out.println("SampleTreeByCalculatingRemainingsAndDrawingFromTreeDist t:" + t + " of m:" + m);
-		//okay so first we need to get "y" that this tree sees. This is defined as R_j
-		//in formula 12 on p274
+		//okay so first we need to get "y" that this tree sees. This is defined as R_j in formula 12 on p274
 		double[] R_j = getResidualsBySubtractingTrees(findOtherTrees(sample_num, t));
 		
-//		System.out.println("SampleTreeByDrawingFromTreeDist rs = " + IOTools.StringJoin(R_j, ","));
 		if (WRITE_DETAILED_DEBUG_FILES){
 			remainings.println((sample_num - 1) + "," + t + "," + copy_of_old_jth_tree_root.stringID() + "," + Tools.StringJoin(R_j, ","));			
 		}
