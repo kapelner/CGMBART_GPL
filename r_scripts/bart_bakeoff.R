@@ -98,8 +98,6 @@ run_bart_bakeoff = function(){
 			}
 		}
 	}
-	prettify_simulation_results_and_save_as_csv()
-	create_avg_sim_results_and_save_as_csv()
 	draw_boxplots_of_sim_results()
 	calculate_cochran_global_pval()
 }
@@ -121,7 +119,7 @@ prettify_simulation_results_and_save_as_csv = function(){
 	#assign it to the object
 	assign("simulation_results_pretty", simulation_results, .GlobalEnv)
 	#write it to file
-	write.csv(simulation_results, paste(PLOTS_DIR, "/", "simulation_results.csv", sep = ""), row.names = FALSE)
+	write.csv(simulation_results, paste("simulation_results", "/", "simulation_results.csv", sep = ""), row.names = FALSE)
 }
 
 draw_boxplots_of_sim_results = function(){
@@ -223,7 +221,7 @@ create_avg_sim_results_and_save_as_csv = function(){
 		avg_simulation_results[, j] = as.numeric(as.character(avg_simulation_results[, j]))
 	}
 	#write it to file
-	write.csv(avg_simulation_results, paste(PLOTS_DIR, "/", "avg_simulation_results.csv", sep = ""), row.names = FALSE)	
+	write.csv(avg_simulation_results, paste("simulation_results", "/", "avg_simulation_results.csv", sep = ""), row.names = FALSE)	
 	assign("avg_simulation_results_pretty", avg_simulation_results, .GlobalEnv)
 }
 
@@ -265,15 +263,15 @@ run_bart_model_and_save_diags_and_results = function(training_data, test_data, d
 	cart_predictions = run_cart_and_plot_y_vs_yhat(training_data, test_data, extra_text = extra_text, data_title = data_title, save_plot = save_plot, bart_machine = bart_machine)
 	
 	#do some plots and histograms to diagnose convergence
-	plot_sigsqs_convergence_diagnostics(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)
+#	plot_sigsqs_convergence_diagnostics(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)
 	a_bart_sigsqs = hist_sigsqs(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)
 #	sigsqs_log = rbind(sigsqs_log, c(data_title, num_trees, num_burn_in, num_iterations_after_burn_in, a_bart_sigsqs))
 #	assign("sigsqs_log", sigsqs_log, .GlobalEnv)
 
 #	plot_tree_liks_convergence_diagnostics(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)
 #	hist_tree_liks(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)
-	plot_tree_num_nodes(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)	
-	plot_tree_depths(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)
+#	plot_tree_num_nodes(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)	
+#	plot_tree_depths(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)
 	for (t in 1 : num_trees){
 #		plot_all_mu_values_for_tree(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot, t)
 #		hist_all_mu_values_for_tree(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot, t)
@@ -311,5 +309,8 @@ run_bart_model_and_save_diags_and_results = function(training_data, test_data, d
 	)
 	simulation_results = rbind(simulation_results, new_simul_row)	
 	assign("simulation_results", simulation_results, .GlobalEnv)
+	#now prettify and iteratively save so we can cut at any time
+	prettify_simulation_results_and_save_as_csv()
+	create_avg_sim_results_and_save_as_csv()
 	"A BART DONE"
 }

@@ -15,9 +15,9 @@ if (.Platform$OS.type == "windows"){
 }
 
 #constants
-NUM_GIGS_RAM_TO_USE = ifelse(.Platform$OS.type == "windows", 6, 1)
+NUM_GIGS_RAM_TO_USE = 3#ifelse(.Platform$OS.type == "windows", 6, 1)
 PLOTS_DIR = "output_plots"
-JAR_DEPENDENCIES = c("bart_java.jar", "commons-math-2.1.jar", "jai_codec.jar", "jai_core.jar")
+JAR_DEPENDENCIES = c("bart_java.jar", "commons-math-2.1.jar", "jai_codec.jar", "jai_core.jar", "trove-3.0.3.jar")
 DATA_FILENAME = "datasets/bart_data.csv"
 DEFAULT_ALPHA = 0.95
 DEFAULT_BETA = 2
