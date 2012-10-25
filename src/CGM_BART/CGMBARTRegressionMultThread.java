@@ -143,9 +143,7 @@ public class CGMBARTRegressionMultThread extends Classifier {
 	}
 	
 	public double EvaluateViaSampAvg(double[] record) { //posterior sample average		
-		double y_hat = StatToolbox.sample_average(getGibbsSamplesForPrediction(record));
-		System.out.println("eval: " + y_hat);
-		return y_hat;
+		return StatToolbox.sample_average(getGibbsSamplesForPrediction(record));
 	}
 	
 	public int numSamplesAfterBurning(){
