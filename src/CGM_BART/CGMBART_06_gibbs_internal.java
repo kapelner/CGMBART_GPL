@@ -99,10 +99,10 @@ public abstract class CGMBART_06_gibbs_internal extends CGMBART_05_gibbs_base im
 		
 		double[] es = getResidualsFromFullSumModel(sample_num, R_j);
 //		System.out.println("drawSigsqFromPosterior es = " + Tools.StringJoin(es, ",")); 
-		if (WRITE_DETAILED_DEBUG_FILES){		
-			remainings.println((sample_num) + ",,e," + Tools.StringJoin(es, ","));
-			evaluations.println((sample_num) + ",,e," + Tools.StringJoin(es, ","));
-		}
+//		if (WRITE_DETAILED_DEBUG_FILES){		
+//			remainings.println((sample_num) + ",,e," + Tools.StringJoin(es, ","));
+//			evaluations.println((sample_num) + ",,e," + Tools.StringJoin(es, ","));
+//		}
 		double sse = 0;
 		for (double e : es){
 			sse += Math.pow(e, 2); 

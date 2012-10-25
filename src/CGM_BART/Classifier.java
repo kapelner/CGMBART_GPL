@@ -53,8 +53,7 @@ import CustomLogging.*;
  */
 public abstract class Classifier implements Serializable {
 	private static final long serialVersionUID = -2857913059676679308L;	
-	
-	public static final int NUM_CORES = Runtime.getRuntime().availableProcessors() - 1;
+
 
 	/** the raw training data consisting of xi = [xi1,...,xiM, yi] that will be used to construct the classifier */
 	protected transient ArrayList<double[]> X_y;
@@ -338,17 +337,17 @@ public abstract class Classifier implements Serializable {
 	}
 	
 	
-	public void writeEvaluationDiagnostics() {		
-		output.print("y,yhat");
-		output.print("\n");
-		for (int i=0; i<n; i++){
-			double[] record = X_y.get(i);
-			double y = getResponseFromRecord(record); //the original response from record does not have to be untransformed
-			double yhat = Evaluate(record);
-			output.println(y + "," + yhat);
-		}		
-		output.close();
-	}
+//	public void writeEvaluationDiagnostics() {		
+//		output.print("y,yhat");
+//		output.print("\n");
+//		for (int i=0; i<n; i++){
+//			double[] record = X_y.get(i);
+//			double y = getResponseFromRecord(record); //the original response from record does not have to be untransformed
+//			double yhat = Evaluate(record);
+//			output.println(y + "," + yhat);
+//		}		
+//		output.close();
+//	}
 	
 	public void setUniqueName(String unique_name) {
 		this.unique_name = unique_name;

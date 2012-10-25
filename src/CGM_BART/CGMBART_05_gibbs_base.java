@@ -20,7 +20,7 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 		//now we burn and thin the chains for each param
 		BurnTreeAndSigsqChain();
 		//make sure debug files are closed
-		CloseDebugFiles();
+//		CloseDebugFiles();
 	}	
 
 	protected void DoGibbsSampling(){	
@@ -38,7 +38,7 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 	}
 	
 	protected void DoOneGibbsSampleAndIncrement(){
-		tree_liks.print(gibb_sample_num + ",");
+//		tree_liks.print(gibb_sample_num + ",");
 		//this array is the array of trees for this given sample
 		final ArrayList<CGMBARTTreeNode> cgm_trees = new ArrayList<CGMBARTTreeNode>(num_trees);				
 		final TreeArrayIllustration tree_array_illustration = new TreeArrayIllustration(gibb_sample_num, unique_name);
@@ -47,7 +47,7 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 		double[] R_j = new double[n];
 		for (int t = 0; t < num_trees; t++){
 			if (t == 0 && gibb_sample_num % 100 == 0){
-				System.out.println("Sampling M_" + (t + 1) + "/" + num_trees + " iter " + gibb_sample_num + "/" + num_gibbs_total_iterations);
+				System.out.println("Sampling M_" + (t + 1) + "/" + num_trees + " iter " + gibb_sample_num + "/" + num_gibbs_total_iterations + "  thread: " + Thread.currentThread().getName());
 			}
 			R_j = SampleTree(gibb_sample_num, t, cgm_trees, tree_array_illustration);
 			SampleMus(gibb_sample_num, t);				
@@ -80,9 +80,9 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 		//okay so first we need to get "y" that this tree sees. This is defined as R_j in formula 12 on p274
 		double[] R_j = getResidualsBySubtractingTrees(findOtherTrees(sample_num, t));
 		
-		if (WRITE_DETAILED_DEBUG_FILES){
-			remainings.println((sample_num - 1) + "," + t + "," + copy_of_old_jth_tree_root.stringID() + "," + Tools.StringJoin(R_j, ","));			
-		}
+//		if (WRITE_DETAILED_DEBUG_FILES){
+//			remainings.println((sample_num - 1) + "," + t + "," + copy_of_old_jth_tree_root.stringID() + "," + Tools.StringJoin(R_j, ","));			
+//		}
 		
 		//now, (important!) set the R_j's as this tree's data.
 		copy_of_old_jth_tree_root.updateWithNewResponsesRecursively(R_j);

@@ -36,11 +36,11 @@ public abstract class CGMBART_08_mh_with_change extends CGMBART_07_mh {
 					(Math.exp(log_r) < 0.00001 ? "damn small" : Math.exp(log_r)));		
 //		}
 		//ACCEPT/REJECT,STEP_name,log_prop_lik_o,log_prop_lik_f,log_r 
-		CGMBART_03_debug.mh_iterations_full_record.println(
-			(acceptProposal(ln_u_0_1, log_r) ? "A" : "R") + "," +  
-			TreeIllustration.one_digit_format.format(log_r) + "," +
-			TreeIllustration.two_digit_format.format(ln_u_0_1)
-		);		
+//		CGMBART_03_debug.mh_iterations_full_record.println(
+//			(acceptProposal(ln_u_0_1, log_r) ? "A" : "R") + "," +  
+//			TreeIllustration.one_digit_format.format(log_r) + "," +
+//			TreeIllustration.two_digit_format.format(ln_u_0_1)
+//		);		
 //		System.out.println("ln_u_0_1: " + ln_u_0_1 + " ln_r: " + log_r);
 		if (acceptProposal(ln_u_0_1, log_r)){ //accept proposal
 			System.out.println("proposal ACCEPTED\n\n");

@@ -60,12 +60,12 @@ public class DataAnalysis {
 		else { //regression problem
 //			machine = new RandomForest(data, new JProgressBarAndLabel(0, 0, null));
 //			for (int num_times = 0; num_times < 100; num_times++){
-				machine = new CGMBARTRegression();
+				machine = new CGMBARTRegressionMultThread();
 				machine.setData(data.getX_y());
 				machine.Build();
 				System.out.println("(in sample) L1 error: " + Math.round(machine.calculateInSampleLoss(Classifier.ErrorTypes.L1)) + " L2 error: " + Math.round(machine.calculateInSampleLoss(Classifier.ErrorTypes.L2)));
 				//now we'll do 95% CI and error rates
-				machine.writeEvaluationDiagnostics();
+//				machine.writeEvaluationDiagnostics();
 //			}
 		}		
 	}

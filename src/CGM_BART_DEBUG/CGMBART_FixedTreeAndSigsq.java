@@ -46,7 +46,7 @@ public class CGMBART_FixedTreeAndSigsq extends CGMBART_09_eval {
 		tree_array_illustration.AddTree(tree);
 		tree_array_illustration.addLikelihood(lik);
 		System.out.println("Running BART Gibbs sampler fixed tree and sigsq, iteration " + sample_num + " lik = " + lik);
-		tree_liks.print(lik + "," + tree.stringID() + ",");
+//		tree_liks.print(lik + "," + tree.stringID() + ",");
 		all_tree_liks[0][sample_num] = lik;	
 		
 		return y_trans;
