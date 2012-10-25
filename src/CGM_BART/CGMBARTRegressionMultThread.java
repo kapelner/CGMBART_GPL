@@ -56,6 +56,7 @@ public class CGMBARTRegressionMultThread extends Classifier {
 		gibbs_samples_of_cgm_trees_after_burn_in = new ArrayList<ArrayList<CGMBARTTreeNode>>(numSamplesAfterBurning());
 		gibbs_samples_of_sigsq_after_burn_in = new ArrayList<Double>(numSamplesAfterBurning());
 
+		System.out.println("burning and aggregating chains from all threads");
 		//go through each thread and get the tail and put them together
 		for (int t = 0; t < num_cores; t++){
 			CGMBARTRegression bart_model = bart_gibbs_chain_threads.get(t);

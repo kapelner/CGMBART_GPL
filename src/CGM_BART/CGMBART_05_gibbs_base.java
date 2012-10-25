@@ -18,7 +18,7 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 		//but it basically does all the Gibbs sampling
 		DoGibbsSampling();
 		//now we burn and thin the chains for each param
-		BurnTreeAndSigsqChain();
+//		BurnTreeAndSigsqChain();
 		//make sure debug files are closed
 //		CloseDebugFiles();
 	}	
@@ -123,7 +123,7 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 			gibbs_samples_of_cgm_trees_after_burn_in.add(gibbs_samples_of_cgm_trees.get(i));
 			gibbs_samples_of_sigsq_after_burn_in.add(gibbs_samples_of_sigsq.get(i));
 		}	
-		System.out.println("BurnTreeAndSigsqChain gibbs_samples_of_sigsq_after_burn_in length = " + gibbs_samples_of_sigsq_after_burn_in.size());
+//		System.out.println("BurnTreeAndSigsqChain gibbs_samples_of_sigsq_after_burn_in length = " + gibbs_samples_of_sigsq_after_burn_in.size());
 	}
 	
 //	public double[] getMuValuesForAllItersByTreeAndLeaf(int t, int leaf_num){

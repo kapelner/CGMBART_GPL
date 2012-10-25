@@ -24,18 +24,17 @@
 
 package CGM_BART;
 
+import gnu.trove.list.array.TDoubleArrayList;
+import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.set.hash.TDoubleHashSet;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 
-import CGM_BART.ClassificationAndRegressionTree.AttributeComparator;
 
 /**
  * A dumb struct to store information about a 
@@ -66,12 +65,12 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 	/** the attribute this node makes a decision on */
 	public Integer splitAttributeM;
 	/** the value this node makes a decision on */
-	public Double splitValue;
+	public double splitValue;
 	/** if this is a leaf node, then the result of the classification, otherwise null */
 	public Double klass;
 	/** if this is a leaf node, then the result of the prediction for regression, otherwise null */
-	protected static final double BAD_PRED_FLAG = -Double.MAX_VALUE;
-	public double y_pred = BAD_PRED_FLAG;
+	protected static final double BAD_FLAG = -Double.MAX_VALUE;
+	public double y_pred = BAD_FLAG;
 	/** the remaining data records at this point in the tree construction cols: x_1, ..., x_p, y, index */
 	public transient List<double[]> data;
 	/** the number of data points */
@@ -236,7 +235,7 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		node.right = null;
 		node.isLeaf = true;
 		node.splitAttributeM = null;
-		node.splitValue = null;
+		node.splitValue = BAD_FLAG;
 	}
 
 //	public static HashSet<CGMBARTTreeNode> selectBranchNodesWithTwoLeaves(ArrayList<CGMBARTTreeNode> terminalNodes) { 
@@ -385,14 +384,14 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 	 * @param data			the data matrix to be sorted
 	 * @param j				the attribute to sort on
 	 */
-	@SuppressWarnings("unchecked")
-	protected void SortAtAttribute(){
-		Collections.sort(data, new AttributeComparator(splitAttributeM));
-		//update indicies after sort
-		for (int i = 0; i < n_eta; i++){
-			indicies[i] = (int)data.get(i)[cgmbart.p + 1];
-		}
-	}	
+//	@SuppressWarnings("unchecked")
+//	protected void SortAtAttribute(){
+//		Collections.sort(data, new AttributeComparator(splitAttributeM));
+//		//update indicies after sort
+//		for (int i = 0; i < n_eta; i++){
+//			indicies[i] = (int)data.get(i)[cgmbart.p + 1];
+//		}
+//	}	
 	
 	public static void propagateDataByChangedRule(CGMBARTTreeNode node) {		
 		if (node.isLeaf){ //only propagate if we are in a split node and NOT a leaf
@@ -400,21 +399,39 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 			return;
 		}
 		//split the data correctly
-		node.SortAtAttribute();
-		int n_split = ClassificationAndRegressionTree.getSplitPoint(node.data, node.splitAttributeM, node.splitValue);
+//		node.SortAtAttribute();
+//		int n_split = ClassificationAndRegressionTree.getSplitPoint(node.data, node.splitAttributeM, node.splitValue);
 		//now set the data in the offspring
-		double[] node_left_responses = new double[n_split];
-		int[] node_left_indicies = new int[n_split];
-		node.left.data = ClassificationAndRegressionTree.getLowerPortion(node.data, n_split, node_left_responses, node_left_indicies, node.cgmbart.p); //WARNING: SHALLOW COPY			
+		int p = node.cgmbart.p;
+		ArrayList<double[]> data_left = new ArrayList<double[]>(node.n_eta);
+		ArrayList<double[]> data_right = new ArrayList<double[]>(node.n_eta);
+		TIntArrayList left_indices = new TIntArrayList(node.n_eta); 
+		TIntArrayList right_indices = new TIntArrayList(node.n_eta);
+		TDoubleArrayList left_responses = new TDoubleArrayList(node.n_eta);
+		TDoubleArrayList right_responses = new TDoubleArrayList(node.n_eta);
+		
+		for (int i = 0; i < node.n_eta; i++){
+			double[] datum = node.data.get(i);
+			if (datum[node.splitAttributeM] <= node.splitValue){
+				data_left.add(datum);
+				left_indices.add(node.indicies[i]);
+				left_responses.add(datum[p]);
+			}
+			else {
+				data_right.add(datum);
+				right_indices.add(node.indicies[i]);	
+				right_responses.add(datum[p]);
+			}
+		}
+		
+		node.left.data = data_left;			
 		node.left.n_eta = node.left.data.size();
-		node.left.responses = node_left_responses;
-		node.left.indicies = node_left_indicies;
-		double[] node_right_responses = new double[node.data.size() - n_split];
-		int[] node_right_indicies = new int[node.data.size() - n_split];		
-		node.right.data = ClassificationAndRegressionTree.getUpperPortion(node.data, n_split, node_right_responses, node_right_indicies, node.cgmbart.p); //WARNING: SHALLOW COPY
+		node.left.responses = left_responses.toArray();
+		node.left.indicies = left_indices.toArray();	
+		node.right.data = data_right;
 		node.right.n_eta = node.right.data.size();
-		node.right.responses = node_right_responses;
-		node.right.indicies = node_right_indicies;
+		node.right.responses = right_responses.toArray();
+		node.right.indicies = right_indices.toArray();
 		propagateDataByChangedRule(node.left);
 		propagateDataByChangedRule(node.right);
 	}
@@ -468,7 +485,7 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		}
 		else {
 			String split = this.splitAttributeM == null ? "null" : TreeIllustration.two_digit_format.format(this.splitAttributeM);
-			String value = this.splitValue == null ? "null" : TreeIllustration.two_digit_format.format(this.splitValue);
+			String value = this.splitValue == BAD_FLAG ? "null" : TreeIllustration.two_digit_format.format(this.splitValue);
 			return "x_" + split + "  <  " + value;
 		}
 	}
@@ -499,8 +516,8 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 	
 	//CHECK as well
 	public double prediction_untransformed(){
-		if (y_pred == BAD_PRED_FLAG){
-			return BAD_PRED_FLAG;
+		if (y_pred == BAD_FLAG){
+			return BAD_FLAG;
 		}
 		return cgmbart.un_transform_y(y_pred);
 	}
@@ -780,7 +797,7 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 			
 			System.out.println("cgmbart = " + cgmbart + " parent = " + parent + " left = " + left + " right = " + right);
 			System.out.println("----- RULE:   X_" + splitAttributeM + " <= " + splitValue + " ------");
-			System.out.println("n_eta = " + n_eta + " y_pred = " + (y_pred == BAD_PRED_FLAG ? "BLANK" : cgmbart.un_transform_y_and_round(y_pred)));
+			System.out.println("n_eta = " + n_eta + " y_pred = " + (y_pred == BAD_FLAG ? "BLANK" : cgmbart.un_transform_y_and_round(y_pred)));
 			System.out.println("sum_responses_qty = " + sum_responses_qty + " sum_responses_qty_sqd = " + sum_responses_qty_sqd);
 			
 			System.out.println("possible_rule_variables: [" + Tools.StringJoin(possible_rule_variables, ", ") + "]");
@@ -839,8 +856,8 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 	}
 
 	public void updateYHatsWithPrediction() {		
-		for (int index : indicies){
-			yhats[index] = y_pred;
+		for (int i = 0; i < indicies.length; i++){
+			yhats[indicies[i]] = y_pred;
 		}
 		printNodeDebugInfo("updateYHatsWithPrediction");
 	}

@@ -1,5 +1,8 @@
 package CGM_BART;
 
+import gnu.trove.list.array.TDoubleArrayList;
+import gnu.trove.list.array.TIntArrayList;
+
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -44,8 +47,14 @@ public class Tools {
 		}
 		return joined;
 	}
+	public static String StringJoin(TIntArrayList all){
+		return StringJoin(all.toArray(), ", ");
+	}		
 	public static String StringJoin(int[] all){
 		return StringJoin(all, ", ");
+	}
+	public static String StringJoin(TDoubleArrayList all){
+		return StringJoin(all.toArray(), ", ");
 	}		
 	public static String StringJoin(double[] all){
 		return StringJoin(all, ", ");

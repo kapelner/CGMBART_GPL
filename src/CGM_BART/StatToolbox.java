@@ -24,6 +24,8 @@
 
 package CGM_BART;
 
+import gnu.trove.list.array.TDoubleArrayList;
+
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -142,6 +144,14 @@ public class StatToolbox {
 		}
 		return y_bar / (double)y.length;
 	}
+	
+	public static final double sample_average(TDoubleArrayList y){
+		double y_bar = 0;
+		for (int i = 0; i < y.size(); i++){
+			y_bar += y.get(i);
+		}
+		return y_bar / (double)y.size();
+	}	
 	
 	public static final double sample_average(int[] y){
 		double y_bar = 0;

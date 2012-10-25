@@ -1,5 +1,7 @@
 package CGM_BART;
 
+import gnu.trove.list.array.TDoubleArrayList;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 
@@ -121,6 +123,9 @@ public abstract class CGMBART_02_hyperparams extends CGMBART_01_base implements 
 		return y;
 	}		
 
+	public double[] un_transform_y_and_round(TDoubleArrayList yt){
+		return un_transform_y_and_round(yt.toArray());
+	}
 	
 	public double getHyper_mu_mu() {
 		return hyper_mu_mu;

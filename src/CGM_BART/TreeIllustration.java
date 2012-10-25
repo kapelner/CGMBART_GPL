@@ -197,12 +197,12 @@ public class TreeIllustration {
 	private void drawSplit(CGMBARTTreeNode node, int x, int y) {
 //		System.out.println("node:" + node.stringID() + " leaf:" + node.isLeaf + " left: " + node.left + " right:" + node.right);
 		Graphics g = canvas.getGraphics();
-		if (node.isLeaf && node.y_pred != CGMBARTTreeNode.BAD_PRED_FLAG){
+		if (node.isLeaf && node.y_pred != CGMBARTTreeNode.BAD_FLAG){
 			String pred = two_digit_format.format(node.prediction_untransformed());//;
 			int draw_x = (int)Math.round(x - pred.length() / 2.0 * character_width_in_px);
 			g.drawString(pred + " (" + node.n_eta + ") ", draw_x, y + 16);
 		}
-		else if (node.splitAttributeM != null && node.splitValue != null) {
+		else if (node.splitAttributeM != null && node.splitValue != CGMBARTTreeNode.BAD_FLAG) {
 			int attr = node.splitAttributeM;
 			double val = node.splitValue;
 			String rule_and_n = "X_" + (attr + 1) + " < " + two_digit_format.format(val) + " (" + node.n_eta + ") " + two_digit_format.format(node.avg_response_untransformed());
