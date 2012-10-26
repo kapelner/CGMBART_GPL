@@ -57,6 +57,7 @@ public abstract class Classifier implements Serializable {
 
 	/** the raw training data consisting of xi = [xi1,...,xiM, yi] that will be used to construct the classifier */
 	protected transient ArrayList<double[]> X_y;
+	protected transient ArrayList<double[]> X_y_by_col;
 	/** just the responses */
 	protected transient double[] y_orig;
 	protected transient double[] y_trans;
@@ -108,19 +109,20 @@ public abstract class Classifier implements Serializable {
 		transformResponseVariable();
 //		X = extractDesignMatrixFromRawData(X_y);
 		this.X_y = addIndicesToDataMatrix(X_y);
+		this.X_y_by_col = getDataMatrixByCol(X_y);
 	}
 	
-//	private ArrayList<double[]> extractDesignMatrixFromRawData(ArrayList<double[]> X_y) {
-//		ArrayList<double[]> X = new ArrayList<double[]>(n);
-//		for (int i = 0; i < n; i++){
-//			double[] x = new double[p];
-//			for (int j = 0; j < p; j++){
-//				x[j] = X_y.get(i)[j];				
-//			}
-//			X.add(x);
-//		}
-//		return X;
-//	}
+	private ArrayList<double[]> getDataMatrixByCol(ArrayList<double[]> X_y) {
+		 ArrayList<double[]> X_y_by_col = new ArrayList<double[]>(n);
+		 for (int j = 0; j < p; j++){
+			 double[] x_dot_j = new double[n];
+			 for (int i = 0; i < n; i++){
+				 x_dot_j[i] = X_y.get(i)[j];
+			 }
+			 X_y_by_col.add(x_dot_j);
+		 }
+		 return X_y_by_col;
+	 }
 
 	private ArrayList<double[]> addIndicesToDataMatrix(ArrayList<double[]> X_y_old) {
 		ArrayList<double[]> X_y_new = new ArrayList<double[]>(n);

@@ -17,18 +17,18 @@ public abstract class CGMBART_06_gibbs_internal extends CGMBART_05_gibbs_base im
 	 *    if t=m-1, then we take all 0, ..., m-2 trees from this gibbs sample
 	 * so let's put together this list of trees:	
 	**/ 
-	protected ArrayList<CGMBARTTreeNode> findOtherTrees(int sample_num, int t){
-		ArrayList<CGMBARTTreeNode> other_trees = new ArrayList<CGMBARTTreeNode>(num_trees - 1);
+	protected CGMBARTTreeNode[] findOtherTrees(int sample_num, int t){
+		CGMBARTTreeNode[] other_trees = new CGMBARTTreeNode[num_trees - 1];
 		for (int j = 0; j < t; j++){
-			other_trees.add(gibbs_samples_of_cgm_trees.get(sample_num).get(j));
+			other_trees[j] = gibbs_samples_of_cgm_trees.get(sample_num).get(j);
 		}
 		for (int j = t + 1; j < num_trees; j++){
-			other_trees.add(gibbs_samples_of_cgm_trees.get(sample_num - 1).get(j));
+			other_trees[j - 1] = gibbs_samples_of_cgm_trees.get(sample_num - 1).get(j);
 		}
 		return other_trees;
 	}
 	
-	protected double[] getResidualsBySubtractingTrees(List<CGMBARTTreeNode> trees_to_subtract) {
+	protected double[] getResidualsBySubtractingTrees(CGMBARTTreeNode[] trees_to_subtract) {
 //		double[] sum_ys_without_jth_tree = new double[n];
 		double[] Rjs = new double[n];
 		

@@ -112,9 +112,9 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 		return R_j;
 	}
 	
-	protected abstract double[] getResidualsBySubtractingTrees(List<CGMBARTTreeNode> findOtherTrees);
+	protected abstract double[] getResidualsBySubtractingTrees(CGMBARTTreeNode[] cgmbartTreeNodes);
 
-	protected abstract ArrayList<CGMBARTTreeNode> findOtherTrees(int sample_num, int t);
+	protected abstract CGMBARTTreeNode[] findOtherTrees(int sample_num, int t);
 
 	protected abstract CGMBARTTreeNode metroHastingsPosteriorTreeSpaceIteration(CGMBARTTreeNode copy_of_old_jth_tree);
 

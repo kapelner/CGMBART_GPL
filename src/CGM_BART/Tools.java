@@ -15,7 +15,14 @@ public class Tools {
 			return " NULL ARRAY ";
 		}		
 		return StringJoin(all.toArray(), joinby);
-	}		
+	}	
+	
+	public static String StringJoin(TIntArrayList all, String joinby){
+		if (all == null){
+			return " NULL ARRAY ";
+		}		
+		return StringJoin(all.toArray(), joinby);
+	}	
 	/**
 	 * Joins a collection of strings into one string
 	 * 

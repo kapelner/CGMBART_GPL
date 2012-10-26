@@ -88,7 +88,7 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 	/** self-explanatory */
 	private transient double sum_responses_qty;	
 	/** this caches the possible split variables */
-	private transient ArrayList<Integer> possible_rule_variables;
+	private transient TIntArrayList possible_rule_variables;
 	/** this caches the possible split values BY variable */
 	private transient HashMap<Integer, TDoubleHashSet> possible_split_vals_by_attr;
 	/** this caches the number of possible split variables */
@@ -582,15 +582,15 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		return padj;
 	}
 	
-	protected ArrayList<Integer> predictorsThatCouldBeUsedToSplitAtNode() {
+	protected TIntArrayList predictorsThatCouldBeUsedToSplitAtNode() {
 		if (possible_rule_variables == null){
-			possible_rule_variables = new ArrayList<Integer>();
+			possible_rule_variables = new TIntArrayList();
 			
 //			System.out.println("predictorsThatCouldBeUsedToSplitAtNode " + this.stringLocation(true) + " data is " + data.size() + " x " + data.get(0).length);
 			
 			for (int j = 0; j < cgmbart.getP(); j++){
 				//if size of unique of x_i > 1
-				double[] x_dot_j = Classifier.getColVector(data, j);
+				double[] x_dot_j = cgmbart.X_y_by_col.get(j);
 				//make hashset to get unique value
 				TDoubleHashSet unique_x_dot_j = new TDoubleHashSet(x_dot_j);
 				//now ensure that we have at least two unique vals to split on
@@ -616,7 +616,7 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		}
 		if (possible_split_vals_by_attr.get(splitAttributeM) == null){
 			//super inefficient
-			double[] x_dot_j = Classifier.getColVector(data, splitAttributeM);
+			double[] x_dot_j = cgmbart.X_y_by_col.get(splitAttributeM);
 			double max = Tools.max(x_dot_j);
 			TDoubleHashSet unique_x_dot_j = new TDoubleHashSet(x_dot_j);			
 			unique_x_dot_j.remove(max);
@@ -630,7 +630,7 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 	 * @return
 	 */
 	public int pickRandomPredictorThatCanBeAssigned(){
-		ArrayList<Integer> predictors = predictorsThatCouldBeUsedToSplitAtNode();
+		TIntArrayList predictors = predictorsThatCouldBeUsedToSplitAtNode();
 		return predictors.get((int)Math.floor(StatToolbox.rand() * pAdj()));
 	}
 	
