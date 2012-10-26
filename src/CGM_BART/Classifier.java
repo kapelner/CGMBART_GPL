@@ -57,7 +57,6 @@ public abstract class Classifier implements Serializable {
 
 	/** the raw training data consisting of xi = [xi1,...,xiM, yi] that will be used to construct the classifier */
 	protected transient ArrayList<double[]> X_y;
-	protected transient ArrayList<double[]> X_y_by_col;
 	/** just the responses */
 	protected transient double[] y_orig;
 	protected transient double[] y_trans;
@@ -99,49 +98,42 @@ public abstract class Classifier implements Serializable {
 	 * 
 	 */
 	public void setData(ArrayList<double[]> X_y){
-		System.out.println("setData for object: " + this + " ID: " + this.toString());
-		//set basic vitals
 		n = X_y.size();
 		p = X_y.get(0).length - 1;
-		
-		//deal with y
+		System.out.println("setData n:" + n + " p:" + p);
 		y_orig = extractResponseFromRawData(X_y);
-		transformResponseVariable();
 //		for (int i = 0; i < n; i++){
-//			System.out.println("#" + i + " y_orig / y_trans: " + y_orig[i] + " / " + y_trans[i]);
+//			System.out.println("i:" + i + " yi:" + y[i]);
 //		}
-		
-		//deal with putting the matrix into the correct forms
-		this.X_y = addIndicesToDataMatrixAndTransY(X_y);
-		this.X_y_by_col = getDataMatrixByCol(X_y);
-	}
-
-	private ArrayList<double[]> addIndicesToDataMatrixAndTransY(ArrayList<double[]> X_y_old) {
-		ArrayList<double[]> X_y_new = new ArrayList<double[]>(n);
-		for (int i = 0; i < n; i++){
-			double[] x_i_dot = new double[p + 2];
-			for (int j = 0; j < p; j++){ 
-				x_i_dot[j] = X_y_old.get(i)[j];
-			}
-			x_i_dot[p] = y_trans[i]; //the pth is the response
-			x_i_dot[p + 1] = i; //the p+1st is the index
-			X_y_new.add(x_i_dot);
-//			System.out.println("row " + i + ": " + Tools.StringJoin(x_i_dot));
-		}
-		return X_y_new;
+		transformResponseVariable();
+//		X = extractDesignMatrixFromRawData(X_y);
+		this.X_y = addIndicesToDataMatrix(X_y);
 	}
 	
-	private ArrayList<double[]> getDataMatrixByCol(ArrayList<double[]> X_y) {
-		ArrayList<double[]> X_y_by_col = new ArrayList<double[]>(n);
-		for (int j = 0; j < p; j++){
-			double[] x_dot_j = new double[n];
-			for (int i = 0; i < n; i++){
-				x_dot_j[i] = X_y.get(i)[j];
+//	private ArrayList<double[]> extractDesignMatrixFromRawData(ArrayList<double[]> X_y) {
+//		ArrayList<double[]> X = new ArrayList<double[]>(n);
+//		for (int i = 0; i < n; i++){
+//			double[] x = new double[p];
+//			for (int j = 0; j < p; j++){
+//				x[j] = X_y.get(i)[j];				
+//			}
+//			X.add(x);
+//		}
+//		return X;
+//	}
+
+	private ArrayList<double[]> addIndicesToDataMatrix(ArrayList<double[]> X_y_old) {
+		ArrayList<double[]> X_y_new = new ArrayList<double[]>(n);
+		for (int i = 0; i < n; i++){
+			double[] x = new double[p + 2];
+			for (int j = 0; j < p + 1; j++){
+				x[j] = X_y_old.get(i)[j];
 			}
-			X_y_by_col.add(x_dot_j);
-//			System.out.println("col " + j + ": " + Tools.StringJoin(x_dot_j));
+			x[p + 1] = i;
+			X_y_new.add(x);
+//			System.out.println("row " + i + ": " + Tools.StringJoin(x));
 		}
-		return X_y_by_col;
+		return X_y_new;
 	}
 
 
@@ -284,11 +276,11 @@ public abstract class Classifier implements Serializable {
 	public double calculateInSampleLoss(ErrorTypes type_of_error_rate){		
 		double loss = 0;
 
-		for (int i = 0; i < n; i++){
+		for (int i=0; i<n; i++){
 			double[] record = X_y.get(i);
 			double y = getResponseFromRecord(record);
 			double yhat = Evaluate(record);
-			System.out.println("calculateInSampleLoss    y: " + y + " yhat: " + yhat);
+//			System.out.println("y: " + y + " yhat: " + yhat);
 
 			// now add the appropriate quantity to the loss
 			switch (type_of_error_rate){
@@ -311,7 +303,7 @@ public abstract class Classifier implements Serializable {
 		//default is to do nothing... ie just copy the y's into y_trans's
 		for (int i = 0; i < n; i++){
 			y_trans[i] = y_orig[i];
-		}
+		}		
 	}	
 	
 	protected double un_transform_y(double y_i) {

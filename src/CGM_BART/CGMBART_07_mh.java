@@ -109,7 +109,7 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 		
 		if (DEBUG_MH){
 			System.out.println("GROW  <<" + grow_node.stringLocation(true) + ">> ---- X_" + (grow_node.splitAttributeM + 1) + 
-				" <= " + TreeIllustration.two_digit_format.format(grow_node.splitValue) + 
+				" < " + TreeIllustration.two_digit_format.format(grow_node.splitValue) + 
 				"\n  ln trans ratio: " + ln_transition_ratio_grow + " ln lik ratio: " + ln_likelihood_ratio_grow + " ln structure ratio: " + ln_tree_structure_ratio_grow +			
 				"\n  trans ratio: " + 
 				(Math.exp(ln_transition_ratio_grow) < 0.00001 ? "damn small" : Math.exp(ln_transition_ratio_grow)) +
@@ -134,7 +134,7 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 		
 		if (DEBUG_MH){
 			System.out.println("PRUNE <<" + prune_node.stringLocation(true) + 
-					">> ---- X_" + (prune_node.splitAttributeM == null ? "null" : (prune_node.splitAttributeM + 1)) + " <= " + TreeIllustration.two_digit_format.format(prune_node.splitValue == CGMBARTTreeNode.BAD_FLAG ? Double.NaN : prune_node.splitValue) + 
+					">> ---- X_" + (prune_node.splitAttributeM == null ? "null" : (prune_node.splitAttributeM + 1)) + " < " + TreeIllustration.two_digit_format.format(prune_node.splitValue == CGMBARTTreeNode.BAD_FLAG ? Double.NaN : prune_node.splitValue) + 
 				"\n  ln trans ratio: " + ln_transition_ratio_prune + " ln lik ratio: " + ln_likelihood_ratio_prune + " ln structure ratio: " + ln_tree_structure_ratio_prune +
 				"\n  trans ratio: " + 
 				(Math.exp(ln_transition_ratio_prune) < 0.00001 ? "damn small" : Math.exp(ln_transition_ratio_prune)) +

@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 
 
 /**
@@ -70,6 +71,8 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 	/** if this is a leaf node, then the result of the prediction for regression, otherwise null */
 	protected static final double BAD_FLAG = -Double.MAX_VALUE;
 	public double y_pred = BAD_FLAG;
+	/** the remaining data records at this point in the tree construction cols: x_1, ..., x_p, y, index */
+	public transient List<double[]> data;
 	/** the number of data points */
 	public transient int n_eta;
 	/** these are the yhats in the correct order */
@@ -127,6 +130,7 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		copy.depth = depth;
 		//////do not copy y_pred
 		//now do data stuff
+		copy.data = data;
 		copy.responses = responses;
 		copy.indicies = indicies;
 		copy.n_eta = n_eta;
@@ -361,6 +365,7 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 	}
 
 	public void flushNodeData() {
+		data = null;
 		yhats = null;
 		indicies = null;	
 		responses = null;
@@ -393,36 +398,40 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 			node.printNodeDebugInfo("propagateDataByChangedRule LEAF");
 			return;
 		}
-		
-		//now set the data in the offspring correctly
+		//split the data correctly
+//		node.SortAtAttribute();
+//		int n_split = ClassificationAndRegressionTree.getSplitPoint(node.data, node.splitAttributeM, node.splitValue);
+		//now set the data in the offspring
 		int p = node.cgmbart.p;
+		ArrayList<double[]> data_left = new ArrayList<double[]>(node.n_eta);
+		ArrayList<double[]> data_right = new ArrayList<double[]>(node.n_eta);
 		TIntArrayList left_indices = new TIntArrayList(node.n_eta); 
 		TIntArrayList right_indices = new TIntArrayList(node.n_eta);
 		TDoubleArrayList left_responses = new TDoubleArrayList(node.n_eta);
 		TDoubleArrayList right_responses = new TDoubleArrayList(node.n_eta);
 		
-		for (int index : node.indicies){
-			double[] datum = node.cgmbart.X_y.get(index);
-			double y = datum[p];
+		for (int i = 0; i < node.n_eta; i++){
+			double[] datum = node.data.get(i);
 			if (datum[node.splitAttributeM] <= node.splitValue){
-				left_indices.add(index);
-				left_responses.add(y);
+				data_left.add(datum);
+				left_indices.add(node.indicies[i]);
+				left_responses.add(datum[p]);
 			}
 			else {
-				right_indices.add(index);	
-				right_responses.add(y);
+				data_right.add(datum);
+				right_indices.add(node.indicies[i]);	
+				right_responses.add(datum[p]);
 			}
 		}
-				
-		//set data for left child
+		
+		node.left.data = data_left;			
+		node.left.n_eta = node.left.data.size();
 		node.left.responses = left_responses.toArray();
-		node.left.indicies = left_indices.toArray();
-		node.left.n_eta = node.left.responses.length;		
-		//set data for right side
+		node.left.indicies = left_indices.toArray();	
+		node.right.data = data_right;
+		node.right.n_eta = node.right.data.size();
 		node.right.responses = right_responses.toArray();
 		node.right.indicies = right_indices.toArray();
-		node.right.n_eta = node.right.indicies.length;
-		//propagate to children (if necessary)
 		propagateDataByChangedRule(node.left);
 		propagateDataByChangedRule(node.right);
 	}
@@ -581,8 +590,7 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 			
 			for (int j = 0; j < cgmbart.getP(); j++){
 				//if size of unique of x_i > 1
-				double[] x_dot_j = cgmbart.X_y_by_col.get(j);
-				
+				double[] x_dot_j = Classifier.getColVector(data, j);
 				//make hashset to get unique value
 				TDoubleHashSet unique_x_dot_j = new TDoubleHashSet(x_dot_j);
 				//now ensure that we have at least two unique vals to split on
@@ -607,7 +615,8 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 			possible_split_vals_by_attr = new HashMap<Integer, TDoubleHashSet>();
 		}
 		if (possible_split_vals_by_attr.get(splitAttributeM) == null){
-			double[] x_dot_j = cgmbart.X_y_by_col.get(splitAttributeM);
+			//super inefficient
+			double[] x_dot_j = Classifier.getColVector(data, splitAttributeM);
 			double max = Tools.max(x_dot_j);
 			TDoubleHashSet unique_x_dot_j = new TDoubleHashSet(x_dot_j);			
 			unique_x_dot_j.remove(max);
@@ -750,12 +759,13 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 
 	public void setStumpData(ArrayList<double[]> X, double[] y, int p) {
 		//pull out X data, set y's, and indices appropriately
-		n_eta = X.size();
-		responses = new double[n_eta];
-		indicies = new int[n_eta];
-		yhats = new double[n_eta];
+		int n = X.size();
 		
-		for (int i = 0; i < n_eta; i++){
+		responses = new double[n];
+		indicies = new int[n];
+		
+		data = new ArrayList<double[]>(n);
+		for (int i = 0; i < n; i++){
 			indicies[i] = i;
 			double[] x_i_dot = X.get(i);
 			double[] x_i_dot_new = new double[p + 2];
@@ -768,7 +778,15 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 					x_i_dot_new[j] = x_i_dot[j];
 				}
 			}
+			data.add(x_i_dot_new);
 		}
+		n_eta = data.size();
+		
+		//get
+		
+		//initialize the yhats
+		yhats = new double[n];
+//		System.out.println("setStumpData  X is " + data.size() + " x " + data.get(0).length + "  y is " + y.length + " x " + 1);
 		printNodeDebugInfo("setStumpData");
 	}
 
@@ -794,9 +812,9 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 				System.out.println(" NULL MAP }");
 			}
 			
-			System.out.println("X is " + n_eta + " x " + cgmbart.X_y.get(0).length + " and below:");
-			for (int index : indicies){
-				double[] record = cgmbart.X_y.get(index).clone();
+			System.out.println("X is " + data.size() + " x " + data.get(0).length + " and below:");
+			for (int i = 0; i < data.size(); i++){
+				double[] record = data.get(i).clone();
 				record[cgmbart.p] = cgmbart.un_transform_y_and_round(record[cgmbart.p]);
 				System.out.println("  " + Tools.StringJoin(record));
 			}
@@ -822,13 +840,14 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		sum_responses_qty = 0; //need to be primitives
 		//copy all the new data in appropriately
 		for (int i = 0; i < n_eta; i++){
-			double y_new = new_responses[i];
+			double y_new = new_responses[indicies[i]];
+			this.data.get(i)[cgmbart.p] = y_new;
 			responses[i] = y_new;
 		}
-//		if (DEBUG_NODES){
-//			System.out.println("new_responses: (size " + new_responses.length + ") [" + Tools.StringJoin(cgmbart.un_transform_y_and_round(new_responses)) + "]");
-//		}
-//		printNodeDebugInfo("updateWithNewResponsesRecursively");
+		if (DEBUG_NODES){
+			System.out.println("new_responses: (size " + new_responses.length + ") [" + Tools.StringJoin(cgmbart.un_transform_y_and_round(new_responses)) + "]");
+		}
+		printNodeDebugInfo("updateWithNewResponsesRecursively");
 		if (this.isLeaf){
 			return;
 		}		
@@ -837,8 +856,8 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 	}
 
 	public void updateYHatsWithPrediction() {		
-		for (int index : indicies){
-			yhats[index] = y_pred;
+		for (int i = 0; i < indicies.length; i++){
+			yhats[indicies[i]] = y_pred;
 		}
 		printNodeDebugInfo("updateYHatsWithPrediction");
 	}
