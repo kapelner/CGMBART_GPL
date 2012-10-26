@@ -63,14 +63,15 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 	/** is this node a terminal leaf? */
 	public boolean isLeaf;
 	/** the attribute this node makes a decision on */
-	public Integer splitAttributeM;
+	public int splitAttributeM;
 	/** the value this node makes a decision on */
 	public double splitValue;
 	/** if this is a leaf node, then the result of the classification, otherwise null */
 	public Double klass;
 	/** if this is a leaf node, then the result of the prediction for regression, otherwise null */
-	protected static final double BAD_FLAG = -Double.MAX_VALUE;
-	public double y_pred = BAD_FLAG;
+	protected static final double BAD_FLAG_double = -Double.MAX_VALUE;
+	protected static final int BAD_FLAG_int = -Integer.MAX_VALUE;
+	public double y_pred = BAD_FLAG_double;
 	/** the remaining data records at this point in the tree construction cols: x_1, ..., x_p, y, index */
 //	public transient List<double[]> data;
 	/** the number of data points */
@@ -213,8 +214,8 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		node.left = null;
 		node.right = null;
 		node.isLeaf = true;
-		node.splitAttributeM = null;
-		node.splitValue = BAD_FLAG;
+		node.splitAttributeM = BAD_FLAG_int;
+		node.splitValue = BAD_FLAG_double;
 	}
 
 //	public static HashSet<CGMBARTTreeNode> selectBranchNodesWithTwoLeaves(ArrayList<CGMBARTTreeNode> terminalNodes) { 
@@ -500,8 +501,8 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 			return "leaf rule: " + klass;
 		}
 		else {
-			String split = this.splitAttributeM == null ? "null" : TreeIllustration.two_digit_format.format(this.splitAttributeM);
-			String value = this.splitValue == BAD_FLAG ? "null" : TreeIllustration.two_digit_format.format(this.splitValue);
+			String split = this.splitAttributeM == BAD_FLAG_int ? "null" : TreeIllustration.two_digit_format.format(this.splitAttributeM);
+			String value = this.splitValue == BAD_FLAG_double ? "null" : TreeIllustration.two_digit_format.format(this.splitValue);
 			return "x_" + split + "  <  " + value;
 		}
 	}
@@ -532,8 +533,8 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 	
 	//CHECK as well
 	public double prediction_untransformed(){
-		if (y_pred == BAD_FLAG){
-			return BAD_FLAG;
+		if (y_pred == BAD_FLAG_double){
+			return BAD_FLAG_double;
 		}
 		return cgmbart.un_transform_y(y_pred);
 	}
@@ -604,14 +605,15 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 			
 //			System.out.println("predictorsThatCouldBeUsedToSplitAtNode " + this.stringLocation(true) + " data is " + data.size() + " x " + data.get(0).length);
 			
-			for (int j = 0; j < cgmbart.getP(); j++){
+			for (int j = 0; j < cgmbart.p; j++){
 				//if size of unique of x_i > 1
 				double[] x_dot_j = cgmbart.X_y_by_col.get(j);
-				//make hashset to get unique value
-				TDoubleHashSet unique_x_dot_j = new TDoubleHashSet(x_dot_j);
-				//now ensure that we have at least two unique vals to split on
-				if (unique_x_dot_j.size() >= 2){
-					possible_rule_variables.add(j);
+				
+				for (int i = 1; i < cgmbart.n; i++){
+					if (x_dot_j[i - 1] != x_dot_j[i]){
+						possible_rule_variables.add(j);
+						break;
+					}
 				}
 			}
 		}
@@ -650,11 +652,11 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		return predictors.get((int)Math.floor(StatToolbox.rand() * pAdj()));
 	}
 	
-	public Double pickRandomSplitValue() {
+	public double pickRandomSplitValue() {
 		double[] split_values = possibleSplitValuesGivenAttribute().toArray();
 		return split_values[(int) Math.floor(StatToolbox.rand() * split_values.length)];
 	}
-
+	
 	public boolean isStump() {
 		return parent == null && left == null && right == null;
 	}
@@ -822,7 +824,7 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 			
 			System.out.println("cgmbart = " + cgmbart + " parent = " + parent + " left = " + left + " right = " + right);
 			System.out.println("----- RULE:   X_" + splitAttributeM + " <= " + splitValue + " ------");
-			System.out.println("n_eta = " + n_eta + " y_pred = " + (y_pred == BAD_FLAG ? "BLANK" : cgmbart.un_transform_y_and_round(y_pred)));
+			System.out.println("n_eta = " + n_eta + " y_pred = " + (y_pred == BAD_FLAG_double ? "BLANK" : cgmbart.un_transform_y_and_round(y_pred)));
 			System.out.println("sum_responses_qty = " + sum_responses_qty + " sum_responses_qty_sqd = " + sum_responses_qty_sqd);
 			
 			System.out.println("possible_rule_variables: [" + Tools.StringJoin(possible_rule_variables, ", ") + "]");

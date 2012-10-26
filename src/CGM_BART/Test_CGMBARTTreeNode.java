@@ -41,11 +41,9 @@ public class Test_CGMBARTTreeNode {
 		data = bart.getData();
 		
 		stump = new CGMBARTTreeNode(bart);
-		stump.data = data;
 		stump.n_eta = data.size();
 		
 		simple_tree = new CGMBARTTreeNode(bart);
-		simple_tree.data = data;
 		simple_tree.n_eta = data.size();
 		
 		simple_tree.splitAttributeM = 0;
@@ -118,9 +116,6 @@ public class Test_CGMBARTTreeNode {
 		Arrays.sort(stump_responses);
 		Arrays.sort(cloned_stump_responses);
 		assertArrayEquals(stump_responses, cloned_stump_responses, 0);
-		for (int i = 0; i < stump.n_eta; i++){
-			assertArrayEquals(stump.data.get(i), cloned_stump.data.get(i), 0);
-		}
 		assertTrue(cloned_stump.isLeaf);
 	}	
 	
@@ -142,7 +137,7 @@ public class Test_CGMBARTTreeNode {
 		assertEquals(simple_tree.numPruneNodesAvailable(), 1);
 		assertEquals(simple_tree.deepestNode(), 1);
 //		assertEquals(simple_tree.widestGeneration(), 2);
-		assertEquals(simple_tree.splitAttributeM, (Integer)0);
+		assertEquals(simple_tree.splitAttributeM, 0);
 		assertEquals(simple_tree.left.stringLocation(false), "L");
 		assertEquals(simple_tree.right.stringLocation(false), "R");		
 		double[] left_responses = {0, 2, 5, 9};

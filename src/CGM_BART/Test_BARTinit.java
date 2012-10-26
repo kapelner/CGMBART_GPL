@@ -62,10 +62,6 @@ public class Test_BARTinit {
 		assertEquals(trees.size(), bart.num_trees);
 		CGMBARTTreeNode tree = trees.get(0);
 		assertTrue(tree.isStump());
-		assertEquals(tree.data.size(), Test_CGMBARTTreeNode.data.size());
-		assertEquals(tree.data.get(0)[0], Test_CGMBARTTreeNode.data.get(0)[0], 0);
-		assertEquals(tree.data.get(0)[1], Test_CGMBARTTreeNode.data.get(0)[1], 0);
-		assertEquals(tree.data.get(0)[2], Test_CGMBARTTreeNode.data.get(0)[2], 0);
 	}
 	
 	@Test

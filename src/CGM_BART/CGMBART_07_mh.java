@@ -84,7 +84,7 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 		grow_node.splitValue = grow_node.pickRandomSplitValue();
 //		System.out.print("split_value = " + split_value);
 		//inform the user if things go awry
-		if (grow_node.splitValue == CGMBARTTreeNode.BAD_FLAG){
+		if (grow_node.splitValue == CGMBARTTreeNode.BAD_FLAG_double){
 			System.out.print("ERROR!!! GROW <<" + grow_node.stringLocation(true) + ">> ---- X_" + (grow_node.splitAttributeM + 1) + "  proposal ln(r) = -oo DUE TO NO SPLIT VALUES\n\n");
 			return Double.NEGATIVE_INFINITY;					
 		}			
@@ -134,7 +134,7 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 		
 		if (DEBUG_MH){
 			System.out.println("PRUNE <<" + prune_node.stringLocation(true) + 
-					">> ---- X_" + (prune_node.splitAttributeM == null ? "null" : (prune_node.splitAttributeM + 1)) + " < " + TreeIllustration.two_digit_format.format(prune_node.splitValue == CGMBARTTreeNode.BAD_FLAG ? Double.NaN : prune_node.splitValue) + 
+					">> ---- X_" + (prune_node.splitAttributeM == CGMBARTTreeNode.BAD_FLAG_int ? "null" : (prune_node.splitAttributeM + 1)) + " < " + TreeIllustration.two_digit_format.format(prune_node.splitValue == CGMBARTTreeNode.BAD_FLAG_double ? Double.NaN : prune_node.splitValue) + 
 				"\n  ln trans ratio: " + ln_transition_ratio_prune + " ln lik ratio: " + ln_likelihood_ratio_prune + " ln structure ratio: " + ln_tree_structure_ratio_prune +
 				"\n  trans ratio: " + 
 				(Math.exp(ln_transition_ratio_prune) < 0.00001 ? "damn small" : Math.exp(ln_transition_ratio_prune)) +
