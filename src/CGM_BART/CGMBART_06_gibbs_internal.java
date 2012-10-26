@@ -75,8 +75,9 @@ public abstract class CGMBART_06_gibbs_internal extends CGMBART_05_gibbs_base im
 				System.err.println("ERROR assignLeafFINAL " + node.y_pred + " (sigsq = " + sigsq + ")");
 			}
 			//now update yhats
+//			System.out.println("assign Leaf y_pred: " + un_transform_y(node.y_pred) + " (sigsq = " + sigsq * y_range_sq + ")");
 			node.updateYHatsWithPrediction();
-//			System.out.println("assignLeafFINAL " + un_transform_y(node.y_prediction) + " (sigsq = " + sigsq * y_range_sq + ")");
+			
 		}
 		else {
 			assignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsqAndUpdateYhats(node.left, sigsq);

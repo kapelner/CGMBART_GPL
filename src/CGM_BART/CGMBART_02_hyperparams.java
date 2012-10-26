@@ -112,7 +112,8 @@ public abstract class CGMBART_02_hyperparams extends CGMBART_01_base implements 
 	}	
 	
 	public double un_transform_y_and_round(double yt_i){
-		return Double.parseDouble(TreeArrayIllustration.one_digit_format.format((yt_i + YminAndYmaxHalfDiff) * (y_max - y_min) + y_min));
+		double y_trans_i = (yt_i + YminAndYmaxHalfDiff) * (y_max - y_min) + y_min;
+		return Double.parseDouble(TreeIllustration.two_digit_format.format(y_trans_i));
 	}
 	
 	public double[] un_transform_y_and_round(double[] yt){

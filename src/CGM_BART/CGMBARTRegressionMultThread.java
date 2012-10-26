@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit;
 public class CGMBARTRegressionMultThread extends Classifier {
 	private static final long serialVersionUID = -4537075714317768756L;
 	
-	private static final int DEFAULT_NUM_CORES = 2;//Runtime.getRuntime().availableProcessors() - 1;
+	private static final int DEFAULT_NUM_CORES = 1;//Runtime.getRuntime().availableProcessors() - 1;
 	private int num_cores;
 	
 	private ArrayList<CGMBARTRegression> bart_gibbs_chain_threads;
@@ -86,7 +86,9 @@ public class CGMBARTRegressionMultThread extends Classifier {
 	}
 
 	public void setData(ArrayList<double[]> X_y){
-		super.setData(X_y);
+		this.X_y = X_y;
+		n = X_y.size();
+		p = X_y.get(0).length - 1;
 		for (int t = 0; t < num_cores; t++){
 			bart_gibbs_chain_threads.get(t).setData(X_y);
 		}	
