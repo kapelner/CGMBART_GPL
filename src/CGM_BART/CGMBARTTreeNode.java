@@ -48,7 +48,7 @@ import java.util.List;
 public class CGMBARTTreeNode implements Cloneable, Serializable {
 	private static final long serialVersionUID = -5584590448078741112L;
 	
-	public static final boolean DEBUG_NODES = false;
+	
 
 	/** a link back to the overall bart model */
 	private CGMBART_02_hyperparams cgmbart;	
@@ -146,27 +146,6 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		}		
 		return copy;
 	}
-	
-//	public int[] getIndices(){
-//		if (indicies == null){
-//			indicies = new int[data.size()];
-//			for (int i = 0; i < data.size(); i++){
-//				indicies[i] = (int) data.get(i)[cgmbart.p + 1];
-//			}
-//		}
-//		return indicies;		
-//	}
-//	
-//	public double[] getResponses(){
-//		if (responses == null){			
-//			responses = new double[data.size()];
-//			for (int i = 0; i < data.size(); i++){
-//				responses[i] = data.get(i)[cgmbart.p];
-//			}
-////			System.out.println("getResponses internal on " + this.stringLocation(true) + " " + Tools.StringJoin(responses));
-//		}
-//		return responses;
-//	}
 	
 	public double avgResponse(){
 		return StatToolbox.sample_average(responses);
@@ -393,6 +372,7 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 //		}
 //	}	
 	
+	public static final boolean DEBUG_NODES = false;
 	public void propagateDataByChangedRule() {		
 		if (isLeaf){ //only propagate if we are in a split node and NOT a leaf
 			printNodeDebugInfo("propagateDataByChangedRule LEAF");
@@ -410,54 +390,90 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		TDoubleArrayList left_responses = new TDoubleArrayList(n_eta);
 		TDoubleArrayList right_responses = new TDoubleArrayList(n_eta);
 		
+//		System.out.println("LOOP THAT WORKS");
 		for (int i = 0; i < n_eta; i++){
-			double[] datum = data.get(i);
-			if (datum[splitAttributeM] <= splitValue){
-				data_left.add(datum);
+//			double[] datum = data.get(i);
+			double[] datum_big = cgmbart.X_y.get(indicies[i]).clone();
+			
+			if (datum_big[splitAttributeM] <= splitValue){
+				data_left.add(datum_big);
 				left_indices.add(indicies[i]);
-				left_responses.add(datum[p]);
+//				left_responses.add(datum[p]);
+				left_responses.add(responses[i]);
 			}
 			else {
-				data_right.add(datum);
+				data_right.add(datum_big);
 				right_indices.add(indicies[i]);	
-				right_responses.add(datum[p]);
+//				right_responses.add(datum[p]);
+				right_responses.add(responses[i]);
 			}
+//			System.out.println("i: " + i + " index: " + indicies[i] + " datum[p] from data: " + datum[p] + " y_trans: " + cgmbart.y_trans[indicies[i]]);
+			
+			
+//			System.out.println("   index: " + indicies[i]);
+//			System.out.println("   datum: " + Tools.StringJoin(datum));
+//			System.out.println("   LR: " + Tools.StringJoin(left_responses));
+//			System.out.println("   RR: " + Tools.StringJoin(right_responses));
 		}
 		
+//		for (int i = 0; i < n_eta; i++){
+//			int index = indicies[i];
+//			double[] datum = cgmbart.X_y.get(index).clone();
+//			
+//			if (datum[splitAttributeM] <= splitValue){
+//				data_left.add(datum);
+//				left_indices.add(index);
+////				left_responses.add(cgmbart.transform_y(datum[p]));
+////				left_responses.add(cgmbart.y_trans[index]);
+////				right_responses.add(responses[i]);
+//			}
+//			else {				
+//				data_right.add(datum);
+//				right_indices.add(index);	
+////				right_responses.add(cgmbart.transform_y(datum[p]));
+////				right_responses.add(cgmbart.y_trans[index]);
+////				right_responses.add(responses[i]);
+//			}
+////			System.out.println(" index: " + index + " datum[p] from data: " + cgmbart.transform_y(datum[p]) + " y_trans: " + cgmbart.y_trans[index]);
+//			
+////			System.out.println("datum[p]: " + datum[p] + " ith y_trans: " + cgmbart.un_transform_y_and_round(cgmbart.y_trans[index]));
+////			System.out.println("   index: " + indicies[i]);
+////			System.out.println("   datum: " + Tools.StringJoin(datum));
+////			System.out.println("   LR: " + Tools.StringJoin(left_responses));
+////			System.out.println("   RR: " + Tools.StringJoin(right_responses));
+//		}		
+		
+//		System.out.println("LOOP THAT DOESN'T WORK");
+//		for (int index : indicies){
+//			double[] datum = cgmbart.X_y.get(index).clone();
+//			datum[cgmbart.p] = cgmbart.y_trans[index];
+//			if (datum[splitAttributeM] <= splitValue){
+//				data_left.add(datum);
+//				left_indices.add(index);
+//				left_responses.add(cgmbart.y_trans[index]);
+//			}
+//			else {
+//				data_right.add(datum);
+//				right_indices.add(index);	
+//				right_responses.add(cgmbart.y_trans[index]);
+//			}
+////			System.out.println("   index: " + index);
+////			System.out.println("   datum: " + Tools.StringJoin(datum));
+////			System.out.println("   LR: " + Tools.StringJoin(left_responses));
+////			System.out.println("   RR: " + Tools.StringJoin(right_responses));			
+//		}		
+		
 		left.data = data_left;			
-		left.n_eta = left.data.size();
+		left.n_eta = left_responses.size();
 		left.responses = left_responses.toArray();
 		left.indicies = left_indices.toArray();	
 		right.data = data_right;
-		right.n_eta = right.data.size();
+		right.n_eta = right_responses.size();
 		right.responses = right_responses.toArray();
 		right.indicies = right_indices.toArray();
 		left.propagateDataByChangedRule();
 		right.propagateDataByChangedRule();
 	}
-	
-//	public void getYhatsByDataIndex(double[] y_hats_by_index){
-//		if (this.isLeaf){
-//			double y_hat = classification_or_regression_prediction();
-////			System.out.println("getYhatsByDataIndex for " + this.stringLocation(true) + " yhat = " + y_hat + " n_eta = " + (this.data == null ? "NULL" : this.data.size()));
-//			for (double[] datum : this.data){
-//				y_hats_by_index[(int) datum[cgmbart.p + 1]] = y_hat;
-//			}
-//		}
-//		else {
-//			this.left.getYhatsByDataIndex(y_hats_by_index);
-//			this.right.getYhatsByDataIndex(y_hats_by_index);
-//		}
-//	}
-
-	//////CHECK THIS LATER
-//	public void updateWithNewResponsesAndPropagate(ArrayList<double[]> X_y, double[] y_new, int p) {
-//		//set the root node data
-//		this.data = Classifier.clone_data_matrix_with_new_y_optional(X_y, y_new);
-//		this.n_eta = this.data.size(); //make sure the parent has the right size
-//		//now just propagate away
-//		propagateDataByChangedRule(this, true);
-//	}
 	
 	public int numLeaves(){
 		if (this.isLeaf){
@@ -757,25 +773,34 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		return (this.splitAttributeM == j ? 1 : 0) + this.left.numTimesAttrUsed(j) + this.right.numTimesAttrUsed(j);
 	}
 
-	public void setStumpData(ArrayList<double[]> X, double[] y, int p) {
+	public void setStumpData(ArrayList<double[]> X_y, double[] y_trans, int p) {
 		//pull out X data, set y's, and indices appropriately
-		int n = X.size();
+		int n = X_y.size();
 		
 		responses = new double[n];
 		indicies = new int[n];
 		
-		data = new ArrayList<double[]>(n);
+		
 		for (int i = 0; i < n; i++){
 			indicies[i] = i;
-			double[] x_i_dot = X.get(i);
+		}
+		for (int i = 0; i < n; i++){
+			for (int j = 0; j < p + 2; j++){
+				if (j == p){
+					responses[i] = y_trans[i];
+				}
+			}
+		}	
+		
+		data = new ArrayList<double[]>(n);
+		for (int i = 0; i < n; i++){
 			double[] x_i_dot_new = new double[p + 2];
 			for (int j = 0; j < p + 2; j++){
 				if (j == p){
-					x_i_dot_new[j] = y[i];
-					responses[i] = y[i];
+					x_i_dot_new[j] = y_trans[i];
 				}
 				else {
-					x_i_dot_new[j] = x_i_dot[j];
+					x_i_dot_new[j] = X_y.get(i)[j];
 				}
 			}
 			data.add(x_i_dot_new);
@@ -812,12 +837,12 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 				System.out.println(" NULL MAP }");
 			}
 			
-			System.out.println("X is " + data.size() + " x " + data.get(0).length + " and below:");
-			for (int i = 0; i < data.size(); i++){
-				double[] record = data.get(i).clone();
-				record[cgmbart.p] = cgmbart.un_transform_y_and_round(record[cgmbart.p]);
-				System.out.println("  " + Tools.StringJoin(record));
-			}
+//			System.out.println("X is " + data.size() + " x " + data.get(0).length + " and below:");
+//			for (int i = 0; i < data.size(); i++){
+//				double[] record = data.get(i).clone();
+//				record[cgmbart.p] = cgmbart.un_transform_y_and_round(record[cgmbart.p]);
+//				System.out.println("  " + Tools.StringJoin(record));
+//			}
 			
 			System.out.println("responses: (size " + responses.length + ") [" + Tools.StringJoin(cgmbart.un_transform_y_and_round(responses)) + "]");
 			System.out.println("indicies: (size " + indicies.length + ") [" + Tools.StringJoin(indicies) + "]");
@@ -828,6 +853,10 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 				System.out.println("y_hat_vec: (size " + yhats.length + ") [" + Tools.StringJoin(cgmbart.un_transform_y_and_round(yhats)) + "]");
 			}
 			System.out.println("-----------------------------------------\n\n\n");
+//			System.out.println("X_y y:   " + Tools.StringJoin(cgmbart.getResponses()));
+//			System.out.println("y_trans: " + Tools.StringJoin(cgmbart.un_transform_y_and_round(cgmbart.y_trans)));
+//			
+//			System.out.println("-----------------------------------------\n\n\n");
 		}
 	}
 
@@ -841,7 +870,7 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		//copy all the new data in appropriately
 		for (int i = 0; i < n_eta; i++){
 			double y_new = new_responses[indicies[i]];
-			this.data.get(i)[cgmbart.p] = y_new;
+//			this.data.get(i)[cgmbart.p] = y_new;
 			responses[i] = y_new;
 		}
 		if (DEBUG_NODES){

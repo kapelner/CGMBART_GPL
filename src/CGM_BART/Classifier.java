@@ -86,6 +86,14 @@ public abstract class Classifier implements Serializable {
 		DataSetupForCSVFile data = new DataSetupForCSVFile(new File(CSVFileFromRDirectory, CSVFileFromRName), true);
 		setData(data.getX_y());
 	}
+	
+	public double[] getResponses(){
+		double[] ys = new double[n];
+		for (int i = 0; i < n; i++){
+			ys[i] = X_y.get(i)[p];
+		}
+		return ys;
+	}	
 
 	
 	/** 

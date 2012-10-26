@@ -29,7 +29,6 @@ public abstract class CGMBART_06_gibbs_internal extends CGMBART_05_gibbs_base im
 	}
 	
 	protected double[] getResidualsBySubtractingTrees(CGMBARTTreeNode[] trees_to_subtract) {
-//		double[] sum_ys_without_jth_tree = new double[n];
 		double[] Rjs = new double[n];
 		
 		//initialize Rjs to be y
@@ -46,18 +45,6 @@ public abstract class CGMBART_06_gibbs_internal extends CGMBART_05_gibbs_base im
 			}			
 		}
 		
-//		for (int i = 0; i < n; i++){
-//			sum_ys_without_jth_tree[i] = 0; //initialize at zero, then add it up over all trees except the jth
-//			for (CGMBARTTreeNode tree : trees_to_subtract){
-////				double y_i = un_transform_y(trees_to_subtract.get(t).Evaluate(X_y.get(i)));
-//				double y_i = tree.Evaluate(X_y.get(i));
-//				sum_ys_without_jth_tree[i] += y_i;
-////				System.out.println(y_i);
-//			}
-//			//now we need to subtract this from y
-//			Rjs[i] = y_trans[i] - sum_ys_without_jth_tree[i];
-//		}
-//		System.out.println("getResidualsForAllTreesExcept one " +  Tools.StringJoin(Rjs, ", "));
 		return Rjs;
 	}
 	
