@@ -91,7 +91,7 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 		grow_node.isLeaf = false;
 		grow_node.left = new CGMBARTTreeNode(grow_node);
 		grow_node.right = new CGMBARTTreeNode(grow_node);	
-		CGMBARTTreeNode.propagateDataByChangedRule(grow_node);	
+		grow_node.propagateDataByChangedRule();	
 
 
 		if (grow_node.left.n_eta <= N_RULE || grow_node.right.n_eta <= N_RULE){

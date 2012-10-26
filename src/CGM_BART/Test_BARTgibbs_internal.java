@@ -51,18 +51,18 @@ public class Test_BARTgibbs_internal {
 		//if we find all other trees on the zeroth go, we should get back the old trees without the first
 		List<CGMBARTTreeNode> expected_trees = null;
 		expected_trees = old_trees.subList(1, num_trees);
-		assertArrayEquals(bart.findOtherTrees(1, 0).toArray(), expected_trees.toArray());
+		assertArrayEquals(bart.findOtherTrees(1, 0), expected_trees.toArray());
 		//so now we take the second tree. So we need a new first tree and then the rest old
 		expected_trees = new_trees.subList(0, 1);
 		expected_trees.addAll(old_trees.subList(2, num_trees));
-		assertArrayEquals(bart.findOtherTrees(1, 1).toArray(), expected_trees.toArray());		
+		assertArrayEquals(bart.findOtherTrees(1, 1), expected_trees.toArray());		
 		//so now we take the fifth tree. So we need a new first four trees and then the rest old
 		expected_trees = new_trees.subList(0, 4);
 		expected_trees.addAll(old_trees.subList(5, num_trees));
-		assertArrayEquals(bart.findOtherTrees(1, 4).toArray(), expected_trees.toArray());	
+		assertArrayEquals(bart.findOtherTrees(1, 4), expected_trees.toArray());	
 		//now we do the last tree
 		expected_trees = new_trees.subList(0, num_trees - 1);
-		assertArrayEquals(bart.findOtherTrees(1, num_trees - 1).toArray(), expected_trees.toArray());			
+		assertArrayEquals(bart.findOtherTrees(1, num_trees - 1), expected_trees.toArray());			
 	}
 	
 	@Test //y = {0, 0, 2, 4, 5, 8, 9}; avg = 4.0
@@ -71,7 +71,7 @@ public class Test_BARTgibbs_internal {
 		double y_pred_initial = -0.4;
 		bart.setNumTrees(num_trees);
 		bart.SetupGibbsSampling();
-		List<CGMBARTTreeNode> old_trees_all_but_one = bart.gibbs_samples_of_cgm_trees.get(0).subList(0, num_trees - 1);
+		CGMBARTTreeNode[] old_trees_all_but_one = (CGMBARTTreeNode[])bart.gibbs_samples_of_cgm_trees.get(0).subList(0, num_trees - 1).toArray();
 		for (CGMBARTTreeNode old_tree : old_trees_all_but_one){
 			old_tree.y_pred = y_pred_initial;
 			old_tree.updateYHatsWithPrediction();

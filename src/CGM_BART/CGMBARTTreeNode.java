@@ -393,47 +393,47 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 //		}
 //	}	
 	
-	public static void propagateDataByChangedRule(CGMBARTTreeNode node) {		
-		if (node.isLeaf){ //only propagate if we are in a split node and NOT a leaf
-			node.printNodeDebugInfo("propagateDataByChangedRule LEAF");
+	public void propagateDataByChangedRule() {		
+		if (isLeaf){ //only propagate if we are in a split node and NOT a leaf
+			printNodeDebugInfo("propagateDataByChangedRule LEAF");
 			return;
 		}
 		//split the data correctly
 //		node.SortAtAttribute();
 //		int n_split = ClassificationAndRegressionTree.getSplitPoint(node.data, node.splitAttributeM, node.splitValue);
 		//now set the data in the offspring
-		int p = node.cgmbart.p;
-		ArrayList<double[]> data_left = new ArrayList<double[]>(node.n_eta);
-		ArrayList<double[]> data_right = new ArrayList<double[]>(node.n_eta);
-		TIntArrayList left_indices = new TIntArrayList(node.n_eta); 
-		TIntArrayList right_indices = new TIntArrayList(node.n_eta);
-		TDoubleArrayList left_responses = new TDoubleArrayList(node.n_eta);
-		TDoubleArrayList right_responses = new TDoubleArrayList(node.n_eta);
+		int p = cgmbart.p;
+		ArrayList<double[]> data_left = new ArrayList<double[]>(n_eta);
+		ArrayList<double[]> data_right = new ArrayList<double[]>(n_eta);
+		TIntArrayList left_indices = new TIntArrayList(n_eta); 
+		TIntArrayList right_indices = new TIntArrayList(n_eta);
+		TDoubleArrayList left_responses = new TDoubleArrayList(n_eta);
+		TDoubleArrayList right_responses = new TDoubleArrayList(n_eta);
 		
-		for (int i = 0; i < node.n_eta; i++){
-			double[] datum = node.data.get(i);
-			if (datum[node.splitAttributeM] <= node.splitValue){
+		for (int i = 0; i < n_eta; i++){
+			double[] datum = data.get(i);
+			if (datum[splitAttributeM] <= splitValue){
 				data_left.add(datum);
-				left_indices.add(node.indicies[i]);
+				left_indices.add(indicies[i]);
 				left_responses.add(datum[p]);
 			}
 			else {
 				data_right.add(datum);
-				right_indices.add(node.indicies[i]);	
+				right_indices.add(indicies[i]);	
 				right_responses.add(datum[p]);
 			}
 		}
 		
-		node.left.data = data_left;			
-		node.left.n_eta = node.left.data.size();
-		node.left.responses = left_responses.toArray();
-		node.left.indicies = left_indices.toArray();	
-		node.right.data = data_right;
-		node.right.n_eta = node.right.data.size();
-		node.right.responses = right_responses.toArray();
-		node.right.indicies = right_indices.toArray();
-		propagateDataByChangedRule(node.left);
-		propagateDataByChangedRule(node.right);
+		left.data = data_left;			
+		left.n_eta = left.data.size();
+		left.responses = left_responses.toArray();
+		left.indicies = left_indices.toArray();	
+		right.data = data_right;
+		right.n_eta = right.data.size();
+		right.responses = right_responses.toArray();
+		right.indicies = right_indices.toArray();
+		left.propagateDataByChangedRule();
+		right.propagateDataByChangedRule();
 	}
 	
 //	public void getYhatsByDataIndex(double[] y_hats_by_index){

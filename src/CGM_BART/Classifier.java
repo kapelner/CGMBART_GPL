@@ -277,8 +277,8 @@ public abstract class Classifier implements Serializable {
 	 */	
 	public double calculateInSampleLoss(ErrorTypes type_of_error_rate){		
 		double loss = 0;
-
-		for (int i=0; i<n; i++){
+		System.out.print("calculateInSampleLoss for " + type_of_error_rate + "...");
+		for (int i = 0; i < n; i++){
 			double[] record = X_y.get(i);
 			double y = getResponseFromRecord(record);
 			double yhat = Evaluate(record);
@@ -297,6 +297,7 @@ public abstract class Classifier implements Serializable {
 					break;
 			}
 		}
+		System.out.print("done\n");
 		return loss;
 	}
 	
@@ -353,13 +354,5 @@ public abstract class Classifier implements Serializable {
 	
 	public void setUniqueName(String unique_name) {
 		this.unique_name = unique_name;
-	}	
-	
-	public static double[] getColVector(List<double[]> X, int j){
-		double[] x_dot_j = new double[X.size()];
-		for (int i = 0; i < X.size(); i++){
-			x_dot_j[i] = X.get(i)[j];
-		}
-		return x_dot_j;
 	}
 }

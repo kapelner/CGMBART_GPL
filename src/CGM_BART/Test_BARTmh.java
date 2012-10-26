@@ -180,7 +180,7 @@ public class Test_BARTmh {
 		first_node_grown.isLeaf = false;
 		first_node_grown.left = new CGMBARTTreeNode(T_star);
 		first_node_grown.right = new CGMBARTTreeNode(T_star);
-		CGMBARTTreeNode.propagateDataByChangedRule(first_node_grown);
+		first_node_grown.propagateDataByChangedRule();
 		assertEquals(1, T_star.numPruneNodesAvailable()); //w_2^* = 1
 		
 		double trans_ratio = Math.exp(bart.calcLnTransRatioGrow(T_i, T_star, first_node_grown));
@@ -201,7 +201,7 @@ public class Test_BARTmh {
 		second_node_grown.isLeaf = false;
 		second_node_grown.left = new CGMBARTTreeNode(T_star);
 		second_node_grown.right = new CGMBARTTreeNode(T_star);		
-		CGMBARTTreeNode.propagateDataByChangedRule(T_star);
+		T_star.propagateDataByChangedRule();
 		
 		trans_ratio = Math.exp(bart.calcLnTransRatioGrow(T_i, T_star, second_node_grown));
 		assertEquals(4, trans_ratio, 0.0001);	
@@ -252,7 +252,7 @@ public class Test_BARTmh {
 		first_node_grown.isLeaf = false;
 		first_node_grown.left = new CGMBARTTreeNode(T_star);
 		first_node_grown.right = new CGMBARTTreeNode(T_star);
-		CGMBARTTreeNode.propagateDataByChangedRule(first_node_grown);
+		first_node_grown.propagateDataByChangedRule();
 		assertEquals(0, first_node_grown.depth); //d_eta = 0
 		
 		double tree_structure_ratio = Math.exp(bart.calcLnTreeStructureRatioGrow(first_node_grown));
@@ -271,7 +271,7 @@ public class Test_BARTmh {
 		second_node_grown.isLeaf = false;
 		second_node_grown.left = new CGMBARTTreeNode(T_star);
 		second_node_grown.right = new CGMBARTTreeNode(T_star);		
-		CGMBARTTreeNode.propagateDataByChangedRule(T_star);
+		T_star.propagateDataByChangedRule();
 		
 		tree_structure_ratio = Math.exp(bart.calcLnTreeStructureRatioGrow(second_node_grown));
 		assertEquals(0.124594970654, tree_structure_ratio, 0.0001);	
@@ -326,7 +326,7 @@ public class Test_BARTmh {
 		first_node_grown.isLeaf = false;
 		first_node_grown.left = new CGMBARTTreeNode(T_star);
 		first_node_grown.right = new CGMBARTTreeNode(T_star);
-		CGMBARTTreeNode.propagateDataByChangedRule(first_node_grown);
+		first_node_grown.propagateDataByChangedRule();
 		
 		//now ensure the proper n's
 		assertEquals(7, first_node_grown.n_eta);
@@ -362,7 +362,7 @@ public class Test_BARTmh {
 		second_node_grown.isLeaf = false;
 		second_node_grown.left = new CGMBARTTreeNode(T_star);
 		second_node_grown.right = new CGMBARTTreeNode(T_star);		
-		CGMBARTTreeNode.propagateDataByChangedRule(T_star);
+		T_star.propagateDataByChangedRule();
 		
 		//now ensure the proper n's
 		assertEquals(4, second_node_grown.n_eta);

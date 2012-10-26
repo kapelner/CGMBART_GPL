@@ -69,7 +69,7 @@ public abstract class CGMBART_08_mh_with_change extends CGMBART_07_mh {
 		changed_node.isLeaf = false;
 		changed_node.left = new CGMBARTTreeNode(changed_node);
 		changed_node.right = new CGMBARTTreeNode(changed_node);
-		CGMBARTTreeNode.propagateDataByChangedRule(changed_node);
+		changed_node.propagateDataByChangedRule();
 		
 		//now calculate only the likelihood ratio of this MH step (since the tree structure and the transition ratios cancel out)
 		double ln_likelihood_ratio_change = calcLnLikRatioChange(original_node, changed_node);
