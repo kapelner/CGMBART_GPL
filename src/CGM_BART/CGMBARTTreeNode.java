@@ -72,7 +72,7 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 	protected static final double BAD_FLAG = -Double.MAX_VALUE;
 	public double y_pred = BAD_FLAG;
 	/** the remaining data records at this point in the tree construction cols: x_1, ..., x_p, y, index */
-	public transient List<double[]> data;
+//	public transient List<double[]> data;
 	/** the number of data points */
 	public transient int n_eta;
 	/** these are the yhats in the correct order */
@@ -130,7 +130,7 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		copy.depth = depth;
 		//////do not copy y_pred
 		//now do data stuff
-		copy.data = data;
+//		copy.data = data;
 		copy.responses = responses;
 		copy.indicies = indicies;
 		copy.n_eta = n_eta;
@@ -344,7 +344,7 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 	}
 
 	public void flushNodeData() {
-		data = null;
+//		data = null;
 		yhats = null;
 		indicies = null;	
 		responses = null;
@@ -382,9 +382,9 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 //		node.SortAtAttribute();
 //		int n_split = ClassificationAndRegressionTree.getSplitPoint(node.data, node.splitAttributeM, node.splitValue);
 		//now set the data in the offspring
-		int p = cgmbart.p;
-		ArrayList<double[]> data_left = new ArrayList<double[]>(n_eta);
-		ArrayList<double[]> data_right = new ArrayList<double[]>(n_eta);
+//		int p = cgmbart.p;
+//		ArrayList<double[]> data_left = new ArrayList<double[]>(n_eta);
+//		ArrayList<double[]> data_right = new ArrayList<double[]>(n_eta);
 		TIntArrayList left_indices = new TIntArrayList(n_eta); 
 		TIntArrayList right_indices = new TIntArrayList(n_eta);
 		TDoubleArrayList left_responses = new TDoubleArrayList(n_eta);
@@ -396,13 +396,13 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 			double[] datum_big = cgmbart.X_y.get(indicies[i]).clone();
 			
 			if (datum_big[splitAttributeM] <= splitValue){
-				data_left.add(datum_big);
+//				data_left.add(datum_big);
 				left_indices.add(indicies[i]);
 //				left_responses.add(datum[p]);
 				left_responses.add(responses[i]);
 			}
 			else {
-				data_right.add(datum_big);
+//				data_right.add(datum_big);
 				right_indices.add(indicies[i]);	
 //				right_responses.add(datum[p]);
 				right_responses.add(responses[i]);
@@ -463,11 +463,11 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 ////			System.out.println("   RR: " + Tools.StringJoin(right_responses));			
 //		}		
 		
-		left.data = data_left;			
+//		left.data = data_left;			
 		left.n_eta = left_responses.size();
 		left.responses = left_responses.toArray();
 		left.indicies = left_indices.toArray();	
-		right.data = data_right;
+//		right.data = data_right;
 		right.n_eta = right_responses.size();
 		right.responses = right_responses.toArray();
 		right.indicies = right_indices.toArray();
@@ -775,16 +775,16 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 
 	public void setStumpData(ArrayList<double[]> X_y, double[] y_trans, int p) {
 		//pull out X data, set y's, and indices appropriately
-		int n = X_y.size();
+		n_eta = X_y.size();
 		
-		responses = new double[n];
-		indicies = new int[n];
+		responses = new double[n_eta];
+		indicies = new int[n_eta];
 		
 		
-		for (int i = 0; i < n; i++){
+		for (int i = 0; i < n_eta; i++){
 			indicies[i] = i;
 		}
-		for (int i = 0; i < n; i++){
+		for (int i = 0; i < n_eta; i++){
 			for (int j = 0; j < p + 2; j++){
 				if (j == p){
 					responses[i] = y_trans[i];
@@ -792,25 +792,25 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 			}
 		}	
 		
-		data = new ArrayList<double[]>(n);
-		for (int i = 0; i < n; i++){
-			double[] x_i_dot_new = new double[p + 2];
-			for (int j = 0; j < p + 2; j++){
-				if (j == p){
-					x_i_dot_new[j] = y_trans[i];
-				}
-				else {
-					x_i_dot_new[j] = X_y.get(i)[j];
-				}
-			}
-			data.add(x_i_dot_new);
-		}
-		n_eta = data.size();
+//		data = new ArrayList<double[]>(n_eta);
+//		for (int i = 0; i < n_eta; i++){
+//			double[] x_i_dot_new = new double[p + 2];
+//			for (int j = 0; j < p + 2; j++){
+//				if (j == p){
+//					x_i_dot_new[j] = y_trans[i];
+//				}
+//				else {
+//					x_i_dot_new[j] = X_y.get(i)[j];
+//				}
+//			}
+//			data.add(x_i_dot_new);
+//		}
+//		n_eta = data.size();
 		
 		//get
 		
 		//initialize the yhats
-		yhats = new double[n];
+		yhats = new double[n_eta];
 //		System.out.println("setStumpData  X is " + data.size() + " x " + data.get(0).length + "  y is " + y.length + " x " + 1);
 		printNodeDebugInfo("setStumpData");
 	}
