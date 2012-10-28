@@ -15,7 +15,7 @@ if (.Platform$OS.type == "windows"){
 }
 
 #constants
-NUM_GIGS_RAM_TO_USE = 3#ifelse(.Platform$OS.type == "windows", 6, 1)
+NUM_MEGS_RAM_TO_USE = ifelse(.Platform$OS.type == "windows", 6000, 1500)
 PLOTS_DIR = "output_plots"
 JAR_DEPENDENCIES = c("bart_java.jar", "commons-math-2.1.jar", "jai_codec.jar", "jai_core.jar", "trove-3.0.3.jar")
 DATA_FILENAME = "datasets/bart_data.csv"
@@ -129,11 +129,11 @@ build_a_bart_model = function(training_data,
 printed_out_warnings = FALSE
 
 init_jvm_and_bart_object = function(unique_name, debug_log, print_tree_illustrations, print_out_every, fix_seed){
-	.jinit(parameters = paste("-Xmx", NUM_GIGS_RAM_TO_USE, "g", sep = ""))
+	.jinit(parameters = paste("-Xmx", NUM_MEGS_RAM_TO_USE, "m", sep = ""))
 	for (dependency in JAR_DEPENDENCIES){
 		.jaddClassPath(paste(directory_where_code_is, "/", dependency, sep = ""))
 	}
-	java_bart_machine = .jnew("CGM_BART.CGMBARTRegression")
+	java_bart_machine = .jnew("CGM_BART.CGMBARTRegressionMultThread")
 	
 	#first set the name
 	.jcall(java_bart_machine, "V", "setUniqueName", unique_name)
@@ -703,7 +703,8 @@ run_other_model_and_plot_y_vs_yhat = function(y_hat,
 		bart_machine = NULL, 
 		sigsqs = NULL,
 		avg_num_splits_by_vars = NULL,
-		y_hat_train = NULL){
+		y_hat_train = NULL,
+		runtime = NULL){
 	L1_err = sum(abs(test_data$y - y_hat))
 	L2_err = sum((test_data$y - y_hat)^2)	
 	rmse = sqrt(L2_err / length(y_hat))
@@ -731,17 +732,30 @@ run_other_model_and_plot_y_vs_yhat = function(y_hat,
 		rmse = rmse, 
 		sigsqs = sigsqs,
 		avg_num_splits_by_vars = avg_num_splits_by_vars,
-		rmse_train = rmse_train)		
+		rmse_train = rmse_train,
+		runtime = runtime)		
 }
 
 run_random_forests_and_plot_y_vs_yhat = function(training_data, test_data, extra_text = NULL, data_title = "data_model", save_plot = FALSE, bart_machine = NULL){
+	before = Sys.time()
 	rf_mod = randomForest(y ~., training_data)
 	y_hat = predict(rf_mod, test_data)
-	run_other_model_and_plot_y_vs_yhat(y_hat, "RF", test_data, training_data, extra_text, data_title, save_plot, bart_machine)
+	after = Sys.time()
+	print(paste("RF run time:", after - before))	
+	run_other_model_and_plot_y_vs_yhat(y_hat, 
+		"RF", 
+		test_data, 
+		training_data, 
+		extra_text, 
+		data_title, 
+		save_plot, 
+		bart_machine,
+		after - before)
 }
 
 run_bayes_tree_bart_and_plot_y_vs_yhat = function(training_data, test_data, extra_text = NULL, data_title = "data_model", save_plot = FALSE, bart_machine = NULL){
 	p = ncol(training_data) - 1
+	before = Sys.time()
 	bayes_tree_bart_mod = bart(x.train = training_data[, 1 : p],
 		y.train = training_data$y,
 		sigest = sd(training_data$y), #we force the sigma estimate to be the std dev of y
@@ -760,26 +774,40 @@ run_bayes_tree_bart_and_plot_y_vs_yhat = function(training_data, test_data, extr
 		
 #	out = list(yhat = bayes_tree_bart_mod$yhat.test.mean, sigmas = bayes_tree_bart_mod$sigma)
 	y_hat = bayes_tree_bart_mod$yhat.test.mean
+	after = Sys.time()
+	print(paste("R BART run time:", after - before))	
 	sigsqs = (bayes_tree_bart_mod$sigma)^2
 	avg_num_splits_by_vars = tryCatch({apply(bayes_tree_bart_mod$varcount, 2, mean)}, error = function(e){NA})
 	y_hat_train = bayes_tree_bart_mod$yhat.train.mean
 	run_other_model_and_plot_y_vs_yhat(y_hat, 
-			"R_BART", 
-			test_data, 
-			training_data,
-			extra_text, 
-			data_title, 
-			save_plot, 
-			bart_machine, 
-			sigsqs = sigsqs, 
-			avg_num_splits_by_vars = avg_num_splits_by_vars,
-			y_hat_train = y_hat_train)
+		"R_BART", 
+		test_data, 
+		training_data,
+		extra_text, 
+		data_title, 
+		save_plot, 
+		bart_machine, 
+		sigsqs = sigsqs, 
+		avg_num_splits_by_vars = avg_num_splits_by_vars,
+		y_hat_train = y_hat_train,
+		runtime = after - before)
 }
 
 run_cart_and_plot_y_vs_yhat = function(training_data, test_data, extra_text = NULL, data_title = "data_model", save_plot = FALSE, bart_machine = NULL){
+	before = Sys.time()
 	cart_model = rpart(y ~ ., training_data)
 	y_hat = predict(cart_model, test_data)
-	run_other_model_and_plot_y_vs_yhat(y_hat, "CART", test_data, training_data, extra_text, data_title, save_plot, bart_machine)
+	after = Sys.time()
+	print(paste("CART run time:", after - before))		
+	run_other_model_and_plot_y_vs_yhat(y_hat, 
+		"CART", 
+		test_data, 
+		training_data, 
+		extra_text, 
+		data_title, 
+		save_plot, 
+		bart_machine,
+		runtime = after - before)
 }
 
 error_in_data = function(data){

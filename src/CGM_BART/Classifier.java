@@ -109,7 +109,7 @@ public abstract class Classifier implements Serializable {
 	public void setData(ArrayList<double[]> X_y){
 		n = X_y.size();
 		p = X_y.get(0).length - 1;
-		System.out.println("setData n:" + n + " p:" + p);
+//		System.out.println("setData n:" + n + " p:" + p);
 		y_orig = extractResponseFromRawData(X_y);
 //		for (int i = 0; i < n; i++){
 //			System.out.println("i:" + i + " yi:" + y[i]);

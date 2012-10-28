@@ -34,8 +34,7 @@ simulation_results_cols = c(
 		"N_B", 
 		"N_G", 
 		"alpha", 
-		"beta", 
-		"run_time",
+		"beta",
 		"A_BART_L1", 
 		"R_BART_L1", 
 		"A_BART_L2", 
@@ -53,7 +52,11 @@ simulation_results_cols = c(
 		"RF_rmse",
 		"CART_L1",
 		"CART_L2",
-		"CART_rmse"
+		"CART_rmse",
+		"A_BART_runtime",
+		"R_BART_runtime",
+		"RF_runtime",
+		"CART_runtime"
 )
 simulation_results = matrix(NA, nrow = 0, ncol = length(simulation_results_cols))
 colnames(simulation_results) = simulation_results_cols
@@ -70,7 +73,7 @@ run_bart_bakeoff = function(){
 					for (num_trees in num_trees_of_interest){
 						graphics.off() #make sure to shut graphics off otherwise it eventually overloads the console
 						
-						for (real_regression_data_set in real_regression_data_sets){
+						for (real_regression_data_set in real_regression_data_sets){							
 							raw_data = read.csv(paste("datasets//", real_regression_data_set, ".csv", sep = ""))				
 							#now pull out half training and half test *randomly*			
 							training_indices = sort(sample(1 : nrow(raw_data), nrow(raw_data) / 2))
@@ -78,6 +81,7 @@ run_bart_bakeoff = function(){
 							training_data = raw_data[training_indices, ]
 							test_data = raw_data[test_indices, ]							
 							for (duplicate_run in 1 : run_model_N_times){
+								cat(paste("model ", real_regression_data_set, "m =", num_trees, "dup = ", duplicate_run, "\n"))
 								current_run = current_run + 1
 								append_to_log(paste("starting model ", current_run, "\\", total_num_runs, "  \"", real_regression_data_set, "\", m = ", num_trees, ", n_B = ", num_burn_in, ", n_G_a = ", num_iterations_after_burn_in, " alpha = ", alpha, " beta = ", beta, sep = ""))
 								run_bart_model_and_save_diags_and_results(training_data, test_data, real_regression_data_set, num_trees, num_burn_in, num_iterations_after_burn_in, alpha, beta, duplicate_run)
@@ -88,6 +92,7 @@ run_bart_bakeoff = function(){
 							training_data = simulate_data_from_simulation_name(simulated_data_set)
 							test_data = simulate_data_from_simulation_name(simulated_data_set)							
 							for (duplicate_run in 1 : run_model_N_times){
+								cat(paste("model ", simulated_data_set, "m =", num_trees, "dup = ", duplicate_run, "\n"))
 								current_run = current_run + 1
 								append_to_log(paste("starting model ", current_run, "\\", total_num_runs, "  \"", simulated_data_set, "\", m = ", num_trees, ", n_B = ", num_burn_in, ", n_G_a = ", num_iterations_after_burn_in, " alpha = ", alpha, " beta = ", beta, sep = ""))
 								run_bart_model_and_save_diags_and_results(training_data, test_data, simulated_data_set, num_trees, num_burn_in, num_iterations_after_burn_in, alpha, beta, duplicate_run)
@@ -170,7 +175,10 @@ avg_simulation_results_cols = c(
 		"R_BART_rmse_train",
 		"A_BART_tot_var_count",		
 		"R_BART_tot_var_count",			
-		"pval_sign_test"
+		"pval_sign_test",
+		"A_BART_runtime",
+		"R_BART_runtime",
+		"RF_runtime"
 )
 avg_simulation_results = matrix(NA, nrow = 0, ncol = length(avg_simulation_results_cols))
 colnames(avg_simulation_results) = avg_simulation_results_cols
@@ -203,7 +211,10 @@ create_avg_sim_results_and_save_as_csv = function(){
 								round(mean(all_results_for_run$R_BART_rmse_train), 2),	
 								round(mean(all_results_for_run$A_BART_tot_var_count), 2),
 								round(mean(all_results_for_run$R_BART_tot_var_count), 2),								
-								round(pval_sign_test, 3)		
+								round(pval_sign_test, 3),
+								round(all_results_for_run$A_BART_runtime, 1),
+								round(all_results_for_run$R_BART_runtime, 1),
+								round(all_results_for_run$RF_runtime, 1)
 							)
 							avg_simulation_results = rbind(avg_simulation_results, new_simul_row)					
 						}
@@ -247,38 +258,26 @@ run_bart_model_and_save_diags_and_results = function(training_data, test_data, d
 		unique_name = paste(data_title, "_m_", num_trees, "_run_", formatC(duplicate_run, width = 2, format = "d", flag = "0")),
 		num_iterations_after_burn_in = num_iterations_after_burn_in)
 	time_finished = Sys.time()
+	print(paste("A BART run time:", time_finished - time_started))
+	
 	assign("bart_machine", bart_machine, .GlobalEnv)
 	append_to_log("built")
 	
 	#now use the bart model to predict y_hat's for the test data
-	a_bart_predictions = predict_and_calc_ppis(bart_machine, test_data)
+	a_bart_predictions_obj = predict_and_calc_ppis(bart_machine, test_data)
 	#diagnose how good the y_hat's from the bart model are
-	plot_y_vs_yhat_a_bart(a_bart_predictions, extra_text = extra_text, data_title = data_title, save_plot = save_plot, bart_machine = bart_machine)
+	plot_y_vs_yhat_a_bart(a_bart_predictions_obj, extra_text = extra_text, data_title = data_title, save_plot = save_plot, bart_machine = bart_machine)
 	
 	#now see how Rob's algorithm does
-	r_bart_predictions = run_bayes_tree_bart_and_plot_y_vs_yhat(training_data, test_data, extra_text = extra_text, data_title = data_title, save_plot = save_plot, bart_machine = bart_machine)
+	r_bart_predictions_obj = run_bayes_tree_bart_and_plot_y_vs_yhat(training_data, test_data, extra_text = extra_text, data_title = data_title, save_plot = save_plot, bart_machine = bart_machine)
 	
 	#now see how good random forests and CART does in comparison
-	rf_predictions = run_random_forests_and_plot_y_vs_yhat(training_data, test_data, extra_text = extra_text, data_title = data_title, save_plot = save_plot, bart_machine = bart_machine)
-	cart_predictions = run_cart_and_plot_y_vs_yhat(training_data, test_data, extra_text = extra_text, data_title = data_title, save_plot = save_plot, bart_machine = bart_machine)
+	rf_predictions_obj = run_random_forests_and_plot_y_vs_yhat(training_data, test_data, extra_text = extra_text, data_title = data_title, save_plot = save_plot, bart_machine = bart_machine)
+	cart_predictions_obj = run_cart_and_plot_y_vs_yhat(training_data, test_data, extra_text = extra_text, data_title = data_title, save_plot = save_plot, bart_machine = bart_machine)
 	
 	#do some plots and histograms to diagnose convergence
-#	plot_sigsqs_convergence_diagnostics(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)
+	plot_sigsqs_convergence_diagnostics(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)
 	a_bart_sigsqs = hist_sigsqs(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)
-#	sigsqs_log = rbind(sigsqs_log, c(data_title, num_trees, num_burn_in, num_iterations_after_burn_in, a_bart_sigsqs))
-#	assign("sigsqs_log", sigsqs_log, .GlobalEnv)
-
-#	plot_tree_liks_convergence_diagnostics(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)
-#	hist_tree_liks(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)
-#	plot_tree_num_nodes(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)	
-#	plot_tree_depths(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)
-	for (t in 1 : num_trees){
-#		plot_all_mu_values_for_tree(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot, t)
-#		hist_all_mu_values_for_tree(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot, t)
-#		for (b in 1 : maximum_nodes_over_all_trees(bart_machine)){
-#			hist_mu_values_by_tree_and_leaf_after_burn_in(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot, t, b)
-#		}
-	}
 	
 	new_simul_row = c(
 		data_title, 
@@ -287,25 +286,29 @@ run_bart_model_and_save_diags_and_results = function(training_data, test_data, d
 		num_iterations_after_burn_in,
 		alpha,
 		beta,
-		round(as.numeric(time_finished - time_started), 2),
-		round(a_bart_predictions$L1_err, 0),
-		round(r_bart_predictions$L1_err, 0),
-		round(a_bart_predictions$L2_err, 0),
-		round(r_bart_predictions$L2_err, 0),
-		round(a_bart_predictions$rmse, 2),
-		round(r_bart_predictions$rmse, 2),	
+		round(a_bart_predictions_obj$L1_err, 0),
+		round(r_bart_predictions_obj$L1_err, 0),
+		round(a_bart_predictions_obj$L2_err, 0),
+		round(r_bart_predictions_obj$L2_err, 0),
+		round(a_bart_predictions_obj$rmse, 2),
+		round(r_bart_predictions_obj$rmse, 2),	
 		round(mean(a_bart_sigsqs), 3),
-		round(mean(r_bart_predictions$sigsqs), 3),
+		round(mean(r_bart_predictions_obj$sigsqs), 3),
 		round(bart_machine$rmse_train, 2),
-		round(r_bart_predictions$rmse_train, 2),
+		round(r_bart_predictions_obj$rmse_train, 2),
 		round(sum(bart_machine$avg_num_splits_by_vars), 1),
-		round(sum(r_bart_predictions$avg_num_splits_by_vars), 1),
-		round(rf_predictions$L1_err, 0),
-		round(rf_predictions$L2_err, 0),
-		round(rf_predictions$rmse, 2),
-		round(cart_predictions$L1_err, 0),
-		round(cart_predictions$L2_err, 0),
-		round(cart_predictions$rmse, 2)		
+		round(sum(r_bart_predictions_obj$avg_num_splits_by_vars), 1),
+		round(rf_predictions_obj$L1_err, 0),
+		round(rf_predictions_obj$L2_err, 0),
+		round(rf_predictions_obj$rmse, 2),
+		round(cart_predictions_obj$L1_err, 0),
+		round(cart_predictions_obj$L2_err, 0),
+		round(cart_predictions_obj$rmse, 2),
+		#now do runtimes
+		round(a_bart_predictions_obj$runtime, 2),
+		round(r_bart_predictions_obj$runtime, 2),
+		round(rf_predictions_obj$runtime, 2),
+		round(cart_predictions_obj$runtime, 2),
 	)
 	simulation_results = rbind(simulation_results, new_simul_row)	
 	assign("simulation_results", simulation_results, .GlobalEnv)

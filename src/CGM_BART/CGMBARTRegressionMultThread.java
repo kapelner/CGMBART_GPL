@@ -1,5 +1,7 @@
 package CGM_BART;
 
+import gnu.trove.list.array.TDoubleArrayList;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
@@ -10,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 public class CGMBARTRegressionMultThread extends Classifier {
 	private static final long serialVersionUID = -4537075714317768756L;
 	
-	private static final int DEFAULT_NUM_CORES = 1;//Runtime.getRuntime().availableProcessors() - 1;
+	private static final int DEFAULT_NUM_CORES = Runtime.getRuntime().availableProcessors() - 1;
 	private int num_cores;
 	
 	private ArrayList<CGMBARTRegression> bart_gibbs_chain_threads;
@@ -128,8 +130,14 @@ public class CGMBARTRegressionMultThread extends Classifier {
 		CGMBART_01_base.ALPHA = alpha;
 	}
 	
-	public void setNumCores(int num_cores){
-		this.num_cores = num_cores;
+	public void setBeta(double beta){
+		CGMBART_01_base.BETA = beta;
+	}	
+	
+	public void setNumCores(Integer num_cores){
+		if (num_cores != null){
+			this.num_cores = num_cores;
+		}
 	}
 
 	@Override
@@ -188,6 +196,31 @@ public class CGMBARTRegressionMultThread extends Classifier {
 	protected double[] get95PctPostPredictiveIntervalForPrediction(double[] record){
 		return getPostPredictiveIntervalForPrediction(record, 0.95);
 	}
+	
+	public double[] getAvgCountsByAttribute(){
+		double[] avg_counts = new double[p];
+//		for (int t = 0; t < num_cores; t++){
+//			double[] avg_counts_by_thread = bart_gibbs_chain_threads.get(t).getAvgCountsByAttribute();
+//			for (int j = 0; j < p; j++){
+//				avg_counts[j] += avg_counts_by_thread[j] / num_cores;
+//			}			
+//		}		
+		return avg_counts;
+	}	
+	
+	public double[] getGibbsSamplesSigsqs(){
+		TDoubleArrayList sigsqs_to_export = new TDoubleArrayList(num_gibbs_total_iterations);
+		for (int t = 0; t < num_cores; t++){
+			TDoubleArrayList sigsqs_to_export_by_thread = new TDoubleArrayList(bart_gibbs_chain_threads.get(t).getGibbsSamplesSigsqs());
+			if (t == 0){
+				sigsqs_to_export.addAll(sigsqs_to_export_by_thread);
+			}
+			else {
+				sigsqs_to_export.addAll(sigsqs_to_export_by_thread.subList(num_gibbs_burn_in, total_iterations_multithreaded));
+			}
+		}		
+		return sigsqs_to_export.toArray();
+	}	
 
 	@Override
 	public void StopBuilding() {
