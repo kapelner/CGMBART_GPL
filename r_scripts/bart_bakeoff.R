@@ -81,7 +81,7 @@ run_bart_bakeoff = function(){
 							training_data = raw_data[training_indices, ]
 							test_data = raw_data[test_indices, ]							
 							for (duplicate_run in 1 : run_model_N_times){
-								cat(paste("model ", real_regression_data_set, "m =", num_trees, "dup = ", duplicate_run, "\n"))
+								cat(paste("model ", real_regression_data_set, "m =", num_trees, "dup = ", duplicate_run, "\n\n"))
 								current_run = current_run + 1
 								append_to_log(paste("starting model ", current_run, "\\", total_num_runs, "  \"", real_regression_data_set, "\", m = ", num_trees, ", n_B = ", num_burn_in, ", n_G_a = ", num_iterations_after_burn_in, " alpha = ", alpha, " beta = ", beta, sep = ""))
 								run_bart_model_and_save_diags_and_results(training_data, test_data, real_regression_data_set, num_trees, num_burn_in, num_iterations_after_burn_in, alpha, beta, duplicate_run)
@@ -92,7 +92,7 @@ run_bart_bakeoff = function(){
 							training_data = simulate_data_from_simulation_name(simulated_data_set)
 							test_data = simulate_data_from_simulation_name(simulated_data_set)							
 							for (duplicate_run in 1 : run_model_N_times){
-								cat(paste("model ", simulated_data_set, "m =", num_trees, "dup = ", duplicate_run, "\n"))
+								cat(paste("model ", simulated_data_set, "m =", num_trees, "dup = ", duplicate_run, "\n\n"))
 								current_run = current_run + 1
 								append_to_log(paste("starting model ", current_run, "\\", total_num_runs, "  \"", simulated_data_set, "\", m = ", num_trees, ", n_B = ", num_burn_in, ", n_G_a = ", num_iterations_after_burn_in, " alpha = ", alpha, " beta = ", beta, sep = ""))
 								run_bart_model_and_save_diags_and_results(training_data, test_data, simulated_data_set, num_trees, num_burn_in, num_iterations_after_burn_in, alpha, beta, duplicate_run)
@@ -279,6 +279,10 @@ run_bart_model_and_save_diags_and_results = function(training_data, test_data, d
 	plot_sigsqs_convergence_diagnostics(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)
 	a_bart_sigsqs = hist_sigsqs(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)
 	
+#	print(paste("ABART runtime", time_finished - time_started))
+#	print(paste("RBART runtime", r_bart_predictions_obj$runtime))
+#	print(paste("ABART runtime", rf_predictions_obj$runtime))
+#	print(paste("ABART runtime", cart_predictions_obj$runtime))
 	new_simul_row = c(
 		data_title, 
 		num_trees, 
@@ -305,10 +309,10 @@ run_bart_model_and_save_diags_and_results = function(training_data, test_data, d
 		round(cart_predictions_obj$L2_err, 0),
 		round(cart_predictions_obj$rmse, 2),
 		#now do runtimes
-		round(a_bart_predictions_obj$runtime, 2),
+		round(time_finished - time_started, 2),
 		round(r_bart_predictions_obj$runtime, 2),
 		round(rf_predictions_obj$runtime, 2),
-		round(cart_predictions_obj$runtime, 2),
+		round(cart_predictions_obj$runtime, 2)
 	)
 	simulation_results = rbind(simulation_results, new_simul_row)	
 	assign("simulation_results", simulation_results, .GlobalEnv)

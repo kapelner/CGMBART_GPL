@@ -2,7 +2,7 @@
 PRINT_TREE_ILLUS = FALSE
 JAVA_LOG = FALSE
 
-run_model_N_times = 5
+run_model_N_times = 1
 real_regression_data_sets = c(
 	"r_boston"
 #	"r_forestfires"
@@ -11,7 +11,7 @@ real_regression_data_sets = c(
 simulated_data_sets = c(
 #	"univariate_linear",
 #	"bivariate_linear",
-	"friedman",
+#	"friedman",
 #	"simple_tree_structure_sigsq_hundredth",
 #	"simple_tree_structure_sigsq_tenth",
 #	"simple_tree_structure_sigsq_half",

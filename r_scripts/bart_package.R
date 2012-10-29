@@ -15,7 +15,7 @@ if (.Platform$OS.type == "windows"){
 }
 
 #constants
-NUM_MEGS_RAM_TO_USE = ifelse(.Platform$OS.type == "windows", 6000, 1500)
+NUM_MEGS_RAM_TO_USE = ifelse(.Platform$OS.type == "windows", 6000, 1250)
 PLOTS_DIR = "output_plots"
 JAR_DEPENDENCIES = c("bart_java.jar", "commons-math-2.1.jar", "jai_codec.jar", "jai_core.jar", "trove-3.0.3.jar")
 DATA_FILENAME = "datasets/bart_data.csv"
@@ -750,7 +750,7 @@ run_random_forests_and_plot_y_vs_yhat = function(training_data, test_data, extra
 		data_title, 
 		save_plot, 
 		bart_machine,
-		after - before)
+		runtime = after - before)
 }
 
 run_bayes_tree_bart_and_plot_y_vs_yhat = function(training_data, test_data, extra_text = NULL, data_title = "data_model", save_plot = FALSE, bart_machine = NULL){
