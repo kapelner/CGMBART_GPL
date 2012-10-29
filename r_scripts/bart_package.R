@@ -2,7 +2,6 @@
 #libraries and dependencies
 options(repos = "http://lib.stat.cmu.edu/R/CRAN")
 tryCatch(library(randomForest), error = function(e){install.packages("randomForest")}, finally = library(randomForest))
-
 tryCatch(library(rpart), error = function(e){install.packages("rpart")}, finally = library(rpart))
 tryCatch(library(xtable), error = function(e){install.packages("xtable")}, finally = library(xtable))
 
@@ -15,7 +14,7 @@ if (.Platform$OS.type == "windows"){
 }
 
 #constants
-NUM_MEGS_RAM_TO_USE = ifelse(.Platform$OS.type == "windows", 6000, 1250)
+NUM_MEGS_RAM_TO_USE = ifelse(.Platform$OS.type == "windows", 6000, 4000)
 PLOTS_DIR = "output_plots"
 JAR_DEPENDENCIES = c("bart_java.jar", "commons-math-2.1.jar", "jai_codec.jar", "jai_core.jar", "trove-3.0.3.jar")
 DATA_FILENAME = "datasets/bart_data.csv"
@@ -25,6 +24,11 @@ COLORS = array(NA, 500)
 for (i in 1 : 500){
 	COLORS[i] = rgb(runif(1, 0, 0.7), runif(1, 0, 0.7), runif(1, 0, 0.7))
 }
+
+#immediately initialize Java
+jinit_params = paste("-Xmx", NUM_MEGS_RAM_TO_USE, "m", " -Xms", 1000, "m", sep = "")
+#print(jinit_params)
+.jinit(jinit_params)
 
 
 #set up a logging system
@@ -129,7 +133,6 @@ build_a_bart_model = function(training_data,
 printed_out_warnings = FALSE
 
 init_jvm_and_bart_object = function(unique_name, debug_log, print_tree_illustrations, print_out_every, fix_seed){
-	.jinit(parameters = paste("-Xmx", NUM_MEGS_RAM_TO_USE, "m", sep = ""))
 	for (dependency in JAR_DEPENDENCIES){
 		.jaddClassPath(paste(directory_where_code_is, "/", dependency, sep = ""))
 	}

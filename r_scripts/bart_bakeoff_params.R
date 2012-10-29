@@ -25,7 +25,7 @@ simulated_data_sets = c(
 
 #nice to have data around for testing... should be overwritten for custom runs...
 num_trees_of_interest = c(
-	50, 100, 200
+	50, 100
 )
 num_burn_ins_of_interest = c(
 	2000

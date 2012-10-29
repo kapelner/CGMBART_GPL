@@ -47,7 +47,8 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 		double[] R_j = new double[n];
 		for (int t = 0; t < num_trees; t++){
 			if (t == 0 && gibb_sample_num % 100 == 0){
-				System.out.println("Sampling M_" + (t + 1) + "/" + num_trees + " iter " + gibb_sample_num + "/" + num_gibbs_total_iterations + "  thread: " + Thread.currentThread().getName());
+				String thread_name = Thread.currentThread().getName();
+				System.out.println("Sampling M_" + (t + 1) + "/" + num_trees + " iter " + gibb_sample_num + "/" + num_gibbs_total_iterations + "  thread: " + thread_name.charAt(thread_name.length() - 1));
 			}
 			R_j = SampleTree(gibb_sample_num, t, cgm_trees, tree_array_illustration);
 			SampleMus(gibb_sample_num, t);				
