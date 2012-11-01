@@ -38,6 +38,8 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 	}
 	
 	protected void DoOneGibbsSampleAndIncrement(){
+		String thread = Thread.currentThread().getName();
+		thread = thread.substring(thread.length() - 1, thread.length());
 //		tree_liks.print(gibb_sample_num + ",");
 		//this array is the array of trees for this given sample
 		final ArrayList<CGMBARTTreeNode> cgm_trees = new ArrayList<CGMBARTTreeNode>(num_trees);				
@@ -48,7 +50,7 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 		for (int t = 0; t < num_trees; t++){
 			if (t == 0 && gibb_sample_num % 100 == 0){				
 				System.out.println("Sampling M_" + (t + 1) + "/" + num_trees + " iter " + 
-					gibb_sample_num + "/" + num_gibbs_total_iterations + "  thread: " + Thread.currentThread().getName());
+					gibb_sample_num + "/" + num_gibbs_total_iterations + "  thread: " + thread);
 			}
 			R_j = SampleTree(gibb_sample_num, t, cgm_trees, tree_array_illustration);
 			SampleMus(gibb_sample_num, t);				
@@ -57,12 +59,16 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 		SampleSigsq(gibb_sample_num, R_j);
 		DebugSample(gibb_sample_num, tree_array_illustration);
 		//now flush the previous previous gibbs sample to not leak memory
-		long mem_used_before_flush = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
-		System.out.println(" mem_used_before_flush = " + mem_used_before_flush / 1000000.0 + "MB");
-		FlushDataForSample(gibbs_samples_of_cgm_trees.get(gibb_sample_num - 1));
-		System.gc();
-		long mem_used_after_flush = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
-		System.out.println(" mem_used_after_flush = " + mem_used_after_flush / 1000000.0 + "MB");		
+		if (gibb_sample_num % 100 == 0){
+			long mem_used_before_flush = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+			System.out.println(" mem_used_before_flush = " + mem_used_before_flush / 1000000.0 + "MB" + "  thread: " + thread);
+			FlushDataForSample(gibbs_samples_of_cgm_trees.get(gibb_sample_num - 1));
+			System.gc();
+			long mem_used_after_flush = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+			System.out.println(" mem_used_after_flush = " + mem_used_after_flush / 1000000.0 + "MB" + "  thread: " + thread);		
+			long max_mem = Runtime.getRuntime().maxMemory();
+			System.out.println(" max_mem = " + max_mem / 1000000.0 + "MB" + "  thread: " + thread);		
+		}
 		gibb_sample_num++;		
 	}
 
