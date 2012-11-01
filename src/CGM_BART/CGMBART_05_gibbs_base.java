@@ -59,11 +59,11 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 		SampleSigsq(gibb_sample_num, R_j);
 		DebugSample(gibb_sample_num, tree_array_illustration);
 		//now flush the previous previous gibbs sample to not leak memory
+		FlushDataForSample(gibbs_samples_of_cgm_trees.get(gibb_sample_num - 1));
+		System.gc();		
 		if (gibb_sample_num % 100 == 0){
 			long mem_used_before_flush = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
 			System.out.println(" mem_used_before_flush = " + mem_used_before_flush / 1000000.0 + "MB" + "  thread: " + thread);
-			FlushDataForSample(gibbs_samples_of_cgm_trees.get(gibb_sample_num - 1));
-			System.gc();
 			long mem_used_after_flush = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
 			System.out.println(" mem_used_after_flush = " + mem_used_after_flush / 1000000.0 + "MB" + "  thread: " + thread);		
 			long max_mem = Runtime.getRuntime().maxMemory();
