@@ -24,6 +24,7 @@
 
 package CGM_BART;
 
+import gnu.trove.iterator.TDoubleIterator;
 import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.set.hash.TDoubleHashSet;
@@ -34,6 +35,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+
+import TroveExtension.TDoubleHashSetAndArray;
 
 
 /**
@@ -91,7 +94,7 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 	/** this caches the possible split variables */
 	private transient TIntArrayList possible_rule_variables;
 	/** this caches the possible split values BY variable */
-	private transient HashMap<Integer, TDoubleHashSet> possible_split_vals_by_attr;
+	private transient HashMap<Integer, TDoubleHashSetAndArray> possible_split_vals_by_attr;
 	/** this caches the number of possible split variables */
 	private transient Integer padj;	
 	
@@ -627,15 +630,15 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		return possibleSplitValuesGivenAttribute().size();
 	}	
 	
-	protected TDoubleHashSet possibleSplitValuesGivenAttribute() {
+	protected TDoubleHashSetAndArray possibleSplitValuesGivenAttribute() {
 		if (possible_split_vals_by_attr == null){
-			possible_split_vals_by_attr = new HashMap<Integer, TDoubleHashSet>();
+			possible_split_vals_by_attr = new HashMap<Integer, TDoubleHashSetAndArray>();
 		}
 		if (possible_split_vals_by_attr.get(splitAttributeM) == null){
 			//super inefficient
 			double[] x_dot_j = cgmbart.X_y_by_col.get(splitAttributeM);
 			double max = Tools.max(x_dot_j);
-			TDoubleHashSet unique_x_dot_j = new TDoubleHashSet(x_dot_j);			
+			TDoubleHashSetAndArray unique_x_dot_j = new TDoubleHashSetAndArray(x_dot_j);			
 			unique_x_dot_j.remove(max);
 			possible_split_vals_by_attr.put(splitAttributeM, unique_x_dot_j);
 		}
@@ -651,9 +654,12 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		return predictors.get((int)Math.floor(StatToolbox.rand() * pAdj()));
 	}
 	
-	public double pickRandomSplitValue() {
-		double[] split_values = possibleSplitValuesGivenAttribute().toArray();
-		return split_values[(int) Math.floor(StatToolbox.rand() * split_values.length)];
+	public double pickRandomSplitValue() {	
+		TDoubleHashSetAndArray split_values = possibleSplitValuesGivenAttribute();
+		int rand_index = (int) Math.floor(StatToolbox.rand() * split_values.size());
+		return split_values.getAtIndex(rand_index);		
+//		double[] split_values = possibleSplitValuesGivenAttribute().toArray();
+//		return split_values[(int) Math.floor(StatToolbox.rand() * split_values.length)];
 	}
 	
 	public boolean isStump() {
