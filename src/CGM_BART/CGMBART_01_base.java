@@ -173,5 +173,9 @@ public abstract class CGMBART_01_base extends Classifier implements Serializable
 	public void StopBuilding() {
 		stop_bit = true;
 	}	
+	
+	public long maxMemory(){
+		return Runtime.getRuntime().maxMemory();
+	}
 
 }

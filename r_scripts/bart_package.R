@@ -14,7 +14,7 @@ if (.Platform$OS.type == "windows"){
 }
 
 #constants
-NUM_MEGS_RAM_TO_USE = ifelse(.Platform$OS.type == "windows", 6000, 4000)
+NUM_MEGS_RAM_TO_USE = ifelse(.Platform$OS.type == "windows", 6000, 1600) #1690
 PLOTS_DIR = "output_plots"
 JAR_DEPENDENCIES = c("bart_java.jar", "commons-math-2.1.jar", "jai_codec.jar", "jai_core.jar", "trove-3.0.3.jar")
 DATA_FILENAME = "datasets/bart_data.csv"
@@ -26,9 +26,9 @@ for (i in 1 : 500){
 }
 
 #immediately initialize Java
-jinit_params = paste("-Xmx", NUM_MEGS_RAM_TO_USE, "m", " -Xms", 1000, "m", sep = "")
+jinit_params = paste("-Xmx", NUM_MEGS_RAM_TO_USE, "m", sep = "")
 #print(jinit_params)
-.jinit(jinit_params)
+.jinit(parameters = jinit_params)
 
 
 #set up a logging system
