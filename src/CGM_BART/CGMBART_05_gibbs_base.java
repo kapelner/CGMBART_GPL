@@ -2,11 +2,9 @@ package CGM_BART;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.List;
 
 public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements Serializable {
 	private static final long serialVersionUID = 1280579612167425306L;
-	
 
 	
 	@Override
@@ -59,15 +57,12 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 		SampleSigsq(gibb_sample_num, R_j);
 		DebugSample(gibb_sample_num, tree_array_illustration);
 		//now flush the previous previous gibbs sample to not leak memory
-		FlushDataForSample(gibbs_samples_of_cgm_trees.get(gibb_sample_num - 1));
-		System.gc();		
+		FlushDataForSample(gibbs_samples_of_cgm_trees.get(gibb_sample_num - 1));	
+		//debug memory messages
 		if (gibb_sample_num % 100 == 0){
-			long mem_used_before_flush = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
-			System.out.println(" mem_used_before_flush = " + mem_used_before_flush / 1000000.0 + "MB" + "  thread: " + thread);
-			long mem_used_after_flush = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
-			System.out.println(" mem_used_after_flush = " + mem_used_after_flush / 1000000.0 + "MB" + "  thread: " + thread);		
+			long mem_used = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
 			long max_mem = Runtime.getRuntime().maxMemory();
-			System.out.println(" max_mem = " + max_mem / 1000000.0 + "MB" + "  thread: " + thread);		
+			System.out.println(" mem_used = " + mem_used / 1000000.0 + "MB" + " max_mem = " + max_mem / 1000000.0 + "MB" + "  thread: " + thread);
 		}
 		gibb_sample_num++;		
 	}
@@ -80,47 +75,43 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 	protected abstract double drawSigsqFromPosterior(int sample_num, double[] R_j);
 
 	protected void SampleMus(int sample_num, int t) {
+		CGMBARTTreeNode previous_tree = gibbs_samples_of_cgm_trees.get(sample_num - 1).get(t);
+		//subtract out previous tree's yhats
+//		System.out.println("  previous yhats = " + Tools.StringJoin(previous_tree.yhats));
+		sum_resids_vec = Tools.subtract_arrays(sum_resids_vec, previous_tree.yhats);
 //		System.out.println("SampleMu sample_num " +  sample_num + " t " + t + " gibbs array " + gibbs_samples_of_cgm_trees.get(sample_num));
 		CGMBARTTreeNode tree = gibbs_samples_of_cgm_trees.get(sample_num).get(t);
 		double current_sigsq = gibbs_samples_of_sigsq.get(sample_num - 1);
 		assignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsqAndUpdateYhats(tree, current_sigsq);
+		//after mus are sampled, we need to update the sum_resids_vec
+		//add in current tree's yhats
+//		System.out.println("  current  yhats = " + Tools.StringJoin(tree.yhats));
+		
+		sum_resids_vec = Tools.add_arrays(sum_resids_vec, tree.yhats);
 	}
 	
 	protected double[] SampleTree(int sample_num, int t, ArrayList<CGMBARTTreeNode> cgm_trees, TreeArrayIllustration tree_array_illustration) {
 		//first copy the tree from the previous gibbs position
 		final CGMBARTTreeNode copy_of_old_jth_tree_root = gibbs_samples_of_cgm_trees.get(sample_num - 1).get(t).clone();
-		//okay so first we need to get "y" that this tree sees. This is defined as R_j in formula 12 on p274
-		double[] R_j = getResidualsBySubtractingTrees(findOtherTrees(sample_num, t));
 		
-//		if (WRITE_DETAILED_DEBUG_FILES){
-//			remainings.println((sample_num - 1) + "," + t + "," + copy_of_old_jth_tree_root.stringID() + "," + Tools.StringJoin(R_j, ","));			
-//		}
+		//okay so first we need to get "y" that this tree sees. This is defined as R_j in formula 12 on p274
+		//just go to sum_residual_vec and subtract it from y_trans
+		double[] R_j = Tools.add_arrays(Tools.subtract_arrays(y_trans, sum_resids_vec), copy_of_old_jth_tree_root.yhats);
+//		System.out.println("sample tree gs#" + sample_num + " t = " + t + " sum_resids = " + Tools.StringJoin(sum_resids_vec));
 		
 		//now, (important!) set the R_j's as this tree's data.
 		copy_of_old_jth_tree_root.updateWithNewResponsesRecursively(R_j);
-		
-//		System.out.println("SampleTree copy_of_old_jth_tree_root \n responses: " + 
-//				Tools.StringJoin(copy_of_old_jth_tree_root.responses) + 
-//				"\n indicies " + Tools.StringJoin(copy_of_old_jth_tree_root.indicies)); 		
 		
 		//sample from T_j | R_j, \sigma
 		//now we will run one M-H step on this tree with the y as the R_j
 		CGMBARTTreeNode new_jth_tree = metroHastingsPosteriorTreeSpaceIteration(copy_of_old_jth_tree_root);
 		
-		//DEBUG
-//		System.err.println("tree star: " + tree_star.stringID() + " tree num leaves: " + tree_star.numLeaves() + " tree depth:" + tree_star.deepestNode());
-//		double lik = tree_star.
-//		tree_liks.print(lik + "," + tree_star.stringID() + ",");
-//		tree_array_illustration.addLikelihood(lik);
-//		all_tree_liks[t][sample_num] = lik;
-		
+		//add it to the vector of current sample's trees
 		cgm_trees.add(t, new_jth_tree);
+		
 		//now set the new trees in the gibbs sample pantheon, keep updating it...
 		gibbs_samples_of_cgm_trees.set(sample_num, cgm_trees);
-//		System.out.println("SampleTree sample_num " + sample_num + " cgm_trees " + cgm_trees);
-
-		tree_array_illustration.AddTree(new_jth_tree);
-		
+		tree_array_illustration.AddTree(new_jth_tree);		
 		return R_j;
 	}
 	

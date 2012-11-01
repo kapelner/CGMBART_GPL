@@ -121,5 +121,23 @@ public class Tools {
         	}
         }
         return max;
-}	
+}
+
+	public static double[] subtract_arrays(double[] arr1, double[] arr2) {
+		int n = arr1.length;
+		double[] diff = new double[n];
+		for (int i = 0; i < n; i++){
+			diff[i] = arr1[i] - arr2[i];
+		}
+		return diff;
+	}
+
+	public static double[] add_arrays(double[] arr1, double[] arr2) {
+		int n = arr1.length;
+		double[] sum = new double[n];
+		for (int i = 0; i < n; i++){
+			sum[i] = arr1[i] + arr2[i];
+		}
+		return sum;
+	}	
 }
