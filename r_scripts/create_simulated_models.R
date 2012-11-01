@@ -15,8 +15,8 @@ DEFAULT_SIGMA = 1
 
 
 simu_data_mod__just_noise_linear = function(N = DEFAULT_N, sigma = DEFAULT_SIGMA){
-	X1 = rep(0, N) #just an intercept
-	y = X1 + rnorm(N, 0, sigma) #ie linear model with $\beta_0 = 0, \beta_1 = 1$
+	X1 = runif(N, 0, 100) #just an intercept
+	y = rnorm(N, 0, sigma) #ie model with y = epsilon
 	Xy = as.data.frame(cbind(X1, y))
 	colnames(Xy) = c("x_1", "y")
 	Xy	
