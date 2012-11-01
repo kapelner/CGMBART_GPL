@@ -113,9 +113,9 @@ public class StatToolbox {
 	}
 	
 	public static double sample_from_norm_dist(double mu, double sigsq){
-		double std_norm_realization = NORM_SAMPS[START_POS % NUM_NORM_SAMPS];
+		double std_norm_realization = NORM_SAMPS[(int)Math.floor(rand() * NUM_NORM_SAMPS)];
 //		System.out.println("sample_from_norm_dist S = " + START_POS + " P = " + START_POS % NUM_NORM_SAMPS + "real = " + std_norm_realization);
-		START_POS++;
+//		START_POS++;
 		return mu + Math.sqrt(sigsq) * std_norm_realization;
 	}	
 	
