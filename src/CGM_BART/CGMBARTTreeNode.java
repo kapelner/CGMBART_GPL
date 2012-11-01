@@ -345,7 +345,6 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 	}
 
 	public void flushNodeData() {
-//		data = null;
 		yhats = null;
 		indicies = null;	
 		responses = null;

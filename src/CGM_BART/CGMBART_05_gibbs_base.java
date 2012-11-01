@@ -46,8 +46,9 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 		//we cycle over each tree and update it according to formulas 15, 16 on p274
 		double[] R_j = new double[n];
 		for (int t = 0; t < num_trees; t++){
-			if (t == 0 && gibb_sample_num % 100 == 0){
-				System.out.println("Sampling M_" + (t + 1) + "/" + num_trees + " iter " + gibb_sample_num + "/" + num_gibbs_total_iterations + "  thread: " + Thread.currentThread().getName());
+			if (t == 0 && gibb_sample_num % 100 == 0){				
+				System.out.println("Sampling M_" + (t + 1) + "/" + num_trees + " iter " + 
+					gibb_sample_num + "/" + num_gibbs_total_iterations + "  thread: " + Thread.currentThread().getName());
 			}
 			R_j = SampleTree(gibb_sample_num, t, cgm_trees, tree_array_illustration);
 			SampleMus(gibb_sample_num, t);				
@@ -56,8 +57,13 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 		SampleSigsq(gibb_sample_num, R_j);
 		DebugSample(gibb_sample_num, tree_array_illustration);
 		//now flush the previous previous gibbs sample to not leak memory
+		long mem_used_before_flush = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+		System.out.println(" mem_used_before_flush = " + mem_used_before_flush / 1000000.0 + "MB");
 		FlushDataForSample(gibbs_samples_of_cgm_trees.get(gibb_sample_num - 1));
-		gibb_sample_num++;
+		System.gc();
+		long mem_used_after_flush = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+		System.out.println(" mem_used_after_flush = " + mem_used_after_flush / 1000000.0 + "MB");		
+		gibb_sample_num++;		
 	}
 
 	protected void SampleSigsq(int sample_num, double[] R_j) {
