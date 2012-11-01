@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 public class CGMBARTRegressionMultThread extends Classifier {
 	private static final long serialVersionUID = -4537075714317768756L;
 	
-	private static final int DEFAULT_NUM_CORES = 1;//Runtime.getRuntime().availableProcessors() - 1;
+	private static final int DEFAULT_NUM_CORES = Runtime.getRuntime().availableProcessors() - 1;
 	
 	private int num_cores;
 	
@@ -37,7 +37,9 @@ public class CGMBARTRegressionMultThread extends Classifier {
 	private void SetupBARTModels() {
 		bart_gibbs_chain_threads = new ArrayList<CGMBARTRegression>(num_cores);
 		for (int t = 0; t < num_cores; t++){
-			bart_gibbs_chain_threads.add(new CGMBARTRegression());
+			CGMBARTRegression bart = new CGMBARTRegression();
+			bart.setThreadNum(t);
+			bart_gibbs_chain_threads.add(bart);
 		}	
 		//we need to set defaults her
 		num_gibbs_burn_in = CGMBART_01_base.DEFAULT_NUM_GIBBS_BURN_IN;
@@ -108,7 +110,7 @@ public class CGMBARTRegressionMultThread extends Classifier {
 	
 	public void setNumGibbsTotalIterations(int num_gibbs_total_iterations){
 		this.num_gibbs_total_iterations = num_gibbs_total_iterations;
-		total_iterations_multithreaded = num_gibbs_burn_in + (int)Math.round((num_gibbs_total_iterations - num_gibbs_burn_in) / (double) num_cores);
+		total_iterations_multithreaded = num_gibbs_burn_in + (int)Math.ceil((num_gibbs_total_iterations - num_gibbs_burn_in) / (double) num_cores);
 		System.out.println("total_iterations_multithreaded: " + total_iterations_multithreaded);
 		
 		for (int t = 0; t < num_cores; t++){

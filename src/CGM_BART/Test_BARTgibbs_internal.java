@@ -41,54 +41,6 @@ public class Test_BARTgibbs_internal {
 	}
 	
 	@Test
-	public void testFindOtherTrees(){
-		int num_trees = 10;
-		bart.setNumTrees(num_trees);
-		bart.SetupGibbsSampling();
-		ArrayList<CGMBARTTreeNode> old_trees = bart.gibbs_samples_of_cgm_trees.get(0);
-		bart.DoOneGibbsSampleAndIncrement();
-		ArrayList<CGMBARTTreeNode> new_trees = bart.gibbs_samples_of_cgm_trees.get(1);
-		//if we find all other trees on the zeroth go, we should get back the old trees without the first
-		List<CGMBARTTreeNode> expected_trees = null;
-		expected_trees = old_trees.subList(1, num_trees);
-		assertArrayEquals(bart.findOtherTrees(1, 0), expected_trees.toArray());
-		//so now we take the second tree. So we need a new first tree and then the rest old
-		expected_trees = new_trees.subList(0, 1);
-		expected_trees.addAll(old_trees.subList(2, num_trees));
-		assertArrayEquals(bart.findOtherTrees(1, 1), expected_trees.toArray());		
-		//so now we take the fifth tree. So we need a new first four trees and then the rest old
-		expected_trees = new_trees.subList(0, 4);
-		expected_trees.addAll(old_trees.subList(5, num_trees));
-		assertArrayEquals(bart.findOtherTrees(1, 4), expected_trees.toArray());	
-		//now we do the last tree
-		expected_trees = new_trees.subList(0, num_trees - 1);
-		assertArrayEquals(bart.findOtherTrees(1, num_trees - 1), expected_trees.toArray());			
-	}
-	
-	@Test //y = {0, 0, 2, 4, 5, 8, 9}; avg = 4.0
-	public void testGetResidualsBySubtractingTrees(){
-		int num_trees = 10;
-		double y_pred_initial = -0.4;
-		bart.setNumTrees(num_trees);
-		bart.SetupGibbsSampling();
-		CGMBARTTreeNode[] old_trees_all_but_one = (CGMBARTTreeNode[])bart.gibbs_samples_of_cgm_trees.get(0).subList(0, num_trees - 1).toArray();
-		for (CGMBARTTreeNode old_tree : old_trees_all_but_one){
-			old_tree.y_pred = y_pred_initial;
-			old_tree.updateYHatsWithPrediction();
-		}
-		double[] resids = bart.getResidualsBySubtractingTrees(old_trees_all_but_one);
-		System.out.println("Y = " + Tools.StringJoin(bart.y_orig, ",") + "  avg_y = " + StatToolbox.sample_average(bart.y_orig));
-		System.out.println("Y_t = " + Tools.StringJoin(bart.y_trans, ",") + "  avg_y_t = " + StatToolbox.sample_average(bart.y_trans));
-		System.out.println("rjs = " + Tools.StringJoin(resids, ","));
-		double[] expected_resids = new double[bart.n];
-		for (int i = 0; i < bart.n; i++){
-			expected_resids[i] = bart.y_trans[i] - (num_trees - 1) * y_pred_initial;
-		}
-		assertArrayEquals(expected_resids, resids, 0.0001);
-		//make this test less basic
-	}
-	
-	@Test
 	public void testAssignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsq(){
 		System.out.println("testAssignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsq");
 		int num_trees = 10;

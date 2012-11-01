@@ -10,7 +10,7 @@ public abstract class CGMBART_04_init extends CGMBART_03_debug implements Serial
 	/** during debugging, we may want to fix sigsq */
 	protected double fixed_sigsq;
 	/** which gibbs sample are we on now? */
-	protected int gibb_sample_num;
+	protected int gibbs_sample_num;
 	/** cached current sum resids_vec */
 	protected double[] sum_resids_vec;	
 	
@@ -22,7 +22,7 @@ public abstract class CGMBART_04_init extends CGMBART_03_debug implements Serial
 		InitializeMus();		
 		DebugInitialization();	
 		//the zeroth gibbs sample is the initialization we just did; now we're onto the first in the chain
-		gibb_sample_num = 1;
+		gibbs_sample_num = 1;
 		
 		sum_resids_vec = new double[n];
 	}

@@ -23,7 +23,7 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 
 	protected void DoGibbsSampling(){	
 //		System.out.println("DoGibbsSampling");
-		while(gibb_sample_num <= num_gibbs_total_iterations){			
+		while(gibbs_sample_num <= num_gibbs_total_iterations){			
 			if (stop_bit){ //rounded to the nearest gibbs sample
 				return;
 			}	
@@ -36,35 +36,44 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 	}
 	
 	protected void DoOneGibbsSampleAndIncrement(){
-		String thread = Thread.currentThread().getName();
-		thread = thread.substring(thread.length() - 1, thread.length());
 //		tree_liks.print(gibb_sample_num + ",");
 		//this array is the array of trees for this given sample
 		final ArrayList<CGMBARTTreeNode> cgm_trees = new ArrayList<CGMBARTTreeNode>(num_trees);				
-		final TreeArrayIllustration tree_array_illustration = new TreeArrayIllustration(gibb_sample_num, unique_name);
+		final TreeArrayIllustration tree_array_illustration = new TreeArrayIllustration(gibbs_sample_num, unique_name);
 		gibbs_samples_of_cgm_trees.add(null); //so I can set explicitly
 		//we cycle over each tree and update it according to formulas 15, 16 on p274
 		double[] R_j = new double[n];
 		for (int t = 0; t < num_trees; t++){
-			if (t == 0 && gibb_sample_num % 100 == 0){				
+			if (t == 0 && gibbs_sample_num % 100 == 0){				
 				System.out.println("Sampling M_" + (t + 1) + "/" + num_trees + " iter " + 
-					gibb_sample_num + "/" + num_gibbs_total_iterations + "  thread: " + thread);
+					gibbs_sample_num + "/" + num_gibbs_total_iterations + "  thread: " + (threadNum + 1));
 			}
-			R_j = SampleTree(gibb_sample_num, t, cgm_trees, tree_array_illustration);
-			SampleMus(gibb_sample_num, t);				
+			R_j = SampleTree(gibbs_sample_num, t, cgm_trees, tree_array_illustration);
+			SampleMus(gibbs_sample_num, t);				
 		}
 		//now we have the last residual vector which we pass on to sample sigsq
-		SampleSigsq(gibb_sample_num, R_j);
-		DebugSample(gibb_sample_num, tree_array_illustration);
+		SampleSigsq(gibbs_sample_num, R_j);
+		DebugSample(gibbs_sample_num, tree_array_illustration);
 		//now flush the previous previous gibbs sample to not leak memory
-		FlushDataForSample(gibbs_samples_of_cgm_trees.get(gibb_sample_num - 1));	
+		FlushDataForSample(gibbs_samples_of_cgm_trees.get(gibbs_sample_num - 1));
+		DeleteBurnInSampleOnOtherThreads();
+//		System.gc();
 		//debug memory messages
-		if (gibb_sample_num % 100 == 0){
+		if (gibbs_sample_num % 100 == 0){
 			long mem_used = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
 			long max_mem = Runtime.getRuntime().maxMemory();
-			System.out.println(" mem_used = " + mem_used / 1000000.0 + "MB" + " max_mem = " + max_mem / 1000000.0 + "MB" + "  thread: " + thread);
+			System.out.println(" mem_used = " + mem_used / 1000000.0 + "MB" + 
+					" max_mem = " + max_mem / 1000000.0 + "MB" + "  thread: " + (threadNum + 1));
 		}
-		gibb_sample_num++;		
+		gibbs_sample_num++;		
+	}
+
+	private void DeleteBurnInSampleOnOtherThreads() {
+		if (threadNum > 0 && gibbs_sample_num <= num_gibbs_burn_in + 1 && gibbs_sample_num >= 2){
+			gibbs_samples_of_cgm_trees.set(gibbs_sample_num - 2, null);
+//			System.out.println("DeleteBurnInSampleOnOtherThreads() thread:" + (threadNum + 1) + " gibbs_sample_num = " + gibbs_sample_num + " num_gibbs_burn_in = " + num_gibbs_burn_in + " len = " + gibbs_samples_of_cgm_trees.size());
+			
+		}
 	}
 
 	protected void SampleSigsq(int sample_num, double[] R_j) {
@@ -115,10 +124,6 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 		return R_j;
 	}
 	
-	protected abstract double[] getResidualsBySubtractingTrees(CGMBARTTreeNode[] cgmbartTreeNodes);
-
-	protected abstract CGMBARTTreeNode[] findOtherTrees(int sample_num, int t);
-
 	protected abstract CGMBARTTreeNode metroHastingsPosteriorTreeSpaceIteration(CGMBARTTreeNode copy_of_old_jth_tree);
 
 	private void BurnTreeAndSigsqChain() {		

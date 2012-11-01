@@ -309,7 +309,7 @@ public class Test_BARTmh {
 	public void testCalcLnLikRatioGrow(){
 		//first set it up so sigsq = 0.01
 		double sigsq = 0.01;
-		bart.gibb_sample_num = 1;
+		bart.gibbs_sample_num = 1;
 		bart.InitGibbsSamplingData();
 		bart.gibbs_samples_of_sigsq.add(sigsq);
 		

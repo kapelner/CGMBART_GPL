@@ -193,7 +193,7 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 	protected static int N_RULE = 1;	
 
 	protected double calcLnLikRatioGrow(CGMBARTTreeNode grow_node) {
-		double sigsq = gibbs_samples_of_sigsq.get(gibb_sample_num - 1);
+		double sigsq = gibbs_samples_of_sigsq.get(gibbs_sample_num - 1);
 		int n_ell = grow_node.n_eta;
 		int n_ell_L = grow_node.left.n_eta;
 		int n_ell_R = grow_node.right.n_eta;

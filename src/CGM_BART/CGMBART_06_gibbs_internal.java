@@ -8,46 +8,6 @@ import java.util.List;
 public abstract class CGMBART_06_gibbs_internal extends CGMBART_05_gibbs_base implements Serializable {
 	private static final long serialVersionUID = 5591873635969255497L;
 
-	/** who are the previous trees?
-	 * e.g. if t=0, then we take all 1, ..., m-1 trees from previous gibbs sample
-	 *     if t=1, then we take the 0th tree from this gibbs sample, and 2, ..., m-1 trees from the previous gibbs sample
-	 *     ...
-	 *     if t=j, then we take the 0,...,j-1 trees from this gibbs sample, and j+1, ..., m-1 trees from the previous gibbs sample
-	 *     ...
-	 *    if t=m-1, then we take all 0, ..., m-2 trees from this gibbs sample
-	 * so let's put together this list of trees:	
-	**/ 
-	protected CGMBARTTreeNode[] findOtherTrees(int sample_num, int t){
-		CGMBARTTreeNode[] other_trees = new CGMBARTTreeNode[num_trees - 1];
-		for (int j = 0; j < t; j++){
-			other_trees[j] = gibbs_samples_of_cgm_trees.get(sample_num).get(j);
-		}
-		for (int j = t + 1; j < num_trees; j++){
-			other_trees[j - 1] = gibbs_samples_of_cgm_trees.get(sample_num - 1).get(j);
-		}
-		return other_trees;
-	}
-	
-	protected double[] getResidualsBySubtractingTrees(CGMBARTTreeNode[] trees_to_subtract) {
-		double[] Rjs = new double[n];
-		
-		//initialize Rjs to be y
-		for (int i = 0; i < n; i++){
-			Rjs[i] = y_trans[i];
-		}
-		
-		//now go through and get the yhats for each tree and subtract them from Rjs
-		for (CGMBARTTreeNode tree : trees_to_subtract){
-			double[] y_hat_vec = tree.yhats;
-			//subtract them from Rjs
-			for (int i = 0; i < n; i++){
-				Rjs[i] -= y_hat_vec[i];
-			}			
-		}
-		
-		return Rjs;
-	}
-	
 	protected void assignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsqAndUpdateYhats(CGMBARTTreeNode node, double sigsq) {
 //		System.out.println("assignLeafValsUsingPosteriorMeanAndCurrentSigsq sigsq: " + sigsq);
 		if (node.isLeaf){

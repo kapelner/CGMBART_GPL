@@ -9,6 +9,7 @@ real_regression_data_sets = c(
 #	"r_concretedata"
 )
 simulated_data_sets = c(
+#	"just_noise_linear",		
 #	"univariate_linear",
 #	"bivariate_linear",
 #	"friedman",

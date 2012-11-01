@@ -95,6 +95,21 @@ simu_data_mod__simple_tree_structure = function(N = DEFAULT_N, sigma = DEFAULT_S
 	Xy
 }
 
+simu_data_mod__simple_tree_structure_high_p = function(N = DEFAULT_N, sigma = DEFAULT_SIGMA, p = 1000){
+	X = matrix(runif(N * p, 0, 100), nrow = N)
+	y = array(NA, N)
+	
+	for (i in 1 : N){
+		y[i] = simple_tree_tag(c(X[i, 1], X[i, 2], X[i, 3])) #only first three covariates matter
+	}
+	#now add the noise
+	y = y + rnorm(N, 0, sigma)
+	
+	Xy = as.data.frame(cbind(X, y))
+	colnames(Xy) = c(paste("x_", 1 : p, sep = ""), "y")
+	Xy	
+}
+
 simple_tree_tag = function(x_vec){
 	if (x_vec[1] < 30){
 		if (x_vec[3] < 10){

@@ -39,7 +39,7 @@ public class Test_BARTgibbs_base {
 	@Test
 	public void testBuildCorrectDims(){
 		bart.Build();
-		assertEquals(NGAndNB + 1, bart.gibb_sample_num); //remember how for loops work? If we want this to end
+		assertEquals(NGAndNB + 1, bart.gibbs_sample_num); //remember how for loops work? If we want this to end
 		assertEquals(NGAndNB + 1, bart.gibbs_samples_of_cgm_trees.size());
 		for (int i = 1; i <= NGAndNB; i++){
 			assertEquals(bart.num_trees, bart.gibbs_samples_of_cgm_trees.get(i).size());
