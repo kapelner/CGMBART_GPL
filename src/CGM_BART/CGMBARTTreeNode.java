@@ -24,17 +24,14 @@
 
 package CGM_BART;
 
-import gnu.trove.iterator.TDoubleIterator;
 import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.list.array.TIntArrayList;
-import gnu.trove.set.hash.TDoubleHashSet;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 
 import TroveExtension.TDoubleHashSetAndArray;
 
@@ -381,99 +378,35 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 			printNodeDebugInfo("propagateDataByChangedRule LEAF");
 			return;
 		}
+//		System.out.println("propagateDataByChangedRule gen: " + this.depth);
+		
 		//split the data correctly
-//		node.SortAtAttribute();
-//		int n_split = ClassificationAndRegressionTree.getSplitPoint(node.data, node.splitAttributeM, node.splitValue);
-		//now set the data in the offspring
-//		int p = cgmbart.p;
-//		ArrayList<double[]> data_left = new ArrayList<double[]>(n_eta);
-//		ArrayList<double[]> data_right = new ArrayList<double[]>(n_eta);
 		TIntArrayList left_indices = new TIntArrayList(n_eta); 
 		TIntArrayList right_indices = new TIntArrayList(n_eta);
 		TDoubleArrayList left_responses = new TDoubleArrayList(n_eta);
 		TDoubleArrayList right_responses = new TDoubleArrayList(n_eta);
 		
-//		System.out.println("LOOP THAT WORKS");
 		for (int i = 0; i < n_eta; i++){
-//			double[] datum = data.get(i);
-			double[] datum_big = cgmbart.X_y.get(indicies[i]).clone();
-			
-			if (datum_big[splitAttributeM] <= splitValue){
-//				data_left.add(datum_big);
+			double[] datum = cgmbart.X_y.get(indicies[i]);
+		
+			if (datum[splitAttributeM] <= splitValue){
 				left_indices.add(indicies[i]);
-//				left_responses.add(datum[p]);
 				left_responses.add(responses[i]);
 			}
 			else {
-//				data_right.add(datum_big);
-				right_indices.add(indicies[i]);	
-//				right_responses.add(datum[p]);
+				right_indices.add(indicies[i]);
 				right_responses.add(responses[i]);
 			}
-//			System.out.println("i: " + i + " index: " + indicies[i] + " datum[p] from data: " + datum[p] + " y_trans: " + cgmbart.y_trans[indicies[i]]);
-			
-			
-//			System.out.println("   index: " + indicies[i]);
-//			System.out.println("   datum: " + Tools.StringJoin(datum));
-//			System.out.println("   LR: " + Tools.StringJoin(left_responses));
-//			System.out.println("   RR: " + Tools.StringJoin(right_responses));
 		}
 		
-//		for (int i = 0; i < n_eta; i++){
-//			int index = indicies[i];
-//			double[] datum = cgmbart.X_y.get(index).clone();
-//			
-//			if (datum[splitAttributeM] <= splitValue){
-//				data_left.add(datum);
-//				left_indices.add(index);
-////				left_responses.add(cgmbart.transform_y(datum[p]));
-////				left_responses.add(cgmbart.y_trans[index]);
-////				right_responses.add(responses[i]);
-//			}
-//			else {				
-//				data_right.add(datum);
-//				right_indices.add(index);	
-////				right_responses.add(cgmbart.transform_y(datum[p]));
-////				right_responses.add(cgmbart.y_trans[index]);
-////				right_responses.add(responses[i]);
-//			}
-////			System.out.println(" index: " + index + " datum[p] from data: " + cgmbart.transform_y(datum[p]) + " y_trans: " + cgmbart.y_trans[index]);
-//			
-////			System.out.println("datum[p]: " + datum[p] + " ith y_trans: " + cgmbart.un_transform_y_and_round(cgmbart.y_trans[index]));
-////			System.out.println("   index: " + indicies[i]);
-////			System.out.println("   datum: " + Tools.StringJoin(datum));
-////			System.out.println("   LR: " + Tools.StringJoin(left_responses));
-////			System.out.println("   RR: " + Tools.StringJoin(right_responses));
-//		}		
-		
-//		System.out.println("LOOP THAT DOESN'T WORK");
-//		for (int index : indicies){
-//			double[] datum = cgmbart.X_y.get(index).clone();
-//			datum[cgmbart.p] = cgmbart.y_trans[index];
-//			if (datum[splitAttributeM] <= splitValue){
-//				data_left.add(datum);
-//				left_indices.add(index);
-//				left_responses.add(cgmbart.y_trans[index]);
-//			}
-//			else {
-//				data_right.add(datum);
-//				right_indices.add(index);	
-//				right_responses.add(cgmbart.y_trans[index]);
-//			}
-////			System.out.println("   index: " + index);
-////			System.out.println("   datum: " + Tools.StringJoin(datum));
-////			System.out.println("   LR: " + Tools.StringJoin(left_responses));
-////			System.out.println("   RR: " + Tools.StringJoin(right_responses));			
-//		}		
-		
-//		left.data = data_left;			
 		left.n_eta = left_responses.size();
 		left.responses = left_responses.toArray();
-		left.indicies = left_indices.toArray();	
-//		right.data = data_right;
+		left.indicies = left_indices.toArray();
+		
 		right.n_eta = right_responses.size();
 		right.responses = right_responses.toArray();
 		right.indicies = right_indices.toArray();
+		
 		left.propagateDataByChangedRule();
 		right.propagateDataByChangedRule();
 	}
