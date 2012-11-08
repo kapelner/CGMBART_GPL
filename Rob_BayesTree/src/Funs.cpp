@@ -562,22 +562,21 @@ double Metrop(Node **top,int *Done,int *step)
 	//++++++++++++++++++++++++++++++++
 
 	//double u = ran1(&idum);
-//	double u = unif_rand();
-//	if(u < 0.9) {
+	double u = unif_rand();
+	if (u < 0.5) {
 		alpha = BirthDeath(*top,&BD,Done);
 		if(BD) {
 			*step = BIRTH;
 		} else {
 			*step = DEATH;
 		}
-//	} else {
-//		alpha = SwapRule(*top,Done);
-//		*step=SWAP;
-//	}
-//	} else {
-//		alpha = ChangeRule(*top,Done);
-//		*step = CHANGE;
-//	}
+	} else if (u < 0.6){
+		alpha = SwapRule(*top,Done);
+		*step=SWAP;
+	} else {
+		alpha = ChangeRule(*top,Done);
+		*step = CHANGE;
+	}
 
 	//disable backout
 	
