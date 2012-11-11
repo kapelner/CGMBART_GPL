@@ -31,7 +31,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 
 import TroveExtension.TDoubleHashSetAndArray;
 
@@ -218,48 +217,6 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		node.splitValue = BAD_FLAG_double;
 	}
 
-//	public static HashSet<CGMBARTTreeNode> selectBranchNodesWithTwoLeaves(ArrayList<CGMBARTTreeNode> terminalNodes) { 
-//		HashSet<CGMBARTTreeNode> branch_nodes = new HashSet<CGMBARTTreeNode>();
-//		for (CGMBARTTreeNode node : terminalNodes){
-//			if (node.parent == null){
-//				continue;
-//			}
-//			if (node.parent.left.isLeaf && node.parent.right.isLeaf){
-//				branch_nodes.add(node.parent);
-//			}
-//		}
-//		return branch_nodes;
-//	}
-	
-//	public static ArrayList<CGMBARTTreeNode> findInternalNodes(CGMBARTTreeNode root){
-//		ArrayList<CGMBARTTreeNode> internal_nodes = new ArrayList<CGMBARTTreeNode>();
-//		findInternalNodesRecursively(root, internal_nodes);
-//		return internal_nodes;
-//	}
-//
-//	private static void findInternalNodesRecursively(CGMBARTTreeNode node, ArrayList<CGMBARTTreeNode> internal_nodes) {
-//		//if we are a leaf, get out
-//		if (node.isLeaf){
-//			return;
-//		}
-//		internal_nodes.add(node);
-//		//recurse to find others
-//		findInternalNodesRecursively(node.left, internal_nodes);
-//		findInternalNodesRecursively(node.right, internal_nodes);
-//	}
-
-//	public static ArrayList<CGMBARTTreeNode> findDoublyInternalNodes(CGMBARTTreeNode root) {
-//		ArrayList<CGMBARTTreeNode> internal_nodes = findInternalNodes(root);
-//		ArrayList<CGMBARTTreeNode> doubly_internal_nodes = new ArrayList<CGMBARTTreeNode>();
-//		//remove all those whose children aren't also internal nodes
-//		for (CGMBARTTreeNode node : internal_nodes){
-//			if (!node.isLeaf && node.parent != null && !node.right.isLeaf && !node.left.isLeaf){
-//				doubly_internal_nodes.add(node);
-//			}
-//		}
-//		return doubly_internal_nodes;
-//	}
-
 	public double classification_or_regression_prediction() {
 		if (klass == null){
 //			System.out.println("evaluate " + y_prediction);
@@ -283,42 +240,6 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 			}
 		}
 	}
-
-//	public int widestGeneration() {
-//		HashMap<Integer, Integer> generation_to_freq = new HashMap<Integer, Integer>();
-//		this.widestGeneration(generation_to_freq);
-//		Object[] thicknesses = generation_to_freq.values().toArray();
-//		//now go through and get the maximum
-//		int max_thickness = Integer.MIN_VALUE;
-//		for (int i = 0; i < thicknesses.length; i++){
-//			if ((Integer)thicknesses[i] > max_thickness){
-//				max_thickness = (Integer)thicknesses[i];
-//			}
-//		}
-//		return max_thickness;
-//	}
-//	public void widestGeneration(HashMap<Integer, Integer> generation_to_freq) {
-//		//first do the incrementation
-//		if (generation_to_freq.containsKey(this.generation)){
-//			//now we check if this node has children to make it thicker
-//			if (this.isLeaf){
-//				generation_to_freq.put(this.generation, generation_to_freq.get(this.generation) + 1);
-//			}
-//			else {
-//				generation_to_freq.put(this.generation, generation_to_freq.get(this.generation) + 2);
-//			}
-//		}
-//		else {
-//			generation_to_freq.put(this.generation, 1);
-//		}
-//		//if it's a leaf, we're done
-//		if (this.isLeaf){
-//			return;
-//		}		
-//		//otherwise, recurse through the children
-//		this.left.widestGeneration(generation_to_freq);
-//		this.right.widestGeneration(generation_to_freq);
-//	}
 
 	public double Evaluate(double[] xs) {
 		CGMBARTTreeNode evalNode = this;
@@ -357,28 +278,12 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 			this.right.flushNodeData();
 	}
 	
-	/**
-	 * Sorts a data matrix by an attribute from lowest record to highest record
-	 * 
-	 * @param data			the data matrix to be sorted
-	 * @param j				the attribute to sort on
-	 */
-//	@SuppressWarnings("unchecked")
-//	protected void SortAtAttribute(){
-//		Collections.sort(data, new AttributeComparator(splitAttributeM));
-//		//update indicies after sort
-//		for (int i = 0; i < n_eta; i++){
-//			indicies[i] = (int)data.get(i)[cgmbart.p + 1];
-//		}
-//	}	
-	
 	public static final boolean DEBUG_NODES = false;
 	public void propagateDataByChangedRule() {		
 		if (isLeaf){ //only propagate if we are in a split node and NOT a leaf
 			printNodeDebugInfo("propagateDataByChangedRule LEAF");
 			return;
 		}
-//		System.out.println("propagateDataByChangedRule gen: " + this.depth);
 		
 		//split the data correctly
 		TIntArrayList left_indices = new TIntArrayList(n_eta); 
@@ -442,29 +347,6 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		}
 	}
 	
-//	public Double get_pred_for_nth_leaf(int leaf_num) {
-//		String leaf_num_binary = Integer.toBinaryString(leaf_num);
-//		//now hack off first digit
-//		leaf_num_binary = leaf_num_binary.substring(1, leaf_num_binary.length());
-//
-////		System.out.println("get_pred_for_nth_leaf gen: directions: " + new String(leaf_num_binary));
-//		
-//		//now that we have our direction array, now we just iterate down the line, begin right where we are
-//		CGMBARTTreeNode node = this;
-//		for (char direction : leaf_num_binary.toCharArray()){
-//			if (direction == '0'){
-//				node = node.left;
-//			}
-//			else {
-//				node = node.right;
-//			}
-//			//if this node does not exist in our tree, we're done
-//			if (node == null){
-//				return null;
-//			}
-//		}
-//		return node.y_prediction;
-//	}
 	
 	//CHECK as well
 	public double prediction_untransformed(){
@@ -488,20 +370,6 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		else {
 			return this.parent.stringLocation(false) + "R";
 		}
-	}
-
-	public LinkedHashMap<CGMBARTTreeNode, String> getLineage() {
-		LinkedHashMap<CGMBARTTreeNode, String> lineage = new LinkedHashMap<CGMBARTTreeNode, String>();
-		CGMBARTTreeNode node = this;
-		while (true){
-			CGMBARTTreeNode oldnode = node;
-			node = node.parent;
-			if (node == null){
-				break;
-			}			
-			lineage.put(node, oldnode == node.left ? "L" : "R");
-		}
-		return lineage;
 	}
 
 	public double sumResponsesQuantitySqd() {
@@ -584,83 +452,24 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 	 */
 	public int pickRandomPredictorThatCanBeAssigned(){
 		TIntArrayList predictors = predictorsThatCouldBeUsedToSplitAtNode();
+		
+		
 		return predictors.get((int)Math.floor(StatToolbox.rand() * pAdj()));
 	}
 	
 	public double pickRandomSplitValue() {	
 		TDoubleHashSetAndArray split_values = possibleSplitValuesGivenAttribute();
 		int rand_index = (int) Math.floor(StatToolbox.rand() * split_values.size());
-		return split_values.getAtIndex(rand_index);		
-//		double[] split_values = possibleSplitValuesGivenAttribute().toArray();
-//		return split_values[(int) Math.floor(StatToolbox.rand() * split_values.length)];
+		return split_values.getAtIndex(rand_index);
 	}
 	
 	public boolean isStump() {
 		return parent == null && left == null && right == null;
 	}
-
-	
-//	private static void DebugWholeTreeRecursively(CGMBARTTreeNode node){
-//		DebugNode(node);
-//		if (node.left != null){
-//			DebugWholeTreeRecursively(node.left);
-//		}
-//		if (node.right != null){
-//			DebugWholeTreeRecursively(node.right);
-//		}		
-//	}	
-//	
-//	public static void DebugWholeTree(CGMBARTTreeNode root){
-//		System.out.println("DEBUG WHOLE TREE ***********************************");
-//		DebugWholeTreeRecursively(root);
-//		System.out.println("****************************************************");
-//	}	
-//	
-//	public static void DebugNode(CGMBARTTreeNode node){	
-//		System.out.println(" DEBUG: " + node.stringLocation(true) + "   ID: " + node.stringID());
-//		if (node.data != null){
-//			System.out.println("  data n: " + node.data.size());
-//		}	
-//		if (node.parent != null){
-//			System.out.println("  parent: " + node.parent.stringID());
-//		}
-//		else {
-//			System.out.println("  parent: null");
-//		}
-//		if (node.left != null){
-//			System.out.println("  left: " + node.left.stringID() + "\t\tnL: " + node.left.data.size());
-//		}
-//		if (node.right != null){
-//			System.out.println("  right: " + node.right.stringID() + "\t\tnR: " + node.right.data.size());
-//		}
-//		System.out.println("  gen: " + node.generation);
-//		if (node.isLeaf){
-//			System.out.println("  isleaf");
-//		}
-//
-//		if (node.splitAttributeM != null){
-//			System.out.println("  splitAtrr: " + node.splitAttributeM);
-//		}
-//		if (node.splitValue != null){
-//			System.out.println("  splitval: " + node.splitValue);
-//		}
-//		if (node.klass != null){
-//			System.out.println("  class: " + node.klass);
-//		}
-//	}
-	
 	public String stringID() {
 		return toString().split("@")[1];
 	}	
 	
-//	public double[] get_ys_in_data(){
-//		double[] ys = new double[data.size()];
-//		for (int i = 0; i < data.size(); i++){
-//			double[] record = data.get(i);
-//			ys[i] = record[record.length - 1];
-//		}
-//		return ys;
-//	}
 	
 	//serializable happy
 	public CGMBARTTreeNode getLeft() {
@@ -731,24 +540,7 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 				}
 			}
 		}	
-		
-//		data = new ArrayList<double[]>(n_eta);
-//		for (int i = 0; i < n_eta; i++){
-//			double[] x_i_dot_new = new double[p + 2];
-//			for (int j = 0; j < p + 2; j++){
-//				if (j == p){
-//					x_i_dot_new[j] = y_trans[i];
-//				}
-//				else {
-//					x_i_dot_new[j] = X_y.get(i)[j];
-//				}
-//			}
-//			data.add(x_i_dot_new);
-//		}
-//		n_eta = data.size();
-		
-		//get
-		
+
 		//initialize the yhats
 		yhats = new double[n_eta];
 //		System.out.println("setStumpData  X is " + data.size() + " x " + data.get(0).length + "  y is " + y.length + " x " + 1);
@@ -831,22 +623,4 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		printNodeDebugInfo("updateYHatsWithPrediction");
 	}
 
-//	public CGMBARTTreeNode findCorrespondingNodeOnSimilarTree(CGMBARTTreeNode node) {
-//		char[] location = node.stringLocation(true).toCharArray();
-//		CGMBARTTreeNode corresponding_node = this;
-//		if (location[0] == 'P' && location.length == 1){
-//			return corresponding_node;
-//		}
-//		
-//		for (int i = 0; i < location.length; i++){
-//			if (location[i] == 'L'){
-//				corresponding_node = corresponding_node.left;
-//			}
-//			else if (location[i] == 'R'){
-//				corresponding_node = corresponding_node.right;
-//			}			
-//		}
-//		
-//		return corresponding_node;
-//	}
 }

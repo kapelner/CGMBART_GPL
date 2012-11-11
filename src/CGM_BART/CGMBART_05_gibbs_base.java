@@ -31,11 +31,23 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 //				System.out.println("gibbs iter: " + gibb_sample_num + "/" + num_gibbs_total_iterations);
 //			}
 			
-			DoOneGibbsSampleAndIncrement();
+			DoOneGibbsSample();
+			//now flush the previous previous gibbs sample to not leak memory
+			FlushDataForSample(gibbs_samples_of_cgm_trees.get(gibbs_sample_num - 1));
+			DeleteBurnInSampleOnOtherThreads();
+//			System.gc();
+			//debug memory messages
+			if (gibbs_sample_num % 100 == 0){
+				long mem_used = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+				long max_mem = Runtime.getRuntime().maxMemory();
+				System.out.println(" mem_used = " + mem_used / 1000000.0 + "MB" + 
+						" max_mem = " + max_mem / 1000000.0 + "MB" + "  thread: " + (threadNum + 1));
+			}
+			gibbs_sample_num++;					
 		}
 	}
 	
-	protected void DoOneGibbsSampleAndIncrement(){
+	protected void DoOneGibbsSample(){
 //		tree_liks.print(gibb_sample_num + ",");
 		//this array is the array of trees for this given sample
 		final ArrayList<CGMBARTTreeNode> cgm_trees = new ArrayList<CGMBARTTreeNode>(num_trees);				
@@ -54,18 +66,6 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 		//now we have the last residual vector which we pass on to sample sigsq
 		SampleSigsq(gibbs_sample_num, R_j);
 		DebugSample(gibbs_sample_num, tree_array_illustration);
-		//now flush the previous previous gibbs sample to not leak memory
-		FlushDataForSample(gibbs_samples_of_cgm_trees.get(gibbs_sample_num - 1));
-		DeleteBurnInSampleOnOtherThreads();
-//		System.gc();
-		//debug memory messages
-		if (gibbs_sample_num % 100 == 0){
-			long mem_used = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
-			long max_mem = Runtime.getRuntime().maxMemory();
-			System.out.println(" mem_used = " + mem_used / 1000000.0 + "MB" + 
-					" max_mem = " + max_mem / 1000000.0 + "MB" + "  thread: " + (threadNum + 1));
-		}
-		gibbs_sample_num++;		
 	}
 
 	private void DeleteBurnInSampleOnOtherThreads() {

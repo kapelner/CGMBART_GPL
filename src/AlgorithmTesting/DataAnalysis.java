@@ -47,7 +47,7 @@ public class DataAnalysis {
 //	private static final String DataSetFilename = "bart_data";
 
 	public static void main(String[] args) throws IOException{
-		
+		System.out.println(System.getProperty("java.version"));
 		//make sure y is last column of data matrix
 		DataSetupForCSVFile data = new DataSetupForCSVFile(new File("datasets", DataSetFilename + ".csv"), true);
 		Classifier machine = null; //we're going to use some machine to do it... 

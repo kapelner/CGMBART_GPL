@@ -150,10 +150,6 @@ public class Test_CGMBARTTreeNode {
 		assertEquals(simple_tree.right.sumResponsesQuantitySqd(), 144, 0);	
 		ArrayList<CGMBARTTreeNode> internal_nodes = new ArrayList<CGMBARTTreeNode>(1);
 		internal_nodes.add(simple_tree);
-//		assertArrayEquals(CGMBARTTreeNode.findInternalNodes(simple_tree).toArray(), internal_nodes.toArray());
-		Object[] just_parent = {simple_tree};
-		assertArrayEquals(simple_tree.left.getLineage().keySet().toArray(), just_parent);
-		assertArrayEquals(simple_tree.right.getLineage().keySet().toArray(), just_parent);
 	}
 	
 	@Test 
@@ -184,13 +180,6 @@ public class Test_CGMBARTTreeNode {
 		internal_nodes.add(double_tree);
 		internal_nodes.add(double_tree.left);
 		internal_nodes.add(double_tree.right);
-//		assertArrayEquals(CGMBARTTreeNode.findInternalNodes(double_tree).toArray(), internal_nodes.toArray());
-		Object[] left_side = {double_tree.left, double_tree};
-		Object[] right_side = {double_tree.right, double_tree};
-		assertArrayEquals(double_tree.left.left.getLineage().keySet().toArray(), left_side);
-		assertArrayEquals(double_tree.left.right.getLineage().keySet().toArray(), left_side);
-		assertArrayEquals(double_tree.right.left.getLineage().keySet().toArray(), right_side);		
-		assertArrayEquals(double_tree.right.right.getLineage().keySet().toArray(), right_side);	
 	}
 
 

@@ -6,6 +6,8 @@
 #PBS -q batch
 set echo
 ja
+#load up R
+module load R/2.15.0
 #run my executable
 setenv OMP_NUM_THREADS $PBS_NCPUS
 R CMD BATCH --slave r_scripts/bart_bakeoff.R
