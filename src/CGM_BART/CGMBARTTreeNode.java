@@ -152,14 +152,14 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 	}
 	
 	//toolbox functions
-	public static ArrayList<CGMBARTTreeNode> getTerminalNodesWithDataAboveOrEqualToN(CGMBARTTreeNode node, int n_rule){
+	public ArrayList<CGMBARTTreeNode> getTerminalNodesWithDataAboveOrEqualToN(int n_rule){
 		ArrayList<CGMBARTTreeNode> terminal_nodes_data_above_n = new ArrayList<CGMBARTTreeNode>();
-		findTerminalNodesDataAboveOrEqualToN(node, terminal_nodes_data_above_n, n_rule);
+		findTerminalNodesDataAboveOrEqualToN(this, terminal_nodes_data_above_n, n_rule);
 		return terminal_nodes_data_above_n;
 	}
 	
 	public ArrayList<CGMBARTTreeNode> getTerminalNodes(){
-		return getTerminalNodesWithDataAboveOrEqualToN(this, 0);
+		return getTerminalNodesWithDataAboveOrEqualToN(0);
 	}
 	
 	private static void findTerminalNodesDataAboveOrEqualToN(CGMBARTTreeNode node, ArrayList<CGMBARTTreeNode> terminal_nodes, int n_rule) {
@@ -438,10 +438,15 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		if (possible_split_vals_by_attr.get(splitAttributeM) == null){
 			//super inefficient
 			double[] x_dot_j = cgmbart.X_y_by_col.get(splitAttributeM);
-			double max = Tools.max(x_dot_j);
-			TDoubleHashSetAndArray unique_x_dot_j = new TDoubleHashSetAndArray(x_dot_j);			
-			unique_x_dot_j.remove(max);
-			possible_split_vals_by_attr.put(splitAttributeM, unique_x_dot_j);
+			double[] x_dot_j_node = new double[n_eta];
+			for (int i = 0; i < n_eta; i++){
+				x_dot_j_node[i] = x_dot_j[indicies[i]];
+			}
+			
+			TDoubleHashSetAndArray unique_x_dot_j_node = new TDoubleHashSetAndArray(x_dot_j_node);	
+			double max = Tools.max(x_dot_j_node);
+			unique_x_dot_j_node.remove(max);
+			possible_split_vals_by_attr.put(splitAttributeM, unique_x_dot_j_node);
 		}
 		return possible_split_vals_by_attr.get(splitAttributeM);
 	}
@@ -451,16 +456,17 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 	 * @return
 	 */
 	public int pickRandomPredictorThatCanBeAssigned(){
-		TIntArrayList predictors = predictorsThatCouldBeUsedToSplitAtNode();
-		System.out.println("preds: " + Tools.StringJoin(predictors));		
+		TIntArrayList predictors = predictorsThatCouldBeUsedToSplitAtNode();	
 		return predictors.get((int)Math.floor(StatToolbox.rand() * pAdj()));
 	}
 	
 	public double pickRandomSplitValue() {	
 		TDoubleHashSetAndArray split_values = possibleSplitValuesGivenAttribute();
-//		double[] split_values_as_arr = split_values.getAsArray();
-//		Arrays.sort(split_values_as_arr);
-//		System.out.println("split_values: " + Tools.StringJoin(split_values_as_arr));
+//		if (splitAttributeM == 0){
+//			double[] split_values_as_arr = split_values.getAsArray();
+//			Arrays.sort(split_values_as_arr);
+//			System.out.println("split_values: " + Tools.StringJoin(split_values_as_arr));
+//		}
 		int rand_index = (int) Math.floor(StatToolbox.rand() * split_values.size());
 		return split_values.getAtIndex(rand_index);
 	}

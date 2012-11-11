@@ -96,7 +96,7 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 
 		if (grow_node.left.n_eta <= N_RULE || grow_node.right.n_eta <= N_RULE){
 			if (DEBUG_MH){
-				System.out.println("ERR: cannot split a node where daughter only has one data point   proposal ln(r) = -oo DUE TO CANNOT GROW\n\n");
+				System.out.println("ERR: cannot split a node where daughter only has NO data points   proposal ln(r) = -oo DUE TO CANNOT GROW\n\n");
 			}
 			return Double.NEGATIVE_INFINITY;
 		}
@@ -190,7 +190,7 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 	
 
 	/** The number of data points in a node that we can split on */
-	protected static int N_RULE = 1;	
+	protected static int N_RULE = 0;	
 
 	protected double calcLnLikRatioGrow(CGMBARTTreeNode grow_node) {
 		double sigsq = gibbs_samples_of_sigsq.get(gibbs_sample_num - 1);
@@ -232,7 +232,7 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 	}
 
 	protected CGMBARTTreeNode pickGrowNode(CGMBARTTreeNode T) {
-		ArrayList<CGMBARTTreeNode> growth_nodes = T.getTerminalNodes();
+		ArrayList<CGMBARTTreeNode> growth_nodes = T.getTerminalNodesWithDataAboveOrEqualToN(2);
 		
 		//2 checks
 		//a) If there is no nodes to grow, return null
