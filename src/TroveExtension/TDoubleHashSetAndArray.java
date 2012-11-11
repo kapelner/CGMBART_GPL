@@ -210,6 +210,10 @@ public double getAtIndex(int index){
 	return array.get(index);
 }
 
+public double[] getAsArray(){
+	return array.toArray();
+}
+
 
 /** {@inheritDoc} */
 public boolean remove( double val ) {

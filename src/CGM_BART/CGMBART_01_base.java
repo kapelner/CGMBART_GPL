@@ -28,6 +28,8 @@ public abstract class CGMBART_01_base extends Classifier implements Serializable
 	/** the variance of the errors */
 	protected ArrayList<Double> gibbs_samples_of_sigsq;
 	protected ArrayList<Double> gibbs_samples_of_sigsq_after_burn_in;
+	
+	/** 
 
 	/** the current # of trees */
 	protected int num_trees;

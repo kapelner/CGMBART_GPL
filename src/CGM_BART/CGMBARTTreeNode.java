@@ -412,8 +412,8 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 				//if size of unique of x_i > 1
 				double[] x_dot_j = cgmbart.X_y_by_col.get(j);
 				
-				for (int i = 1; i < cgmbart.n; i++){
-					if (x_dot_j[i - 1] != x_dot_j[i]){
+				for (int i = 1; i < indicies.length; i++){
+					if (x_dot_j[indicies[i - 1]] != x_dot_j[indicies[i]]){
 						possible_rule_variables.add(j);
 						break;
 					}
@@ -452,13 +452,15 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 	 */
 	public int pickRandomPredictorThatCanBeAssigned(){
 		TIntArrayList predictors = predictorsThatCouldBeUsedToSplitAtNode();
-		
-		
+		System.out.println("preds: " + Tools.StringJoin(predictors));		
 		return predictors.get((int)Math.floor(StatToolbox.rand() * pAdj()));
 	}
 	
 	public double pickRandomSplitValue() {	
 		TDoubleHashSetAndArray split_values = possibleSplitValuesGivenAttribute();
+//		double[] split_values_as_arr = split_values.getAsArray();
+//		Arrays.sort(split_values_as_arr);
+//		System.out.println("split_values: " + Tools.StringJoin(split_values_as_arr));
 		int rand_index = (int) Math.floor(StatToolbox.rand() * split_values.size());
 		return split_values.getAtIndex(rand_index);
 	}
