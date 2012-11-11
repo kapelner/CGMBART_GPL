@@ -11,10 +11,6 @@ source("r_scripts/bart_package.R")
 source("r_scripts/create_simulated_models.R")
 graphics.off()
 
-if (FALSE){
-	run_bart_bakeoff()
-}
-
 source("r_scripts/bart_bakeoff_params.R")
 
 total_num_runs = (length(real_regression_data_sets) + length(simulated_data_sets)) * 
@@ -320,4 +316,8 @@ run_bart_model_and_save_diags_and_results = function(training_data, test_data, d
 	prettify_simulation_results_and_save_as_csv()
 	create_avg_sim_results_and_save_as_csv()
 	"A BART DONE"
+}
+
+if (TRUE){
+	run_bart_bakeoff()
 }

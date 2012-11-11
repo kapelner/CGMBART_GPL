@@ -16,7 +16,7 @@ for (i in 1:length(ntree)){
 				y.train = train[, 14], 
 				x.test = test[,-14],
 				ntree = ntree[i],
-				nskip = 2000, 
+				nskip = 10000, 
 				ndpost = 2000, 
 				sigest = sd(train$medv)
 		)
@@ -33,8 +33,11 @@ for (i in 1:length(ntree)){
 }
 
 tapply(out[,2],out[,1], mean)
-write.csv(out, "GPCS.csv")
+write.csv(out, "GPbigburn.csv")
 
+##GP Big Burn
+#1        5       20       50      100      200 
+#7.462532 6.231115 5.975318 5.537033 5.674937 5.704696 
 
 ##GPCS
 #1        5       20       50      100      200 
