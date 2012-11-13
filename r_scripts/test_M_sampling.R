@@ -15,7 +15,7 @@ for (sigsq in sigsqs){
 	test_data = simu_data_mod__simple_tree_structure(sigma = sigma)	
 	
 	#load up a bart model
-	bart_machine = build_a_bart_model(training_data, 
+	bart_machine = build_bart_machine(training_data, 
 			num_trees = 1, 
 			num_burn_in = 2000, 
 			num_iterations_after_burn_in = 2000,

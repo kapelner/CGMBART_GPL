@@ -79,9 +79,7 @@ public class CGMBART_F1_prior_cov_spec extends CGMBART_09_eval {
 	 */
 	public void setCovSplitPrior(double[] cov_split_prior) {
 		this.cov_split_prior = cov_split_prior;
-	}	
-	
-	public void useCovPriorCovSpec(){
+		//if we're setting the vector, we're using this feature
 		use_prior_cov_spec = true;
 	}
 	

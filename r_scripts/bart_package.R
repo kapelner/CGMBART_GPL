@@ -61,7 +61,7 @@ JAVA_LOG = FALSE #to be overwritten later
 #training_data = simulate_data_from_simulation_name(simulated_data_model_name)
 #test_data = simulate_data_from_simulation_name(simulated_data_model_name)
 
-build_a_bart_model = function(training_data, 
+build_bart_machine = function(training_data, 
 		num_trees = 50, 
 		num_burn_in = 1000, 
 		num_iterations_after_burn_in = 1000, 
@@ -72,10 +72,9 @@ build_a_bart_model = function(training_data,
 		fix_seed = FALSE,
 		unique_name = "unnamed",
 		print_tree_illustrations = FALSE, 
-		print_out_every = NULL){
+		print_out_every = NULL,
+		cov_prior_vec = NULL){
 	
-#	clean_previous_bart_data()
-
 	num_gibbs = num_burn_in + num_iterations_after_burn_in
 	#check for errors in data
 	if (error_in_data(training_data)){
@@ -96,6 +95,9 @@ build_a_bart_model = function(training_data,
 	.jcall(java_bart_machine, "V", "setNumGibbsTotalIterations", as.integer(num_gibbs))
 	.jcall(java_bart_machine, "V", "setAlpha", alpha)
 	.jcall(java_bart_machine, "V", "setBeta", beta)
+	if (cov_prior_vec != NULL){
+		.jcall(java_bart_machine, "V", "setCovSplitPrior", as.numeric(cov_prior_vec))
+	}
 	
 	
 	

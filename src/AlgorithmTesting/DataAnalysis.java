@@ -65,9 +65,8 @@ public class DataAnalysis {
 //			for (int num_times = 0; num_times < 100; num_times++){
 				machine = new CGMBARTRegressionMultThread();
 				machine.setData(data.getX_y());
-				((CGMBARTRegressionMultThread)machine).useCovPriorCovSpec();
-				double[] cov_split_prior = {1/3.0, 1/3.0, 1/3.0};
-				((CGMBARTRegressionMultThread)machine).setCovSplitPrior(cov_split_prior);
+//				double[] cov_split_prior = {1, 1000,1000};
+//				((CGMBARTRegressionMultThread)machine).setCovSplitPrior(cov_split_prior);
 				machine.Build();
 				System.out.println("(in sample) L1 error: " + Math.round(machine.calculateInSampleLoss(Classifier.ErrorTypes.L1)) + " L2 error: " + Math.round(machine.calculateInSampleLoss(Classifier.ErrorTypes.L2)));
 				//now we'll do 95% CI and error rates

@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 public class CGMBARTRegressionMultThread extends Classifier {
 	private static final long serialVersionUID = -4537075714317768756L;
 	
-	private static final int DEFAULT_NUM_CORES = Runtime.getRuntime().availableProcessors() - 1;
+	private static final int DEFAULT_NUM_CORES = 1;//Runtime.getRuntime().availableProcessors() - 1;
 	
 	private int num_cores;
 	
@@ -237,11 +237,5 @@ public class CGMBARTRegressionMultThread extends Classifier {
 			bart_gibbs_chain_threads.get(t).setCovSplitPrior(cov_split_prior);
 		}		
 	}
-	
-	public void useCovPriorCovSpec(){
-		for (int t = 0; t < num_cores; t++){
-			bart_gibbs_chain_threads.get(t).useCovPriorCovSpec();
-		}
-	}	
 
 }

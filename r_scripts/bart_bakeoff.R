@@ -244,7 +244,7 @@ run_bart_model_and_save_diags_and_results = function(training_data, test_data, d
 	
 	#generate the bart model
 	time_started = Sys.time()
-	bart_machine = build_a_bart_model(training_data, 
+	bart_machine = build_bart_machine(training_data, 
 		num_trees = num_trees, 
 		num_burn_in = num_burn_in, 
 		alpha = alpha, 

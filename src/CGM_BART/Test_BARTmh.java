@@ -38,7 +38,6 @@ public class Test_BARTmh {
 	public void tearDown() throws Exception {
 	}
 	
-	private static final double BigN = 100000;
 //	
 //	@Test	
 //	public void testPickGrowNode(){
@@ -171,7 +170,7 @@ public class Test_BARTmh {
 		CGMBARTTreeNode T_star = Test_CGMBARTTreeNode.stump.clone();
 		CGMBARTTreeNode first_node_grown = T_star;
 		assertEquals(T_i.numLeaves(), 1); //b = 1
-		assertEquals(first_node_grown.pAdj(), 3); //padj = 3
+		assertEquals(bart.pAdj(first_node_grown), 3, 0); //padj = 3
 		
 		//set up the stump as a tree
 		first_node_grown.splitAttributeM = 0;
@@ -192,7 +191,7 @@ public class Test_BARTmh {
 		CGMBARTTreeNode second_node_grown = T_star.left;
 		assertEquals(T_i.numLeaves(), 2); //b = 2
 		System.out.println("second_node_grown.pAdj()");
-		assertEquals(second_node_grown.pAdj(), 2); //padj = 2
+		assertEquals(bart.pAdj(second_node_grown), 2, 0); //padj = 2
 		assertEquals(T_star.numPruneNodesAvailable(), 1); //w_2^* = 1
 		second_node_grown.splitAttributeM = 2;
 		assertEquals(second_node_grown.nAdj(), 1);  //multiple zeroes, but one unique value
@@ -214,7 +213,7 @@ public class Test_BARTmh {
 		
 		assertEquals(T_i.numPruneNodesAvailable(), 1); //w_2 = 1
 		assertEquals(T_i.numLeaves(), 3); //b = 3
-		assertEquals(prune_node.pAdj(), 2); //padj = 2
+		assertEquals(bart.pAdj(prune_node), 2, 0); //padj = 2
 		assertEquals(prune_node.nAdj(), 1); //multiple zeroes, but one unique value
 		
 		trans_ratio = Math.exp(bart.calcLnTransRatioPrune(T_i, T_star, prune_node));
@@ -228,7 +227,7 @@ public class Test_BARTmh {
 		
 		assertEquals(T_i.numPruneNodesAvailable(), 1); //w_2 = 1
 		assertEquals(T_i.numLeaves(), 2); //b = 2
-		assertEquals(prune_node.pAdj(), 3); //padj = 3
+		assertEquals(bart.pAdj(prune_node), 3, 0); //padj = 3
 		assertEquals(prune_node.nAdj(), 1); //multiple zeroes, but one unique value
 //		assertEquals(prune_node.splitValuesRepeated(), 4); //n_repeat = 4	
 		
@@ -243,7 +242,7 @@ public class Test_BARTmh {
 		CGMBARTTreeNode T_i = Test_CGMBARTTreeNode.stump;
 		CGMBARTTreeNode T_star = Test_CGMBARTTreeNode.stump.clone();
 		CGMBARTTreeNode first_node_grown = T_star;
-		assertEquals(first_node_grown.pAdj(), 3); //padj = 3
+		assertEquals(bart.pAdj(first_node_grown), 3, 0); //padj = 3
 		
 		//set up the stump as a tree
 		first_node_grown.splitAttributeM = 0;
@@ -262,7 +261,7 @@ public class Test_BARTmh {
 		T_i = T_star;
 		T_star = T_star.clone();
 		CGMBARTTreeNode second_node_grown = T_star.left;
-		assertEquals(second_node_grown.pAdj(), 2); //padj = 2
+		assertEquals(bart.pAdj(second_node_grown), 2, 0); //padj = 2
 		assertEquals(1, second_node_grown.depth); //d_eta = 1
 		second_node_grown.splitAttributeM = 2;
 		assertEquals(second_node_grown.nAdj(), 1);  //multiple zeroes, but one unique value
@@ -282,7 +281,7 @@ public class Test_BARTmh {
 		T_star = temp;
 		CGMBARTTreeNode prune_node = second_node_grown;
 		
-		assertEquals(prune_node.pAdj(), 2); //padj = 2
+		assertEquals(bart.pAdj(prune_node), 2, 0); //padj = 2
 		assertEquals(prune_node.nAdj(), 1);  //multiple zeroes, but one unique value
 		assertEquals(1, prune_node.depth);
 		
@@ -297,7 +296,7 @@ public class Test_BARTmh {
 		prune_node = first_node_grown;
 		
 		assertEquals(prune_node.depth, 0); //padj = 3
-		assertEquals(prune_node.pAdj(), 3); //padj = 3
+		assertEquals(bart.pAdj(prune_node), 3, 0); //padj = 3
 		assertEquals(prune_node.nAdj(), 1);  //multiple zeroes, but one unique value
 		
 		tree_structure_ratio = Math.exp(-bart.calcLnTreeStructureRatioGrow(prune_node));

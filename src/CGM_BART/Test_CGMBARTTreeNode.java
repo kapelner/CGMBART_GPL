@@ -188,14 +188,14 @@ public class Test_CGMBARTTreeNode {
 		//simple tree first
 		int[] all_predictors = {0, 1, 2};
 		assertArrayEquals(simple_tree.predictorsThatCouldBeUsedToSplitAtNode().toArray(), all_predictors);
-		assertEquals(simple_tree.pAdj(), 3);
+		assertEquals(bart.pAdj(simple_tree), 3, 0);
 		double[] vals_to_split = {0.0}; //remember we can't split on 1 because it's the max value
 		System.out.println("poss splits: " + Tools.StringJoin(simple_tree.possibleSplitValuesGivenAttribute().toArray(), ","));
 		double[] arr1 = simple_tree.possibleSplitValuesGivenAttribute().toArray();
 		for (int i = 0; i < arr1.length; i++){
 			assertEquals(arr1[i], vals_to_split[i], 0.0001);
 		}
-		assertEquals(simple_tree.pAdj(), 3);
+		assertEquals(bart.pAdj(simple_tree), 3, 0);
 		//now go into the leaves and see what else we can split on
 		int[] predictors_left = {1, 2};
 		assertArrayEquals(simple_tree.left.predictorsThatCouldBeUsedToSplitAtNode().toArray(), predictors_left);
@@ -208,7 +208,7 @@ public class Test_CGMBARTTreeNode {
 	public void testDoubleTreePredictorsAtSplit(){
 		int[] all_predictors = {0, 1, 2};
 		assertArrayEquals(double_tree.predictorsThatCouldBeUsedToSplitAtNode().toArray(), all_predictors);
-		assertEquals(3, double_tree.pAdj());
+		assertEquals(3, bart.pAdj(double_tree), 0);
 		assertEquals(1, double_tree.nAdj());
 		
 		//Test double.tree n.adj at second nodes
@@ -217,30 +217,30 @@ public class Test_CGMBARTTreeNode {
 		
 		int[] predictors_left_left = {1, 2};
 		assertArrayEquals(double_tree.left.left.predictorsThatCouldBeUsedToSplitAtNode().toArray(), predictors_left_left);
-		assertEquals(double_tree.left.left.pAdj(), 2);
+		assertEquals(bart.pAdj(double_tree.left.left), 2, 0);
 		
 		int[] predictors_left_right = {};
 		assertArrayEquals(double_tree.left.right.predictorsThatCouldBeUsedToSplitAtNode().toArray(), predictors_left_right);
-		assertEquals(0, double_tree.left.right.pAdj());
+		assertEquals(0, bart.pAdj(double_tree.left.right), 0);
 		
 		int[] predictors_right_right = {1};
 		assertArrayEquals(double_tree.right.right.predictorsThatCouldBeUsedToSplitAtNode().toArray(), predictors_right_right);
-		assertEquals(1, double_tree.right.right.pAdj());
+		assertEquals(1, bart.pAdj(double_tree.right.right), 0);
 		
 		int[] predictors_right_left = {};
 		assertArrayEquals(double_tree.right.left.predictorsThatCouldBeUsedToSplitAtNode().toArray(), predictors_right_left);
-		assertEquals(0, double_tree.right.left.pAdj());
+		assertEquals(0, bart.pAdj(double_tree.right.left), 0);
 		
 		//now take it a step further... extend the tree on the left left and see what happens
 		CGMBARTTreeNode double_tree_ext = buildDoubleTreeExt();
 		
 		int[] predictors_left_left_left = {1, 2};
 		assertArrayEquals(double_tree_ext.left.left.left.predictorsThatCouldBeUsedToSplitAtNode().toArray(), predictors_left_left_left);
-		assertEquals(double_tree_ext.left.left.left.pAdj(), 2);
+		assertEquals(bart.pAdj(double_tree_ext.left.left.left), 2, 0);
 		
 		int[] predictors_left_left_right = {};
 		assertArrayEquals(double_tree_ext.left.left.right.predictorsThatCouldBeUsedToSplitAtNode().toArray(), predictors_left_left_right);
-		assertEquals(double_tree_ext.left.left.right.pAdj(), 0);		
+		assertEquals(bart.pAdj(double_tree_ext.left.left.right), 0, 0);		
 	}	
 	
 	private CGMBARTTreeNode buildDoubleTreeExt(){
@@ -258,7 +258,7 @@ public class Test_CGMBARTTreeNode {
 	@Test
 	public void testPropagateDataByChangedRule(){
 		CGMBARTTreeNode double_tree_ext = buildDoubleTreeExt();
-		assertEquals(2, double_tree_ext.left.left.pAdj());
+		assertEquals(2, bart.pAdj(double_tree_ext.left.left), 0);
 		assertEquals(2, double_tree_ext.left.left.nAdj());
 		assertEquals(9,double_tree_ext.left.left.left.sumResponses(),0);
 		assertEquals(2,double_tree_ext.left.left.right.sumResponses(),0);
