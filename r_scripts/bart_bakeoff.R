@@ -318,6 +318,6 @@ run_bart_model_and_save_diags_and_results = function(training_data, test_data, d
 	"A BART DONE"
 }
 
-if (TRUE){
+if (FALSE){
 	run_bart_bakeoff()
 }

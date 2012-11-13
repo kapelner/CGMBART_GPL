@@ -73,7 +73,7 @@ build_bart_machine = function(training_data,
 		unique_name = "unnamed",
 		print_tree_illustrations = FALSE, 
 		print_out_every = NULL,
-		cov_prior_vec = NA){
+		cov_prior_vec = NULL){
 	
 	num_gibbs = num_burn_in + num_iterations_after_burn_in
 	#check for errors in data
@@ -95,7 +95,15 @@ build_bart_machine = function(training_data,
 	.jcall(java_bart_machine, "V", "setNumGibbsTotalIterations", as.integer(num_gibbs))
 	.jcall(java_bart_machine, "V", "setAlpha", alpha)
 	.jcall(java_bart_machine, "V", "setBeta", beta)
-	if (!is.na(cov_prior_vec)){
+	if (length(cov_prior_vec) != 0){
+		#put in checks here for user make sure it's correct length
+		if (length(cov_prior_vec) != ncol(training_data) - 1){
+			stop("covariate prior vector length has to be equal to p", call. = FALSE)
+			return(TRUE)
+		} else if (sum(cov_prior_vec > 0) != ncol(training_data) - 1){
+			stop("covariate prior vector has to have all its elements be positive", call. = FALSE)
+			return(TRUE)
+		}
 		.jcall(java_bart_machine, "V", "setCovSplitPrior", as.numeric(cov_prior_vec))
 	}
 	
@@ -128,7 +136,8 @@ build_bart_machine = function(training_data,
 		alpha = alpha,
 		beta = beta,
 		rmse_train = rmse_train,
-		avg_num_splits_by_vars = avg_num_splits_by_vars
+		avg_num_splits_by_vars = avg_num_splits_by_vars,
+		cov_prior_vec = cov_prior_vec
 	)
 }
 
