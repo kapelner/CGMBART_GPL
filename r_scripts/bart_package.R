@@ -68,12 +68,12 @@ build_bart_machine = function(training_data,
 		alpha = DEFAULT_ALPHA,
 		beta = DEFAULT_BETA, 
 		class_or_regr = "r", 
-		debug_log = TRUE,
+		debug_log = FALSE,
 		fix_seed = FALSE,
 		unique_name = "unnamed",
 		print_tree_illustrations = FALSE, 
 		print_out_every = NULL,
-		cov_prior_vec = NULL){
+		cov_prior_vec = NA){
 	
 	num_gibbs = num_burn_in + num_iterations_after_burn_in
 	#check for errors in data
@@ -95,7 +95,7 @@ build_bart_machine = function(training_data,
 	.jcall(java_bart_machine, "V", "setNumGibbsTotalIterations", as.integer(num_gibbs))
 	.jcall(java_bart_machine, "V", "setAlpha", alpha)
 	.jcall(java_bart_machine, "V", "setBeta", beta)
-	if (cov_prior_vec != NULL){
+	if (!is.na(cov_prior_vec)){
 		.jcall(java_bart_machine, "V", "setCovSplitPrior", as.numeric(cov_prior_vec))
 	}
 	
