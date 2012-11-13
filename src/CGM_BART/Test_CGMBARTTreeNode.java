@@ -124,10 +124,10 @@ public class Test_CGMBARTTreeNode {
 		ArrayList<CGMBARTTreeNode> just_stump = new ArrayList<CGMBARTTreeNode>();
 		just_stump.add(stump);
 		assertEquals(stump.getTerminalNodes(), just_stump);
-		assertEquals(CGMBARTTreeNode.getTerminalNodesWithDataAboveOrEqualToN(stump, 5), just_stump);
-		assertEquals(CGMBARTTreeNode.getTerminalNodesWithDataAboveOrEqualToN(stump, 7), just_stump);
-		System.out.println("testTerminalNodesStump:  " + CGMBARTTreeNode.getTerminalNodesWithDataAboveOrEqualToN(stump, 8).size());
-		assertTrue(CGMBARTTreeNode.getTerminalNodesWithDataAboveOrEqualToN(stump, 8).size() == 0);
+		assertEquals(stump.getTerminalNodesWithDataAboveOrEqualToN(5), just_stump);
+		assertEquals(stump.getTerminalNodesWithDataAboveOrEqualToN(7), just_stump);
+		System.out.println("testTerminalNodesStump:  " + stump.getTerminalNodesWithDataAboveOrEqualToN(8).size());
+		assertTrue(stump.getTerminalNodesWithDataAboveOrEqualToN(8).size() == 0);
 	}
 	
 	@Test 
