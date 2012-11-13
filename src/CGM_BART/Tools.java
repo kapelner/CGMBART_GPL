@@ -121,7 +121,28 @@ public class Tools {
         	}
         }
         return max;
-}
+    }
+    
+    public static double sum_array(double[] arr){
+    	double sum = 0;
+    	for (int i = 0; i < arr.length; i++){
+    		sum += arr[i];
+    	}
+    	return sum;
+    }
+ 
+    public static void weight_arr_by_sum(double[] arr){
+    	double weight = sum_array(arr);
+    	for (int i = 0; i < arr.length; i++){
+    		arr[i] = arr[i] / weight;
+    	}
+    }
+    	
+    public static void weight_arr(double[] arr, double weight){
+    	for (int i = 0; i < arr.length; i++){
+    		arr[i] = arr[i] / weight;
+    	}
+    }    
 
 	public static double[] subtract_arrays(double[] arr1, double[] arr2) {
 		int n = arr1.length;

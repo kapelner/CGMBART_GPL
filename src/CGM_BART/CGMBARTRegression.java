@@ -29,7 +29,7 @@ import java.util.logging.StreamHandler;
 
 import CGM_BART_DEBUG.*; //sample #21
 
-public class CGMBARTRegression extends CGMBART_09_eval {
+public class CGMBARTRegression extends CGMBART_F1_prior_cov_spec {
 	private static final long serialVersionUID = 6418127647567343927L;
 	
 	
@@ -71,5 +71,6 @@ public class CGMBARTRegression extends CGMBART_09_eval {
 		}
 		output.close();
 	}
+
 
 }

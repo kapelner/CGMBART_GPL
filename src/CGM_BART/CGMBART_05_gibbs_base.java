@@ -161,5 +161,5 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 		
 		return avg_counts;
 	}
-	
+
 }

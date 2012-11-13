@@ -92,7 +92,7 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 	/** this caches the possible split values BY variable */
 	private transient HashMap<Integer, TDoubleHashSetAndArray> possible_split_vals_by_attr;
 	/** this caches the number of possible split variables */
-	private transient Integer padj;	
+	protected transient Integer padj;	
 	
 	public CGMBARTTreeNode(){}	
 
@@ -389,18 +389,6 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		}
 		return sum_responses_qty;
 	}	
-		
-	
-	/**
-	 * Gets the total number of predictors that could be used for rules at this juncture
-	 * @return
-	 */
-	public int pAdj(){
-		if (padj == null){
-			padj = predictorsThatCouldBeUsedToSplitAtNode().size();
-		}
-		return padj;
-	}
 	
 	protected TIntArrayList predictorsThatCouldBeUsedToSplitAtNode() {
 		if (possible_rule_variables == null){
@@ -451,15 +439,7 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		return possible_split_vals_by_attr.get(splitAttributeM);
 	}
 
-	/**
-	 * Pick a random predictor from the set of possible predictors at this juncture
-	 * @return
-	 */
-	public int pickRandomPredictorThatCanBeAssigned(){
-		TIntArrayList predictors = predictorsThatCouldBeUsedToSplitAtNode();	
-		return predictors.get((int)Math.floor(StatToolbox.rand() * pAdj()));
-	}
-	
+
 	public double pickRandomSplitValue() {	
 		TDoubleHashSetAndArray split_values = possibleSplitValuesGivenAttribute();
 //		if (splitAttributeM == 0){

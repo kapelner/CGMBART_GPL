@@ -1,5 +1,7 @@
 package CGM_BART;
 
+import gnu.trove.list.array.TIntArrayList;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -66,5 +68,30 @@ public abstract class CGMBART_06_gibbs_internal extends CGMBART_05_gibbs_base im
 			R_j[i] -= last_tree.yhats[i];
 		}
 		return R_j;
+	}	
+	
+
+	/**
+	 * Pick a random predictor from the set of possible predictors at this juncture
+	 * @param node 
+	 * @return
+	 */
+	public int pickRandomPredictorThatCanBeAssigned(CGMBARTTreeNode node){
+        TIntArrayList predictors = node.predictorsThatCouldBeUsedToSplitAtNode();
+        return predictors.get((int)Math.floor(StatToolbox.rand() * pAdj(node)));
+	}
+	
+	
+	
+	/**
+	 * Gets the total number of predictors that could be used for rules at this juncture
+	 * @param node 
+	 * @return
+	 */
+	public double pAdj(CGMBARTTreeNode node){
+		if (node.padj == null){
+			node.padj = node.predictorsThatCouldBeUsedToSplitAtNode().size();
+		}
+		return node.padj;
 	}	
 }

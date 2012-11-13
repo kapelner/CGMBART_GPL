@@ -80,7 +80,7 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 		
 		//now start the growth process
 		//first pick the attribute and then the split
-		grow_node.splitAttributeM = grow_node.pickRandomPredictorThatCanBeAssigned();
+		grow_node.splitAttributeM = pickRandomPredictorThatCanBeAssigned(grow_node);
 		grow_node.splitValue = grow_node.pickRandomSplitValue();
 //		System.out.print("split_value = " + split_value);
 		//inform the user if things go awry
@@ -171,14 +171,14 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 	protected double calcLnTransRatioPrune(CGMBARTTreeNode T_i, CGMBARTTreeNode T_star, CGMBARTTreeNode prune_node) {
 		int w_2 = T_i.numPruneNodesAvailable();
 		int b = T_i.numLeaves();
-		int p_adj = prune_node.pAdj();
+		double p_adj = pAdj(prune_node);
 		int n_adj = prune_node.nAdj();
 		return Math.log(w_2) - Math.log(b - 1) - Math.log(p_adj) - Math.log(n_adj); 
 	}
 
 	protected double calcLnTreeStructureRatioGrow(CGMBARTTreeNode grow_node) {
 		int d_eta = grow_node.depth;
-		int p_adj = grow_node.pAdj();
+		double p_adj = pAdj(grow_node);
 		int n_adj = grow_node.nAdj();
 //		System.out.println("calcLnTreeStructureRatioGrow d_eta: " + d_eta + " p_adj: " + p_adj + " n_adj: " + n_adj + " n_repeat: " + n_repeat + " ALPHA: " + ALPHA + " BETA: " + BETA);
 		return Math.log(ALPHA) 
@@ -186,8 +186,7 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 				- Math.log(Math.pow(1 + d_eta, BETA) - ALPHA)
 				- Math.log(p_adj) 
 				- Math.log(n_adj);
-	}
-	
+	}	
 
 	/** The number of data points in a node that we can split on */
 	protected static int N_RULE = 0;	
@@ -220,7 +219,7 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 
 	protected double calcLnTransRatioGrow(CGMBARTTreeNode T_i, CGMBARTTreeNode T_star, CGMBARTTreeNode node_grown_in_Tstar) {
 		int b = T_i.numLeaves();
-		int p_adj = node_grown_in_Tstar.pAdj();
+		double p_adj = pAdj(node_grown_in_Tstar);
 		int n_adj = node_grown_in_Tstar.nAdj();
 		int w_2_star = T_star.numPruneNodesAvailable();
 //		System.out.println("calcLnTransRatioGrow b:" + b + " p_adj: " + p_adj + " n_adj: " + n_adj + " w_2_star:" + w_2_star + " n_repeat:" + n_repeat);
@@ -248,7 +247,7 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 		CGMBARTTreeNode growth_node = growth_nodes.get((int)Math.floor(StatToolbox.rand() * growth_nodes.size()));
 
 		//do check b
-		if (growth_node.pAdj() == 0){
+		if (pAdj(growth_node) == 0){
 			System.err.println("no attributes available in GROW step!");
 			return null;			
 		}

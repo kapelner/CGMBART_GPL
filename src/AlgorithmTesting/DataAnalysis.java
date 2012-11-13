@@ -33,7 +33,7 @@ public class DataAnalysis {
 	
 	/** this is a file that is in CSV format (csv extension) with/out a header named c_<name> or r_<name> for classification or regression respectively */
 //	private static final String DataSetFilename = "r_just_noise";
-//	private static final String DataSetFilename = "r_treemodel";
+	private static final String DataSetFilename = "r_treemodel";
 //	private static final String DataSetFilename = "r_treemodel_high_p";
 //	private static final String DataSetFilename = "r_treemodel_high_p_low_n";
 //	private static final String DataSetFilename = "r_treemodel_high_n";
@@ -41,13 +41,13 @@ public class DataAnalysis {
 //	private static final String DataSetFilename = "r_friedman";
 //	private static final String DataSetFilename = "r_univariatelinear";
 //	private static final String DataSetFilename = "r_bivariatelinear";
-	private static final String DataSetFilename = "r_boston";	
+//	private static final String DataSetFilename = "r_boston";	
 //	private static final String DataSetFilename = "r_forestfires";
 //	private static final String DataSetFilename = "r_concretedata";
 //	private static final String DataSetFilename = "bart_data";
 
 	public static void main(String[] args) throws IOException{
-		System.out.println(System.getProperty("java.version"));
+		System.out.println("java ver: " + System.getProperty("java.version"));
 		//make sure y is last column of data matrix
 		DataSetupForCSVFile data = new DataSetupForCSVFile(new File("datasets", DataSetFilename + ".csv"), true);
 		Classifier machine = null; //we're going to use some machine to do it... 
@@ -65,6 +65,9 @@ public class DataAnalysis {
 //			for (int num_times = 0; num_times < 100; num_times++){
 				machine = new CGMBARTRegressionMultThread();
 				machine.setData(data.getX_y());
+				((CGMBARTRegressionMultThread)machine).useCovPriorCovSpec();
+				double[] cov_split_prior = {1/3.0, 1/3.0, 1/3.0};
+				((CGMBARTRegressionMultThread)machine).setCovSplitPrior(cov_split_prior);
 				machine.Build();
 				System.out.println("(in sample) L1 error: " + Math.round(machine.calculateInSampleLoss(Classifier.ErrorTypes.L1)) + " L2 error: " + Math.round(machine.calculateInSampleLoss(Classifier.ErrorTypes.L2)));
 				//now we'll do 95% CI and error rates

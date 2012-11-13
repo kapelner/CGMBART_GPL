@@ -25,6 +25,7 @@
 package CGM_BART;
 
 import gnu.trove.list.array.TDoubleArrayList;
+import gnu.trove.list.array.TIntArrayList;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -278,5 +279,21 @@ public class StatToolbox {
 			return gibbsSamplesForPrediction[(n - 1) / 2];
 		}
 		
+	}
+
+	public static int multinomial_sample(TIntArrayList predictors, double[] weighted_cov_split_prior_subset) {
+		double r = StatToolbox.rand();
+		double cum_prob = 0;
+		int index = 0;
+		if (r < weighted_cov_split_prior_subset[0]){
+			return predictors.get(0);
+		}
+		while (true){			
+			cum_prob += weighted_cov_split_prior_subset[index];
+			if (r > cum_prob && r < cum_prob + weighted_cov_split_prior_subset[index + 1]){
+				return predictors.get(index + 1);
+			}
+			index++;
+		}
 	}	
 }
