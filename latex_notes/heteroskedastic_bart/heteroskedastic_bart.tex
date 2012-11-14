@@ -1,0 +1,86 @@
+\include{preamble}
+
+\title{Some notes on the Metropolis-Hastings Implementation}
+
+\date{}
+
+\newcommand{\treet}[1]{\text{\PHplaneTree}_{#1}}
+
+\begin{document}
+\maketitle
+
+\section*{Heteroskedastic BART Introduction}
+
+We take vanilla BART and update the last step of the Gibbs sampler to include a sampling an estimate for the variance for each observation, $\sigsq_1, \ldots, \sigsq_n$.
+
+\beqn
+\treet{1} &~|~& R_1, \sigsq_1, \ldots, \sigsq_n \\
+M_1 &~|~& \treet{1}, R_1, \sigsq_1, \ldots, \sigsq_n \\
+\vdots && \\
+\treet{m} &~|~& R_m, \sigsq_1, \ldots, \sigsq_n \\
+M_m &~|~& \treet{m}, R_m, \sigsq_1, \ldots, \sigsq_n \\
+\sigsq_1 &~|~& E \\
+\vdots && \\
+\sigsq_n &~|~& E \\
+\eeqn
+
+\subsection*{Prior on the variance}
+
+We keep the same prior on each of the observation's variances:
+
+\beqn
+\sigsq_1, \ldots, \sigsq_n \iid \invgammanot{\overtwo{\nu}}{\overtwo{\nu\lambda}}
+\eeqn
+
+We may have to rethink the above, but it seems like a good start. Once again we pick $\nu = 3$ and we pick $\lambda$ so that 90\% of the prior's density is below $s^2$, our estimate from the data which is either just the sample variance, or the RMSE squared from a linear model. 
+
+We also can have individual priors:
+
+\beqn
+\sigsq_1 &\sim& \invgammanot{\overtwo{\nu}}{\overtwo{\nu\lambda_1}} \\
+\vdots && \\
+\sigsq_n &\sim& \invgammanot{\overtwo{\nu}}{\overtwo{\nu\lambda_n}} \\
+\eeqn
+
+where $\lambda_i$ is picked based on a weighted least squares residual.
+
+\subsection*{Changes in Gibbs Sampler for $M$}
+
+The other step that has to change is sampling the leaf $\mu$'s. Remember that $M_t ~|~ \treet{1}, R_1, \sigsq_1, \ldots, \sigsq_n$ is actually the sampling for all leaves where each leaf is considered independent:
+
+\beqn
+\mu_{t1} &~|~&  \treet{t}, R_{t_1}, \sigsq_1, \ldots, \sigsq_n \\
+\vdots && \\
+\mu_{tb_t} &~|~&  \treet{t}, R_{t_{b_t}}, \sigsq_1, \ldots, \sigsq_n \\
+\eeqn
+
+The subscripts on the $R$ term indicates we only consider the data that falls into the leaf. So remember that the prior on the leaf value was normal, and the likelihood was assumed normal as well. The only thing that changes is we now have a different variance estimate for each observation. 
+
+We derive the correct posterior distribution below. We drop the subscripts just for convenience since it will be the same for each of the above and denote $k$ as the number of data records that fell into this leaf. $\sigsq_1, \ldots, \sigsq_k \subset \sigsq_1, \ldots, \sigsq_n$ for the data in this leaf as well:
+
+\beqn
+\cprob{\mu}{R, \sigsq_1, \ldots, \sigsq_k} &\propto& \cprob{R}{\mu, \sigsq_1, \ldots, \sigsq_n} \cprob{\mu}{\sigsq_1, \ldots, \sigsq_k} \\
+&=& \multnormnot{k}{\mu\onevec}{\threebythreemat{\sigsq_1}{}{}{}{\ddots}{}{}{}{\sigsq_k}} \normnot{0}{\sigsq_\mu} \\
+&\vdots& \\
+&=& \normnot{\frac{\dfrac{k^2 \Rbar}{\sum_{i=1}^k \sigsq_i}}{\doneover{\sigsq_\mu} + \dfrac{k^2}{\sum_{i=1}^k \sigsq_i}}}{\oneover{\doneover{\sigsq_\mu} + \dfrac{k^2}{\sum_{i=1}^k \sigsq_i}}}
+\eeqn
+
+\subsection*{Changes in Gibbs Sampler for $\sigsq_i$}
+
+In vanilla BART, the posterior of $\sigsq$ was:
+
+\beqn
+\sigsq ~|~ e_1, \ldots, e_n \sim \invgammanot{\overtwo{\nu + n}}{\overtwo{\lambda\nu + \sum_{i=1}^n e_i^2}} 
+\eeqn
+
+Now, we have to sample each $\sigsq_1, \ldots, \sigsq_n$. We estimate each of them based on only one residual:
+
+\beqn
+\sigsq_i ~|~ e_i \sim \invgammanot{\overtwo{\nu + 1}}{\overtwo{\lambda\nu + e_i^2}}
+\eeqn
+
+
+
+
+
+\end{document}
