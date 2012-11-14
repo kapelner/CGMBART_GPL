@@ -47,9 +47,9 @@ public class Test_BARTgibbs_internal {
 		bart.setNumTrees(num_trees);
 		bart.SetupGibbsSampling();	
 		double sigsq = CGMBART_04_init.INITIAL_SIGSQ;
-		List<CGMBARTTreeNode> trees = bart.gibbs_samples_of_cgm_trees.get(0);
+		CGMBARTTreeNode[] trees = bart.gibbs_samples_of_cgm_trees[0];
 		for (int t = 0; t < num_trees; t++){
-			CGMBARTTreeNode tree = trees.get(t);
+			CGMBARTTreeNode tree = trees[t];
 			double posterior_sigsq = bart.calcLeafPosteriorVar(tree, sigsq);
 			System.out.println("testAssignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsq: bart.n = " + bart.n);
 			assertEquals(1 / (1 / bart.hyper_sigsq_mu + bart.n / sigsq), posterior_sigsq, 0.0001);

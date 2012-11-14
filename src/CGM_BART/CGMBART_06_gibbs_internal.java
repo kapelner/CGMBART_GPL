@@ -63,7 +63,7 @@ public abstract class CGMBART_06_gibbs_internal extends CGMBART_05_gibbs_base im
 	
 	protected double[] getResidualsFromFullSumModel(int sample_num, double[] R_j){	
 		//all we need to do is subtract the last tree's yhats now
-		CGMBARTTreeNode last_tree = gibbs_samples_of_cgm_trees.get(sample_num).get(num_trees - 1);
+		CGMBARTTreeNode last_tree = gibbs_samples_of_cgm_trees[sample_num][num_trees - 1];
 		for (int i = 0; i < n; i++){
 			R_j[i] -= last_tree.yhats[i];
 		}

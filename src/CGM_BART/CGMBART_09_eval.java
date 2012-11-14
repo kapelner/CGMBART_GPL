@@ -25,7 +25,7 @@ public abstract class CGMBART_09_eval extends CGMBART_07_mh implements Serializa
 		//the results for each of the gibbs samples
 		double[] y_gibbs_samples = new double[numSamplesAfterBurningAndThinning()];	
 		for (int i = 0; i < numSamplesAfterBurningAndThinning(); i++){
-			ArrayList<CGMBARTTreeNode> cgm_trees = gibbs_samples_of_cgm_trees_after_burn_in.get(i);
+			CGMBARTTreeNode[] cgm_trees = gibbs_samples_of_cgm_trees_after_burn_in[i];
 			double yt_i = 0;
 			for (CGMBARTTreeNode tree : cgm_trees){ //sum of trees right?
 				yt_i += tree.Evaluate(record);

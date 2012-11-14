@@ -28,26 +28,23 @@ public abstract class CGMBART_04_init extends CGMBART_03_debug implements Serial
 	}
 	
 	protected void InitGibbsSamplingData(){
-//		System.out.println("InitGibbsSamplingData");
-		all_tree_liks = new double[num_trees][num_gibbs_total_iterations + 1];
-
 		//now initialize the gibbs sampler array for trees and error variances
-		gibbs_samples_of_cgm_trees = new ArrayList<ArrayList<CGMBARTTreeNode>>(num_gibbs_total_iterations);
-		gibbs_samples_of_cgm_trees_after_burn_in = new ArrayList<ArrayList<CGMBARTTreeNode>>(num_gibbs_total_iterations - num_gibbs_burn_in);
-		gibbs_samples_of_sigsq = new ArrayList<Double>(num_gibbs_total_iterations);	
-		gibbs_samples_of_sigsq_after_burn_in = new ArrayList<Double>(num_gibbs_total_iterations - num_gibbs_burn_in);		
+		gibbs_samples_of_cgm_trees = new CGMBARTTreeNode[num_gibbs_total_iterations + 1][num_trees];
+		gibbs_samples_of_cgm_trees_after_burn_in = new CGMBARTTreeNode[num_gibbs_total_iterations - num_gibbs_burn_in + 1][num_trees];
+		gibbs_samples_of_sigsq = new double[num_gibbs_total_iterations + 1];	
+		gibbs_samples_of_sigsq_after_burn_in = new double[num_gibbs_total_iterations - num_gibbs_burn_in];		
 	}
 	
 	
 	protected void InitializeTrees() {
 		//create the array of trees for the zeroth gibbs sample
-		ArrayList<CGMBARTTreeNode> cgm_trees = new ArrayList<CGMBARTTreeNode>(num_trees);		
+		CGMBARTTreeNode[] cgm_trees = new CGMBARTTreeNode[num_trees];		
 		for (int i = 0; i < num_trees; i++){
 			CGMBARTTreeNode stump = new CGMBARTTreeNode(this);
 			stump.setStumpData(X_y, y_trans, p);
-			cgm_trees.add(stump);
+			cgm_trees[i] = stump;
 		}	
-		gibbs_samples_of_cgm_trees.add(cgm_trees);	
+		gibbs_samples_of_cgm_trees[0] = cgm_trees;	
 	}
 
 	protected static final double INITIAL_PRED = 0; //median, doesn't matter anyway
@@ -57,7 +54,7 @@ public abstract class CGMBART_04_init extends CGMBART_03_debug implements Serial
 //		for (CGMBARTTreeNode tree : gibbs_samples_of_cgm_trees.get(0)){
 //			assignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsq(tree, gibbs_samples_of_sigsq.get(0));
 //		}	
-		for (CGMBARTTreeNode stump : gibbs_samples_of_cgm_trees.get(0)){
+		for (CGMBARTTreeNode stump : gibbs_samples_of_cgm_trees[0]){
 			stump.y_pred = INITIAL_PRED;
 		}
 	}
@@ -65,7 +62,7 @@ public abstract class CGMBART_04_init extends CGMBART_03_debug implements Serial
 	protected static final double INITIAL_SIGSQ = Math.pow(0.5 / 3, 2); //median, doesn't matter anyway
 	protected void InitizializeSigsq() {
 //		System.out.println("InitizializeSigsq");
-		gibbs_samples_of_sigsq.add(0, INITIAL_SIGSQ);
+		gibbs_samples_of_sigsq[0] = INITIAL_SIGSQ;
 //		gibbs_samples_of_sigsq.add(0, sampleInitialSigsqByDrawingFromThePrior());
 	}
 	

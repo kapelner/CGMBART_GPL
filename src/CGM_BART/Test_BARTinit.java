@@ -31,38 +31,6 @@ public class Test_BARTinit {
 		bart = new CGMBARTRegression();
 		bart.setData(Test_CGMBARTTreeNode.data);		
 	}
-
-	@After
-	public void tearDown() throws Exception {
-	}
-	
-	@Test
-	public void testInitGibbsSamplingData(){
-		bart.InitGibbsSamplingData();
-		assertEquals(bart.gibbs_samples_of_cgm_trees.size(), 0);
-		assertEquals(bart.gibbs_samples_of_cgm_trees_after_burn_in.size(), 0);
-		assertEquals(bart.gibbs_samples_of_sigsq.size(), 0);
-		assertEquals(bart.gibbs_samples_of_sigsq_after_burn_in.size(), 0);
-	}
-	
-	@Test
-	public void testInitizializeSigsq(){
-		bart.InitGibbsSamplingData();
-		bart.InitizializeSigsq();
-		assertEquals(bart.gibbs_samples_of_sigsq.size(), 1);
-		assertTrue(bart.gibbs_samples_of_sigsq.get(0) >= 0);
-	}	
-	
-	@Test
-	public void testInitiatizeTrees(){
-		bart.InitGibbsSamplingData();
-		bart.InitializeTrees();
-		assertEquals(bart.gibbs_samples_of_cgm_trees.size(), 1);
-		ArrayList<CGMBARTTreeNode> trees = bart.gibbs_samples_of_cgm_trees.get(0);
-		assertEquals(trees.size(), bart.num_trees);
-		CGMBARTTreeNode tree = trees.get(0);
-		assertTrue(tree.isStump());
-	}
 	
 	@Test
 	public void testInitializeMus(){
@@ -70,7 +38,7 @@ public class Test_BARTinit {
 		bart.InitizializeSigsq();
 		bart.InitializeTrees();
 		bart.InitializeMus();
-		CGMBARTTreeNode tree = bart.gibbs_samples_of_cgm_trees.get(0).get(0);
+		CGMBARTTreeNode tree = bart.gibbs_samples_of_cgm_trees[0][0];
 		assertTrue(tree.y_pred == CGMBART_04_init.INITIAL_PRED);
 	}	
 }

@@ -36,26 +36,13 @@ public class Test_BARTgibbs_base {
 	public void tearDown() throws Exception {
 	}
 	
-	@Test
-	public void testBuildCorrectDims(){
-		bart.Build();
-		assertEquals(NGAndNB + 1, bart.gibbs_sample_num); //remember how for loops work? If we want this to end
-		assertEquals(NGAndNB + 1, bart.gibbs_samples_of_cgm_trees.size());
-		for (int i = 1; i <= NGAndNB; i++){
-			assertEquals(bart.num_trees, bart.gibbs_samples_of_cgm_trees.get(i).size());
-		}		
-		assertEquals(NGAndNB + 1, bart.gibbs_samples_of_sigsq.size());
-		assertEquals(NGAndNB - NB, bart.gibbs_samples_of_cgm_trees_after_burn_in.size());
-		assertEquals(NGAndNB - NB, bart.gibbs_samples_of_sigsq_after_burn_in.size());
-	}
-	
 	
 	@Test
 	public void testSampleSigsq(){
 		bart.Build();
 		for (int i = 1; i <= NGAndNB; i++){
 			bart.SampleSigsq(i, new double[bart.n]);
-			assertTrue(bart.gibbs_samples_of_sigsq.get(i) > 0);
+			assertTrue(bart.gibbs_samples_of_sigsq[i] > 0);
 		}
 	}	
 	

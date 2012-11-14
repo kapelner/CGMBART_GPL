@@ -310,7 +310,7 @@ public class Test_BARTmh {
 		double sigsq = 0.01;
 		bart.gibbs_sample_num = 1;
 		bart.InitGibbsSamplingData();
-		bart.gibbs_samples_of_sigsq.add(sigsq);
+		bart.gibbs_samples_of_sigsq[0] = sigsq;
 		
 		//we're going to test the stump's transition ratio
 		CGMBARTTreeNode T_i = Test_CGMBARTTreeNode.stump;

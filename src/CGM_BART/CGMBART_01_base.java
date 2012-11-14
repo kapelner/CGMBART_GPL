@@ -23,11 +23,11 @@ public abstract class CGMBART_01_base extends Classifier implements Serializable
 	protected static double BETA = 2; //see p271 in CGM10	
 	
 	/** the actual list of trees */
-	protected ArrayList<ArrayList<CGMBARTTreeNode>> gibbs_samples_of_cgm_trees;
-	protected ArrayList<ArrayList<CGMBARTTreeNode>> gibbs_samples_of_cgm_trees_after_burn_in;
+	protected CGMBARTTreeNode[][] gibbs_samples_of_cgm_trees;
+	protected CGMBARTTreeNode[][] gibbs_samples_of_cgm_trees_after_burn_in;
 	/** the variance of the errors */
-	protected ArrayList<Double> gibbs_samples_of_sigsq;
-	protected ArrayList<Double> gibbs_samples_of_sigsq_after_burn_in;
+	protected double[] gibbs_samples_of_sigsq;
+	protected double[] gibbs_samples_of_sigsq_after_burn_in;
 	
 	/** 
 
@@ -44,8 +44,6 @@ public abstract class CGMBART_01_base extends Classifier implements Serializable
 	//this is frequency of unique values by each column
 	protected ArrayList<HashMap<Double, Integer>> num_val_hash_by_column;
 	
-	/** stuff during the build run time that we can access and look at */
-	protected double[][] all_tree_liks;
 	/** if the user pressed stop, we can cancel the Gibbs Sampling to unlock the CPU */
 	protected boolean stop_bit;
 
@@ -162,13 +160,13 @@ public abstract class CGMBART_01_base extends Classifier implements Serializable
 
 	@Override
 	protected void FlushData() {
-		for (ArrayList<CGMBARTTreeNode> cgm_trees : gibbs_samples_of_cgm_trees){
+		for (CGMBARTTreeNode[] cgm_trees : gibbs_samples_of_cgm_trees){
 			FlushDataForSample(cgm_trees);
 		}	
 	}
 	
 
-	protected void FlushDataForSample(ArrayList<CGMBARTTreeNode> cgm_trees) {
+	protected void FlushDataForSample(CGMBARTTreeNode[] cgm_trees) {
 		for (CGMBARTTreeNode tree : cgm_trees){
 			tree.flushNodeData();	
 		}
