@@ -24,12 +24,10 @@
  
 package CGM_BART;
 
-import java.util.logging.Logger;
-import java.util.logging.StreamHandler;
+//import java.util.logging.Logger;
+//import java.util.logging.StreamHandler;
 
-import CGM_BART_DEBUG.*; //sample #21
-
-public class CGMBARTRegression extends CGMBART_F1_prior_cov_spec {
+public class CGMBARTRegression extends CGMBART_F2_heteroskedasticity {
 	private static final long serialVersionUID = 6418127647567343927L;
 	
 	
