@@ -467,6 +467,10 @@ get_root_splits_of_trees = function(bart_machine, data_title = "data_model", sav
 	root_splits
 }
 
+get_var_counts_over_chain = function(bart_machine){
+	.jcall(java_bart_machine, "[[D", "getCountForAttributesForEntireChain", evalArray = FALSE)	
+}
+
 plot_tree_depths = function(bart_machine, extra_text = NULL, data_title = "data_model", save_plot = FALSE){
 	java_bart_machine = bart_machine$java_bart_machine
 	num_burn_in = bart_machine$num_burn_in

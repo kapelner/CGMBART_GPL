@@ -224,6 +224,28 @@ public class CGMBARTRegressionMultThread extends Classifier {
 		}		
 		return sigsqs_to_export.toArray();
 	}	
+	
+	public double[][] getCountForAttributesForEntireChain(){
+		double[][] var_count_matrix = new double[gibbs_samples_of_cgm_trees_after_burn_in.length][p];
+		
+		for (int g = 0; g < gibbs_samples_of_cgm_trees_after_burn_in.length; g++){
+			var_count_matrix[g] = getCountForAttributeInGibbsSample(g);
+		}
+		return var_count_matrix;
+	}	
+
+	private double[] getCountForAttributeInGibbsSample(int g) {
+		double[] counts = new double[p];
+		for (int j = 0; j < p; j++){
+			int tot_for_attr_j = 0;
+			for (CGMBARTTreeNode root_node : gibbs_samples_of_cgm_trees_after_burn_in[g]){
+				tot_for_attr_j += root_node.numTimesAttrUsed(j);
+			}			
+			counts[j] = tot_for_attr_j;
+		}
+		
+		return counts;
+	}
 
 	@Override
 	public void StopBuilding() {

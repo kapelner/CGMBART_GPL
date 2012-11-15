@@ -148,7 +148,7 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 //		return mu_vals;
 //	}	
 	
-	public double[] getAvgCountsByAttribute(){
+	public double[] getAvgCountsByAttributeOverChain(){
 		double[] avg_counts = new double[p];
 		for (int j = 0; j < p; j++){
 			int tot_for_attr_j = 0;
