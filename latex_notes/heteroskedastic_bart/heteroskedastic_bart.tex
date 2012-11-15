@@ -1,6 +1,6 @@
 \include{preamble}
 
-\title{Heteroskedastic BART}
+\title{Heteroskedastic BART Augmentation}
 
 \date{}
 
@@ -11,14 +11,14 @@
 
 \section*{Introduction}
 
-We want to allow each observation to have its own variance, but each observation is still independent. The model now becomes:
+We want to extend the BART model so that each observation now can have its own variance (but each observation is still independent). The model becomes:
 
 \beqn
 Y = \sum_{t=1}^m \treet{t}\parens{X_1, \ldots, X_p} + \berrordist, \quad \berrordist \sim \multnormnot{n}{\bv{0}}{\underbrace{\threebythreemat{\sigsq_1}{}{}{}{\ddots}{}{}{}{\sigsq_k}}_{\D}}
 \eeqn
 
 
-We take vanilla BART and now condition on the variances and then we augment the last step of the Gibbs sampler to now do $n$ samples --- one for $\sigsq_1$, one for $\sigsq_2$, $\ldots$, and one for $\sigsq_n$. Remember that $E$ is the vector of residuals, $Y$ minus the best guess inside the trees:
+We take vanilla BART and now condition on the variances and then we augment the last step of the Gibbs sampler to now do $n$ samples --- one for $\sigsq_1$, one for $\sigsq_2$, $\ldots$, and one for $\sigsq_n$. Remember that $E$ is the $n$-vector of residuals, $Y$ minus the best guess inside the trees:
 
 \beqn
 \treet{1} &~|~& R_1, \sigsq_1, \ldots, \sigsq_n \\
@@ -31,9 +31,15 @@ M_m &~|~& \treet{m}, R_m, \sigsq_1, \ldots, \sigsq_n \\
 \sigsq_n &~|~& E \\
 \eeqn
 
+Thus, there are many pieces in the BART model that will now have to be altered. Each subsection below is devoted to each piece.
+
+\pagebreak
 \subsection*{Prior on the variance}
 
-We keep the same prior on each of the observation's variances:
+We present two possible designs below for the prior on the $\sigsq$'s:
+
+\begin{itemize}
+\item  We keep the same prior as before, now it's on each of the observation's variances:
 
 \beqn
 \sigsq_1, \ldots, \sigsq_n \iid \invgammanot{\overtwo{\nu}}{\overtwo{\nu\lambda}}
@@ -41,7 +47,7 @@ We keep the same prior on each of the observation's variances:
 
 We may have to rethink the above, but it seems like a good start. Once again we pick $\nu = 3$ and we pick $\lambda$ so that 90\% of the prior's density is below $s^2$, our estimate from the data which is either just the sample variance, or the RMSE squared from a linear model. 
 
-We also can have individual priors:
+\item We also can have individual priors:
 
 \beqn
 \sigsq_1 &\sim& \invgammanot{\overtwo{\nu}}{\overtwo{\nu\lambda_1}} \\
@@ -49,7 +55,9 @@ We also can have individual priors:
 \sigsq_n &\sim& \invgammanot{\overtwo{\nu}}{\overtwo{\nu\lambda_n}} \\
 \eeqn
 
-where $\lambda_i$ is picked based on a weighted least squares residual.
+where $\lambda_i$ is picked based on the weighted least squares residual for each observation.
+
+\end{itemize}
 
 \subsection*{Changes in Gibbs Sampler for $M$}
 
@@ -80,7 +88,7 @@ In vanilla BART, the posterior of $\sigsq$ was:
 \sigsq ~|~ e_1, \ldots, e_n \sim \invgammanot{\overtwo{\nu + n}}{\overtwo{\lambda\nu + \sum_{i=1}^n e_i^2}} 
 \eeqn
 
-Now, we have to sample each $\sigsq_1, \ldots, \sigsq_n$. We estimate each of them based on only one residual:
+Now, we have to sample each $\sigsq_1, \ldots, \sigsq_n$ from their individual posteriors. The analagous expression is that the SSE is based on only one residual:
 
 \beqn
 \sigsq_i ~|~ e_i \sim \invgammanot{\overtwo{\nu + 1}}{\overtwo{\lambda\nu + e_i^2}}
@@ -107,7 +115,7 @@ We cannot use this expression as before since $\sigsq$ is now non-constant. Inst
 \eeqn
 \normalsize
 
-Thus, we have to figure out the below. I'm going to drop the subscripts for convenience:
+Thus, we have to figure out the following below. I'm going to drop the subscripts for convenience:
 
 \beqn
 && \myint{\mu}{\reals}{}{\cprob{\R}{\mu, \sigsq_1, \ldots, \sigsq_n}\prob{\mu}}  \\
@@ -123,7 +131,7 @@ Now we can solve the underbraced integral above using Mathematica:
 
 \begin{figure}[htp]
 \centering
-\includegraphics[width=4.5in]{mathematica.jpg}
+\includegraphics[width= 5.0in]{mathematica.jpg}
 \end{figure}
 \FloatBarrier
 
