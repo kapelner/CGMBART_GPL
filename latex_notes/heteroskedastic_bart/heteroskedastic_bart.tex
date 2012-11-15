@@ -1,6 +1,6 @@
 \include{preamble}
 
-\title{Some notes on the Metropolis-Hastings Implementation}
+\title{Heteroskedastic BART}
 
 \date{}
 
@@ -9,9 +9,16 @@
 \begin{document}
 \maketitle
 
-\section*{Heteroskedastic BART Introduction}
+\section*{Introduction}
 
-We take vanilla BART and update the last step of the Gibbs sampler to include a sampling an estimate for the variance for each observation, $\sigsq_1, \ldots, \sigsq_n$.
+We want to allow each observation to have its own variance, but each observation is still independent. The model now becomes:
+
+\beqn
+Y = \sum_{t=1}^m \treet{t}\parens{X_1, \ldots, X_p} + \berrordist, \quad \berrordist \sim \multnormnot{n}{\bv{0}}{\underbrace{\threebythreemat{\sigsq_1}{}{}{}{\ddots}{}{}{}{\sigsq_k}}_{\D}}
+\eeqn
+
+
+We take vanilla BART and now condition on the variances and then we augment the last step of the Gibbs sampler to now do $n$ samples --- one for $\sigsq_1$, one for $\sigsq_2$, $\ldots$, and one for $\sigsq_n$. Remember that $E$ is the vector of residuals, $Y$ minus the best guess inside the trees:
 
 \beqn
 \treet{1} &~|~& R_1, \sigsq_1, \ldots, \sigsq_n \\
@@ -60,7 +67,7 @@ We derive the correct posterior distribution below. We drop the subscripts just 
 
 \beqn
 \cprob{\mu}{R, \sigsq_1, \ldots, \sigsq_k} &\propto& \cprob{R}{\mu, \sigsq_1, \ldots, \sigsq_n} \cprob{\mu}{\sigsq_1, \ldots, \sigsq_k} \\
-&=& \multnormnot{k}{\mu\onevec}{\underbrace{\threebythreemat{\sigsq_1}{}{}{}{\ddots}{}{}{}{\sigsq_k}}_{\D}} \normnot{0}{\sigsq_\mu} \\
+&=& \multnormnot{k}{\mu\onevec}{\D} \normnot{0}{\sigsq_\mu} \\
 &\vdots& \\
 &=& \normnot{\frac{\dfrac{k^2 \Rbar}{\sum_{i=1}^k \sigsq_i}}{\doneover{\sigsq_\mu} + \dfrac{k^2}{\sum_{i=1}^k \sigsq_i}}}{\oneover{\doneover{\sigsq_\mu} + \dfrac{k^2}{\sum_{i=1}^k \sigsq_i}}}
 \eeqn
@@ -109,18 +116,18 @@ Thus, we have to figure out the below. I'm going to drop the subscripts for conv
 &=& \oneover{\tothepow{2\pi}{\overtwo{n} + 1}\sqrt{\sigsqmu \prod_{i=1}^{n} \sigsq_i}}\myint{\mu}{\reals}{}{\exp{-\half \parens{\musq + \sumonen{i}{\squared{R_i - \mu}}} }}\\
 &=& \oneover{\tothepow{2\pi}{\overtwo{n} + 1}\sqrt{\sigsqmu \prod_{i=1}^{n} \sigsq_i}}\myint{\mu}{\reals}{}{\exp{-\half \parens{\frac{\musq}{\sigsq_\mu} + \sumonen{i}{\frac{R_i^2}{\sigsq_i} - \frac{2\mu R_i}{\sigsq_i} + \frac{\musq}{\sigsq_i}}} }}\\
 &=& \oneover{\tothepow{2\pi}{\overtwo{n} + 1}\sqrt{\sigsqmu \prod_{i=1}^{n} \sigsq_i}}\myint{\mu}{\reals}{}{\exp{-\half \parens{\frac{\musq}{\sigsq_\mu} + \sumonen{i}{\frac{R_i^2}{\sigsq_i}} - 2\mu \sumonen{i}{\frac{R_i}}{\sigsq_i} + \musq\sumonen{i}{\frac{1}{\sigsq_i}}} }}\\
-&=& \oneover{\tothepow{2\pi}{\overtwo{n} + 1}\sqrt{\sigsqmu \prod_{i=1}^{n} \sigsq_i}} \exp{-\half \sumonen{i}{\frac{R_i^2}{\sigsq_i}}}\myint{\mu}{\reals}{}{\exp{-\half \parens{\frac{\musq}{\sigsq_\mu} - 2\mu \sumonen{i}{\frac{R_i}}{\sigsq_i} + \musq\sumonen{i}{\frac{1}{\sigsq_i}}} }}\\
+&=& \oneover{\tothepow{2\pi}{\overtwo{n} + 1}\sqrt{\sigsqmu \prod_{i=1}^{n} \sigsq_i}} \exp{-\half \sumonen{i}{\frac{R_i^2}{\sigsq_i}}} \underbrace{\myint{\mu}{\reals}{}{\exp{-\half \parens{\frac{\musq}{\sigsq_\mu} - 2\mu \sumonen{i}{\frac{R_i}}{\sigsq_i} + \musq\sumonen{i}{\frac{1}{\sigsq_i}}} }}} \\
 \eeqn
 
-Now we can solve with Mathematica:
+Now we can solve the underbraced integral above using Mathematica:
 
 \begin{figure}[htp]
 \centering
-\includegraphics[width=5.5in]{mathematica.jpg}
+\includegraphics[width=4.5in]{mathematica.jpg}
 \end{figure}
 \FloatBarrier
 
-Thus we arrive at:
+Plugging this result into the equation where the integral once was, we obtain:
 
 \beqn
 &=& \oneover{\tothepow{2\pi}{\overtwo{n} + 1}\sqrt{\sigsqmu \prod_{i=1}^{n} \sigsq_i}} \exp{-\half \sumonen{i}{\frac{R_i^2}{\sigsq_i}}} \sqrt{\frac{2\pi}{\oneover{\sigsq_\mu} + \displaystyle \sum_{i=1}^n \oneover{\sigsq_i}}} \exp{\frac{\sigsq_\mu \squared{\displaystyle \sum_{i=1}^n \frac{R_i}{\sigsq_i}}}{2 + 2\sigsq_\mu \displaystyle \sum_{i=1}^n \oneover{\sigsq_i}}}\\
@@ -133,7 +140,7 @@ Now we can solve for the likelihood ratio:
 \frac{\cprob{\R}{T^*, \sigsq_1, \ldots, \sigsq_n}}{\cprob{\R}{T, \sigsq_1, \ldots, \sigsq_n}} = \frac{\cprob{\R_L}{\sigsq_1, \ldots, \sigsq_n} \cprob{\R_R}{\sigsq}}{\cprob{\R}{\sigsq_1, \ldots, \sigsq_n}} \\
 \eeqn
 
-Note that there's many things that can cancel above. The sum of the $R_i^2 / \sigsq_i$'s would cancel numerator-denominator since we're adding the same set\footnote{the aggregate of the left leaf values $\cup$ the aggregate of the right leaf values has to equal the parent's values}, the product of the $\sigsq_i$'s would cancel since we're multiplying over the same set, the $2\pi$'s will cancel as well leaving us with:
+Note that there's many things that can cancel above. The sum of the $R_i^2 / \sigsq_i$'s would cancel numerator-denominator since we're adding the same set\footnote{The set of left leaf values $\cup$ the set of right leaf values has to equal the set of the node's parent's values}, the product of the $\sigsq_i$'s would cancel since we're multiplying over the same set, the $2\pi$'s will cancel as well leaving us with:
 
 \begin{changemargin}{-20px}{0px}
 \small
