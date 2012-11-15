@@ -56,11 +56,11 @@ The other step that has to change is sampling the leaf $\mu$'s. Remember that $M
 
 The subscripts on the $R$ term indicates we only consider the data that falls into the leaf. So remember that the prior on the leaf value was normal, and the likelihood was assumed normal as well. The only thing that changes is we now have a different variance estimate for each observation. 
 
-We derive the correct posterior distribution below. We drop the subscripts just for convenience since it will be the same for each of the above and denote $k$ as the number of data records that fell into this leaf. $\sigsq_1, \ldots, \sigsq_k \subset \sigsq_1, \ldots, \sigsq_n$ for the data in this leaf as well:
+We derive the correct posterior distribution below. We drop the subscripts just for convenience since it will be the same for each of the above and denote $k$ as the number of data records that fell into this leaf. $\braces{\sigsq_1, \ldots, \sigsq_k} \subset \braces{\sigsq_1, \ldots, \sigsq_n}$ for the data in this leaf as well:
 
 \beqn
 \cprob{\mu}{R, \sigsq_1, \ldots, \sigsq_k} &\propto& \cprob{R}{\mu, \sigsq_1, \ldots, \sigsq_n} \cprob{\mu}{\sigsq_1, \ldots, \sigsq_k} \\
-&=& \multnormnot{k}{\mu\onevec}{\threebythreemat{\sigsq_1}{}{}{}{\ddots}{}{}{}{\sigsq_k}} \normnot{0}{\sigsq_\mu} \\
+&=& \multnormnot{k}{\mu\onevec}{\underbrace{\threebythreemat{\sigsq_1}{}{}{}{\ddots}{}{}{}{\sigsq_k}}_{\D}} \normnot{0}{\sigsq_\mu} \\
 &\vdots& \\
 &=& \normnot{\frac{\dfrac{k^2 \Rbar}{\sum_{i=1}^k \sigsq_i}}{\doneover{\sigsq_\mu} + \dfrac{k^2}{\sum_{i=1}^k \sigsq_i}}}{\oneover{\doneover{\sigsq_\mu} + \dfrac{k^2}{\sum_{i=1}^k \sigsq_i}}}
 \eeqn
@@ -80,7 +80,72 @@ Now, we have to sample each $\sigsq_1, \ldots, \sigsq_n$. We estimate each of th
 \eeqn
 
 
+\subsection*{Changes in Likelihood for $R$}
 
+In vanilla BART, we had:
+
+\beqn
+&& \frac{\cprob{\R}{T^*, \sigsq}}{\cprob{\R}{T, \sigsq}} \\
+&=& \frac{\myint{\mu}{\reals}{}{\cprob{\RLlonetonlL}{\mu, \sigsq}\prob{\mu}} ~~ \myint{\mu}{\reals}{}{\cprob{\RRlonetonlR}{\mu, \sigsq}\prob{\mu}}}{\myint{\mu}{\reals}{}{\cprob{\Rlonetonl}{\mu, \sigsq}\prob{\mu}}}  \\
+&\vdots& \\
+&=& \sqrt{\frac{\sigsq \parens{\sigsq + n_\ell \sigsqmu}}{\parens{\sigsq + n_{\ell_L} \sigsqmu}\parens{\sigsq + n_{\ell_R} \sigsqmu}}}~\exp{\frac{\sigsq_\mu}{2\sigsq} \parens{\frac{\squared{\sum_{i=1}^{n_{\ell_L}} R_{\ell_L, i}}}{\sigsq + n_{\ell_L}\sigsq_\mu} + \frac{\squared{\sum_{i=1}^{n_{\ell_R}} R_{\ell_R, i}}}{\sigsq + n_{\ell_R}\sigsq_\mu} - \frac{\squared{\sum_{i=1}^{n_{\ell}} R_{\ell, i}}}{\sigsq + n_\ell \sigsq_\mu}}} \\
+\eeqn
+
+We cannot use this expression as before since $\sigsq$ is now non-constant. Instead we have to use:
+
+\small
+\beqn
+&& \frac{\cprob{\R}{T^*, \sigsq}}{\cprob{\R}{T, \sigsq}} \\
+&=& \frac{\myint{\mu}{\reals}{}{\cprob{\RLlonetonlL}{\mu, \sigsq_1, \ldots, \sigsq_n}\prob{\mu}} ~~ \myint{\mu}{\reals}{}{\cprob{\RRlonetonlR}{\mu, \sigsq_1, \ldots, \sigsq_n}\prob{\mu}}}{\myint{\mu}{\reals}{}{\cprob{\Rlonetonl}{\mu, \sigsq_1, \ldots, \sigsq_n}\prob{\mu}}} 
+\eeqn
+\normalsize
+
+Thus, we have to figure out the below. I'm going to drop the subscripts for convenience:
+
+\beqn
+&& \myint{\mu}{\reals}{}{\cprob{\R}{\mu, \sigsq_1, \ldots, \sigsq_n}\prob{\mu}}  \\
+&=& \myint{\mu}{\reals}{}{\oneover{\tothepow{2\pi}{\overtwo{n}} \abss{\D}^{-\half}}\exp{-\half\transpose{\R - \mu\onevec} \D^{-1} (\R - \mu\onevec)} ~\oneoversqrt{2\pi\sigsq_\mu} \exp{-\oneover{2\sigsq_\mu} \musq}}~ \\
+&=& \myint{\mu}{\reals}{}{\parens{\prod_{i=1}^{n} \oneoversqrt{2\pi\sigsq_i} \exp{-\oneover{2\sigsq_i} \squared{R_i - \mu}}} ~\oneoversqrt{2\pi\sigsq_\mu} \exp{-\oneover{2\sigsq_\mu} \musq}}~ \\
+&=& \oneover{\tothepow{2\pi}{\overtwo{n} + 1}\sqrt{\sigsqmu \prod_{i=1}^{n} \sigsq_i}}\myint{\mu}{\reals}{}{\exp{-\half \parens{\musq + \sumonen{i}{\squared{R_i - \mu}}} }}\\
+&=& \oneover{\tothepow{2\pi}{\overtwo{n} + 1}\sqrt{\sigsqmu \prod_{i=1}^{n} \sigsq_i}}\myint{\mu}{\reals}{}{\exp{-\half \parens{\frac{\musq}{\sigsq_\mu} + \sumonen{i}{\frac{R_i^2}{\sigsq_i} - \frac{2\mu R_i}{\sigsq_i} + \frac{\musq}{\sigsq_i}}} }}\\
+&=& \oneover{\tothepow{2\pi}{\overtwo{n} + 1}\sqrt{\sigsqmu \prod_{i=1}^{n} \sigsq_i}}\myint{\mu}{\reals}{}{\exp{-\half \parens{(n+1)\musq -2\mu\Rbar + \sumonen{i}{R_i^2}} }}\\
+&=& \oneover{\tothepow{2\pi}{\overtwo{n} + 1}\sqrt{\sigsqmu \prod_{i=1}^{n} \sigsq_i}} \exp{-\half \sumonen{i}{R_i^2}}\myint{\mu}{\reals}{}{\exp{-\half \parens{(n+1)\musq -2\mu\Rbar} }}\\
+\eeqn
+
+Now we can solve with Mathematica:
+
+\begin{figure}[htp]
+\centering
+\includegraphics[width=4in]{mathematica.jpg}
+\end{figure}
+\FloatBarrier
+
+Thus we arrive at:
+
+\beqn
+&=& \oneover{\tothepow{2\pi}{\overtwo{n} + 1}\sqrt{\sigsqmu \prod_{i=1}^{n} \sigsq_i}} \exp{-\half \sumonen{i}{R_i^2}} \sqrt{\frac{2\pi}{n+1}} \exp{\parens{\frac{\Rbar^2}{2n+2}}} \\
+&=& \oneover{\sqrt{\sigsqmu}\tothepow{2\pi}{\overtwo{n}}\sqrt{(n+1)\prod_{i=1}^{n} \sigsq_i}} \exp{-\half \sumonen{i}{R_i^2}}\exp{\half \parens{\frac{\Rbar^2}{n+1}}} \\
+\eeqn
+
+Now we can solve for the likelihood ratio:
+
+\begin{changemargin}{-40px}{0px}
+\scriptsize
+\beqn
+&& \frac{\cprob{\R}{T^*, \sigsq}}{\cprob{\R}{T, \sigsq}} \\
+&=& \frac{\oneover{\sqrt{\sigsqmu}\tothepow{2\pi}{\overtwo{n_L}}\sqrt{(n_L+1) \displaystyle\prod_{i_L=1}^{n_L} \sigsq_i}} \exp{-\half \displaystyle\sum_{i_L=1}^{n_L}{R_i^2}}\exp{\half \parens{\dfrac{\Rbar_L^2}{n_L+1}}} \oneover{\sqrt{\sigsqmu}\tothepow{2\pi}{\overtwo{n_R}}\sqrt{(n_R+1) \displaystyle\prod_{i_R=1}^{n_R} \sigsq_i}} \exp{-\half \displaystyle\sum_{i_R=1}^{n_R}{R_i^2}}\exp{\half \parens{\dfrac{\Rbar_R^2}{n_R+1}}}  }{\oneover{\sqrt{\sigsqmu}\tothepow{2\pi}{\overtwo{n}}\sqrt{(n+1) \displaystyle\prod_{i=1}^{n} \sigsq_i}} \exp{-\half \displaystyle\sumonen{i}{R_i^2}}\exp{\half \parens{\dfrac{\Rbar^2}{n+1}}}}
+\eeqn
+\normalsize
+\end{changemargin}
+
+Note that there's many things that can cancel above. The sum of the $R_i^2$'s would cancel since we're adding the same set, the product of the $\sigsq_i$'s would cancel since we're multiplying over the same set, the $2\pi$'s will cancel as well, and finally, one of the $\sqrt{\sigsqmu}$ will cancel leaving us with:
+
+\beqn
+&=& \frac{\oneover{\sqrt{\sigsqmu}\sqrt{(n_L+1)}} \exp{\half \parens{\dfrac{\Rbar_L^2}{n_L+1}}} \oneover{\sqrt{(n_R+1) }} \exp{\half \parens{\dfrac{\Rbar_R^2}{n_R+1}}}  }{\oneover{\sqrt{(n+1) }} \exp{\half \parens{\dfrac{\Rbar^2}{n+1}}}} \\
+&=& \oneover{\sqrt{\sigsqmu}} \frac{\oneover{\sqrt{(n_L+1)}} \exp{\half \parens{\dfrac{\Rbar_L^2}{n_L+1}}} \oneover{\sqrt{(n_R+1) }} \exp{\half \parens{\dfrac{\Rbar_R^2}{n_R+1}}}  }{\oneover{\sqrt{(n+1) }} \exp{\half \parens{\dfrac{\Rbar^2}{n+1}}}} \\
+&=& \sqrt{\frac{n + 1}{\sigsqmu(n_L + 1)(n_R + 1)}} \frac{ \exp{\half \parens{\dfrac{\Rbar_L^2}{n_L+1}}} \exp{\half \parens{\dfrac{\Rbar_R^2}{n_R+1}}}  }{ \exp{\half \parens{\dfrac{\Rbar^2}{n+1}}}} \\
+&=& \sqrt{\frac{n + 1}{\sigsqmu(n_L + 1)(n_R + 1)}} \exp{\half \parens{\dfrac{\Rbar_L^2}{n_L+1} + \dfrac{\Rbar_R^2}{n_R+1} - \dfrac{\Rbar^2}{n+1}}} \\
+\eeqn
 
 
 \end{document}
