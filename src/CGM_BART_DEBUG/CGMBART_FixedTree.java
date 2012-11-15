@@ -2,8 +2,6 @@ package CGM_BART_DEBUG;
 
 import CGM_BART.*;
 
-import java.util.ArrayList;
-
 public class CGMBART_FixedTree extends CGMBART_09_eval {
 	private static final long serialVersionUID = 3460935328647793073L;
 	
@@ -16,16 +14,16 @@ public class CGMBART_FixedTree extends CGMBART_09_eval {
 
 	//only the simple tree 
 	protected void InitializeTrees() {
-		ArrayList<CGMBARTTreeNode> cgm_trees = new ArrayList<CGMBARTTreeNode>(num_trees);
-		cgm_trees.add(CreateTheSimpleTreeModel(this));	
-		gibbs_samples_of_cgm_trees.add(0, cgm_trees);		
+		CGMBARTTreeNode[] cgm_trees = new CGMBARTTreeNode[num_trees];
+		cgm_trees[0] = CreateTheSimpleTreeModel(this);	
+		gibbs_samples_of_cgm_trees[0] = cgm_trees;		
 	}
 
-	protected double[] SampleTree(int sample_num, int t, ArrayList<CGMBARTTreeNode> cgm_trees, TreeArrayIllustration tree_array_illustration) {
+	protected double[] SampleTree(int sample_num, int t, CGMBARTTreeNode[] cgm_trees, TreeArrayIllustration tree_array_illustration) {
 		CGMBARTTreeNode tree = CreateTheSimpleTreeModel(this);
 		tree.updateWithNewResponsesRecursively(y_trans); //no need for new y vector (which is usually the residuals from other trees)
-		cgm_trees.add(tree);
-		gibbs_samples_of_cgm_trees.set(sample_num, cgm_trees);
+		cgm_trees[t] = tree;
+		gibbs_samples_of_cgm_trees[sample_num] = cgm_trees;
 		
 		//The rest is all debug 
 		double lik = 0;//posterior_builder.calculateLnProbYGivenTree(tree);

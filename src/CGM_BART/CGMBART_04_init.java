@@ -1,8 +1,6 @@
 package CGM_BART;
 
-import java.util.ArrayList;
 import java.io.Serializable;
-
 
 public abstract class CGMBART_04_init extends CGMBART_03_debug implements Serializable {
 	private static final long serialVersionUID = 8239599486635371714L;

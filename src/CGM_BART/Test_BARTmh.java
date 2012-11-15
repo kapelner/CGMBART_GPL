@@ -2,8 +2,6 @@ package CGM_BART;
 
 import static org.junit.Assert.*;
 
-import java.util.HashMap;
-
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;

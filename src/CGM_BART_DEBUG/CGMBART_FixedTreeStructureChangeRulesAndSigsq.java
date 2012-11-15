@@ -1,7 +1,5 @@
 package CGM_BART_DEBUG;
 
-import java.util.ArrayList;
-
 import CGM_BART.*;
 
 public class CGMBART_FixedTreeStructureChangeRulesAndSigsq extends CGMBART_09_eval {
@@ -16,7 +14,7 @@ public class CGMBART_FixedTreeStructureChangeRulesAndSigsq extends CGMBART_09_ev
 	
 	//start the tree with no information
 	protected void InitializeTrees() {
-		ArrayList<CGMBARTTreeNode> cgm_trees = new ArrayList<CGMBARTTreeNode>(num_trees);
+		CGMBARTTreeNode[] cgm_trees = new CGMBARTTreeNode[num_trees];
 		CGMBARTTreeNode tree = CGMBART_FixedTree.CreateTheSimpleTreeModel(this);
 		tree.splitAttributeM = 0;
 		tree.splitValue = 0.0;
@@ -24,7 +22,7 @@ public class CGMBART_FixedTreeStructureChangeRulesAndSigsq extends CGMBART_09_ev
 		tree.left.splitValue = 0.0;
 		tree.right.splitAttributeM = 0;
 		tree.right.splitValue = 0.0;
-		cgm_trees.add(tree);	
-		gibbs_samples_of_cgm_trees.add(0, cgm_trees);		
+		cgm_trees[0] = tree;	
+		gibbs_samples_of_cgm_trees[0] = cgm_trees;		
 	}
 }

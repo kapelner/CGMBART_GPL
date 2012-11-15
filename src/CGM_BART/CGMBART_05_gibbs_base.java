@@ -1,7 +1,6 @@
 package CGM_BART;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 
 public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements Serializable {
 	private static final long serialVersionUID = 1280579612167425306L;
@@ -128,13 +127,13 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 	
 	protected abstract CGMBARTTreeNode metroHastingsPosteriorTreeSpaceIteration(CGMBARTTreeNode copy_of_old_jth_tree);
 
-	private void BurnTreeAndSigsqChain() {		
-		for (int i = num_gibbs_burn_in; i < num_gibbs_total_iterations; i++){
-			gibbs_samples_of_cgm_trees_after_burn_in[i - num_gibbs_burn_in] = gibbs_samples_of_cgm_trees[i];
-			gibbs_samples_of_sigsq_after_burn_in[i - num_gibbs_burn_in] = gibbs_samples_of_sigsq[i];
-		}	
-//		System.out.println("BurnTreeAndSigsqChain gibbs_samples_of_sigsq_after_burn_in length = " + gibbs_samples_of_sigsq_after_burn_in.size());
-	}
+//	private void BurnTreeAndSigsqChain() {		
+//		for (int i = num_gibbs_burn_in; i < num_gibbs_total_iterations; i++){
+//			gibbs_samples_of_cgm_trees_after_burn_in[i - num_gibbs_burn_in] = gibbs_samples_of_cgm_trees[i];
+//			gibbs_samples_of_sigsq_after_burn_in[i - num_gibbs_burn_in] = gibbs_samples_of_sigsq[i];
+//		}	
+////		System.out.println("BurnTreeAndSigsqChain gibbs_samples_of_sigsq_after_burn_in length = " + gibbs_samples_of_sigsq_after_burn_in.size());
+//	}
 	
 //	public double[] getMuValuesForAllItersByTreeAndLeaf(int t, int leaf_num){
 //		double[] mu_vals = new double[num_gibbs_total_iterations];

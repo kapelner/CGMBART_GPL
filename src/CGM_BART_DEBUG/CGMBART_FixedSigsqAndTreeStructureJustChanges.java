@@ -1,7 +1,5 @@
 package CGM_BART_DEBUG;
 
-import java.util.ArrayList;
-
 import CGM_BART.*;
 
 public class CGMBART_FixedSigsqAndTreeStructureJustChanges extends CGMBART_09_eval {
@@ -18,17 +16,17 @@ public class CGMBART_FixedSigsqAndTreeStructureJustChanges extends CGMBART_09_ev
 	//fix it once for good
 	protected void InitizializeSigsq() {	
 		fixed_sigsq = 1 / y_range_sq;
-		gibbs_samples_of_sigsq.add(0, fixed_sigsq);
+		gibbs_samples_of_sigsq[0] = fixed_sigsq;
 	}	
 	
 	//keep sigsq fixed
 	protected void SampleSigsq(int sample_num) {
-		gibbs_samples_of_sigsq.add(sample_num, fixed_sigsq); //fix it forever
+		gibbs_samples_of_sigsq[sample_num] = fixed_sigsq; //fix it forever
 	}	
 
 	//start the tree with no information
 	protected void InitializeTrees() {
-		ArrayList<CGMBARTTreeNode> cgm_trees = new ArrayList<CGMBARTTreeNode>(num_trees);
+		CGMBARTTreeNode[] cgm_trees = new CGMBARTTreeNode[num_trees];
 		CGMBARTTreeNode tree = CGMBART_FixedTree.CreateTheSimpleTreeModel(this);
 		tree.splitAttributeM = 0;
 		tree.splitValue = 0.0;
@@ -36,8 +34,8 @@ public class CGMBART_FixedSigsqAndTreeStructureJustChanges extends CGMBART_09_ev
 		tree.left.splitValue = 0.0;
 		tree.right.splitAttributeM = 0;
 		tree.right.splitValue = 0.0;
-		cgm_trees.add(tree);	
-		gibbs_samples_of_cgm_trees.add(0, cgm_trees);		
+		cgm_trees[0] = tree;	
+		gibbs_samples_of_cgm_trees[0] = cgm_trees;		
 	}
 //
 //	private CGMTreeNode CreateOneBranchTree() {

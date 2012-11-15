@@ -84,7 +84,7 @@ public class StatToolbox {
 	
 	private static double[] NORM_SAMPS;
 	private static int NUM_NORM_SAMPS;
-	private static int START_POS;
+//	private static int START_POS;
 	private static final String norm_samps_file = "randsamps/rnorm.csv";
 	static {
 		BufferedReader in;
@@ -95,7 +95,7 @@ public class StatToolbox {
 				String[] random_samps = raw.split(",");
 				NUM_NORM_SAMPS = random_samps.length;
 				NORM_SAMPS = new double[NUM_NORM_SAMPS];
-				START_POS = (int)Math.floor(rand() * NUM_NORM_SAMPS);
+//				START_POS = (int)Math.floor(rand() * NUM_NORM_SAMPS);
 				for (int i = 0; i < NUM_NORM_SAMPS; i++){
 					NORM_SAMPS[i] = Double.parseDouble(random_samps[i]);
 				}	

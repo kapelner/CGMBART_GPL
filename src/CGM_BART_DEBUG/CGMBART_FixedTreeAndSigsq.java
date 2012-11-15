@@ -21,25 +21,25 @@ public class CGMBART_FixedTreeAndSigsq extends CGMBART_09_eval {
 	}
 	
 	protected void InitializeTrees() {
-		ArrayList<CGMBARTTreeNode> cgm_trees = new ArrayList<CGMBARTTreeNode>(num_trees);
-		cgm_trees.add(CGMBART_FixedTree.CreateTheSimpleTreeModel(this));	
-		gibbs_samples_of_cgm_trees.add(0, cgm_trees);		
+		CGMBARTTreeNode[] cgm_trees = new CGMBARTTreeNode[num_trees];
+		cgm_trees[0] = CGMBART_FixedTree.CreateTheSimpleTreeModel(this);	
+		gibbs_samples_of_cgm_trees[0] = cgm_trees;		
 	}
 
 	//fix it once for good
 	protected void InitizializeSigsq() {		
-		gibbs_samples_of_sigsq.add(0, fixed_sigsq);		
+		gibbs_samples_of_sigsq[0] = fixed_sigsq;		
 	}	
 	
 	protected void SampleSigsq(int sample_num) {
-		gibbs_samples_of_sigsq.add(sample_num, fixed_sigsq); //fix it forever
+		gibbs_samples_of_sigsq[sample_num] = fixed_sigsq; //fix it forever
 	}
 
-	protected double[] SampleTree(int sample_num, int t, ArrayList<CGMBARTTreeNode> cgm_trees, TreeArrayIllustration tree_array_illustration) {
+	protected double[] SampleTree(int sample_num, int t, CGMBARTTreeNode[] cgm_trees, TreeArrayIllustration tree_array_illustration) {
 		CGMBARTTreeNode tree = CGMBART_FixedTree.CreateTheSimpleTreeModel(this);
 		tree.updateWithNewResponsesRecursively(y_trans); //no need for new y vector (which is usually the residuals from other trees)
-		cgm_trees.add(tree);
-		gibbs_samples_of_cgm_trees.set(sample_num, cgm_trees);
+		cgm_trees[t] = tree;
+		gibbs_samples_of_cgm_trees[sample_num] = cgm_trees;
 		
 		//The rest is all debug
 		double lik = 0; //posterior_builder.calculateLnProbYGivenTree(tree);

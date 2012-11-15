@@ -18,9 +18,16 @@ public class CGMBART_F2_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
 	}	
 	
 	private void SampleMusF2(int sample_num, int t) {
-		// TODO Auto-generated method stub
 		
 	}	
+	
+
+	public void useHeteroskedasticity(){
+		use_heteroskedasticity = true;
+	}	
+	
+	
+	/////////////nothing but scaffold code below, do not alter!
 	
 	protected void SampleMus(int sample_num, int t) {
 		if (use_heteroskedasticity){
@@ -46,8 +53,5 @@ public class CGMBART_F2_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
 		}
 		return super.calcLnLikRatioGrow(grow_node);
 	}	
-
-	public void useHeteroskedasticity(){
-		use_heteroskedasticity = true;
-	}	
+	
 }

@@ -71,6 +71,8 @@ public class CGMBART_F1_prior_cov_spec extends CGMBART_09_eval {
 		use_prior_cov_spec = true;
 	}
 	
+	/////////////nothing but scaffold code below, do not alter!
+	
 	public int pickRandomPredictorThatCanBeAssigned(CGMBARTTreeNode node){
 		if (use_prior_cov_spec){
 			return pickRandomPredictorThatCanBeAssignedF1(node);
