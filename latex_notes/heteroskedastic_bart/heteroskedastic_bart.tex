@@ -106,7 +106,7 @@ In vanilla BART, we had:
 &=& \sqrt{\frac{\sigsq \parens{\sigsq + n_\ell \sigsqmu}}{\parens{\sigsq + n_{\ell_L} \sigsqmu}\parens{\sigsq + n_{\ell_R} \sigsqmu}}}~\exp{\frac{\sigsq_\mu}{2\sigsq} \parens{\frac{\squared{\sum_{i=1}^{n_{\ell_L}} R_{\ell_L, i}}}{\sigsq + n_{\ell_L}\sigsq_\mu} + \frac{\squared{\sum_{i=1}^{n_{\ell_R}} R_{\ell_R, i}}}{\sigsq + n_{\ell_R}\sigsq_\mu} - \frac{\squared{\sum_{i=1}^{n_{\ell}} R_{\ell, i}}}{\sigsq + n_\ell \sigsq_\mu}}} \\
 \eeqn
 
-We cannot use this expression as before since $\sigsq$ is now non-constant. Instead we have to use:
+We cannot use this expression as before since $\sigsq$ is no longer shared across all observations. Instead we have to use:
 
 \small
 \beqn
@@ -153,7 +153,7 @@ Note that there's many things that can cancel above. The sum of the $R_i^2 / \si
 \begin{changemargin}{-20px}{0px}
 \small
 \beqn
-&=& \sqrt{\frac{\parens{1 + \sigsq_\mu \displaystyle \sum_{i_L=1}^{n_L} \oneover{\sigsq_i}}\parens{1 + \sigsq_\mu \displaystyle \sum_{i_R=1}^{n_R} \oneover{\sigsq_i}}}{1 + \sigsq_\mu \displaystyle \sum_{i=1}^n \oneover{\sigsq_i}}}  \exp{\overtwo{\sigsq_\mu} \parens{\frac{\squared{\displaystyle \sum_{i_L=1}^{n_L} \frac{R_i}{\sigsq_i}}}{1 + \sigsq_\mu \displaystyle \sum_{i_L=1}^{n_L} \oneover{\sigsq_i}} + \frac{\squared{\displaystyle \sum_{i_R=1}^{n_R} \frac{R_i}{\sigsq_i}}}{1 + \sigsq_\mu \displaystyle \sum_{i_R=1}^{n_R} \oneover{\sigsq_i}} -  \frac{\squared{\displaystyle \sum_{i=1}^{n} \frac{R_i}{\sigsq_i}}}{1 + \sigsq_\mu \displaystyle \sum_{i=1}^{n} \oneover{\sigsq_i}}}}
+&=& \sqrt{\frac{1 + \sigsq_\mu \displaystyle \sum_{i=1}^n \oneover{\sigsq_i}}{\parens{1 + \sigsq_\mu \displaystyle \sum_{i_L=1}^{n_L} \oneover{\sigsq_i}}\parens{1 + \sigsq_\mu \displaystyle \sum_{i_R=1}^{n_R} \oneover{\sigsq_i}}}}  \exp{\overtwo{\sigsq_\mu} \parens{\frac{\squared{\displaystyle \sum_{i_L=1}^{n_L} \frac{R_i}{\sigsq_i}}}{1 + \sigsq_\mu \displaystyle \sum_{i_L=1}^{n_L} \oneover{\sigsq_i}} + \frac{\squared{\displaystyle \sum_{i_R=1}^{n_R} \frac{R_i}{\sigsq_i}}}{1 + \sigsq_\mu \displaystyle \sum_{i_R=1}^{n_R} \oneover{\sigsq_i}} -  \frac{\squared{\displaystyle \sum_{i=1}^{n} \frac{R_i}{\sigsq_i}}}{1 + \sigsq_\mu \displaystyle \sum_{i=1}^{n} \oneover{\sigsq_i}}}}
 \eeqn
 \normalsize
 \end{changemargin}
@@ -162,7 +162,7 @@ In log form this becomes:
 
 \inblue{
 \beqn
-&& \half \parens{\natlog{1 + \sigsq_\mu \displaystyle \sum_{i_L=1}^{n_L} \oneover{\sigsq_i}} + \natlog{1 + \sigsq_\mu \displaystyle \sum_{i_R=1}^{n_R} \oneover{\sigsq_i}} - \natlog{1 + \sigsq_\mu \displaystyle \sum_{i=1}^{n} + \oneover{\sigsq_i}}} + \\
+&& \half \parens{\natlog{1 + \sigsq_\mu \displaystyle \sum_{i=1}^{n} + \oneover{\sigsq_i}}} - \natlog{1 + \sigsq_\mu \displaystyle \sum_{i_L=1}^{n_L} \oneover{\sigsq_i}} - \natlog{1 + \sigsq_\mu \displaystyle \sum_{i_R=1}^{n_R} \oneover{\sigsq_i}} + \\
 && \overtwo{\sigsq_\mu} \parens{\frac{\squared{\displaystyle \sum_{i_L=1}^{n_L} \frac{R_i}{\sigsq_i}}}{1 + \sigsq_\mu \displaystyle \sum_{i_L=1}^{n_L} \oneover{\sigsq_i}} + \frac{\squared{\displaystyle \sum_{i_R=1}^{n_R} \frac{R_i}{\sigsq_i}}}{1 + \sigsq_\mu \displaystyle \sum_{i_R=1}^{n_R} \oneover{\sigsq_i}} -  \frac{\squared{\displaystyle \sum_{i=1}^{n} \frac{R_i}{\sigsq_i}}}{1 + \sigsq_\mu \displaystyle \sum_{i=1}^{n} \oneover{\sigsq_i}}}
 \eeqn
 }
