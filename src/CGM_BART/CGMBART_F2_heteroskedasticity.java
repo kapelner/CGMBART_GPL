@@ -57,15 +57,30 @@ public class CGMBART_F2_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
 	}
 	
 	private void SampleSigsqF2(int sample_num, double[] es) {
-//		double sigsq = drawSigsqFromPosterior(sample_num, es);
-		for (int i = 0; i < n; i++){			
-			double[] one_residual = {es[i]};
-			double sigsq = drawSigsqFromPosterior(sample_num, one_residual);
-			gibbs_samples_of_sigsq_hetero[sample_num][i] = sigsq;	
-//			System.out.println("sample sigsq e_i = " + es[i] + " sigsq_i = " + sigsq);
+		if (gibbs_sample_num < num_gibbs_burn_in){
+			double sigsq = drawSigsqFromPosterior(sample_num, es);
+			for (int i = 0; i < n; i++){
+//				double[] one_residual = {es[i]};
+//				double sigsq = drawSigsqFromPosterior(sample_num, one_residual);
+				gibbs_samples_of_sigsq_hetero[sample_num][i] = sigsq;	
+//				System.out.println("sample sigsq e_i = " + es[i] + " sigsq_i = " + sigsq);
+			}			
 		}
+		else {
+//			double sigsq = drawSigsqFromPosterior(sample_num, es);
+			for (int i = 0; i < n; i++){
+				double[] one_residual = {es[i]};
+				double sigsq = drawSigsqFromPosterior(sample_num, one_residual);
+				gibbs_samples_of_sigsq_hetero[sample_num][i] = sigsq;	
+//				System.out.println("sample sigsq e_i = " + es[i] + " sigsq_i = " + sigsq);
+			}				
+		}
+
+	}
 	
-	}	
+	public double[] getSigsqsByGibbsSample(int g){
+		return gibbs_samples_of_sigsq_hetero[g];
+	}
 	
 	private void SampleMusF2(int sample_num, CGMBARTTreeNode tree) {
 		double[] current_sigsqs = gibbs_samples_of_sigsq_hetero[sample_num - 1];

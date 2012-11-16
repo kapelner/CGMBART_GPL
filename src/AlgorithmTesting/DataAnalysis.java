@@ -67,7 +67,7 @@ public class DataAnalysis {
 				machine.setData(data.getX_y());
 //				double[] cov_split_prior = {1, 1000,1000};
 //				((CGMBARTRegressionMultThread)machine).setCovSplitPrior(cov_split_prior);
-//				((CGMBARTRegressionMultThread)machine).useHeteroskedasticity();
+				((CGMBARTRegressionMultThread)machine).useHeteroskedasticity();
 				machine.Build();
 				System.out.println("(in sample) L1 error: " + Math.round(machine.calculateInSampleLoss(Classifier.ErrorTypes.L1)) + " L2 error: " + Math.round(machine.calculateInSampleLoss(Classifier.ErrorTypes.L2)));
 				//now we'll do 95% CI and error rates

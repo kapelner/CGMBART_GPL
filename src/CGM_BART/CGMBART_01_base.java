@@ -16,8 +16,8 @@ public abstract class CGMBART_01_base extends Classifier implements Serializable
 
 	protected static final int DEFAULT_NUM_TREES = 200;
 	//this burn in number needs to be computed via some sort of moving average or time series calculation
-	protected static final int DEFAULT_NUM_GIBBS_BURN_IN = 1000;
-	protected static final int DEFAULT_NUM_GIBBS_TOTAL_ITERATIONS = 2000; //this must be larger than the number of burn in!!!
+	protected static final int DEFAULT_NUM_GIBBS_BURN_IN = 2000;
+	protected static final int DEFAULT_NUM_GIBBS_TOTAL_ITERATIONS = 4000; //this must be larger than the number of burn in!!!
 	
 	protected static double ALPHA = 0.95;
 	protected static double BETA = 2; //see p271 in CGM10	
@@ -28,8 +28,6 @@ public abstract class CGMBART_01_base extends Classifier implements Serializable
 	/** the variance of the errors */
 	protected double[] gibbs_samples_of_sigsq;
 	protected double[] gibbs_samples_of_sigsq_after_burn_in;
-	
-	/** 
 
 	/** the current # of trees */
 	protected int num_trees;

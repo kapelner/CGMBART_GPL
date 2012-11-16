@@ -73,6 +73,7 @@ build_bart_machine = function(training_data,
 		unique_name = "unnamed",
 		print_tree_illustrations = FALSE, 
 		print_out_every = NULL,
+		use_heteroskedasticity = FALSE,
 		cov_prior_vec = NULL){
 	
 	num_gibbs = num_burn_in + num_iterations_after_burn_in
@@ -95,6 +96,8 @@ build_bart_machine = function(training_data,
 	.jcall(java_bart_machine, "V", "setNumGibbsTotalIterations", as.integer(num_gibbs))
 	.jcall(java_bart_machine, "V", "setAlpha", alpha)
 	.jcall(java_bart_machine, "V", "setBeta", beta)
+	
+	#now take care of features
 	if (length(cov_prior_vec) != 0){
 		#put in checks here for user make sure it's correct length
 		if (length(cov_prior_vec) != ncol(training_data) - 1){
@@ -105,6 +108,9 @@ build_bart_machine = function(training_data,
 			return(TRUE)
 		}
 		.jcall(java_bart_machine, "V", "setCovSplitPrior", as.numeric(cov_prior_vec))
+	}
+	if (use_heteroskedasticity){
+		.jcall(java_bart_machine, "V", "useHeteroskedasticity")
 	}
 	
 	
@@ -196,6 +202,43 @@ clean_previous_bart_data = function(){
 	if (exists("all_mu_vals_for_all_trees")){
 		rm(all_mu_vals_for_all_trees)
 	}
+}
+
+plot_sigsqs_convergence_diagnostics_hetero = function(bart_machine, extra_text = NULL, data_title = "data_model", save_plot = FALSE){
+	sigsqs = .jcall(bart_machine$java_bart_machine, "[D", "getGibbsSamplesSigsqs")
+	
+	num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in
+	num_burn_in = bart_machine$num_burn_in
+	num_gibbs = bart_machine$num_gibbs
+	num_trees = bart_machine$num_trees
+	
+	sigsqs = matrix(NA, nrow = bart_machine$num_iterations_after_burn_in, ncol = bart_machine$n)
+	for (g in 1 : bart_machine$num_iterations_after_burn_in){
+		sigsqs[g, ] = .jcall(bart_machine$java_bart_machine, "[D", "getSigsqsByGibbsSample", as.integer(g - 1))
+	}	
+	
+	if (save_plot){
+		save_plot_function(bart_machine, "sigsqs_by_gibbs", data_title)
+	}
+	else {
+		dev.new()
+	}	
+	
+	plot(NA, 
+		main = paste("Sigsqs throughout entire chain", ifelse(is.null(extra_text), "", paste("\n", extra_text))), 
+		type = "n", xlim = c(1, bart_machine$num_iterations_after_burn_in), ylim = c(0, max(sigsqs)))
+	#want to plot each sigsq as a function of gibbs
+	for (i in 1 : bart_machine$n){
+		sigsqis = sigsqs[, i]
+		points(sigsqis, pch = ".", col = COLORS[i %% 500])
+	}
+	abline(v = num_burn_in, col = "gray")
+	
+	if (save_plot){	
+		dev.off()
+	}
+	
+	sigsqs
 }
 
 plot_sigsqs_convergence_diagnostics = function(bart_machine, extra_text = NULL, data_title = "data_model", save_plot = FALSE){

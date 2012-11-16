@@ -43,7 +43,7 @@ public abstract class CGMBART_06_gibbs_internal extends CGMBART_05_gibbs_base im
 		//first calculate the SSE
 		double sse = 0;
 		for (double e : es){
-			sse += Math.pow(e, 2); 
+			sse += e * e; 
 		}
 		//we're sampling from sigsq ~ InvGamma((nu + n) / 2, 1/2 * (sum_i error^2_i + lambda * nu))
 		//which is equivalent to sampling (1 / sigsq) ~ Gamma((nu + n) / 2, 2 / (sum_i error^2_i + lambda * nu))
