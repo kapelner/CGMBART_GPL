@@ -57,23 +57,23 @@ public class CGMBART_F2_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
 	}
 	
 	private void SampleSigsqF2(int sample_num, double[] es) {
-		if (gibbs_sample_num < num_gibbs_burn_in){
-			double sigsq = drawSigsqFromPosterior(sample_num, es);
-			for (int i = 0; i < n; i++){
-//				double[] one_residual = {es[i]};
-//				double sigsq = drawSigsqFromPosterior(sample_num, one_residual);
-				gibbs_samples_of_sigsq_hetero[sample_num][i] = sigsq;	
-//				System.out.println("sample sigsq e_i = " + es[i] + " sigsq_i = " + sigsq);
-			}			
-		}
-		else {
+//		if (gibbs_sample_num < num_gibbs_burn_in){
+//			double sigsq = drawSigsqFromPosterior(sample_num, es);
+//			for (int i = 0; i < n; i++){
+////				double[] one_residual = {es[i]};
+////				double sigsq = drawSigsqFromPosterior(sample_num, one_residual);
+//				gibbs_samples_of_sigsq_hetero[sample_num][i] = sigsq;	
+////				System.out.println("sample sigsq e_i = " + es[i] + " sigsq_i = " + sigsq);
+//			}			
+//		}
+//		else {
 //			double sigsq = drawSigsqFromPosterior(sample_num, es);
 			for (int i = 0; i < n; i++){
 				double sigsq = StatToolbox.sample_from_inv_gamma((hyper_nu + es.length) / 2, 2 / (es.length * es[i] * es[i] + hyper_nu * hyper_lambda));
 				gibbs_samples_of_sigsq_hetero[sample_num][i] = sigsq;	
 //				System.out.println("sample sigsq e_i = " + es[i] + " sigsq_i = " + sigsq);
 			}				
-		}
+//		}
 
 	}
 	
