@@ -25,6 +25,7 @@ public abstract class CGMBART_02_hyperparams extends CGMBART_01_base implements 
 	public void setData(ArrayList<double[]> X_y){
 		super.setData(X_y);
 		calculateHyperparameters();	
+		StatToolbox.cacheInvGammas(n, hyper_nu);
 	}		
 	
 	// hist(1 / rgamma(5000, 1.5, 1.5 * 153.65), br=100)
