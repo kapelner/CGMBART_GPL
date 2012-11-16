@@ -62,9 +62,9 @@ JAVA_LOG = FALSE #to be overwritten later
 #test_data = simulate_data_from_simulation_name(simulated_data_model_name)
 
 build_bart_machine = function(training_data, 
-		num_trees = 50, 
-		num_burn_in = 1000, 
-		num_iterations_after_burn_in = 1000, 
+		num_trees = 200, 
+		num_burn_in = 2000, 
+		num_iterations_after_burn_in = 2000, 
 		alpha = DEFAULT_ALPHA,
 		beta = DEFAULT_BETA, 
 		class_or_regr = "r", 
@@ -129,6 +129,8 @@ build_bart_machine = function(training_data,
 
 	#now once it's done, let's extract things that are related to diagnosing the build of the BART model
 	list(java_bart_machine = java_bart_machine, 
+		n = nrow(training_data),
+		p = ncol(training_data) - 1,
 		num_trees = num_trees,
 		num_burn_in = num_burn_in,
 		num_iterations_after_burn_in = num_iterations_after_burn_in, 
@@ -468,7 +470,11 @@ get_root_splits_of_trees = function(bart_machine, data_title = "data_model", sav
 }
 
 get_var_counts_over_chain = function(bart_machine){
-	.jcall(java_bart_machine, "[[D", "getCountForAttributesForEntireChain", evalArray = FALSE)	
+	C = matrix(NA, nrow = bart_machine$num_iterations_after_burn_in, ncol = bart_machine$p)
+	for (g in 1 : bart_machine$num_iterations_after_burn_in){
+		C[g, ] = .jcall(bart_machine$java_bart_machine, "[I", "getCountForAttributeInGibbsSample", as.integer(g - 1))
+	}
+	C
 }
 
 plot_tree_depths = function(bart_machine, extra_text = NULL, data_title = "data_model", save_plot = FALSE){
