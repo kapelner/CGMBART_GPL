@@ -130,6 +130,15 @@ public class Tools {
     	}
     	return sum;
     }
+    
+
+	public static double sum_inv_array(double[] arr) {
+    	double sum = 0;
+    	for (int i = 0; i < arr.length; i++){
+    		sum += 1 / arr[i];
+    	}
+    	return sum;
+	}	    
  
     public static void weight_arr_by_sum(double[] arr){
     	double weight = sum_array(arr);
@@ -160,5 +169,6 @@ public class Tools {
 			sum[i] = arr1[i] + arr2[i];
 		}
 		return sum;
-	}	
+	}
+
 }

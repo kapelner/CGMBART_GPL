@@ -52,7 +52,7 @@ public class Test_BARTgibbs_internal {
 			assertEquals(1 / (1 / bart.hyper_sigsq_mu + bart.n / sigsq), posterior_sigsq, 0.0001);
 			//draw from posterior distribution
 			double posterior_mean = bart.calcLeafPosteriorMean(tree, sigsq, posterior_sigsq);
-			bart.assignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsqAndUpdateYhats(tree, sigsq);
+			bart.assignLeafValsBySamplingFromPosteriorMeanAndSigsqAndUpdateYhats(tree, sigsq);
 			double moe = 4 * Math.sqrt(posterior_sigsq);
 			System.out.println("testAssignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsq\n sigsq = " + sigsq + " sigsq_post = " + posterior_sigsq + " mu_post = " + posterior_mean + " avg_y_node = " + tree.avg_response_untransformed() + " ypred = " + bart.un_transform_y(tree.y_pred));
 			assertTrue(tree.y_pred <= posterior_mean + moe && tree.y_pred >= posterior_mean - moe);

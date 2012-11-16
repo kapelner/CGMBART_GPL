@@ -62,11 +62,28 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 					gibbs_sample_num + "/" + num_gibbs_total_iterations + "  thread: " + (threadNum + 1));
 			}
 			R_j = SampleTree(gibbs_sample_num, t, cgm_trees, tree_array_illustration);
-			SampleMus(gibbs_sample_num, t);				
+			SampleMusWrapper(gibbs_sample_num, t);				
 		}
 		//now we have the last residual vector which we pass on to sample sigsq
-		SampleSigsq(gibbs_sample_num, R_j);
+		SampleSigsq(gibbs_sample_num, getResidualsFromFullSumModel(gibbs_sample_num, R_j));
 		DebugSample(gibbs_sample_num, tree_array_illustration);
+	}
+
+	private void SampleMusWrapper(int sample_num, int t) {
+		CGMBARTTreeNode previous_tree = gibbs_samples_of_cgm_trees[sample_num - 1][t];
+		//subtract out previous tree's yhats
+//		System.out.println("  previous yhats = " + Tools.StringJoin(previous_tree.yhats));
+		sum_resids_vec = Tools.subtract_arrays(sum_resids_vec, previous_tree.yhats);
+//		System.out.println("SampleMu sample_num " +  sample_num + " t " + t + " gibbs array " + gibbs_samples_of_cgm_trees.get(sample_num));
+		CGMBARTTreeNode tree = gibbs_samples_of_cgm_trees[sample_num][t];
+
+		SampleMus(sample_num, tree);
+		
+		//after mus are sampled, we need to update the sum_resids_vec
+		//add in current tree's yhats
+//		System.out.println("  current  yhats = " + Tools.StringJoin(tree.yhats));
+		
+		sum_resids_vec = Tools.add_arrays(sum_resids_vec, tree.yhats);
 	}
 
 	private void DeleteBurnInSampleOnOtherThreads() {
@@ -77,28 +94,28 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 		}
 	}
 
-	protected void SampleSigsq(int sample_num, double[] R_j) {
-		double sigsq = drawSigsqFromPosterior(sample_num, R_j);
+	protected void SampleSigsq(int sample_num, double[] es) {
+		double sigsq = drawSigsqFromPosterior(sample_num, es);
 		gibbs_samples_of_sigsq[sample_num] = sigsq;
 	}
+	
+	protected double[] getResidualsFromFullSumModel(int sample_num, double[] R_j){	
+		//all we need to do is subtract the last tree's yhats now
+		CGMBARTTreeNode last_tree = gibbs_samples_of_cgm_trees[sample_num][num_trees - 1];
+		for (int i = 0; i < n; i++){
+			R_j[i] -= last_tree.yhats[i];
+		}
+		return R_j;
+	}		
 
-	protected abstract double drawSigsqFromPosterior(int sample_num, double[] R_j);
+	protected abstract double drawSigsqFromPosterior(int sample_num, double[] es);
 
-	protected void SampleMus(int sample_num, int t) {
-		CGMBARTTreeNode previous_tree = gibbs_samples_of_cgm_trees[sample_num - 1][t];
-		//subtract out previous tree's yhats
-//		System.out.println("  previous yhats = " + Tools.StringJoin(previous_tree.yhats));
-		sum_resids_vec = Tools.subtract_arrays(sum_resids_vec, previous_tree.yhats);
-//		System.out.println("SampleMu sample_num " +  sample_num + " t " + t + " gibbs array " + gibbs_samples_of_cgm_trees.get(sample_num));
-		CGMBARTTreeNode tree = gibbs_samples_of_cgm_trees[sample_num][t];
+	protected void SampleMus(int sample_num, CGMBARTTreeNode tree) {
 		double current_sigsq = gibbs_samples_of_sigsq[sample_num - 1];
-		assignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsqAndUpdateYhats(tree, current_sigsq);
-		//after mus are sampled, we need to update the sum_resids_vec
-		//add in current tree's yhats
-//		System.out.println("  current  yhats = " + Tools.StringJoin(tree.yhats));
-		
-		sum_resids_vec = Tools.add_arrays(sum_resids_vec, tree.yhats);
+		assignLeafValsBySamplingFromPosteriorMeanAndSigsqAndUpdateYhats(tree, current_sigsq);
 	}
+	
+	protected abstract void assignLeafValsBySamplingFromPosteriorMeanAndSigsqAndUpdateYhats(CGMBARTTreeNode node, double current_sigsq);
 	
 	protected double[] SampleTree(int sample_num, int t, CGMBARTTreeNode[] cgm_trees, TreeArrayIllustration tree_array_illustration) {
 		//first copy the tree from the previous gibbs position

@@ -259,5 +259,10 @@ public class CGMBARTRegressionMultThread extends Classifier {
 			bart_gibbs_chain_threads[t].setCovSplitPrior(cov_split_prior);
 		}		
 	}
-
+	
+	public void useHeteroskedasticity(){
+		for (int t = 0; t < num_cores; t++){
+			bart_gibbs_chain_threads[t].useHeteroskedasticity();
+		}		
+	}
 }
