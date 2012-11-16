@@ -39,7 +39,7 @@ public abstract class CGMBART_03_debug extends CGMBART_02_hyperparams implements
 	public double[] getGibbsSamplesSigsqs(){
 		double[] sigsqs_to_export = new double[gibbs_samples_of_sigsq.length];
 		for (int n_g = 0; n_g < gibbs_samples_of_sigsq.length; n_g++){			
-			sigsqs_to_export[n_g] = gibbs_samples_of_sigsq[n_g] * y_range_sq;	//Var[y^t] = Var[y / R_y] = 1/R_y^2 Var[y]		
+			sigsqs_to_export[n_g] = un_transform_sigsq(gibbs_samples_of_sigsq[n_g]);		
 		}
 		return sigsqs_to_export;
 	}	

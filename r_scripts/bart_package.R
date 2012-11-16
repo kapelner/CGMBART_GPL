@@ -212,8 +212,8 @@ plot_sigsqs_convergence_diagnostics_hetero = function(bart_machine, extra_text =
 	num_gibbs = bart_machine$num_gibbs
 	num_trees = bart_machine$num_trees
 	
-	sigsqs = matrix(NA, nrow = bart_machine$num_iterations_after_burn_in, ncol = bart_machine$n)
-	for (g in 1 : bart_machine$num_iterations_after_burn_in){
+	sigsqs = matrix(NA, nrow = bart_machine$num_gibbs, ncol = bart_machine$n)
+	for (g in 1 : bart_machine$num_gibbs){
 		sigsqs[g, ] = .jcall(bart_machine$java_bart_machine, "[D", "getSigsqsByGibbsSample", as.integer(g - 1))
 	}	
 	
@@ -224,9 +224,16 @@ plot_sigsqs_convergence_diagnostics_hetero = function(bart_machine, extra_text =
 		dev.new()
 	}	
 	
+	ymax = 20
+#	ymax = max(sigsqs[bart_machine$num_burn_in : bart_machine$num_gibbs, ])
+	
 	plot(NA, 
 		main = paste("Sigsqs throughout entire chain", ifelse(is.null(extra_text), "", paste("\n", extra_text))), 
-		type = "n", xlim = c(1, bart_machine$num_iterations_after_burn_in), ylim = c(0, max(sigsqs)))
+		type = "n", 
+		xlim = c(1, bart_machine$num_gibbs), 		
+		ylim = c(0, ymax)
+	)
+
 	#want to plot each sigsq as a function of gibbs
 	for (i in 1 : bart_machine$n){
 		sigsqis = sigsqs[, i]

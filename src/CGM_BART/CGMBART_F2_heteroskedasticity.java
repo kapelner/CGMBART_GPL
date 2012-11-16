@@ -140,13 +140,30 @@ public class CGMBART_F2_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
 		for (int i = 0; i < n; i++){
 			initial_sigsqs[i] = INITIAL_SIGSQ;
 		}	
-	}	
+	}
 	
+	
+	
+	private void BurnSigsqChainF2() {
+		System.out.println("BurnSigsqChainF2");
+		for (int i = num_gibbs_burn_in; i < num_gibbs_total_iterations - num_gibbs_burn_in; i++){
+			gibbs_samples_of_sigsq_hetero_after_burn_in[i - num_gibbs_burn_in] = gibbs_samples_of_sigsq_hetero[i];
+		}
+//		System.out.println(Tools.StringJoin(gibbs_samples_of_sigsq_hetero_after_burn_in));
+	}
 	
 	
 	/////////////nothing but scaffold code below, do not alter!
 	
-	
+	@Override
+	public void Build() {
+		super.Build();
+		if (use_heteroskedasticity){
+			BurnSigsqChainF2();
+		}
+	}	
+
+
 	protected void InitizializeSigsq() {
 		if (use_heteroskedasticity){
 			InitizializeSigsqF2();

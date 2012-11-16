@@ -24,6 +24,8 @@ public class CGMBARTRegressionMultThread extends Classifier {
 	private int num_gibbs_total_iterations;
 	private int total_iterations_multithreaded;
 
+	private ArrayList<double[]> gibbs_samples_of_sigsq_hetero_aggregated;
+
 	public CGMBARTRegressionMultThread(int num_cores){
 		this.num_cores = num_cores;
 		SetupBARTModels();
@@ -57,7 +59,7 @@ public class CGMBARTRegressionMultThread extends Classifier {
 		ConstructBurnedChainForTreesAndSigsq();	
 	}	
 	
-	private void ConstructBurnedChainForTreesAndSigsq() {
+	protected void ConstructBurnedChainForTreesAndSigsq() {
 		gibbs_samples_of_cgm_trees_after_burn_in = new CGMBARTTreeNode[numSamplesAfterBurning()][bart_gibbs_chain_threads[0].num_trees];
 		gibbs_samples_of_sigsq_after_burn_in = new double[numSamplesAfterBurning()];
 
@@ -70,6 +72,8 @@ public class CGMBARTRegressionMultThread extends Classifier {
 				gibbs_samples_of_sigsq_after_burn_in[i - num_gibbs_burn_in] = bart_model.gibbs_samples_of_sigsq[i];
 			}			
 		}
+		
+				
 		System.out.print("done\n");
 		
 	}
@@ -265,4 +269,19 @@ public class CGMBARTRegressionMultThread extends Classifier {
 			bart_gibbs_chain_threads[t].useHeteroskedasticity();
 		}		
 	}
+	
+	public double[] getSigsqsByGibbsSample(int g){
+//		if (gibbs_samples_of_sigsq_hetero_aggregated == null){
+//			gibbs_samples_of_sigsq_hetero_aggregated = new ArrayList<double[]>(numSamplesAfterBurning());
+//			for (int t = 0; t < num_cores; t++){
+//				for (int i = 0; i < total_iterations_multithreaded - num_gibbs_burn_in; i++){
+//					double[] sigsqs_gibbs = bart_gibbs_chain_threads[t].gibbs_samples_of_sigsq_hetero[i];
+//					System.out.println("sigsqs_gibbs: " + Tools.StringJoin(sigsqs_gibbs));
+//					gibbs_samples_of_sigsq_hetero_aggregated.add(sigsqs_gibbs);
+//				}
+//			}			
+//			
+//		}
+		return bart_gibbs_chain_threads[0].un_transform_sigsq(bart_gibbs_chain_threads[0].gibbs_samples_of_sigsq_hetero[g]);
+	}	
 }

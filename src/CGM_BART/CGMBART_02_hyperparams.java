@@ -111,6 +111,19 @@ public abstract class CGMBART_02_hyperparams extends CGMBART_01_base implements 
 		return un_transform_y((double)yt_i);
 	}	
 	
+	//Var[y^t] = Var[y / R_y] = 1/R_y^2 Var[y]
+	public double un_transform_sigsq(double sigsq_t_i){
+		return sigsq_t_i * y_range_sq;
+	}
+	
+	public double[] un_transform_sigsq(double[] sigsq_t_is){
+		double[] sigsq_is = new double[sigsq_t_is.length];
+		for (int i = 0; i < sigsq_t_is.length; i++){
+			sigsq_is[i] = un_transform_sigsq(sigsq_t_is[i]);
+		}
+		return sigsq_is;
+	}			
+	
 	public double un_transform_y_and_round(double yt_i){
 		return Double.parseDouble(TreeArrayIllustration.one_digit_format.format((yt_i + YminAndYmaxHalfDiff) * (y_max - y_min) + y_min));
 	}
