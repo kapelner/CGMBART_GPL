@@ -358,4 +358,14 @@ public abstract class Classifier implements Serializable {
 	public void setUniqueName(String unique_name) {
 		this.unique_name = unique_name;
 	}
+	
+	public void writeStdOutToLogFile(){
+		try {
+			Logger.getLogger("").addHandler(new StreamHandler()); //turn off std out
+			suppressOrWriteToDebugLog();
+		}
+		catch (Error e){
+			System.out.println("Logger and or suppressOrWriteToDebugLog FAILING\n");
+		}		
+	}
 }

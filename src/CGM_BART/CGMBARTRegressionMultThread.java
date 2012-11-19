@@ -139,10 +139,8 @@ public class CGMBARTRegressionMultThread extends Classifier {
 		CGMBART_01_base.BETA = beta;
 	}	
 	
-	public void setNumCores(Integer num_cores){
-		if (num_cores != null){
-			this.num_cores = num_cores;
-		}
+	public void setNumCores(int num_cores){
+		this.num_cores = num_cores;
 	}
 
 	@Override

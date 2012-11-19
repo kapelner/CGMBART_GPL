@@ -73,6 +73,7 @@ build_bart_machine = function(training_data,
 		unique_name = "unnamed",
 		print_tree_illustrations = FALSE, 
 		print_out_every = NULL,
+		num_cores = 1,
 		use_heteroskedasticity = FALSE,
 		cov_prior_vec = NULL){
 	
@@ -98,6 +99,8 @@ build_bart_machine = function(training_data,
 	.jcall(java_bart_machine, "V", "setBeta", beta)
 	
 	#now take care of features
+	.jcall(java_bart_machine, "V", "setNumCores", as.integer(num_cores))
+	
 	if (length(cov_prior_vec) != 0){
 		#put in checks here for user make sure it's correct length
 		if (length(cov_prior_vec) != ncol(training_data) - 1){
@@ -124,7 +127,7 @@ build_bart_machine = function(training_data,
 	y_hat_train_posterior_samples = matrix(NA, nrow = nrow(training_data), ncol = num_iterations_after_burn_in) 
 	for (i in 1 : nrow(training_data)){
 		y_hat_train_posterior_samples[i, ] = 
-			.jcall(java_bart_machine, "[D", "getGibbsSamplesForPrediction", c(as.numeric(training_data[i, ]), NA))
+			.jcall(java_bart_machine, "[D", "getGibbsSamplesForPrediction", c(as.numeric(training_data[i, ]), NA), as.integer(num_cores))
 	}
 	
 	y_hat_train = calc_y_hat_from_gibbs_samples(y_hat_train_posterior_samples)
@@ -143,6 +146,8 @@ build_bart_machine = function(training_data,
 		num_gibbs = num_gibbs,
 		alpha = alpha,
 		beta = beta,
+		y_hat_train = y_hat_train,
+		L2_err_train = L2_err_train,
 		rmse_train = rmse_train,
 		avg_num_splits_by_vars = avg_num_splits_by_vars,
 		cov_prior_vec = cov_prior_vec
@@ -164,7 +169,7 @@ init_jvm_and_bart_object = function(unique_name, debug_log, print_tree_illustrat
 		if (!printed_out_warnings){
 			cat("warning: printing out the log file will slow down the runtime perceptibly\n")
 		}
-		.jcall(java_bart_machine, "V", "writeToDebugLog")
+		.jcall(java_bart_machine, "V", "writeStdOutToLogFile")
 	}
 	#now initialize the data
 	.jcall(java_bart_machine, "V", "setDataToDefaultForRPackage")
@@ -204,7 +209,7 @@ clean_previous_bart_data = function(){
 	}
 }
 
-plot_sigsqs_convergence_diagnostics_hetero = function(bart_machine, extra_text = NULL, data_title = "data_model", save_plot = FALSE){
+plot_sigsqs_convergence_diagnostics_hetero = function(bart_machine, records = c(0), extra_text = NULL, data_title = "data_model", save_plot = FALSE){
 	sigsqs = .jcall(bart_machine$java_bart_machine, "[D", "getGibbsSamplesSigsqs")
 	
 	num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in
@@ -235,7 +240,7 @@ plot_sigsqs_convergence_diagnostics_hetero = function(bart_machine, extra_text =
 	)
 
 	#want to plot each sigsq as a function of gibbs
-	for (i in 1 : bart_machine$n){
+	for (i in records){
 		sigsqis = sigsqs[, i]
 		points(sigsqis, pch = ".", col = COLORS[i %% 500])
 	}
@@ -713,37 +718,28 @@ look_at_sample_of_test_data = function(bart_predictions, grid_len = 3, extra_tex
 	}	
 }
 
-predict_and_calc_ppis = function(bart_machine, test_data, training_data, ppi_conf = 0.95, num_cores = 1){
+predict = function(bart_machine, test_data, num_cores = 1){
 	#pull out data objects for convenience
 	java_bart_machine = bart_machine$java_bart_machine
 	num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in
 	n = nrow(test_data)
 	y = test_data$y
-
+	
 	#check for errors in data
 	if (error_in_data(test_data)){
 		return;
 	}	
-	test_data = pre_process_data(test_data)
-
+	test_data = pre_process_data(test_data)	
 	
 	#do the evaluation as a loop... one day this should be done better than this with a matrix
-	y_hat_posterior_samples = matrix(NA, nrow = nrow(test_data), ncol = num_iterations_after_burn_in) 
-	ppi_a = array(NA, n)
-	ppi_b = array(NA, n)	
+	y_hat_posterior_samples = matrix(NA, nrow = nrow(test_data), ncol = num_iterations_after_burn_in)	
 	for (i in 1 : n){
-		samps = .jcall(java_bart_machine, "[D", "getGibbsSamplesForPrediction", c(as.numeric(test_data[i, ]), NA), as.integer(num_cores))
-		y_hat_posterior_samples[i, ] = samps
-
-		ppi_a[i] = quantile(sort(samps), (1 - ppi_conf) / 2)
-		ppi_b[i] = quantile(sort(samps), (1 + ppi_conf) / 2)
+		y_hat_posterior_samples[i, ] = 
+			.jcall(java_bart_machine, "[D", "getGibbsSamplesForPrediction", c(as.numeric(test_data[i, ]), NA), as.integer(num_cores))
 	}
 	#to get y_hat.. just take straight mean of posterior samples, alternatively, we can let java do it if we want more bells and whistles
 	y_hat = calc_y_hat_from_gibbs_samples(y_hat_posterior_samples)
 	assign("y_hat", y_hat, .GlobalEnv)
-	#did the PPI capture the true y?
-	y_inside_ppi = y >= ppi_a & y <= ppi_b
-	prop_ys_in_ppi = sum(y_inside_ppi) / n
 	
 	L1_err = round(sum(abs(y - y_hat)), 1)
 	L2_err = round(sum((y - y_hat)^2), 1)		
@@ -751,15 +747,28 @@ predict_and_calc_ppis = function(bart_machine, test_data, training_data, ppi_con
 	#give the user everything
 	list(y_hat_posterior_samples = y_hat_posterior_samples, 
 		y = test_data$y,
-		y_hat = y_hat, 
-		ppi_a = ppi_a, 
-		ppi_b = ppi_b, 
-		ppi_conf = ppi_conf,
-		y_inside_ppi = y_inside_ppi, 
-		prop_ys_in_ppi = prop_ys_in_ppi,
+		y_hat = y_hat,
 		L1_err = L1_err,
 		L2_err = L2_err,
 		rmse = sqrt(L2_err / n))
+}
+
+predict_and_calc_ppis = function(bart_machine, test_data, ppi_conf = 0.95, num_cores = 1){
+	predict_obj = predict(bart_machine, test_data, num_cores)
+
+	ppi_a = array(NA, n)
+	ppi_b = array(NA, n)	
+	for (i in 1 : n){		
+		ppi_a[i] = quantile(sort(predict_obj$y_hat_posterior_samples), (1 - ppi_conf) / 2)
+		ppi_b[i] = quantile(sort(predict_obj$y_hat_posterior_samples), (1 + ppi_conf) / 2)
+	}		
+
+	predict_obj$ppi_a = ppi_a
+	predict_obj$ppi_b = ppi_b
+	predict_obj$y_inside_ppi = y >= ppi_a & y <= ppi_b #did the PPI capture the true y?
+	predict_obj$prop_ys_in_ppi = sum(y_inside_ppi) / n
+	#return the whole thing
+	predict_obj
 }
 
 #let's do sample medians like Rob

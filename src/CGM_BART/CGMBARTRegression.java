@@ -24,8 +24,6 @@
  
 package CGM_BART;
 
-//import java.util.logging.Logger;
-//import java.util.logging.StreamHandler;
 
 public class CGMBARTRegression extends CGMBART_F2_heteroskedasticity {
 	private static final long serialVersionUID = 6418127647567343927L;
@@ -40,13 +38,6 @@ public class CGMBARTRegression extends CGMBART_F2_heteroskedasticity {
 	public CGMBARTRegression() {		
 		super();
 //		System.out.println("CGMBARTRegression init\n");
-		try {
-//			Logger.getLogger("").addHandler(new StreamHandler()); //turn off std out
-//			suppressOrWriteToDebugLog();
-		} 
-		catch (Error e){
-			System.out.println("Logger and or suppressOrWriteToDebugLog FAILING\n");
-		}
 	}
 
 
