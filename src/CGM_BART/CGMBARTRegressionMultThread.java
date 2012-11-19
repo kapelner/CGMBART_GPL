@@ -12,12 +12,12 @@ import java.util.concurrent.TimeUnit;
 public class CGMBARTRegressionMultThread extends Classifier {
 	private static final long serialVersionUID = -4537075714317768756L;
 	
-	private static final int DEFAULT_NUM_CORES = 1;//Runtime.getRuntime().availableProcessors() - 1;
+	private static final int DEFAULT_NUM_CORES = 2;//Runtime.getRuntime().availableProcessors() - 1;
 	
 	private int num_cores;
 	
 	private CGMBARTRegression[] bart_gibbs_chain_threads;
-	protected CGMBARTTreeNode[][] gibbs_samples_of_cgm_trees_after_burn_in;
+	protected ArrayList<CGMBARTTreeNode[]> gibbs_samples_of_cgm_trees_after_burn_in;
 	protected double[] gibbs_samples_of_sigsq_after_burn_in;
 	
 	private int num_gibbs_burn_in;
@@ -58,7 +58,7 @@ public class CGMBARTRegressionMultThread extends Classifier {
 	}	
 	
 	protected void ConstructBurnedChainForTreesAndSigsq() {
-		gibbs_samples_of_cgm_trees_after_burn_in = new CGMBARTTreeNode[numSamplesAfterBurning()][bart_gibbs_chain_threads[0].num_trees];
+		gibbs_samples_of_cgm_trees_after_burn_in = new ArrayList<CGMBARTTreeNode[]>(numSamplesAfterBurning());
 		gibbs_samples_of_sigsq_after_burn_in = new double[numSamplesAfterBurning()];
 
 		System.out.print("burning and aggregating chains from all threads...");
@@ -66,7 +66,7 @@ public class CGMBARTRegressionMultThread extends Classifier {
 		for (int t = 0; t < num_cores; t++){
 			CGMBARTRegression bart_model = bart_gibbs_chain_threads[t];
 			for (int i = num_gibbs_burn_in; i < total_iterations_multithreaded; i++){
-				gibbs_samples_of_cgm_trees_after_burn_in[i - num_gibbs_burn_in] = bart_model.gibbs_samples_of_cgm_trees[i];
+				gibbs_samples_of_cgm_trees_after_burn_in.add(bart_model.gibbs_samples_of_cgm_trees[i]);
 				gibbs_samples_of_sigsq_after_burn_in[i - num_gibbs_burn_in] = bart_model.gibbs_samples_of_sigsq[i];
 			}			
 		}
@@ -170,33 +170,28 @@ public class CGMBARTRegressionMultThread extends Classifier {
 		return num_gibbs_total_iterations - num_gibbs_burn_in;
 	}	
 	
-	protected double[] getGibbsSamplesForPrediction(final double[] data_record, int num_cores_evaluate){
+	protected double[] getGibbsSamplesForPrediction(final double[] data_record, final int num_cores_evaluate){
 //		System.out.println("eval record: " + record + " numtrees:" + this.bayesian_trees.size());
 		//the results for each of the gibbs samples
 		final double[] y_gibbs_samples = new double[numSamplesAfterBurning()];
 		
+		
 		ExecutorService evaluate_sum_of_trees_pool = Executors.newFixedThreadPool(num_cores_evaluate);
-		
-//		System.out.println("getGibbsSamplesForPrediction in  CGMBARTMultiThread num_cores_evaluate = " + num_cores_evaluate);
-		
-		final int chunk_size = (int)Math.ceil(numSamplesAfterBurning() / (double) num_cores_evaluate);
-				
+			
 		for (int t = 0; t < num_cores_evaluate; t++){
 			final int final_t = t;
 			evaluate_sum_of_trees_pool.execute(new Runnable(){
 				public void run() {
-					for (int g = final_t * chunk_size; g < final_t * (chunk_size + 1); g++){
-						if (g >= numSamplesAfterBurning()){
-							break;
+					for (int g = 0; g < numSamplesAfterBurning(); g++){
+						if (g % num_cores_evaluate == final_t){
+							CGMBARTTreeNode[] cgm_trees = gibbs_samples_of_cgm_trees_after_burn_in.get(g);
+							double yt_i = 0;
+							for (CGMBARTTreeNode tree : cgm_trees){ //sum of trees right?
+								yt_i += tree.Evaluate(data_record);
+							}
+							//just make sure we switch it back to really what y is for the user
+							y_gibbs_samples[g] = bart_gibbs_chain_threads[0].un_transform_y(yt_i);
 						}
-	//					System.out.println("getGibbsSamplesForPrediction in  CGMBARTMultiThread final_g = " + final_g);
-						CGMBARTTreeNode[] cgm_trees = gibbs_samples_of_cgm_trees_after_burn_in[g];
-						double yt_i = 0;
-						for (CGMBARTTreeNode tree : cgm_trees){ //sum of trees right?
-							yt_i += tree.Evaluate(data_record);
-						}
-						//just make sure we switch it back to really what y is for the user
-						y_gibbs_samples[g] = bart_gibbs_chain_threads[0].un_transform_y(yt_i);
 					}
 				}			
 			});
@@ -254,7 +249,7 @@ public class CGMBARTRegressionMultThread extends Classifier {
 
 	public int[] getCountForAttributeInGibbsSample(int g, int num_cores_count) {
 		final int[] counts = new int[p];		
-		final CGMBARTTreeNode[] cgm_trees = gibbs_samples_of_cgm_trees_after_burn_in[g];
+		final CGMBARTTreeNode[] cgm_trees = gibbs_samples_of_cgm_trees_after_burn_in.get(g);
 		
 		ExecutorService get_count_for_attribute_pool = Executors.newFixedThreadPool(num_cores_count);
 		

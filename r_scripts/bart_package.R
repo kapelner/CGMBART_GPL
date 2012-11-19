@@ -792,32 +792,35 @@ run_other_model_and_plot_y_vs_yhat = function(y_hat,
 		training_data,
 		extra_text = NULL, 
 		data_title = "data_model", 
-		save_plot = FALSE, 
+		save_plot = FALSE,
 		bart_machine = NULL, 
 		sigsqs = NULL,
 		avg_num_splits_by_vars = NULL,
 		y_hat_train = NULL,
-		runtime = NULL){
+		runtime = NULL,
+		create_plot = FALSE){
 	L1_err = sum(abs(test_data$y - y_hat))
 	L2_err = sum((test_data$y - y_hat)^2)	
 	rmse = sqrt(L2_err / length(y_hat))
 	L2_err_train = sum((training_data$y - y_hat_train)^2)
 	rmse_train = sqrt(L2_err_train / length(y_hat_train))
 	
-	if (save_plot){
-		save_plot_function(bart_machine, paste("yvyhat_", model_name, sep = ""), data_title)
-	}	
-	else {
-		dev.new()
-	}		
-	plot(test_data$y, 
-			y_hat, 
-			main = paste("y/yhat ", model_name, " model L1/2 = ", round(L1_err, 1), "/", round(L2_err, 1), " rmse = ", round(rmse, 2), ifelse(is.null(extra_text), "", paste("\n", extra_text)), sep = ""), 
-			xlab = "y", 
-			ylab = "y_hat")	
-	if (save_plot){	
-		dev.off()
-	}	
+	if (create_plot){
+		if (save_plot){
+			save_plot_function(bart_machine, paste("yvyhat_", model_name, sep = ""), data_title)
+		}	
+		else {
+			dev.new()
+		}		
+		plot(test_data$y, 
+				y_hat, 
+				main = paste("y/yhat ", model_name, " model L1/2 = ", round(L1_err, 1), "/", round(L2_err, 1), " rmse = ", round(rmse, 2), ifelse(is.null(extra_text), "", paste("\n", extra_text)), sep = ""), 
+				xlab = "y", 
+				ylab = "y_hat")	
+		if (save_plot){	
+			dev.off()
+		}
+	}
 	
 	list(y_hat = y_hat, 
 		L1_err = L1_err, 
