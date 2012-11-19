@@ -47,7 +47,6 @@ import TroveExtension.TDoubleHashSetAndArray;
 public class CGMBARTTreeNode implements Cloneable, Serializable {
 	private static final long serialVersionUID = -5584590448078741112L;
 	
-	
 
 	/** a link back to the overall bart model */
 	private CGMBART_02_hyperparams cgmbart;	

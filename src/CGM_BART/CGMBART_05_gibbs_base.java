@@ -34,14 +34,6 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 			//now flush the previous previous gibbs sample to not leak memory
 			FlushDataForSample(gibbs_samples_of_cgm_trees[gibbs_sample_num - 1]);
 			DeleteBurnInSampleOnOtherThreads();
-//			System.gc();
-			//debug memory messages
-			if (gibbs_sample_num % 100 == 0){
-				long mem_used = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
-				long max_mem = Runtime.getRuntime().maxMemory();
-				System.out.println(" mem_used = " + mem_used / 1000000.0 + "MB" + 
-						" max_mem = " + max_mem / 1000000.0 + "MB" + "  thread: " + (threadNum + 1));
-			}
 			gibbs_sample_num++;					
 		}
 	}
@@ -57,9 +49,14 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 		//we cycle over each tree and update it according to formulas 15, 16 on p274
 		double[] R_j = new double[n];
 		for (int t = 0; t < num_trees; t++){
-			if (t == 0 && gibbs_sample_num % 100 == 0){				
+			if (t == 0 && gibbs_sample_num % 100 == 0){
+				//debug memory messages
+				long mem_used = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+				long max_mem = Runtime.getRuntime().maxMemory();
 				System.out.println("Sampling M_" + (t + 1) + "/" + num_trees + " iter " + 
-					gibbs_sample_num + "/" + num_gibbs_total_iterations + "  thread: " + (threadNum + 1));
+						gibbs_sample_num + "/" + num_gibbs_total_iterations + "  thread: " + (threadNum + 1) +
+						"  mem: " + TreeIllustration.one_digit_format.format(mem_used / 1000000.0) + "/" + 
+						TreeIllustration.one_digit_format.format(max_mem / 1000000.0) + "MB");
 			}
 			R_j = SampleTree(gibbs_sample_num, t, cgm_trees, tree_array_illustration);
 			SampleMusWrapper(gibbs_sample_num, t);				

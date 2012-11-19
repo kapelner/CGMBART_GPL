@@ -84,8 +84,7 @@ public class CGMBARTRegressionMultThread extends Classifier {
 				public void run() {
 					bart_gibbs_chain_threads[tf].Build();
 				}
-			}
-	    	);
+			});
 		}
 		bart_gibbs_chain_pool.shutdown();
 		try {	         
@@ -100,7 +99,7 @@ public class CGMBARTRegressionMultThread extends Classifier {
 	 	
 		for (int t = 0; t < num_cores; t++){
 			bart_gibbs_chain_threads[t].setData(X_y);
-		}	
+		}
 	}
 	
 	public void setNumGibbsBurnIn(int num_gibbs_burn_in){
@@ -141,6 +140,7 @@ public class CGMBARTRegressionMultThread extends Classifier {
 	
 	public void setNumCores(int num_cores){
 		this.num_cores = num_cores;
+		SetupBARTModels();
 	}
 
 	@Override
@@ -179,17 +179,25 @@ public class CGMBARTRegressionMultThread extends Classifier {
 		
 //		System.out.println("getGibbsSamplesForPrediction in  CGMBARTMultiThread num_cores_evaluate = " + num_cores_evaluate);
 		
-		for (int g = 0; g < numSamplesAfterBurning(); g++){
-			final int final_g = g;
+		final int chunk_size = (int)Math.ceil(numSamplesAfterBurning() / (double) num_cores_evaluate);
+				
+		for (int t = 0; t < num_cores_evaluate; t++){
+			final int final_t = t;
 			evaluate_sum_of_trees_pool.execute(new Runnable(){
 				public void run() {
-					CGMBARTTreeNode[] cgm_trees = gibbs_samples_of_cgm_trees_after_burn_in[final_g];
-					double yt_i = 0;
-					for (CGMBARTTreeNode tree : cgm_trees){ //sum of trees right?
-						yt_i += tree.Evaluate(data_record);
+					for (int g = final_t * chunk_size; g < final_t * (chunk_size + 1); g++){
+						if (g >= numSamplesAfterBurning()){
+							break;
+						}
+	//					System.out.println("getGibbsSamplesForPrediction in  CGMBARTMultiThread final_g = " + final_g);
+						CGMBARTTreeNode[] cgm_trees = gibbs_samples_of_cgm_trees_after_burn_in[g];
+						double yt_i = 0;
+						for (CGMBARTTreeNode tree : cgm_trees){ //sum of trees right?
+							yt_i += tree.Evaluate(data_record);
+						}
+						//just make sure we switch it back to really what y is for the user
+						y_gibbs_samples[g] = bart_gibbs_chain_threads[0].un_transform_y(yt_i);
 					}
-					//just make sure we switch it back to really what y is for the user
-					y_gibbs_samples[final_g] = bart_gibbs_chain_threads[0].un_transform_y(yt_i);//				}
 				}			
 			});
 		}
@@ -293,7 +301,7 @@ public class CGMBARTRegressionMultThread extends Classifier {
 			bart_gibbs_chain_threads[t].useHeteroskedasticity();
 		}		
 	}
-	
+
 	public double[] getSigsqsByGibbsSample(int g){
 //		if (gibbs_samples_of_sigsq_hetero_aggregated == null){
 //			gibbs_samples_of_sigsq_hetero_aggregated = new ArrayList<double[]>(numSamplesAfterBurning());
@@ -306,6 +314,7 @@ public class CGMBARTRegressionMultThread extends Classifier {
 //			}			
 //			
 //		}
+		System.out.println("getSigsqsByGibbsSample  bart_gibbs_chain_threads[0]: " + bart_gibbs_chain_threads[0] + " g = " + g);
 		return bart_gibbs_chain_threads[0].un_transform_sigsq(bart_gibbs_chain_threads[0].gibbs_samples_of_sigsq_hetero[g]);
 	}	
 }

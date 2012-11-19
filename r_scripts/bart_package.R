@@ -27,7 +27,6 @@ for (i in 1 : 500){
 
 #immediately initialize Java
 jinit_params = paste("-Xmx", NUM_MEGS_RAM_TO_USE, "m", sep = "")
-#print(jinit_params)
 .jinit(parameters = jinit_params)
 
 
@@ -70,9 +69,9 @@ build_bart_machine = function(training_data,
 		class_or_regr = "r", 
 		debug_log = FALSE,
 		fix_seed = FALSE,
+		run_in_sample = FALSE,
 		unique_name = "unnamed",
-		print_tree_illustrations = FALSE, 
-		print_out_every = NULL,
+		print_tree_illustrations = FALSE,
 		num_cores = 1,
 		use_heteroskedasticity = FALSE,
 		cov_prior_vec = NULL){
@@ -90,7 +89,28 @@ build_bart_machine = function(training_data,
 	write.csv(training_data, DATA_FILENAME, row.names = FALSE)
 	
 	#initialize the JVM
-	java_bart_machine = init_jvm_and_bart_object(unique_name, debug_log, print_tree_illustrations, print_out_every, fix_seed)
+	for (dependency in JAR_DEPENDENCIES){
+		.jaddClassPath(paste(directory_where_code_is, "/", dependency, sep = ""))
+	}
+	java_bart_machine = .jnew("CGM_BART.CGMBARTRegressionMultThread")
+	
+	#first set the name
+	.jcall(java_bart_machine, "V", "setUniqueName", unique_name)
+	#now set whether we want the program to log to a file
+	if (debug_log){
+		cat("warning: printing out the log file will slow down the runtime significantly\n")
+		.jcall(java_bart_machine, "V", "writeStdOutToLogFile")
+	}
+	#fix seed if you want
+	if (fix_seed){
+		.jcall(java_bart_machine, "V", "fixRandSeed")		
+	}
+	#set whether we want there to be tree illustrations
+	if (print_tree_illustrations){
+		cat("warning: printing tree illustrations will slow down the runtime significantly\n")
+		.jcall(java_bart_machine, "V", "printTreeIllustations")
+	}
+	
 	#make bart to spec with what the user wants
 	.jcall(java_bart_machine, "V", "setNumTrees", as.integer(num_trees))
 	.jcall(java_bart_machine, "V", "setNumGibbsBurnIn", as.integer(num_burn_in))
@@ -100,6 +120,7 @@ build_bart_machine = function(training_data,
 	
 	#now take care of features
 	.jcall(java_bart_machine, "V", "setNumCores", as.integer(num_cores))
+	
 	
 	if (length(cov_prior_vec) != 0){
 		#put in checks here for user make sure it's correct length
@@ -116,80 +137,48 @@ build_bart_machine = function(training_data,
 		.jcall(java_bart_machine, "V", "useHeteroskedasticity")
 	}
 	
-	
+	#now load the data into BART
+	.jcall(java_bart_machine, "V", "setDataToDefaultForRPackage")
 	
 	#build the bart machine for use later
 	#need http://math.acadiau.ca/ACMMaC/Rmpi/sample.html RMPI here
 	#or better yet do this in pieces and plot slowly
 	.jcall(java_bart_machine, "V", "Build")
 	
-	#once its done gibbs sampling, see how the training data does
-	y_hat_train_posterior_samples = matrix(NA, nrow = nrow(training_data), ncol = num_iterations_after_burn_in) 
-	for (i in 1 : nrow(training_data)){
-		y_hat_train_posterior_samples[i, ] = 
-			.jcall(java_bart_machine, "[D", "getGibbsSamplesForPrediction", c(as.numeric(training_data[i, ]), NA), as.integer(num_cores))
+	#now once it's done, let's extract things that are related to diagnosing the build of the BART model
+	bart_machine = list(java_bart_machine = java_bart_machine, 
+			n = nrow(training_data),
+			p = ncol(training_data) - 1,
+			num_trees = num_trees,
+			num_burn_in = num_burn_in,
+			num_iterations_after_burn_in = num_iterations_after_burn_in, 
+			num_gibbs = num_gibbs,
+			alpha = alpha,
+			beta = beta,
+			cov_prior_vec = cov_prior_vec,
+			use_heteroskedasticity = use_heteroskedasticity
+	)
+	
+	#once its done gibbs sampling, see how the training data does if user wants
+	if (run_in_sample){
+		y_hat_train_posterior_samples = matrix(NA, nrow = nrow(training_data), ncol = num_iterations_after_burn_in) 
+		for (i in 1 : nrow(training_data)){
+			y_hat_train_posterior_samples[i, ] = 
+				.jcall(java_bart_machine, "[D", "getGibbsSamplesForPrediction", c(as.numeric(training_data[i, ]), NA), as.integer(num_cores))
+		}
+		
+		bart_machine$y_hat_train = calc_y_hat_from_gibbs_samples(y_hat_train_posterior_samples)
+		bart_machine$residuals = training_data$y - bart_machine$y_hat_train
+		bart_machine$L1_err_train = sum(abs(bart_machine$residuals))
+		bart_machine$L2_err_train = sum(bart_machine$residuals^2)
+		bart_machine$rmse_train = sqrt(bart_machine$L2_err_train / bart_machine$n)
 	}
 	
-	y_hat_train = calc_y_hat_from_gibbs_samples(y_hat_train_posterior_samples)
-	L2_err_train = sum((training_data$y - y_hat_train)^2)
-	rmse_train = sqrt(L2_err_train / length(y_hat_train))
-	
-	avg_num_splits_by_vars = .jcall(java_bart_machine, "[D", "getAvgCountsByAttribute")
-
-	#now once it's done, let's extract things that are related to diagnosing the build of the BART model
-	list(java_bart_machine = java_bart_machine, 
-		n = nrow(training_data),
-		p = ncol(training_data) - 1,
-		num_trees = num_trees,
-		num_burn_in = num_burn_in,
-		num_iterations_after_burn_in = num_iterations_after_burn_in, 
-		num_gibbs = num_gibbs,
-		alpha = alpha,
-		beta = beta,
-		y_hat_train = y_hat_train,
-		L2_err_train = L2_err_train,
-		rmse_train = rmse_train,
-		avg_num_splits_by_vars = avg_num_splits_by_vars,
-		cov_prior_vec = cov_prior_vec
-	)
+	bart_machine
 }
 
 printed_out_warnings = FALSE
 
-init_jvm_and_bart_object = function(unique_name, debug_log, print_tree_illustrations, print_out_every, fix_seed){
-	for (dependency in JAR_DEPENDENCIES){
-		.jaddClassPath(paste(directory_where_code_is, "/", dependency, sep = ""))
-	}
-	java_bart_machine = .jnew("CGM_BART.CGMBARTRegressionMultThread")
-	
-	#first set the name
-	.jcall(java_bart_machine, "V", "setUniqueName", unique_name)
-	#now set whether we want the program to log to a file
-	if (debug_log){
-		if (!printed_out_warnings){
-			cat("warning: printing out the log file will slow down the runtime perceptibly\n")
-		}
-		.jcall(java_bart_machine, "V", "writeStdOutToLogFile")
-	}
-	#now initialize the data
-	.jcall(java_bart_machine, "V", "setDataToDefaultForRPackage")
-	if (fix_seed){
-		.jcall(java_bart_machine, "V", "fixRandSeed")		
-	}
-	#set whether we want there to be tree illustrations
-	if (print_tree_illustrations){
-		if (!printed_out_warnings){
-			cat("warning: printing tree illustrations will slow down the runtime significantly\n")
-		}
-		.jcall(java_bart_machine, "V", "printTreeIllustations")
-	}
-
-	if (!is.null(print_out_every)){
-		.jcall(java_bart_machine, "V", "setPrintOutEveryNIter", as.integer(print_out_every))
-	}
-	printed_out_warnings = TRUE
-	java_bart_machine
-}
 
 clean_previous_bart_data = function(){
 	if (exists("sigsqs_after_burnin")){
@@ -209,7 +198,10 @@ clean_previous_bart_data = function(){
 	}
 }
 
-plot_sigsqs_convergence_diagnostics_hetero = function(bart_machine, records = c(0), extra_text = NULL, data_title = "data_model", save_plot = FALSE){
+plot_sigsqs_convergence_diagnostics_hetero = function(bart_machine, records = c(1), extra_text = NULL, data_title = "data_model", save_plot = FALSE, moving_avgs = TRUE){
+	if (bart_machine$use_heteroskedasticity != TRUE){
+		stop("This BART machine was not created using the heteroskedasticity-robust feature, use \"plot_sigsqs_convergence_diagnostics\" instead")
+	}
 	sigsqs = .jcall(bart_machine$java_bart_machine, "[D", "getGibbsSamplesSigsqs")
 	
 	num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in
@@ -220,7 +212,9 @@ plot_sigsqs_convergence_diagnostics_hetero = function(bart_machine, records = c(
 	sigsqs = matrix(NA, nrow = bart_machine$num_gibbs, ncol = bart_machine$n)
 	for (g in 1 : bart_machine$num_gibbs){
 		sigsqs[g, ] = .jcall(bart_machine$java_bart_machine, "[D", "getSigsqsByGibbsSample", as.integer(g - 1))
-	}	
+	}
+	sigsqs_after_burnin = sigsqs[(length(sigsqs) - num_iterations_after_burn_in) : length(sigsqs), 1]
+	assign("sigsqs_after_burnin", sigsqs_after_burnin, .GlobalEnv)	
 	
 	if (save_plot){
 		save_plot_function(bart_machine, "sigsqs_by_gibbs", data_title)
@@ -229,12 +223,15 @@ plot_sigsqs_convergence_diagnostics_hetero = function(bart_machine, records = c(
 		dev.new()
 	}	
 	
-	ymax = 20
+	ymax = quantile(sigsqs, .95)
 #	ymax = max(sigsqs[bart_machine$num_burn_in : bart_machine$num_gibbs, ])
 	
 	plot(NA, 
-		main = paste("Sigsqs throughout entire chain", ifelse(is.null(extra_text), "", paste("\n", extra_text))), 
+		main = paste("Sigsqs throughout entire chain", ifelse(is.null(extra_text), "", 
+						paste("\n", extra_text)), ifelse(length(records) < 10, paste("record #", paste(records, collapse = ", ")), "")), 
 		type = "n", 
+		xlab = "Gibbs sample",
+		ylab = "Var[Noise] estimate",
 		xlim = c(1, bart_machine$num_gibbs), 		
 		ylim = c(0, ymax)
 	)
@@ -246,6 +243,15 @@ plot_sigsqs_convergence_diagnostics_hetero = function(bart_machine, records = c(
 	}
 	abline(v = num_burn_in, col = "gray")
 	
+	#now maybe we want to see moving averages
+	if (moving_avgs){
+		for (i in records){
+			sigsqis = sigsqs[, i]
+			moving_avg = filter(sigsqis, rep(1/101, 101), sides = 2)
+			lines(moving_avg, col = COLORS[i %% 500])
+		}		
+	}
+	
 	if (save_plot){	
 		dev.off()
 	}
@@ -254,6 +260,9 @@ plot_sigsqs_convergence_diagnostics_hetero = function(bart_machine, records = c(
 }
 
 plot_sigsqs_convergence_diagnostics = function(bart_machine, extra_text = NULL, data_title = "data_model", save_plot = FALSE){
+	if (bart_machine$use_heteroskedasticity == TRUE){
+		stop("This BART machine was created using the heteroskedasticity-robust feature, use \"plot_sigsqs_convergence_diagnostics_hetero\" instead")
+	}	
 	sigsqs = .jcall(bart_machine$java_bart_machine, "[D", "getGibbsSamplesSigsqs")
 	
 	num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in
@@ -718,7 +727,7 @@ look_at_sample_of_test_data = function(bart_predictions, grid_len = 3, extra_tex
 	}	
 }
 
-predict = function(bart_machine, test_data, num_cores = 1){
+bart_predict = function(bart_machine, test_data, num_cores = 1){
 	#pull out data objects for convenience
 	java_bart_machine = bart_machine$java_bart_machine
 	num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in
@@ -731,7 +740,7 @@ predict = function(bart_machine, test_data, num_cores = 1){
 	}	
 	test_data = pre_process_data(test_data)	
 	
-	#do the evaluation as a loop... one day this should be done better than this with a matrix
+	#do the evaluation as a loop... one day this should be done better than this using a matrix
 	y_hat_posterior_samples = matrix(NA, nrow = nrow(test_data), ncol = num_iterations_after_burn_in)	
 	for (i in 1 : n){
 		y_hat_posterior_samples[i, ] = 
@@ -742,11 +751,12 @@ predict = function(bart_machine, test_data, num_cores = 1){
 	assign("y_hat", y_hat, .GlobalEnv)
 	
 	L1_err = round(sum(abs(y - y_hat)), 1)
-	L2_err = round(sum((y - y_hat)^2), 1)		
+	L2_err = round(sum((y - y_hat)^2), 1)
 	
 	#give the user everything
 	list(y_hat_posterior_samples = y_hat_posterior_samples, 
 		y = test_data$y,
+		e = y - y_hat,
 		y_hat = y_hat,
 		L1_err = L1_err,
 		L2_err = L2_err,
@@ -754,19 +764,19 @@ predict = function(bart_machine, test_data, num_cores = 1){
 }
 
 predict_and_calc_ppis = function(bart_machine, test_data, ppi_conf = 0.95, num_cores = 1){
-	predict_obj = predict(bart_machine, test_data, num_cores)
+	predict_obj = bart_predict(bart_machine, test_data, num_cores = num_cores)
 
-	ppi_a = array(NA, n)
-	ppi_b = array(NA, n)	
-	for (i in 1 : n){		
+	ppi_a = array(NA, nrow(test_data))
+	ppi_b = array(NA, nrow(test_data))	
+	for (i in 1 : bart_machine$n){		
 		ppi_a[i] = quantile(sort(predict_obj$y_hat_posterior_samples), (1 - ppi_conf) / 2)
 		ppi_b[i] = quantile(sort(predict_obj$y_hat_posterior_samples), (1 + ppi_conf) / 2)
 	}		
 
 	predict_obj$ppi_a = ppi_a
 	predict_obj$ppi_b = ppi_b
-	predict_obj$y_inside_ppi = y >= ppi_a & y <= ppi_b #did the PPI capture the true y?
-	predict_obj$prop_ys_in_ppi = sum(y_inside_ppi) / n
+	predict_obj$y_inside_ppi = predict_obj$y >= ppi_a & predict_obj$y <= ppi_b #did the PPI capture the true y?
+	predict_obj$prop_ys_in_ppi = sum(predict_obj$y_inside_ppi) / nrow(test_data)
 	#return the whole thing
 	predict_obj
 }

@@ -10,8 +10,8 @@ source("r_scripts/bart_bakeoff.R")
 
 library(MASS)
 data(Boston)
-X=Boston
+X = Boston
 colnames(X)[ncol(X)] = "y"
-bart_machine = build_bart_machine(X, use_heteroskedasticity = TRUE, num_cores = 3, debug_log = TRUE)
+bart_machine = build_bart_machine(X, use_heteroskedasticity = T, num_cores = 1, debug_log = TRUE, run_in_sample = TRUE)
 
 sigsqs = plot_sigsqs_convergence_diagnostics_hetero(bart_machine)

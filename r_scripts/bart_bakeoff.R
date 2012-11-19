@@ -247,12 +247,15 @@ run_bart_model_and_save_diags_and_results = function(training_data, test_data, d
 	bart_machine = build_bart_machine(training_data, 
 		num_trees = num_trees, 
 		num_burn_in = num_burn_in, 
+		num_iterations_after_burn_in = num_iterations_after_burn_in,
 		alpha = alpha, 
 		beta = beta,
 		print_tree_illustrations = PRINT_TREE_ILLUS,
 		debug_log = JAVA_LOG,
 		unique_name = paste(data_title, "_m_", num_trees, "_run_", formatC(duplicate_run, width = 2, format = "d", flag = "0")),
-		num_iterations_after_burn_in = num_iterations_after_burn_in)
+		run_in_sample = TRUE,
+		use_heteroskedasticity = TRUE,
+		num_cores = 1)
 	time_finished = Sys.time()
 	print(paste("A BART run time:", time_finished - time_started))
 	
@@ -260,7 +263,7 @@ run_bart_model_and_save_diags_and_results = function(training_data, test_data, d
 	append_to_log("built")
 	
 	#now use the bart model to predict y_hat's for the test data
-	a_bart_predictions_obj = predict_and_calc_ppis(bart_machine, test_data)
+	a_bart_predictions_obj = predict_and_calc_ppis(bart_machine, test_data, num_cores = 1)
 	#diagnose how good the y_hat's from the bart model are
 	plot_y_vs_yhat_a_bart(a_bart_predictions_obj, extra_text = extra_text, data_title = data_title, save_plot = save_plot, bart_machine = bart_machine)
 	
@@ -272,9 +275,9 @@ run_bart_model_and_save_diags_and_results = function(training_data, test_data, d
 	cart_predictions_obj = run_cart_and_plot_y_vs_yhat(training_data, test_data, extra_text = extra_text, data_title = data_title, save_plot = save_plot, bart_machine = bart_machine)
 	
 	#do some plots and histograms to diagnose convergence
-	plot_sigsqs_convergence_diagnostics(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)
-	a_bart_sigsqs = hist_sigsqs(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)
-	
+#	plot_sigsqs_convergence_diagnostics_hetero(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)
+#	a_bart_sigsqs = hist_sigsqs(bart_machine, extra_text = extra_text, data_title = data_title, save_plot = save_plot)
+	a_bart_sigsqs = c(0)
 #	print(paste("ABART runtime", time_finished - time_started))
 #	print(paste("RBART runtime", r_bart_predictions_obj$runtime))
 #	print(paste("ABART runtime", rf_predictions_obj$runtime))
