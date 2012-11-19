@@ -70,6 +70,9 @@ public abstract class Classifier implements Serializable {
 	
 	/** the name of this classifier */
 	protected String unique_name = "unnamed";
+
+
+	private double[] in_sample_residuals;
 	
 	protected static PrintWriter output;
 	protected static final String DEBUG_EXT = ".csv";
@@ -228,7 +231,11 @@ public abstract class Classifier implements Serializable {
 	protected abstract void FlushData();
 	
 	/** After the classifier has been built, new records can be evaluated */
-	public abstract double Evaluate(double[] record);
+	public abstract double Evaluate(double[] record, int num_cores);
+	
+	public double Evaluate(double[] record){
+		return Evaluate(record, 1);
+	}
 	
 	/**
 	 * Given a data record, return the Y value - take the last index
@@ -280,28 +287,42 @@ public abstract class Classifier implements Serializable {
 	public static enum ErrorTypes {L1, L2, MISCLASSIFICATION};
 	/**
 	 * Calculates the in-sample error using the specified loss function
+	 * @param num_cores_evaluate 
 	 * @param type_of_error_rate  the loss function 
 	 * @return the error rate
 	 */	
-	public double calculateInSampleLoss(ErrorTypes type_of_error_rate){		
-		double loss = 0;
-		System.out.print("calculateInSampleLoss for " + type_of_error_rate + "...");
+	
+	private void calculateInSampleResiduals(int num_cores_evaluate){
+		long t0 = System.currentTimeMillis();
+		System.out.print("calculating in-sample residuals...");
+		in_sample_residuals = new double[n];
 		for (int i = 0; i < n; i++){
 			double[] record = X_y.get(i);
 			double y = getResponseFromRecord(record);
-			double yhat = Evaluate(record);
-//			System.out.println("y: " + y + " yhat: " + yhat);
-
-			// now add the appropriate quantity to the loss
+			double yhat = Evaluate(record, num_cores_evaluate);
+			in_sample_residuals[i] = y - yhat;
+		}
+		long t1 = System.currentTimeMillis();
+		System.out.print("done in " + ((t1 - t0) / 1000.0) + " sec \n");
+	}
+	
+	public double calculateInSampleLoss(ErrorTypes type_of_error_rate, int num_cores_evaluate){	
+		if (in_sample_residuals == null){
+			calculateInSampleResiduals(num_cores_evaluate);
+		}
+		
+		double loss = 0;
+		System.out.print("calculateInSampleLoss for " + type_of_error_rate + "...");
+		for (int i = 0; i < n; i++){
 			switch (type_of_error_rate){
 				case L1:
-					loss += Math.abs(y - yhat);
+					loss += Math.abs(in_sample_residuals[i]);
 					break;
 				case L2:
-					loss += Math.pow(y - yhat, 2);
+					loss += in_sample_residuals[i] * in_sample_residuals[i];
 					break;
 				case MISCLASSIFICATION:
-					loss += (yhat == y ? 0 : 1);
+					loss += (in_sample_residuals[i] == 0 ? 0 : 1);
 					break;
 			}
 		}
@@ -322,21 +343,8 @@ public abstract class Classifier implements Serializable {
 		return y_i;
 	}
 
-	public double calculateMisclassificationRate(){
-		return calculateInSampleLoss(ErrorTypes.MISCLASSIFICATION) / (double) n * 100;
-	}
-	
-	public double CalculateCrossValidationError(ErrorTypes type_of_error_rate){
-		//TODO
-		return 0;
-	}
-	
-	public double calculateLeaveOneOutLoss(ErrorTypes type_of_error_rate){
-		double loss = 0;
-		for (int i = 0; i < n; i++){
-			//TODO
-		}
-		return loss;
+	public double calculateMisclassificationRate(int num_cores_evaluate){
+		return calculateInSampleLoss(ErrorTypes.MISCLASSIFICATION, num_cores_evaluate) / (double) n * 100;
 	}
 	
 	public double[] getYTrans() {
@@ -346,19 +354,6 @@ public abstract class Classifier implements Serializable {
 	public Classifier clone(){
 		return null;
 	}
-	
-	
-//	public void writeEvaluationDiagnostics() {		
-//		output.print("y,yhat");
-//		output.print("\n");
-//		for (int i=0; i<n; i++){
-//			double[] record = X_y.get(i);
-//			double y = getResponseFromRecord(record); //the original response from record does not have to be untransformed
-//			double yhat = Evaluate(record);
-//			output.println(y + "," + yhat);
-//		}		
-//		output.close();
-//	}
 	
 	public void setUniqueName(String unique_name) {
 		this.unique_name = unique_name;

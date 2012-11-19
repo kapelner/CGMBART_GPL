@@ -33,7 +33,7 @@ public class DataAnalysis {
 	
 	/** this is a file that is in CSV format (csv extension) with/out a header named c_<name> or r_<name> for classification or regression respectively */
 //	private static final String DataSetFilename = "r_just_noise";
-//	private static final String DataSetFilename = "r_treemodel";
+	private static final String DataSetFilename = "r_treemodel";
 //	private static final String DataSetFilename = "r_treemodel_high_p";
 //	private static final String DataSetFilename = "r_treemodel_high_p_low_n";
 //	private static final String DataSetFilename = "r_treemodel_high_n";
@@ -41,7 +41,7 @@ public class DataAnalysis {
 //	private static final String DataSetFilename = "r_friedman";
 //	private static final String DataSetFilename = "r_univariatelinear";
 //	private static final String DataSetFilename = "r_bivariatelinear";
-	private static final String DataSetFilename = "r_boston";	
+//	private static final String DataSetFilename = "r_boston";	
 //	private static final String DataSetFilename = "r_forestfires";
 //	private static final String DataSetFilename = "r_concretedata";
 //	private static final String DataSetFilename = "bart_data";
@@ -58,7 +58,11 @@ public class DataAnalysis {
 			machine = new CGMBARTClassification(data.getK());
 			machine.setData(data.getX_y());
 			machine.Build();
-			System.out.println("errors: " + (int)machine.calculateInSampleLoss(Classifier.ErrorTypes.MISCLASSIFICATION) + "/" + machine.getN() + "  (" + machine.calculateMisclassificationRate() + "%)");
+			System.out.println("errors: " + 
+					(int)machine.calculateInSampleLoss(Classifier.ErrorTypes.MISCLASSIFICATION, 4) + 
+					"/" + 
+					machine.getN() + 
+					"  (" + machine.calculateMisclassificationRate(4) + "%)");
 		}
 		else { //regression problem
 //			machine = new RandomForest(data, new JProgressBarAndLabel(0, 0, null));
@@ -67,11 +71,12 @@ public class DataAnalysis {
 				machine.setData(data.getX_y());
 //				double[] cov_split_prior = {1, 1000,1000};
 //				((CGMBARTRegressionMultThread)machine).setCovSplitPrior(cov_split_prior);
-				((CGMBARTRegressionMultThread)machine).useHeteroskedasticity();
+//				((CGMBARTRegressionMultThread)machine).useHeteroskedasticity();
 				machine.Build();
-				System.out.println("(in sample) L1 error: " + Math.round(machine.calculateInSampleLoss(Classifier.ErrorTypes.L1)) + " L2 error: " + Math.round(machine.calculateInSampleLoss(Classifier.ErrorTypes.L2)));
-				//now we'll do 95% CI and error rates
-//				machine.writeEvaluationDiagnostics();
+				System.out.println("(in sample) L1 error: " + 
+					Math.round(machine.calculateInSampleLoss(Classifier.ErrorTypes.L1, 4)) +
+					" L2 error: " + 
+					Math.round(machine.calculateInSampleLoss(Classifier.ErrorTypes.L2, 4)));
 //			}
 		}		
 	}

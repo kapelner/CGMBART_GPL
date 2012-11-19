@@ -52,25 +52,6 @@ public final class CGMBARTClassification extends CGMBART_F1_prior_cov_spec {
 	}
 	
 
-	public void writeEvaluationDiagnostics() {
-		// TODO Auto-generated method stub
-		output.print("y,yhat,a,b,inside");
-		for (int i = 0; i < numSamplesAfterBurningAndThinning(); i++){
-			output.print(",samp_" + (i + 1));
-		}
-		output.print("\n");
-		for (int i=0; i<n; i++){
-			double[] record = X_y.get(i);
-			double y = getResponseFromRecord(record);
-			double yhat = Evaluate(record);
-			double[] ppi = get95PctPostPredictiveIntervalForPrediction(record);
-			double[] samples = getGibbsSamplesForPrediction(record);
-			int inside = (y >= ppi[0] && y <= ppi[1]) ? 1 : 0;
-			output.println(y + "," + yhat + "," + ppi[0] + "," + ppi[1] + "," + inside + "," + Tools.StringJoin(samples, ","));
-		}		
-		output.close();
-	}
-
 	@Override
 	protected void DoGibbsSampling() {
 		// TODO Auto-generated method stub

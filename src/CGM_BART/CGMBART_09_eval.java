@@ -7,37 +7,36 @@ import java.util.Arrays;
 public abstract class CGMBART_09_eval extends CGMBART_07_mh implements Serializable {
 	private static final long serialVersionUID = -6670611007413531590L;
 
-	public double Evaluate(double[] record) { //posterior sample median (it's what Rob uses)		
-		return EvaluateViaSampAvg(record);
+	public double Evaluate(double[] record, int num_cores_evaluate) { //posterior sample median (it's what Rob uses)		
+		return EvaluateViaSampAvg(record, num_cores_evaluate);
 	}	
 	
-	public double EvaluateViaSampMed(double[] record) { //posterior sample average		
-		return StatToolbox.sample_median(getGibbsSamplesForPrediction(record));
+	public double EvaluateViaSampMed(double[] record, int num_cores_evaluate) { //posterior sample average		
+		return StatToolbox.sample_median(getGibbsSamplesForPrediction(record, num_cores_evaluate));
 	}
 	
-	public double EvaluateViaSampAvg(double[] record) { //posterior sample average		
-		return StatToolbox.sample_average(getGibbsSamplesForPrediction(record));
+	public double EvaluateViaSampAvg(double[] record, int num_cores_evaluate) { //posterior sample average		
+		return StatToolbox.sample_average(getGibbsSamplesForPrediction(record, num_cores_evaluate));
 	}
 
-	protected double[] getGibbsSamplesForPrediction(double[] record){
+	protected double[] getGibbsSamplesForPrediction(double[] data_record, int num_cores_evaluate){
 //		System.out.println("eval record: " + record + " numtrees:" + this.bayesian_trees.size());
 		//the results for each of the gibbs samples
 		double[] y_gibbs_samples = new double[numSamplesAfterBurningAndThinning()];	
-		for (int i = 0; i < numSamplesAfterBurningAndThinning(); i++){
-			CGMBARTTreeNode[] cgm_trees = gibbs_samples_of_cgm_trees_after_burn_in[i];
-			double yt_i = 0;
+		for (int g = 0; g < numSamplesAfterBurningAndThinning(); g++){
+			CGMBARTTreeNode[] cgm_trees = gibbs_samples_of_cgm_trees_after_burn_in[g];
+			double yt_g = 0;
 			for (CGMBARTTreeNode tree : cgm_trees){ //sum of trees right?
-				yt_i += tree.Evaluate(record);
-			}
-			//just make sure we switch it back to really what y is for the user
-			y_gibbs_samples[i] = un_transform_y(yt_i);
+				yt_g += tree.Evaluate(data_record);
+			}			
+			y_gibbs_samples[g] = un_transform_y(yt_g);
 		}
 		return y_gibbs_samples;
 	}
 	
-	protected double[] getPostPredictiveIntervalForPrediction(double[] record, double coverage){
+	protected double[] getPostPredictiveIntervalForPrediction(double[] record, double coverage, int num_cores_evaluate){
 		//get all gibbs samples sorted
-		double[] y_gibbs_samples_sorted = getGibbsSamplesForPrediction(record);
+		double[] y_gibbs_samples_sorted = getGibbsSamplesForPrediction(record, num_cores_evaluate);
 		Arrays.sort(y_gibbs_samples_sorted);
 		
 		//calculate index of the CI_a and CI_b
@@ -49,7 +48,7 @@ public abstract class CGMBART_09_eval extends CGMBART_07_mh implements Serializa
 		return conf_interval;
 	}
 	
-	protected double[] get95PctPostPredictiveIntervalForPrediction(double[] record){
-		return getPostPredictiveIntervalForPrediction(record, 0.95);
-	}
+	protected double[] get95PctPostPredictiveIntervalForPrediction(double[] record, int num_cores_evaluate){
+		return getPostPredictiveIntervalForPrediction(record, 0.95, num_cores_evaluate);
+	}	
 }

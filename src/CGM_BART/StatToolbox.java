@@ -119,7 +119,7 @@ public class StatToolbox {
 				for (int i = 0; i < NUM_NORM_SAMPS; i++){
 					NORM_SAMPS[i] = Double.parseDouble(random_samps[i]);
 				}	
-				System.out.println("NUM_NORM_SAMPS: " + NUM_NORM_SAMPS);
+//				System.out.println("NUM_NORM_SAMPS: " + NUM_NORM_SAMPS);
 //				System.out.println("START_POS: " + START_POS);
 //				System.out.println("NORM_SAMPS: " + Tools.StringJoin(NORM_SAMPS));
 			} catch (IOException e) {

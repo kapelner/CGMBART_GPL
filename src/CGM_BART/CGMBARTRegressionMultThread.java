@@ -24,8 +24,6 @@ public class CGMBARTRegressionMultThread extends Classifier {
 	private int num_gibbs_total_iterations;
 	private int total_iterations_multithreaded;
 
-	private ArrayList<double[]> gibbs_samples_of_sigsq_hetero_aggregated;
-
 	public CGMBARTRegressionMultThread(int num_cores){
 		this.num_cores = num_cores;
 		SetupBARTModels();
@@ -155,40 +153,61 @@ public class CGMBARTRegressionMultThread extends Classifier {
 	}
 
 	public double Evaluate(double[] record) { //posterior sample median (it's what Rob uses)		
-		return EvaluateViaSampAvg(record);
+		return EvaluateViaSampAvg(record, 1);
 	}	
 	
-	public double EvaluateViaSampMed(double[] record) { //posterior sample average		
-		return StatToolbox.sample_median(getGibbsSamplesForPrediction(record));
+	public double Evaluate(double[] record, int num_cores_evaluate) { //posterior sample median (it's what Rob uses)		
+		return EvaluateViaSampAvg(record, num_cores_evaluate);
+	}		
+	
+	public double EvaluateViaSampMed(double[] record, int num_cores_evaluate) { //posterior sample average		
+		return StatToolbox.sample_median(getGibbsSamplesForPrediction(record, num_cores_evaluate));
 	}
 	
-	public double EvaluateViaSampAvg(double[] record) { //posterior sample average		
-		return StatToolbox.sample_average(getGibbsSamplesForPrediction(record));
+	public double EvaluateViaSampAvg(double[] record, int num_cores_evaluate) { //posterior sample average		
+		return StatToolbox.sample_average(getGibbsSamplesForPrediction(record, num_cores_evaluate));
 	}
 	
 	public int numSamplesAfterBurning(){
 		return num_gibbs_total_iterations - num_gibbs_burn_in;
-	}		
-
-	protected double[] getGibbsSamplesForPrediction(double[] record){
+	}	
+	
+	protected double[] getGibbsSamplesForPrediction(final double[] data_record, int num_cores_evaluate){
 //		System.out.println("eval record: " + record + " numtrees:" + this.bayesian_trees.size());
 		//the results for each of the gibbs samples
-		double[] y_gibbs_samples = new double[numSamplesAfterBurning()];	
-		for (int i = 0; i < numSamplesAfterBurning(); i++){
-			CGMBARTTreeNode[] cgm_trees = gibbs_samples_of_cgm_trees_after_burn_in[i];
-			double yt_i = 0;
-			for (CGMBARTTreeNode tree : cgm_trees){ //sum of trees right?
-				yt_i += tree.Evaluate(record);
-			}
-			//just make sure we switch it back to really what y is for the user
-			y_gibbs_samples[i] = bart_gibbs_chain_threads[0].un_transform_y(yt_i);
+		final double[] y_gibbs_samples = new double[numSamplesAfterBurning()];
+		
+		ExecutorService evaluate_sum_of_trees_pool = Executors.newFixedThreadPool(num_cores_evaluate);
+		
+//		System.out.println("getGibbsSamplesForPrediction in  CGMBARTMultiThread num_cores_evaluate = " + num_cores_evaluate);
+		
+		for (int g = 0; g < numSamplesAfterBurning(); g++){
+			final int final_g = g;
+			evaluate_sum_of_trees_pool.execute(new Runnable(){
+				public void run() {
+					CGMBARTTreeNode[] cgm_trees = gibbs_samples_of_cgm_trees_after_burn_in[final_g];
+					double yt_i = 0;
+					for (CGMBARTTreeNode tree : cgm_trees){ //sum of trees right?
+						yt_i += tree.Evaluate(data_record);
+					}
+					//just make sure we switch it back to really what y is for the user
+					y_gibbs_samples[final_g] = bart_gibbs_chain_threads[0].un_transform_y(yt_i);//				}
+				}			
+			});
 		}
+		//now join em up and ship out the result
+		evaluate_sum_of_trees_pool.shutdown();
+		try {	         
+			evaluate_sum_of_trees_pool.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS); //effectively infinity
+	    } catch (InterruptedException ignored){}		
+
 		return y_gibbs_samples;
 	}
-	
-	protected double[] getPostPredictiveIntervalForPrediction(double[] record, double coverage){
+
+
+	protected double[] getPostPredictiveIntervalForPrediction(double[] record, double coverage, int num_cores_evaluate){
 		//get all gibbs samples sorted
-		double[] y_gibbs_samples_sorted = getGibbsSamplesForPrediction(record);
+		double[] y_gibbs_samples_sorted = getGibbsSamplesForPrediction(record, num_cores_evaluate);
 		Arrays.sort(y_gibbs_samples_sorted);
 		
 		//calculate index of the CI_a and CI_b
@@ -200,19 +219,8 @@ public class CGMBARTRegressionMultThread extends Classifier {
 		return conf_interval;
 	}
 	
-	protected double[] get95PctPostPredictiveIntervalForPrediction(double[] record){
-		return getPostPredictiveIntervalForPrediction(record, 0.95);
-	}
-	
-	public double[] getAvgCountsByAttribute(){
-		double[] avg_counts = new double[p];
-//		for (int t = 0; t < num_cores; t++){
-//			double[] avg_counts_by_thread = bart_gibbs_chain_threads.get(t).getAvgCountsByAttribute();
-//			for (int j = 0; j < p; j++){
-//				avg_counts[j] += avg_counts_by_thread[j] / num_cores;
-//			}			
-//		}		
-		return avg_counts;
+	protected double[] get95PctPostPredictiveIntervalForPrediction(double[] record, int num_cores_evaluate){
+		return getPostPredictiveIntervalForPrediction(record, 0.95, num_cores_evaluate);
 	}	
 	
 	public double[] getGibbsSamplesSigsqs(){
@@ -229,24 +237,40 @@ public class CGMBARTRegressionMultThread extends Classifier {
 		return sigsqs_to_export.toArray();
 	}	
 	
-	public int[][] getCountForAttributesForEntireChain(){
-		int[][] var_count_matrix = new int[gibbs_samples_of_cgm_trees_after_burn_in.length][p];
-		
-		for (int g = 0; g < gibbs_samples_of_cgm_trees_after_burn_in.length; g++){
-			var_count_matrix[g] = getCountForAttributeInGibbsSample(g);
-		}
-		return var_count_matrix;
-	}	
+//	public int[][] getCountForAttributesForEntireChain(){
+//		int[][] var_count_matrix = new int[gibbs_samples_of_cgm_trees_after_burn_in.length][p];
+//		
+//		for (int g = 0; g < gibbs_samples_of_cgm_trees_after_burn_in.length; g++){
+//			var_count_matrix[g] = getCountForAttributeInGibbsSample(g);
+//		}
+//		return var_count_matrix;
+//	}	
 
-	public int[] getCountForAttributeInGibbsSample(int g) {
-		int[] counts = new int[p];
+	public int[] getCountForAttributeInGibbsSample(int g, int num_cores_count) {
+		final int[] counts = new int[p];		
+		final CGMBARTTreeNode[] cgm_trees = gibbs_samples_of_cgm_trees_after_burn_in[g];
+		
+		ExecutorService get_count_for_attribute_pool = Executors.newFixedThreadPool(num_cores_count);
+		
 		for (int j = 0; j < p; j++){
-			int tot_for_attr_j = 0;
-			for (CGMBARTTreeNode root_node : gibbs_samples_of_cgm_trees_after_burn_in[g]){
-				tot_for_attr_j += root_node.numTimesAttrUsed(j);
-			}			
-			counts[j] = tot_for_attr_j;
+			final int final_j = j;
+			get_count_for_attribute_pool.execute(new Runnable(){
+				public void run() {
+					int tot_for_attr_j = 0;
+					for (CGMBARTTreeNode root_node : cgm_trees){
+						tot_for_attr_j += root_node.numTimesAttrUsed(final_j);
+					}		
+					counts[final_j] = tot_for_attr_j;					
+				}
+			});
+
 		}
+		
+		//now join em up and ship out the result
+		get_count_for_attribute_pool.shutdown();
+		try {	         
+			get_count_for_attribute_pool.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS); //effectively infinity
+	    } catch (InterruptedException ignored){}	
 		
 		return counts;
 	}
@@ -259,12 +283,14 @@ public class CGMBARTRegressionMultThread extends Classifier {
 	}
 	
 	public void setCovSplitPrior(double[] cov_split_prior){
+		System.out.println("using BART with covariate importance prior");
 		for (int t = 0; t < num_cores; t++){
 			bart_gibbs_chain_threads[t].setCovSplitPrior(cov_split_prior);
 		}		
 	}
 	
 	public void useHeteroskedasticity(){
+		System.out.println("using heteroskedastic BART");
 		for (int t = 0; t < num_cores; t++){
 			bart_gibbs_chain_threads[t].useHeteroskedasticity();
 		}		

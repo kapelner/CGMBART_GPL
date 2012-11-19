@@ -47,27 +47,6 @@ public class CGMBARTRegression extends CGMBART_F2_heteroskedasticity {
 		catch (Error e){
 			System.out.println("Logger and or suppressOrWriteToDebugLog FAILING\n");
 		}
-	}	
-	 
-
-	public void writeEvaluationDiagnostics() {
-		
-		output.print("y,yhat,a,b,inside");
-		for (int i = 0; i < numSamplesAfterBurningAndThinning(); i++){
-			output.print(",samp_" + (i + 1));
-		}
-		output.print("\n");
-		for (int i=0; i<n; i++){
-			double[] record = X_y.get(i);
-			double y = getResponseFromRecord(record); //the original response from record does not have to be untransformed
-			double yhat = Evaluate(record);
-			double[] ppi = get95PctPostPredictiveIntervalForPrediction(record);
-			double[] samples = getGibbsSamplesForPrediction(record);
-			int inside = (y >= ppi[0] && y <= ppi[1]) ? 1 : 0;
-			output.println(y + "," + yhat + "," + ppi[0] + "," + ppi[1] + "," + inside + "," + Tools.StringJoin(samples, ","));
-//			System.out.println(y + "," + yhat + "," + ppi[0] + "," + ppi[1] + "," + inside);
-		}
-		output.close();
 	}
 
 

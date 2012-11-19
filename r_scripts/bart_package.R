@@ -519,10 +519,10 @@ get_root_splits_of_trees = function(bart_machine, data_title = "data_model", sav
 	root_splits
 }
 
-get_var_counts_over_chain = function(bart_machine){
+get_var_counts_over_chain = function(bart_machine, num_cores_count = 1){
 	C = matrix(NA, nrow = bart_machine$num_iterations_after_burn_in, ncol = bart_machine$p)
 	for (g in 1 : bart_machine$num_iterations_after_burn_in){
-		C[g, ] = .jcall(bart_machine$java_bart_machine, "[I", "getCountForAttributeInGibbsSample", as.integer(g - 1))
+		C[g, ] = .jcall(bart_machine$java_bart_machine, "[I", "getCountForAttributeInGibbsSample", as.integer(g - 1), as.integer(num_cores_count))
 	}
 	C
 }
@@ -713,7 +713,7 @@ look_at_sample_of_test_data = function(bart_predictions, grid_len = 3, extra_tex
 	}	
 }
 
-predict_and_calc_ppis = function(bart_machine, test_data, training_data, ppi_conf = 0.95){
+predict_and_calc_ppis = function(bart_machine, test_data, training_data, ppi_conf = 0.95, num_cores = 1){
 	#pull out data objects for convenience
 	java_bart_machine = bart_machine$java_bart_machine
 	num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in
@@ -732,7 +732,7 @@ predict_and_calc_ppis = function(bart_machine, test_data, training_data, ppi_con
 	ppi_a = array(NA, n)
 	ppi_b = array(NA, n)	
 	for (i in 1 : n){
-		samps = .jcall(java_bart_machine, "[D", "getGibbsSamplesForPrediction", c(as.numeric(test_data[i, ]), NA))
+		samps = .jcall(java_bart_machine, "[D", "getGibbsSamplesForPrediction", c(as.numeric(test_data[i, ]), NA), as.integer(num_cores))
 		y_hat_posterior_samples[i, ] = samps
 
 		ppi_a[i] = quantile(sort(samps), (1 - ppi_conf) / 2)
