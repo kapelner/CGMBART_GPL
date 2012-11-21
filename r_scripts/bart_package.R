@@ -4,17 +4,19 @@ options(repos = "http://lib.stat.cmu.edu/R/CRAN")
 tryCatch(library(randomForest), error = function(e){install.packages("randomForest")}, finally = library(randomForest))
 tryCatch(library(rpart), error = function(e){install.packages("rpart")}, finally = library(rpart))
 tryCatch(library(xtable), error = function(e){install.packages("xtable")}, finally = library(xtable))
-
-if (.Platform$OS.type == "windows"){
-	tryCatch(library(rJava), error = function(e){install.packages("rJava")}, finally = library(rJava))
-	tryCatch(library(BayesTree), error = function(e){install.packages("BayesTree")}, finally = library(BayesTree))
-} else {
-	tryCatch(library(rJava), error = function(e){library(rJava, lib.loc = "~/R/")})	
-	library(BayesTree, lib.loc = "~/R/")
-}
+tryCatch(library(rJava), error = function(e){install.packages("rJava")}, finally = library(rJava))
+tryCatch(library(BayesTree), error = function(e){install.packages("BayesTree")}, finally = library(BayesTree))
+#
+#if (.Platform$OS.type == "windows"){
+#	tryCatch(library(rJava), error = function(e){install.packages("rJava")}, finally = library(rJava))
+#	tryCatch(library(BayesTree), error = function(e){install.packages("BayesTree")}, finally = library(BayesTree))
+#} else {
+#	tryCatch(library(rJava), error = function(e){library(rJava, lib.loc = "~/R/")})	
+#	library(BayesTree, lib.loc = "~/R/")
+#}
 
 #constants
-NUM_MEGS_RAM_TO_USE = ifelse(.Platform$OS.type == "windows", 6000, 1600) #1690
+NUM_MEGS_RAM_TO_USE = 6000 #ifelse(.Platform$OS.type == "windows", 6000, 1600) #1690
 PLOTS_DIR = "output_plots"
 JAR_DEPENDENCIES = c("bart_java.jar", "commons-math-2.1.jar", "jai_codec.jar", "jai_core.jar", "trove-3.0.3.jar")
 DATA_FILENAME = "datasets/bart_data.csv"
