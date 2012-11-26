@@ -2,6 +2,8 @@
 PRINT_TREE_ILLUS = FALSE
 JAVA_LOG = FALSE
 
+num_cores = 10
+
 run_model_N_times = 10
 real_regression_data_sets = c(
 	"r_boston",
