@@ -1,13 +1,13 @@
 #!/bin/csh
 #PBS -l ncpus=16
 #ncpus must be a multiple of 16
-#PBS -l walltime=5:00
+#PBS -l walltime=20:00
 #PBS -j oe
 #PBS -q batch
 set echo
 ja
 #load up R
-module load R/2.15.0
+module load R
 #run my executable
 setenv OMP_NUM_THREADS $PBS_NCPUS
 R CMD BATCH --slave r_scripts/bart_bakeoff.R
