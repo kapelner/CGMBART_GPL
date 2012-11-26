@@ -2,7 +2,7 @@
 PRINT_TREE_ILLUS = FALSE
 JAVA_LOG = FALSE
 
-num_cores = 10
+num_cores = 15 #a blade is 16 and I want to keep one core for switching and miscellaneous
 
 run_model_N_times = 10
 real_regression_data_sets = c(

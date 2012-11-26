@@ -6,6 +6,4 @@
 #PBS -q batch
 set echo
 #run my executable
-setenv OMP_NUM_THREADS 10
 R --no-save < r_scripts/bart_bakeoff.R > r_log/bart_output.out
-ja -chlst
