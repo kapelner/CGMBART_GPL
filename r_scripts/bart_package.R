@@ -842,6 +842,29 @@ run_other_model_and_plot_y_vs_yhat = function(y_hat,
 		runtime = runtime)		
 }
 
+get_variable_significance = function(bart_machine, data, var_num, num_iter, print_histogram=F, num_cores=1){
+  real_sse = bart_predict_for_test_data(bart_machine, data, num_cores)$L2_err
+  n = nrow(data)
+  sse_vec = numeric(num_iter)
+  for(i in 1:num_iter){
+    data_scrambled = data
+    data_scrambled[ ,var_num] = data[sample(1:n,n,replace=F), var_num] ##scrambled column of interest
+    sse_vec[i] = bart_predict_for_test_data(bart_machine, data_scrambled, num_cores)$L2_err
+    if(i%%10 == 0) print(i)
+  }
+  p_value = (1 + sum(real_sse>sse_vec))/(1 + num_iter) ##how many null values greater than obs. 
+  if(print_histogram == T){
+    hist(sse_vec, 
+         col = "grey", 
+         main = paste("Null Distribution for Variable", var_num),
+         xlim = c(min(sse_vec,real_sse-1),max(sse_vec, real_sse+1)),
+         xlab = "SSE")
+    abline(v=real_sse, col="red")
+  }
+  list(p_value = p_value, sse_vec = sse_vec, real_sse = real_sse)
+}
+
+
 run_random_forests_and_plot_y_vs_yhat = function(training_data, test_data, extra_text = NULL, data_title = "data_model", save_plot = FALSE, bart_machine = NULL){
 	before = Sys.time()
 	rf_mod = randomForest(y ~., training_data)
