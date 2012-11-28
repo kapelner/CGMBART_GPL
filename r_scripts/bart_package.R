@@ -114,18 +114,17 @@ build_bart_machine = function(training_data,
 	}
 	
 	#make bart to spec with what the user wants
+	.jcall(java_bart_machine, "V", "setNumCores", as.integer(num_cores)) #this must be set FIRST!!!
 	.jcall(java_bart_machine, "V", "setNumTrees", as.integer(num_trees))
 	.jcall(java_bart_machine, "V", "setNumGibbsBurnIn", as.integer(num_burn_in))
 	.jcall(java_bart_machine, "V", "setNumGibbsTotalIterations", as.integer(num_gibbs))
 	.jcall(java_bart_machine, "V", "setAlpha", alpha)
 	.jcall(java_bart_machine, "V", "setBeta", beta)
-	
-	#now take care of features
-	.jcall(java_bart_machine, "V", "setNumCores", as.integer(num_cores))
+
 	
 	
 	if (length(cov_prior_vec) != 0){
-		#put in checks here for user make sure it's correct length
+		#put in checks here for user to make sure it's correct length
 		if (length(cov_prior_vec) != ncol(training_data) - 1){
 			stop("covariate prior vector length has to be equal to p", call. = FALSE)
 			return(TRUE)
@@ -163,8 +162,12 @@ build_bart_machine = function(training_data,
 	
 	#once its done gibbs sampling, see how the training data does if user wants
 	if (run_in_sample){
+		cat("evaluating in sample data")
 		y_hat_train_posterior_samples = matrix(NA, nrow = nrow(training_data), ncol = num_iterations_after_burn_in) 
 		for (i in 1 : nrow(training_data)){
+			if (i %% 100 == 0){
+				cat(".")
+			}
 			y_hat_train_posterior_samples[i, ] = 
 				.jcall(java_bart_machine, "[D", "getGibbsSamplesForPrediction", c(as.numeric(training_data[i, ]), NA), as.integer(num_cores))
 		}
@@ -174,6 +177,7 @@ build_bart_machine = function(training_data,
 		bart_machine$L1_err_train = sum(abs(bart_machine$residuals))
 		bart_machine$L2_err_train = sum(bart_machine$residuals^2)
 		bart_machine$rmse_train = sqrt(bart_machine$L2_err_train / bart_machine$n)
+		cat("done\n")
 	}
 	
 	bart_machine
@@ -765,22 +769,23 @@ bart_predict = function(bart_machine, test_data, num_cores = 1){
 		rmse = sqrt(L2_err / n))
 }
 
-predict_and_calc_ppis = function(bart_machine, test_data, ppi_conf = 0.95, num_cores = 1){
-	predict_obj = bart_predict(bart_machine, test_data, num_cores = num_cores)
-
-	ppi_a = array(NA, nrow(test_data))
-	ppi_b = array(NA, nrow(test_data))	
+calc_ppis_from_prediction = function(predict_obj, ppi_conf = 0.95){
+	n_test = length(predict_obj$y)
+	
+	ppi_lower_bd = array(NA, n_test)
+	ppi_upper_bd = array(NA, n_test)	
 	for (i in 1 : bart_machine$n){		
-		ppi_a[i] = quantile(sort(predict_obj$y_hat_posterior_samples), (1 - ppi_conf) / 2)
-		ppi_b[i] = quantile(sort(predict_obj$y_hat_posterior_samples), (1 + ppi_conf) / 2)
-	}		
-
-	predict_obj$ppi_a = ppi_a
-	predict_obj$ppi_b = ppi_b
-	predict_obj$y_inside_ppi = predict_obj$y >= ppi_a & predict_obj$y <= ppi_b #did the PPI capture the true y?
-	predict_obj$prop_ys_in_ppi = sum(predict_obj$y_inside_ppi) / nrow(test_data)
-	#return the whole thing
-	predict_obj
+		ppi_lower_bd[i] = quantile(sort(predict_obj$y_hat_posterior_samples[i, ]), (1 - ppi_conf) / 2)
+		ppi_upper_bd[i] = quantile(sort(predict_obj$y_hat_posterior_samples[i, ]), (1 + ppi_conf) / 2)
+	}	
+	#did the PPI capture the true y?
+	y_inside_ppi = predict_obj$y >= ppi_lower_bd & predict_obj$y <= ppi_upper_bd 
+	
+	list(ppis = cbind(ppi_lower_bd, ppi_upper_bd),
+		ppi_conf = ppi_conf,
+		y_inside_ppi = y_inside_ppi,
+		prop_ys_in_ppi = sum(y_inside_ppi) / n_test
+	)
 }
 
 #let's do sample medians like Rob

@@ -82,6 +82,7 @@ run_bart_bakeoff = function(){
 								append_to_log(paste("starting model ", current_run, "\\", total_num_runs, "  \"", real_regression_data_set, "\", m = ", num_trees, ", n_B = ", num_burn_in, ", n_G_a = ", num_iterations_after_burn_in, " alpha = ", alpha, " beta = ", beta, sep = ""))
 								run_bart_model_and_save_diags_and_results(training_data, test_data, real_regression_data_set, num_trees, num_burn_in, num_iterations_after_burn_in, alpha, beta, duplicate_run)
 							}
+							create_avg_sim_results_and_save_as_csv()
 						}
 		
 						for (simulated_data_set in simulated_data_sets){
@@ -93,6 +94,7 @@ run_bart_bakeoff = function(){
 								append_to_log(paste("starting model ", current_run, "\\", total_num_runs, "  \"", simulated_data_set, "\", m = ", num_trees, ", n_B = ", num_burn_in, ", n_G_a = ", num_iterations_after_burn_in, " alpha = ", alpha, " beta = ", beta, sep = ""))
 								run_bart_model_and_save_diags_and_results(training_data, test_data, simulated_data_set, num_trees, num_burn_in, num_iterations_after_burn_in, alpha, beta, duplicate_run)
 							}
+							create_avg_sim_results_and_save_as_csv()
 						}
 					}
 				}
@@ -263,7 +265,8 @@ run_bart_model_and_save_diags_and_results = function(training_data, test_data, d
 	append_to_log("built")
 	
 	#now use the bart model to predict y_hat's for the test data
-	a_bart_predictions_obj = predict_and_calc_ppis(bart_machine, test_data, num_cores = num_cores)
+	a_bart_predictions_obj = bart_predict(bart_machine, test_data, num_cores = num_cores)
+	append_to_log("test data predicted")
 	#diagnose how good the y_hat's from the bart model are
 #	plot_y_vs_yhat_a_bart(a_bart_predictions_obj, extra_text = extra_text, data_title = data_title, save_plot = save_plot, bart_machine = bart_machine)
 	
@@ -282,7 +285,8 @@ run_bart_model_and_save_diags_and_results = function(training_data, test_data, d
 #	print(paste("RBART runtime", r_bart_predictions_obj$runtime))
 #	print(paste("ABART runtime", rf_predictions_obj$runtime))
 #	print(paste("ABART runtime", cart_predictions_obj$runtime))
-	new_simul_row = c(
+
+new_simul_row = c(
 		data_title, 
 		num_trees, 
 		num_burn_in, 
@@ -317,10 +321,9 @@ run_bart_model_and_save_diags_and_results = function(training_data, test_data, d
 	assign("simulation_results", simulation_results, .GlobalEnv)
 	#now prettify and iteratively save so we can cut at any time
 	prettify_simulation_results_and_save_as_csv()
-	create_avg_sim_results_and_save_as_csv()
 	"A BART DONE"
 }
 
-if (TRUE){
+if (FALSE){
 	run_bart_bakeoff()
 }

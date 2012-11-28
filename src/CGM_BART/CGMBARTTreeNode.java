@@ -64,8 +64,6 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 	public int splitAttributeM;
 	/** the value this node makes a decision on */
 	public double splitValue;
-	/** if this is a leaf node, then the result of the classification, otherwise null */
-	public Double klass;
 	/** if this is a leaf node, then the result of the prediction for regression, otherwise null */
 	protected static final double BAD_FLAG_double = -Double.MAX_VALUE;
 	protected static final int BAD_FLAG_int = -Integer.MAX_VALUE;
@@ -123,7 +121,6 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		copy.isLeaf = isLeaf;
 		copy.splitAttributeM = splitAttributeM;
 		copy.splitValue = splitValue;
-		copy.klass = klass;
 		copy.possible_rule_variables = possible_rule_variables;
 		copy.possible_split_vals_by_attr = possible_split_vals_by_attr;
 		copy.depth = depth;
@@ -215,14 +212,6 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		node.splitAttributeM = BAD_FLAG_int;
 		node.splitValue = BAD_FLAG_double;
 	}
-
-	public double classification_or_regression_prediction() {
-		if (klass == null){
-//			System.out.println("evaluate " + y_prediction);
-			return y_pred;
-		}
-		return klass;
-	}
 	
 	public int deepestNode(){
 		if (this.isLeaf){
@@ -247,7 +236,7 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 //			System.out.println("evaluate via node: " + evalNode.stringID());
 //			CGMTreeNode.DebugNode((CGMTreeNode)evalNode);
 			if (evalNode.isLeaf){
-				return evalNode.classification_or_regression_prediction();
+				return y_pred;
 			}
 			//all split rules are less than or equals (this is merely a convention)
 			//it's a convention that makes sense - if X_.j is binary, and the split values can only be 0/1
@@ -333,19 +322,6 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		}
 		return this.left.numPruneNodesAvailable() + this.right.numPruneNodesAvailable();
 	}	
-
-	public String splitToString() {
-		if (this.isLeaf){
-			String klass = this.klass == null ? "null" : TreeIllustration.two_digit_format.format(this.klass);
-			return "leaf rule: " + klass;
-		}
-		else {
-			String split = this.splitAttributeM == BAD_FLAG_int ? "null" : TreeIllustration.two_digit_format.format(this.splitAttributeM);
-			String value = this.splitValue == BAD_FLAG_double ? "null" : TreeIllustration.two_digit_format.format(this.splitValue);
-			return "x_" + split + "  <  " + value;
-		}
-	}
-	
 	
 	//CHECK as well
 	public double prediction_untransformed(){
@@ -494,12 +470,6 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 	}
 	public void setSplitValue(double splitValue) {
 		this.splitValue = splitValue;
-	}
-	public Double getKlass() {
-		return klass;
-	}
-	public void setKlass(Double klass) {
-		this.klass = klass;
 	}
 
 	public int numTimesAttrUsed(int j) {

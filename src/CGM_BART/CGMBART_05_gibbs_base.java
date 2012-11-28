@@ -8,6 +8,7 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 	
 	@Override
 	public void Build() {
+//		System.out.println("INIT BART CHAIN m = " + num_trees + " n_B = " + num_gibbs_burn_in + " n_G = " + num_gibbs_total_iterations);
 //		System.out.println("Build CGMBART_05_gibbs_base");
 		//this can be different for any BART implementation
 		SetupGibbsSampling();		
