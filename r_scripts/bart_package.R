@@ -738,8 +738,8 @@ bart_predict_for_test_data = function(bart_machine, test_data, num_cores = 1){
 	y = test_data$y
 	n = nrow(test_data)
 	
-	predict_obj$L1_err = round(sum(abs(y - predict_obj$y_hat)), 1)
-	predict_obj$L2_err = round(sum((y - predict_obj$y_hat)^2), 1)
+	predict_obj$L1_err = sum(abs(y - predict_obj$y_hat))
+	predict_obj$L2_err = sum((y - predict_obj$y_hat)^2)
 	predict_obj$rmse = sqrt(predict_obj$L2_err / n)
 	predict_obj$e = y - predict_obj$y_hat
 	
