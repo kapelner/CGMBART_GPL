@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 public class CGMBARTRegressionMultThread extends Classifier {
 	private static final long serialVersionUID = -4537075714317768756L;
 	
-	private static final int DEFAULT_NUM_CORES = 1;//Runtime.getRuntime().availableProcessors() - 1;
+	private static final int DEFAULT_NUM_CORES = 3;//Runtime.getRuntime().availableProcessors() - 1;
 	
 	private int num_cores;
 	private int num_trees;
@@ -71,8 +71,12 @@ public class CGMBARTRegressionMultThread extends Classifier {
 			CGMBARTRegression bart_model = bart_gibbs_chain_threads[t];
 			for (int i = num_gibbs_burn_in; i < total_iterations_multithreaded; i++){
 				int offset = t * (total_iterations_multithreaded - num_gibbs_burn_in);
-//				System.out.println("t = " + t + " total_iterations_multithreaded = " + total_iterations_multithreaded + " g = " + (offset + (i - num_gibbs_burn_in)));
-				gibbs_samples_of_cgm_trees_after_burn_in[offset + (i - num_gibbs_burn_in)] = bart_model.gibbs_samples_of_cgm_trees[i];
+				int g = offset + (i - num_gibbs_burn_in);
+//				System.out.println("t = " + t + " total_iterations_multithreaded = " + total_iterations_multithreaded + " g = " + g);
+				if (g >= numSamplesAfterBurning()){
+					break;
+				}
+				gibbs_samples_of_cgm_trees_after_burn_in[g] = bart_model.gibbs_samples_of_cgm_trees[i];
 				gibbs_samples_of_sigsq_after_burn_in[i - num_gibbs_burn_in] = bart_model.gibbs_samples_of_sigsq[i];
 			}			
 		}				
@@ -183,7 +187,6 @@ public class CGMBARTRegressionMultThread extends Classifier {
 		final CGMBARTRegression first_bart = bart_gibbs_chain_threads[0];
 		
 		if (num_cores_evaluate == 1){
-//		if (num_cores_evaluate == 1){
 			for (int g = 0; g < num_samples_after_burn_in; g++){
 				CGMBARTTreeNode[] cgm_trees = gibbs_samples_of_cgm_trees_after_burn_in[g];
 				double yt_i = 0;

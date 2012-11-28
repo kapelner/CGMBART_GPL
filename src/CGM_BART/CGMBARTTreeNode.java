@@ -236,7 +236,7 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 //			System.out.println("evaluate via node: " + evalNode.stringID());
 //			CGMTreeNode.DebugNode((CGMTreeNode)evalNode);
 			if (evalNode.isLeaf){
-				return y_pred;
+				return evalNode.y_pred;
 			}
 			//all split rules are less than or equals (this is merely a convention)
 			//it's a convention that makes sense - if X_.j is binary, and the split values can only be 0/1

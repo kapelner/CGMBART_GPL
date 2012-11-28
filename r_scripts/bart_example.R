@@ -21,14 +21,15 @@ Xtest = X[(nrow(X) / 2 + 1) : nrow(X), ]
 
 bart_machine = build_bart_machine(Xtrain, 
 				run_in_sample = TRUE, 
-				num_trees = 4, 
+				num_trees = 10, 
 				debug_log = TRUE, 
-				num_burn_in = 567, 
-				num_iterations_after_burn_in = 433, 
+				num_burn_in = 1000, 
+				num_iterations_after_burn_in = 1000, 
 				num_cores = 3)
 
-for (i in 1 : 100000){
-	predict_obj = bart_predict(bart_machine, Xtest)
+for (i in 1 : 100){
+	print(i)
+	predict_obj = bart_predict(bart_machine, Xtest, num_cores = 1)
 }
 ppi_obj = calc_ppis_from_prediction(predict_obj)
 #bart_machine = build_bart_machine(X, use_heteroskedasticity = F, num_cores = 10, run_in_sample = TRUE)
