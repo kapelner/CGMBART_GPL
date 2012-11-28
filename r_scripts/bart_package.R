@@ -733,40 +733,43 @@ look_at_sample_of_test_data = function(bart_predictions, grid_len = 3, extra_tex
 	}	
 }
 
-bart_predict = function(bart_machine, test_data, num_cores = 1){
+bart_predict_for_test_data = function(bart_machine, test_data, num_cores = 1){
+	predict_obj = bart_predict(bart_machine, test_data, num_cores)
+	y = test_data$y
+	n = nrow(test_data)
+	
+	predict_obj$L1_err = round(sum(abs(y - predict_obj$y_hat)), 1)
+	predict_obj$L2_err = round(sum((y - predict_obj$y_hat)^2), 1)
+	predict_obj$rmse = sqrt(predict_obj$L2_err / n)
+	predict_obj$e = y - predict_obj$y_hat
+	
+	predict_obj
+}
+
+bart_predict = function(bart_machine, new_data, num_cores = 1){
 	#pull out data objects for convenience
 	java_bart_machine = bart_machine$java_bart_machine
 	num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in
-	n = nrow(test_data)
-	y = test_data$y
+	n = nrow(new_data)
+	
 	
 	#check for errors in data
-	if (error_in_data(test_data)){
+	if (error_in_data(new_data)){
 		return;
 	}	
-	test_data = pre_process_data(test_data)	
+	new_data = pre_process_data(new_data)	
 	
 	#do the evaluation as a loop... one day this should be done better than this using a matrix
-	y_hat_posterior_samples = matrix(NA, nrow = nrow(test_data), ncol = num_iterations_after_burn_in)	
+	y_hat_posterior_samples = matrix(NA, nrow = nrow(new_data), ncol = num_iterations_after_burn_in)	
 	for (i in 1 : n){
 		y_hat_posterior_samples[i, ] = 
-			.jcall(java_bart_machine, "[D", "getGibbsSamplesForPrediction", c(as.numeric(test_data[i, ]), NA), as.integer(num_cores))
+			.jcall(java_bart_machine, "[D", "getGibbsSamplesForPrediction", c(as.numeric(new_data[i, ]), NA), as.integer(num_cores))
 	}
 	#to get y_hat.. just take straight mean of posterior samples, alternatively, we can let java do it if we want more bells and whistles
 	y_hat = calc_y_hat_from_gibbs_samples(y_hat_posterior_samples)
 	assign("y_hat", y_hat, .GlobalEnv)
 	
-	L1_err = round(sum(abs(y - y_hat)), 1)
-	L2_err = round(sum((y - y_hat)^2), 1)
-	
-	#give the user everything
-	list(y_hat_posterior_samples = y_hat_posterior_samples, 
-		y = test_data$y,
-		e = y - y_hat,
-		y_hat = y_hat,
-		L1_err = L1_err,
-		L2_err = L2_err,
-		rmse = sqrt(L2_err / n))
+	list(y_hat_posterior_samples = y_hat_posterior_samples, y_hat = y_hat)
 }
 
 calc_ppis_from_prediction = function(predict_obj, ppi_conf = 0.95){

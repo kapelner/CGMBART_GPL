@@ -30,6 +30,7 @@ bart_machine = build_bart_machine(Xtrain,
 for (i in 1 : 100){
 	print(i)
 	predict_obj = bart_predict(bart_machine, Xtest, num_cores = 1)
+	predict_obj = bart_predict_for_test_data(bart_machine, Xtest, num_cores = 1)
 }
 ppi_obj = calc_ppis_from_prediction(predict_obj)
 #bart_machine = build_bart_machine(X, use_heteroskedasticity = F, num_cores = 10, run_in_sample = TRUE)
