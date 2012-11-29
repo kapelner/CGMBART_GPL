@@ -148,6 +148,7 @@ build_bart_machine = function(training_data,
 	
 	#now once it's done, let's extract things that are related to diagnosing the build of the BART model
 	bart_machine = list(java_bart_machine = java_bart_machine, 
+			training_data = training_data,
 			n = nrow(training_data),
 			p = ncol(training_data) - 1,
 			num_trees = num_trees,
@@ -156,6 +157,7 @@ build_bart_machine = function(training_data,
 			num_gibbs = num_gibbs,
 			alpha = alpha,
 			beta = beta,
+			run_in_sample = run_in_sample,
 			cov_prior_vec = cov_prior_vec,
 			use_heteroskedasticity = use_heteroskedasticity
 	)
@@ -176,6 +178,7 @@ build_bart_machine = function(training_data,
 		bart_machine$residuals = training_data$y - bart_machine$y_hat_train
 		bart_machine$L1_err_train = sum(abs(bart_machine$residuals))
 		bart_machine$L2_err_train = sum(bart_machine$residuals^2)
+		bart_machine$Rsq = 1 - bart_machine$L2_err_train / sum((training_data$y - mean(training_data$y))^2) #1 - SSE / SST
 		bart_machine$rmse_train = sqrt(bart_machine$L2_err_train / bart_machine$n)
 		cat("done\n")
 	}
@@ -842,24 +845,35 @@ run_other_model_and_plot_y_vs_yhat = function(y_hat,
 		runtime = runtime)		
 }
 
-get_variable_significance = function(bart_machine, data, var_num, num_iter, print_histogram=F, num_cores=1){
-  real_sse = bart_predict_for_test_data(bart_machine, data, num_cores)$L2_err
-  n = nrow(data)
-  sse_vec = numeric(num_iter)
-  for(i in 1:num_iter){
+get_variable_significance = function(bart_machine, var_num, data = NULL, num_iter = 100, print_histogram = TRUE, num_cores = 1){
+	if (bart_machine$run_in_sample){
+		real_sse = bart_machine$L2_err_train
+		n = bart_machine$n
+		data = bart_machine$training_data
+	} else {
+		real_sse = bart_predict_for_test_data(bart_machine, data, num_cores)$L2_err
+		n = nrow(data)
+	}
+  
+  
+  sse_vec = array(NA, num_iter)
+  
+  for (i in 1 : num_iter){
     data_scrambled = data
-    data_scrambled[ ,var_num] = data[sample(1:n,n,replace=F), var_num] ##scrambled column of interest
+    data_scrambled[, var_num] = data[sample(1 : n, n, replace = FALSE), var_num] ##scrambled column of interest
     sse_vec[i] = bart_predict_for_test_data(bart_machine, data_scrambled, num_cores)$L2_err
-    if(i%%10 == 0) print(i)
+    if (i %% 10 == 0) print(i)
   }
-  p_value = (1 + sum(real_sse>sse_vec))/(1 + num_iter) ##how many null values greater than obs. 
-  if(print_histogram == T){
+  p_value = (1 + sum(real_sse > sse_vec)) / (1 + num_iter) ##how many null values greater than obs. 
+  if (print_histogram){
+	windows()
     hist(sse_vec, 
+		 br = num_iter / 3,
          col = "grey", 
          main = paste("Null Distribution for Variable", var_num),
          xlim = c(min(sse_vec,real_sse-1),max(sse_vec, real_sse+1)),
          xlab = "SSE")
-    abline(v=real_sse, col="red")
+    abline(v=real_sse, col="blue", lwd = 3)
   }
   list(p_value = p_value, sse_vec = sse_vec, real_sse = real_sse)
 }
