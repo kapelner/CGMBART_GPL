@@ -24,6 +24,10 @@ public class CGMBARTRegressionMultThread extends Classifier {
 	private int num_gibbs_burn_in;
 	private int num_gibbs_total_iterations;
 	private int total_iterations_multithreaded;
+
+	private double[] cov_split_prior;
+
+	private boolean use_heteroskedasticity;
 	
 	public CGMBARTRegressionMultThread(){
 //		System.out.print("new CGMBARTRegressionMultThread()");		
@@ -46,6 +50,13 @@ public class CGMBARTRegressionMultThread extends Classifier {
 			bart.num_gibbs_burn_in = num_gibbs_burn_in;
 			bart.setThreadNum(t);
 			bart.setData(X_y);
+			//set features
+			if (cov_split_prior != null){
+				bart.setCovSplitPrior(cov_split_prior);
+			}
+			if (use_heteroskedasticity){
+				bart.useHeteroskedasticity();
+			}
 			bart_gibbs_chain_threads[t] = bart;
 		}	
 //		System.out.print("end SetupBARTModels()");
@@ -80,7 +91,7 @@ public class CGMBARTRegressionMultThread extends Classifier {
 				gibbs_samples_of_sigsq_after_burn_in[i - num_gibbs_burn_in] = bart_model.gibbs_samples_of_sigsq[i];
 			}			
 		}				
-		System.out.print("done\n");		
+		System.out.print("done\n");
 	}
 
 	private void BuildOnAllThreads(){
@@ -107,9 +118,6 @@ public class CGMBARTRegressionMultThread extends Classifier {
 	
 	public void setNumGibbsBurnIn(int num_gibbs_burn_in){
 		this.num_gibbs_burn_in = num_gibbs_burn_in;
-		for (int t = 0; t < num_cores; t++){
-			
-		}
 	}
 	
 	public void setNumGibbsTotalIterations(int num_gibbs_total_iterations){
@@ -307,17 +315,13 @@ public class CGMBARTRegressionMultThread extends Classifier {
 	}
 	
 	public void setCovSplitPrior(double[] cov_split_prior){
-		System.out.println("using BART with covariate importance prior");
-		for (int t = 0; t < num_cores; t++){
-			bart_gibbs_chain_threads[t].setCovSplitPrior(cov_split_prior);
-		}		
+		this.cov_split_prior = cov_split_prior;
+		System.out.println("using BART with covariate importance prior");		
 	}
 	
 	public void useHeteroskedasticity(){
-		System.out.println("using heteroskedastic BART");
-		for (int t = 0; t < num_cores; t++){
-			bart_gibbs_chain_threads[t].useHeteroskedasticity();
-		}		
+		use_heteroskedasticity = true;
+		System.out.println("using heteroskedastic BART");		
 	}
 
 	public double[] getSigsqsByGibbsSample(int g){

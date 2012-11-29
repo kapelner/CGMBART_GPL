@@ -26,6 +26,7 @@ bart_machine = build_bart_machine(Xtrain,
 				debug_log = TRUE, 
 				num_burn_in = 1000, 
 				num_iterations_after_burn_in = 1000, 
+				cov_prior_vec = rep(1,13),
 				num_cores = 3)
 
 #predict on the test data
