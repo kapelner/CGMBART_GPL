@@ -302,17 +302,17 @@ public class StatToolbox {
 		
 	}
 
-	public static int multinomial_sample(TIntArrayList predictors, double[] weighted_cov_split_prior_subset) {
+	public static int multinomial_sample(TIntArrayList vals, double[] probs) {
 		double r = StatToolbox.rand();
 		double cum_prob = 0;
 		int index = 0;
-		if (r < weighted_cov_split_prior_subset[0]){
-			return predictors.get(0);
+		if (r < probs[0]){
+			return vals.get(0);
 		}
 		while (true){			
-			cum_prob += weighted_cov_split_prior_subset[index];
-			if (r > cum_prob && r < cum_prob + weighted_cov_split_prior_subset[index + 1]){
-				return predictors.get(index + 1);
+			cum_prob += probs[index];
+			if (r > cum_prob && r < cum_prob + probs[index + 1]){
+				return vals.get(index + 1);
 			}
 			index++;
 		}

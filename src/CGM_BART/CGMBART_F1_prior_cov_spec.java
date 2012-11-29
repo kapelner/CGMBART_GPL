@@ -13,7 +13,7 @@ public class CGMBART_F1_prior_cov_spec extends CGMBART_09_eval {
 	private int pickRandomPredictorThatCanBeAssignedF1(CGMBARTTreeNode node){
 		TIntArrayList predictors = node.predictorsThatCouldBeUsedToSplitAtNode();
 		//get probs of split prior based on predictors that can be used and weight it accordingly
-		double[] weighted_cov_split_prior_subset = getWeightedCovSplitPriorSubset(predictors, cov_split_prior);
+		double[] weighted_cov_split_prior_subset = getWeightedCovSplitPriorSubset(predictors);
 //		System.out.println("predictors: " + Tools.StringJoin(predictors));
 //		System.out.println("cov_split_prior: " + Tools.StringJoin(cov_split_prior));
 //		System.out.println("weighted_cov_split_prior_subset: " + Tools.StringJoin(weighted_cov_split_prior_subset));
@@ -34,7 +34,7 @@ public class CGMBART_F1_prior_cov_spec extends CGMBART_09_eval {
 		//pull out weighted cov split prior subset vector
 		TIntArrayList predictors = node.predictorsThatCouldBeUsedToSplitAtNode();
 		//get probs of split prior based on predictors that can be used and weight it accordingly
-		double[] weighted_cov_split_prior_subset = getWeightedCovSplitPriorSubset(predictors, cov_split_prior);	
+		double[] weighted_cov_split_prior_subset = getWeightedCovSplitPriorSubset(predictors);	
 		
 //		System.out.println("predictors: " + Tools.StringJoin(predictors));
 //		System.out.println("splitAttributeM: " + node.splitAttributeM);
@@ -51,9 +51,10 @@ public class CGMBART_F1_prior_cov_spec extends CGMBART_09_eval {
 		
 		return 1 / weighted_cov_split_prior_subset[index];
 	}
-	private double[] getWeightedCovSplitPriorSubset(TIntArrayList predictors, double[] cov_split_prior) {
+	
+	private double[] getWeightedCovSplitPriorSubset(TIntArrayList predictors) {
 		double[] weighted_cov_split_prior_subset = new double[predictors.size()];
-		for (int i = 0; i < cov_split_prior.length; i++){
+		for (int i = 0; i < predictors.size(); i++){
 			weighted_cov_split_prior_subset[i] = cov_split_prior[predictors.get(i)];
 		}
 		Tools.weight_arr_by_sum(weighted_cov_split_prior_subset);
