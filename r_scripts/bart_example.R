@@ -22,7 +22,7 @@ Xtest = X[(nrow(X) / 2 + 1) : nrow(X), ]
 #build the BART machine
 bart_machine = build_bart_machine(Xtrain, 
 				run_in_sample = TRUE, 
-				num_trees = 10, 
+				num_trees = 200, 
 				debug_log = TRUE, 
 				num_burn_in = 1000, 
 				num_iterations_after_burn_in = 1000, 
@@ -36,7 +36,7 @@ predict_obj = bart_predict(bart_machine, Xtest, num_cores = 1)
 predict_obj = bart_predict_for_test_data(bart_machine, Xtest, num_cores = 1)
 
 #get PPIs for test data
-ppi_obj = calc_ppis_from_prediction(predict_obj)
+ppi_obj = calc_ppis_from_prediction(bart_machine, Xtest)
 
 
 

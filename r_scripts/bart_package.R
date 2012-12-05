@@ -762,30 +762,36 @@ bart_predict = function(bart_machine, new_data, num_cores = 1){
 	}	
 	new_data = pre_process_data(new_data)	
 	
-	#do the evaluation as a loop... one day this should be done better than this using a matrix
-	y_hat_posterior_samples = matrix(NA, nrow = nrow(new_data), ncol = num_iterations_after_burn_in)	
+	y_hat = array(NA, n)
 	for (i in 1 : n){
-		y_hat_posterior_samples[i, ] = 
-			.jcall(java_bart_machine, "[D", "getGibbsSamplesForPrediction", c(as.numeric(new_data[i, ]), NA), as.integer(num_cores))
+		y_hat = .jcall(java_bart_machine, "D", "Evaluate", c(as.numeric(new_data[i, ])), as.integer(num_cores))
 	}
-	#to get y_hat.. just take straight mean of posterior samples, alternatively, we can let java do it if we want more bells and whistles
-	y_hat = calc_y_hat_from_gibbs_samples(y_hat_posterior_samples)
+
 	assign("y_hat", y_hat, .GlobalEnv)
 	
-	list(y_hat_posterior_samples = y_hat_posterior_samples, y_hat = y_hat)
+	list(y_hat = y_hat)
 }
 
-calc_ppis_from_prediction = function(predict_obj, ppi_conf = 0.95){
-	n_test = length(predict_obj$y)
+calc_ppis_from_prediction = function(bart_machine, new_data, ppi_conf = 0.95, num_cores = 1){
+	n_test = nrow(new_data)
 	
 	ppi_lower_bd = array(NA, n_test)
 	ppi_upper_bd = array(NA, n_test)	
+	
+	y_hat_posterior_samples = matrix(NA, nrow = n_test, ncol = bart_machine$num_iterations_after_burn_in)	
+	for (i in 1 : n_test){
+		y_hat_posterior_samples[i, ] = 
+			.jcall(bart_machine$java_bart_machine, "[D", "getGibbsSamplesForPrediction", c(as.numeric(new_data[i, ]), NA), as.integer(num_cores))
+	}
+	#to get y_hat.. just take straight mean of posterior samples, alternatively, we can let java do it if we want more bells and whistles
+	y_hat = calc_y_hat_from_gibbs_samples(y_hat_posterior_samples)	
+	
 	for (i in 1 : bart_machine$n){		
-		ppi_lower_bd[i] = quantile(sort(predict_obj$y_hat_posterior_samples[i, ]), (1 - ppi_conf) / 2)
-		ppi_upper_bd[i] = quantile(sort(predict_obj$y_hat_posterior_samples[i, ]), (1 + ppi_conf) / 2)
+		ppi_lower_bd[i] = quantile(sort(y_hat_posterior_samples[i, ]), (1 - ppi_conf) / 2)
+		ppi_upper_bd[i] = quantile(sort(y_hat_posterior_samples[i, ]), (1 + ppi_conf) / 2)
 	}	
 	#did the PPI capture the true y?
-	y_inside_ppi = predict_obj$y >= ppi_lower_bd & predict_obj$y <= ppi_upper_bd 
+	y_inside_ppi = new_data$y >= ppi_lower_bd & new_data$y <= ppi_upper_bd 
 	
 	list(ppis = cbind(ppi_lower_bd, ppi_upper_bd),
 		ppi_conf = ppi_conf,
