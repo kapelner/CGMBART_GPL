@@ -792,7 +792,7 @@ bart_predict = function(bart_machine, new_data, num_cores = 1){
 	
 	y_hat = array(NA, n)
 	for (i in 1 : n){
-		y_hat = .jcall(java_bart_machine, "D", "Evaluate", c(as.numeric(new_data[i, ])), as.integer(num_cores))
+		y_hat[i] = .jcall(java_bart_machine, "D", "Evaluate", c(as.numeric(new_data[i, ])), as.integer(num_cores))
 	}
 
 	assign("y_hat", y_hat, .GlobalEnv)
