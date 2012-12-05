@@ -6,7 +6,7 @@ if (.Platform$OS.type == "windows"){
 }
 setwd(directory_where_code_is)
 
-source("r_scripts/bart_bakeoff.R")
+source("r_scripts/bart_package.R")
 
 #get some data
 library(MASS)
@@ -22,18 +22,19 @@ Xtest = X[(nrow(X) / 2 + 1) : nrow(X), ]
 #build the BART machine
 bart_machine = build_bart_machine(Xtrain, 
 				run_in_sample = TRUE, 
-				num_trees = 200, 
-				debug_log = TRUE, 
+				num_trees = 200,
 				num_burn_in = 1000, 
 				num_iterations_after_burn_in = 1000, 
-				cov_prior_vec = rep(1,13),
-				num_cores = 3)
+				cov_prior_vec = rep(1, 13),
+				num_cores = 4)
+		
+check_bart_error_assumptions(bart_machine)
 
 #predict on the test data
-predict_obj = bart_predict(bart_machine, Xtest, num_cores = 1)
+predict_obj = bart_predict(bart_machine, Xtest, num_cores = 4)
 
 #convenience to predict on the test data automatically computing SSE, etc
-predict_obj = bart_predict_for_test_data(bart_machine, Xtest, num_cores = 1)
+predict_obj = bart_predict_for_test_data(bart_machine, Xtest, num_cores = 4)
 
 #get PPIs for test data
 ppi_obj = calc_ppis_from_prediction(bart_machine, Xtest)
@@ -42,7 +43,7 @@ ppi_obj = calc_ppis_from_prediction(bart_machine, Xtest)
 
 #now test the variable importance
 #generate the Friedman data
-n = 1000
+n = 500
 x1 = runif(n, 0, 1)
 x2 = runif(n, 0, 1)
 x3 = runif(n, 0, 1)
@@ -62,11 +63,12 @@ summary(lm(y ~ ., Xy))
 
 bart_machine = build_bart_machine(Xy, 
 	run_in_sample = TRUE, 
-	num_trees = 10, 
-	debug_log = TRUE, 
+	num_trees = 200,
 	num_burn_in = 1000, 
 	num_iterations_after_burn_in = 1000, 
-	num_cores = 3)
+	num_cores = 4)
+
+check_bart_error_assumptions(bart_machine)
 
 for (var in 1 : 10){
 	varsign = get_variable_significance(bart_machine, var, num_cores = 3)

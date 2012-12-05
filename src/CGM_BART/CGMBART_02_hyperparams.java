@@ -20,6 +20,7 @@ public abstract class CGMBART_02_hyperparams extends CGMBART_01_base implements 
 	protected double y_min;
 	protected double y_max;
 	protected double y_range_sq;	
+	protected Double sample_var_y;
 	
 	
 	public void setData(ArrayList<double[]> X_y){
@@ -44,13 +45,15 @@ public abstract class CGMBART_02_hyperparams extends CGMBART_01_base implements 
 		
 		//now we do a simple search for the best value of lambda
 		//if sig_sq ~ \nu\lambda * X where X is Inv chi sq, then sigsq ~ InvGamma(\nu/2, \nu\lambda/2) \neq InvChisq
-		double s_sq_y = StatToolbox.sample_variance(y_trans); //0.00001;//
+		if (sample_var_y == null){
+			sample_var_y = StatToolbox.sample_variance(y_trans); //0.00001;//
+		}
 //		double prob_diff = Double.MAX_VALUE;
 		
 //		double q = 0.9;
 		double ten_pctile_chisq_df_3 = 0.5843744; //we need q=0.9 for this to work
 		
-		hyper_lambda = ten_pctile_chisq_df_3 / 3 * s_sq_y;
+		hyper_lambda = ten_pctile_chisq_df_3 / 3 * sample_var_y;
 //		System.out.println("lambda: " + lambda);
 //		
 //		for (lambda = 0.00001; lambda < 10 * s_sq_y; lambda += (s_sq_y / 10000)){

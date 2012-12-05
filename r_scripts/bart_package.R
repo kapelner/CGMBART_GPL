@@ -68,10 +68,11 @@ build_bart_machine = function(training_data,
 		num_iterations_after_burn_in = 2000, 
 		alpha = DEFAULT_ALPHA,
 		beta = DEFAULT_BETA, 
-		class_or_regr = "r", 
+		regression_type = "r", #r, c, o, n (regression, classification, ordinal, count)
 		debug_log = FALSE,
 		fix_seed = FALSE,
-		run_in_sample = FALSE,
+		run_in_sample = TRUE,
+		s_sq_y = "mse", #"mse" or "var"
 		unique_name = "unnamed",
 		print_tree_illustrations = FALSE,
 		num_cores = 1,
@@ -113,6 +114,22 @@ build_bart_machine = function(training_data,
 		.jcall(java_bart_machine, "V", "printTreeIllustations")
 	}
 	
+	#set the std deviation of y to use
+	if (ncol(training_data) - 1 >= nrow(training_data)){
+		cat("warning: cannot use MSE of linear model for s_sq_y if p > n\n")
+		s_sq_y = "var"
+	}
+	if (s_sq_y == "mse"){
+		mod = lm(y ~ ., training_data)
+		mse = var(mod$residuals)
+		.jcall(java_bart_machine, "V", "setSampleVarY", as.numeric(mse))
+	} else if (s_sq_y == "var"){
+		.jcall(java_bart_machine, "V", "setSampleVarY", as.numeric(var(training_data$y)))
+	} else {
+		stop("s_sq_y must be \"rmse\" or \"sd\"", call. = FALSE)
+		return(TRUE)
+	}
+	
 	#make bart to spec with what the user wants
 	.jcall(java_bart_machine, "V", "setNumCores", as.integer(num_cores)) #this must be set FIRST!!!
 	.jcall(java_bart_machine, "V", "setNumTrees", as.integer(num_trees))
@@ -148,33 +165,32 @@ build_bart_machine = function(training_data,
 	
 	#now once it's done, let's extract things that are related to diagnosing the build of the BART model
 	bart_machine = list(java_bart_machine = java_bart_machine, 
-			training_data = training_data,
-			n = nrow(training_data),
-			p = ncol(training_data) - 1,
-			num_trees = num_trees,
-			num_burn_in = num_burn_in,
-			num_iterations_after_burn_in = num_iterations_after_burn_in, 
-			num_gibbs = num_gibbs,
-			alpha = alpha,
-			beta = beta,
-			run_in_sample = run_in_sample,
-			cov_prior_vec = cov_prior_vec,
-			use_heteroskedasticity = use_heteroskedasticity
+		training_data = training_data,
+		n = nrow(training_data),
+		p = ncol(training_data) - 1,
+		num_trees = num_trees,
+		num_burn_in = num_burn_in,
+		num_iterations_after_burn_in = num_iterations_after_burn_in, 
+		num_gibbs = num_gibbs,
+		alpha = alpha,
+		beta = beta,
+		run_in_sample = run_in_sample,
+		cov_prior_vec = cov_prior_vec,
+		use_heteroskedasticity = use_heteroskedasticity
 	)
 	
 	#once its done gibbs sampling, see how the training data does if user wants
 	if (run_in_sample){
 		cat("evaluating in sample data")
-		y_hat_train_posterior_samples = matrix(NA, nrow = nrow(training_data), ncol = num_iterations_after_burn_in) 
+		y_hat_train = array(NA, nrow(training_data))
 		for (i in 1 : nrow(training_data)){
-			if (i %% 100 == 0){
+			if (i %% as.integer(nrow(training_data) / 10) == 0){
 				cat(".")
 			}
-			y_hat_train_posterior_samples[i, ] = 
-				.jcall(java_bart_machine, "[D", "getGibbsSamplesForPrediction", c(as.numeric(training_data[i, ]), NA), as.integer(num_cores))
+			y_hat_train = .jcall(java_bart_machine, "D", "Evaluate", c(as.numeric(training_data[i, ])), as.integer(num_cores))
 		}
 		
-		bart_machine$y_hat_train = calc_y_hat_from_gibbs_samples(y_hat_train_posterior_samples)
+		bart_machine$y_hat_train = y_hat_train
 		bart_machine$residuals = training_data$y - bart_machine$y_hat_train
 		bart_machine$L1_err_train = sum(abs(bart_machine$residuals))
 		bart_machine$L2_err_train = sum(bart_machine$residuals^2)
@@ -187,6 +203,18 @@ build_bart_machine = function(training_data,
 }
 
 printed_out_warnings = FALSE
+
+check_bart_error_assumptions = function(bart_machine, alpha = 0.05){
+	graphics.off()
+	qqnorm(bart_machine$residuals, main = "Normal Q-Q plot for in-sample residuals")
+	qqline(bart_machine$residuals)
+	normal_p_val = shapiro.test(bart_machine$residuals)$p.value
+	if (normal_p_val > alpha){
+		cat("p-val for shapiro-wilk test of normality:", normal_p_val, "(ppis believable)\n")
+	} else {
+		cat("p-val for shapiro-wilk test of normality:", normal_p_val, "(exercise caution when using ppis!)\n")
+	}
+}
 
 
 clean_previous_bart_data = function(){

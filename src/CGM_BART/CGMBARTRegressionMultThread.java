@@ -21,6 +21,7 @@ public class CGMBARTRegressionMultThread extends Classifier {
 	protected CGMBARTTreeNode[][] gibbs_samples_of_cgm_trees_after_burn_in;
 	protected double[] gibbs_samples_of_sigsq_after_burn_in;
 	
+	private double sample_var_y;
 	private int num_gibbs_burn_in;
 	private int num_gibbs_total_iterations;
 	private int total_iterations_multithreaded;
@@ -28,6 +29,8 @@ public class CGMBARTRegressionMultThread extends Classifier {
 	private double[] cov_split_prior;
 
 	private boolean use_heteroskedasticity;
+
+	
 	
 	public CGMBARTRegressionMultThread(){
 //		System.out.print("new CGMBARTRegressionMultThread()");		
@@ -48,6 +51,7 @@ public class CGMBARTRegressionMultThread extends Classifier {
 			bart.num_trees = num_trees;
 			bart.num_gibbs_total_iterations = total_iterations_multithreaded;
 			bart.num_gibbs_burn_in = num_gibbs_burn_in;
+			bart.sample_var_y = sample_var_y;
 			bart.setThreadNum(t);
 			bart.setData(X_y);
 			//set features
@@ -129,6 +133,10 @@ public class CGMBARTRegressionMultThread extends Classifier {
 	public void setNumTrees(int num_trees){
 //		System.out.print("setNumTrees()");
 		this.num_trees = num_trees;
+	}
+	
+	public void setSampleVarY(double sample_var_y){
+		this.sample_var_y = sample_var_y;
 	}
 	
 	public void setPrintOutEveryNIter(int print_out_every){
