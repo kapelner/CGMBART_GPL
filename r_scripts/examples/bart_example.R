@@ -23,8 +23,7 @@ Xtest = X[(nrow(X) / 2 + 1) : nrow(X), ]
 bart_machine = build_bart_machine(Xtrain, 
 	num_trees = 200,
 	num_burn_in = 1000, 
-	num_iterations_after_burn_in = 1000, 
-	cov_prior_vec = rep(1, 12),
+	num_iterations_after_burn_in = 1000,
 	num_cores = 4)
 		
 check_bart_error_assumptions(bart_machine)

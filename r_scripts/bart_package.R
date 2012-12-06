@@ -205,15 +205,21 @@ build_bart_machine = function(training_data,
 
 printed_out_warnings = FALSE
 
-check_bart_error_assumptions = function(bart_machine, alpha = 0.05){
+check_bart_error_assumptions = function(bart_machine, alpha_normal_test = 0.05, alpha_hetero_test = 0.05){
 	graphics.off()
-	qqnorm(bart_machine$residuals, main = "Normal Q-Q plot for in-sample residuals")
+	es = bart_machine$residuals
+	qqnorm(es, main = "Normal Q-Q plot for in-sample residuals")
 	qqline(bart_machine$residuals)
-	normal_p_val = shapiro.test(bart_machine$residuals)$p.value
-	if (normal_p_val > alpha){
-		cat("p-val for shapiro-wilk test of normality:", normal_p_val, "(ppis believable)\n")
-	} else {
-		cat("p-val for shapiro-wilk test of normality:", normal_p_val, "(exercise caution when using ppis!)\n")
+	normal_p_val = shapiro.test(es)$p.value
+	cat("p-val for shapiro-wilk test of normality of residuals:", normal_p_val, ifelse(normal_p_val > alpha_normal_test, "(ppis believable)", "(exercise caution when using ppis!)"), "\n")
+	
+	if (!bart_machine$use_heteroskedasticity){
+		#see p225 in purple book for Szroeter's test
+		n = length(es)
+		h = sum(seq(1 : n) * es^2) / sum(es^2)
+		Q = sqrt(6 * n / (n^2 - 1)) * (h - (n + 1) / 2)
+		hetero_pval = 1 - pnorm(Q, 0, 1)
+		cat("p-val for szroeter's test of homoskedasticity of residuals (assuming inputted observation order):", hetero_pval, ifelse(hetero_pval > alpha_hetero_test, "(ppis believable)", "(exercise caution when using ppis!)"), "\n")		
 	}
 }
 
