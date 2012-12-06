@@ -84,12 +84,12 @@ build_bart_machine = function(training_data,
 	if (error_in_data(training_data)){
 		return;
 	}
-	training_data = pre_process_data(training_data)
+	model_matrix_training_data = pre_process_data(training_data)
 	
 	#now write the data as a csv, make sure to exclude row names,
 	#this is how we're going to send the data in BART for now even
 	#though it is inefficient
-	write.csv(training_data, DATA_FILENAME, row.names = FALSE)
+	write.csv(model_matrix_training_data, DATA_FILENAME, row.names = FALSE)
 	
 	#initialize the JVM
 	for (dependency in JAR_DEPENDENCIES){
@@ -115,7 +115,7 @@ build_bart_machine = function(training_data,
 	}
 	
 	#set the std deviation of y to use
-	if (ncol(training_data) - 1 >= nrow(training_data)){
+	if (ncol(model_matrix_training_data) - 1 >= nrow(model_matrix_training_data)){
 		cat("warning: cannot use MSE of linear model for s_sq_y if p > n\n")
 		s_sq_y = "var"
 	}
@@ -124,7 +124,7 @@ build_bart_machine = function(training_data,
 		mse = var(mod$residuals)
 		.jcall(java_bart_machine, "V", "setSampleVarY", as.numeric(mse))
 	} else if (s_sq_y == "var"){
-		.jcall(java_bart_machine, "V", "setSampleVarY", as.numeric(var(training_data$y)))
+		.jcall(java_bart_machine, "V", "setSampleVarY", as.numeric(var(model_matrix_training_data$y)))
 	} else {
 		stop("s_sq_y must be \"rmse\" or \"sd\"", call. = FALSE)
 		return(TRUE)
@@ -142,10 +142,11 @@ build_bart_machine = function(training_data,
 	
 	if (length(cov_prior_vec) != 0){
 		#put in checks here for user to make sure it's correct length
-		if (length(cov_prior_vec) != ncol(training_data) - 1){
-			stop("covariate prior vector length has to be equal to p", call. = FALSE)
+		if (length(cov_prior_vec) != ncol(model_matrix_training_data) - 1){
+			attribute_names = paste(colnames(model_matrix_training_data)[1 : ncol(model_matrix_training_data) - 1], collapse = ", ")
+			stop(paste("covariate prior vector length =", length(cov_prior_vec), "has to be equal to p =", ncol(model_matrix_training_data) - 1, "\nattribute names in order for the prior:", attribute_names), call. = FALSE)
 			return(TRUE)
-		} else if (sum(cov_prior_vec > 0) != ncol(training_data) - 1){
+		} else if (sum(cov_prior_vec > 0) != ncol(model_matrix_training_data) - 1){
 			stop("covariate prior vector has to have all its elements be positive", call. = FALSE)
 			return(TRUE)
 		}
@@ -165,9 +166,9 @@ build_bart_machine = function(training_data,
 	
 	#now once it's done, let's extract things that are related to diagnosing the build of the BART model
 	bart_machine = list(java_bart_machine = java_bart_machine, 
-		training_data = training_data,
-		n = nrow(training_data),
-		p = ncol(training_data) - 1,
+		training_data = model_matrix_training_data,
+		n = nrow(model_matrix_training_data),
+		p = ncol(model_matrix_training_data) - 1,
 		num_trees = num_trees,
 		num_burn_in = num_burn_in,
 		num_iterations_after_burn_in = num_iterations_after_burn_in, 
@@ -182,12 +183,12 @@ build_bart_machine = function(training_data,
 	#once its done gibbs sampling, see how the training data does if user wants
 	if (run_in_sample){
 		cat("evaluating in sample data")
-		y_hat_train = array(NA, nrow(training_data))
-		for (i in 1 : nrow(training_data)){
-			if (i %% as.integer(nrow(training_data) / 10) == 0){
+		y_hat_train = array(NA, nrow(model_matrix_training_data))
+		for (i in 1 : nrow(model_matrix_training_data)){
+			if (i %% as.integer(nrow(model_matrix_training_data) / 10) == 0){
 				cat(".")
 			}
-			y_hat_train = .jcall(java_bart_machine, "D", "Evaluate", c(as.numeric(training_data[i, ])), as.integer(num_cores))
+			y_hat_train[i] = .jcall(java_bart_machine, "D", "Evaluate", c(as.numeric(model_matrix_training_data[i, ])), as.integer(num_cores))
 		}
 		
 		bart_machine$y_hat_train = y_hat_train
@@ -765,14 +766,15 @@ look_at_sample_of_test_data = function(bart_predictions, grid_len = 3, extra_tex
 }
 
 bart_predict_for_test_data = function(bart_machine, test_data, num_cores = 1){
-	predict_obj = bart_predict(bart_machine, test_data, num_cores)
+	y_hat = bart_predict(bart_machine, test_data, num_cores)
 	y = test_data$y
 	n = nrow(test_data)
 	
-	predict_obj$L1_err = sum(abs(y - predict_obj$y_hat))
-	predict_obj$L2_err = sum((y - predict_obj$y_hat)^2)
+	predict_obj$y_hat = y_hat
+	predict_obj$L1_err = sum(abs(y - y_hat))
+	predict_obj$L2_err = sum((y - y_hat)^2)
 	predict_obj$rmse = sqrt(predict_obj$L2_err / n)
-	predict_obj$e = y - predict_obj$y_hat
+	predict_obj$e = y - y_hat
 	
 	predict_obj
 }
@@ -794,10 +796,8 @@ bart_predict = function(bart_machine, new_data, num_cores = 1){
 	for (i in 1 : n){
 		y_hat[i] = .jcall(java_bart_machine, "D", "Evaluate", c(as.numeric(new_data[i, ])), as.integer(num_cores))
 	}
-
-	assign("y_hat", y_hat, .GlobalEnv)
 	
-	list(y_hat = y_hat)
+	y_hat
 }
 
 calc_ppis_from_prediction = function(bart_machine, new_data, ppi_conf = 0.95, num_cores = 1){
@@ -1000,11 +1000,13 @@ error_in_data = function(data){
 }
 
 pre_process_data = function(data){
-	#TO-DO
-	#MUST BE DETERMINISTIC!
-	#1) convert categorical data into 0/1's
-	#2) delete missing data rows
-	data
+	#delete missing data just in case
+	data = data[!is.na(data), ]
+	#convert to model matrix with binary dummies (if factor has more than k>2 levels, we need dummies for all k, not k-1 (thanks Andreas) 
+	#see http://stackoverflow.com/questions/4560459/all-levels-of-a-factor-in-a-model-matrix-in-r
+	model_matrix = model.matrix(~ ., data)
+	#kill intercept since it's useless for BART anyway
+	model_matrix[, 2 : ncol(model_matrix)]
 }
 
 #believe it or not... there's no standard R function for this, isn't that pathetic?
