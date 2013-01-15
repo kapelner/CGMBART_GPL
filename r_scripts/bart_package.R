@@ -793,9 +793,6 @@ bart_predict = function(bart_machine, new_data, num_cores = 1){
 	
 	
 	#check for errors in data
-	if (error_in_data(new_data)){
-		return;
-	}	
 	new_data = pre_process_data(new_data)	
 	
 	y_hat = array(NA, n)
