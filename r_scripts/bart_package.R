@@ -77,7 +77,8 @@ build_bart_machine = function(training_data,
 		print_tree_illustrations = FALSE,
 		num_cores = 1,
 		use_heteroskedasticity = FALSE,
-		cov_prior_vec = NULL){
+		cov_prior_vec = NULL,
+		verbose = TRUE){
 	
 	num_gibbs = num_burn_in + num_iterations_after_burn_in
 	#check for errors in data
@@ -93,7 +94,7 @@ build_bart_machine = function(training_data,
 	
 	#initialize the JVM
 	for (dependency in JAR_DEPENDENCIES){
-		.jaddClassPath(paste(directory_where_code_is, "/", dependency, sep = ""))
+		.jaddClassPath(dependency)
 	}
 	java_bart_machine = .jnew("CGM_BART.CGMBARTRegressionMultThread")
 	
@@ -182,10 +183,12 @@ build_bart_machine = function(training_data,
 	
 	#once its done gibbs sampling, see how the training data does if user wants
 	if (run_in_sample){
-		cat("evaluating in sample data")
+		if (verbose){
+			cat("evaluating in sample data")
+		}
 		y_hat_train = array(NA, nrow(model_matrix_training_data))
 		for (i in 1 : nrow(model_matrix_training_data)){
-			if (i %% as.integer(nrow(model_matrix_training_data) / 10) == 0){
+			if (i %% as.integer(nrow(model_matrix_training_data) / 10) == 0 && verbose){
 				cat(".")
 			}
 			y_hat_train[i] = .jcall(java_bart_machine, "D", "Evaluate", c(as.numeric(model_matrix_training_data[i, ])), as.integer(num_cores))
@@ -197,7 +200,9 @@ build_bart_machine = function(training_data,
 		bart_machine$L2_err_train = sum(bart_machine$residuals^2)
 		bart_machine$Rsq = 1 - bart_machine$L2_err_train / sum((training_data$y - mean(training_data$y))^2) #1 - SSE / SST
 		bart_machine$rmse_train = sqrt(bart_machine$L2_err_train / bart_machine$n)
-		cat("done\n")
+		if (verbose){
+			cat("done\n")
+		}
 	}
 	
 	bart_machine
@@ -582,7 +587,14 @@ get_var_counts_over_chain = function(bart_machine, num_cores_count = 1){
 	for (g in 1 : bart_machine$num_iterations_after_burn_in){
 		C[g, ] = .jcall(bart_machine$java_bart_machine, "[I", "getCountForAttributeInGibbsSample", as.integer(g - 1), as.integer(num_cores_count))
 	}
+	colnames(C) = colnames(bart_machine$training_data)[1 : bart_machine$p]
 	C
+}
+
+get_var_props_over_chain = function(bart_machine, num_cores_count = 1){
+	C = get_var_counts_over_chain(bart_machine, num_cores_count)
+	Ctot = apply(C, 2, sum)
+	Ctot / sum(Ctot)
 }
 
 plot_tree_depths = function(bart_machine, extra_text = NULL, data_title = "data_model", save_plot = FALSE){
