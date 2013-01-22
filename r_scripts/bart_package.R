@@ -787,14 +787,15 @@ bart_predict_for_test_data = function(bart_machine, test_data, num_cores = 1){
 	y_hat = bart_predict(bart_machine, test_data, num_cores)
 	y = test_data$y
 	n = nrow(test_data)
+	L2_err = sum((y - y_hat)^2)
 	
-	predict_obj$y_hat = y_hat
-	predict_obj$L1_err = sum(abs(y - y_hat))
-	predict_obj$L2_err = sum((y - y_hat)^2)
-	predict_obj$rmse = sqrt(predict_obj$L2_err / n)
-	predict_obj$e = y - y_hat
-	
-	predict_obj
+	list(
+		y_hat = y_hat,
+		L1_err = sum(abs(y - y_hat)),
+		L2_err = L2_err,
+		rmse = sqrt(L2_err / n),
+		e = y - y_hat
+	)
 }
 
 bart_predict = function(bart_machine, new_data, num_cores = 1){
