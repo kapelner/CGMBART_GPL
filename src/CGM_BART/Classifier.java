@@ -54,6 +54,7 @@ import CustomLogging.*;
 public abstract class Classifier implements Serializable {
 	private static final long serialVersionUID = -2857913059676679308L;	
 
+	public static final double MISSING_VALUE = -Double.MAX_VALUE;
 
 	/** the raw training data consisting of xi = [xi1,...,xiM, yi] that will be used to construct the classifier */
 	protected transient ArrayList<double[]> X_y;
@@ -88,6 +89,29 @@ public abstract class Classifier implements Serializable {
 	public void setDataToDefaultForRPackage(){
 		DataSetupForCSVFile data = new DataSetupForCSVFile(new File(CSVFileFromRDirectory, CSVFileFromRName), true);
 		setData(data.getX_y());
+	}
+	
+	public void addTrainingDataRow(String[] record_string){
+		//initialize data matrix if it hasn't been initialized already
+		if (X_y == null){
+			X_y = new ArrayList<double[]>();
+		}
+		
+		//now add the new record
+		final double[] record = new double[record_string.length];
+		for (int i = 0; i < record_string.length; i++){
+			try {
+				record[i] = Double.parseDouble(record_string[i]);
+			}
+			catch (NumberFormatException e){
+				record[i] = MISSING_VALUE;
+			}
+		}				
+		X_y.add(record);		
+	}
+	
+	public void finalizeTrainingData(){
+		setData(X_y);
 	}
 	
 	public double[] getResponses(){

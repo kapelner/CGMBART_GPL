@@ -19,7 +19,6 @@ tryCatch(library(BayesTree), error = function(e){install.packages("BayesTree")},
 NUM_MEGS_RAM_TO_USE = 6000 #ifelse(.Platform$OS.type == "windows", 6000, 1600) #1690
 PLOTS_DIR = "output_plots"
 JAR_DEPENDENCIES = c("bart_java.jar", "commons-math-2.1.jar", "jai_codec.jar", "jai_core.jar", "trove-3.0.3.jar")
-DATA_FILENAME = "datasets/bart_data.csv"
 DEFAULT_ALPHA = 0.95
 DEFAULT_BETA = 2
 COLORS = array(NA, 500)
@@ -87,11 +86,6 @@ build_bart_machine = function(training_data,
 	}
 	model_matrix_training_data = pre_process_data(training_data)
 	
-	#now write the data as a csv, make sure to exclude row names,
-	#this is how we're going to send the data in BART for now even
-	#though it is inefficient
-	write.csv(model_matrix_training_data, DATA_FILENAME, row.names = FALSE)
-	
 	#initialize the JVM
 	for (dependency in JAR_DEPENDENCIES){
 		.jaddClassPath(dependency)
@@ -157,8 +151,11 @@ build_bart_machine = function(training_data,
 		.jcall(java_bart_machine, "V", "useHeteroskedasticity")
 	}
 	
-	#now load the data into BART
-	.jcall(java_bart_machine, "V", "setDataToDefaultForRPackage")
+	#now load the training data into BART
+	for (i in 1 : nrow(model_matrix_training_data)){
+		.jcall(java_bart_machine, "V", "addTrainingDataRow", as.character(model_matrix_training_data[i, ]))
+	}
+	.jcall(java_bart_machine, "V", "finalizeTrainingData")
 	
 	#build the bart machine for use later
 	#need http://math.acadiau.ca/ACMMaC/Rmpi/sample.html RMPI here
@@ -205,10 +202,12 @@ build_bart_machine = function(training_data,
 		}
 	}
 	
+	#use R's S3 object orientation
+	class(bart_machine) = "bart_machine"
 	bart_machine
 }
 
-printed_out_warnings = FALSE
+
 
 check_bart_error_assumptions = function(bart_machine, alpha_normal_test = 0.05, alpha_hetero_test = 0.05){
 	graphics.off()
@@ -219,6 +218,7 @@ check_bart_error_assumptions = function(bart_machine, alpha_normal_test = 0.05, 
 	cat("p-val for shapiro-wilk test of normality of residuals:", normal_p_val, ifelse(normal_p_val > alpha_normal_test, "(ppis believable)", "(exercise caution when using ppis!)"), "\n")
 	
 	if (!bart_machine$use_heteroskedasticity){
+		#TODO --- iterate over all x's and sort them
 		#see p225 in purple book for Szroeter's test
 		n = length(es)
 		h = sum(seq(1 : n) * es^2) / sum(es^2)
@@ -229,23 +229,6 @@ check_bart_error_assumptions = function(bart_machine, alpha_normal_test = 0.05, 
 }
 
 
-clean_previous_bart_data = function(){
-	if (exists("sigsqs_after_burnin")){
-		rm(sigsqs_after_burnin)
-	}
-	if (exists("all_tree_num_nodes")){
-		rm(all_tree_num_nodes)
-	}
-	if (exists("all_tree_liks")){
-		rm(all_tree_liks)
-	}
-	if (exists("y_hat")){
-		rm(y_hat)
-	}
-	if (exists("all_mu_vals_for_all_trees")){
-		rm(all_mu_vals_for_all_trees)
-	}
-}
 
 plot_sigsqs_convergence_diagnostics_hetero = function(bart_machine, records = c(1), extra_text = NULL, data_title = "data_model", save_plot = FALSE, moving_avgs = TRUE){
 	if (bart_machine$use_heteroskedasticity != TRUE){
@@ -408,6 +391,7 @@ get_mu_values_for_all_trees = function(bart_machine){
 		}
 	}
 	assign("all_mu_vals_for_all_trees", all_mu_vals_for_all_trees, .GlobalEnv)
+	all_mu_vals_for_all_trees
 }
 
 hist_mu_values_by_tree_and_leaf_after_burn_in = function(bart_machine, extra_text = NULL, data_title = "data_model", save_plot = FALSE, tree_num, leaf_num){
@@ -639,93 +623,15 @@ plot_tree_depths = function(bart_machine, extra_text = NULL, data_title = "data_
 
 ALPHA = 0.5
 
-plot_tree_liks_convergence_diagnostics = function(bart_machine, extra_text = NULL, data_title = "data_model", save_plot = FALSE){
-	java_bart_machine = bart_machine$java_bart_machine
-	num_burn_in = bart_machine$num_burn_in
-	num_gibbs = bart_machine$num_gibbs
-	num_trees = bart_machine$num_trees
-	
-	all_tree_liks = matrix(NA, nrow = num_trees, ncol = num_gibbs + 1)	
-	for (t in 1 : num_trees){		
-#		tryCatch({
-		all_tree_liks[t, ] = .jcall(java_bart_machine, "[D", "getLikForTree", as.integer(t - 1))
-#		},
-#		error = function(exc){return},
-#		finally = function(exc){})			
-	}	
-	assign("all_tree_liks", all_tree_liks, .GlobalEnv)
-	
-	treeliks_scale = (max(all_tree_liks, na.rm = TRUE) - min(all_tree_liks, na.rm = TRUE)) * 0.5
-	
-	if (save_plot){
-		save_plot_function(bart_machine, "tree_liks_by_gibbs", data_title)
-	}	
-	else {
-		dev.new()
-	}	
-	plot(1 : (num_gibbs + 1),  # + 1 for the prior
-			all_tree_liks[1, ], 
-			col = sample(COLORS, 1),
-			pch = ".",
-			main = paste("Tree ln(prop Lik) by Iteration", ifelse(is.null(extra_text), "", paste("\n", extra_text))), 
-			ylim = quantile(all_tree_liks[1, ], c(0, .999), na.rm = TRUE),
-			xlab = "Gibbs sample # (gray line indicates burn in)", 
-			ylab = "log proportional likelihood")
-	if (num_trees > 1){
-		for (t in 2 : nrow(all_tree_liks)){
-			points(1 : (num_gibbs + 1), all_tree_liks[t, ], col = sample(COLORS, 1), pch = ".", cex = 2)
-		}
-	}
-	abline(v = num_burn_in, col = "gray")
-	if (save_plot){	
-		dev.off()
-	}	
-}
 
-hist_tree_liks = function(bart_machine, extra_text = NULL, data_title = "data_model", save_plot = FALSE){
-	java_bart_machine = bart_machine$java_bart_machine
-	num_burn_in = bart_machine$num_burn_in
-	num_gibbs = bart_machine$num_gibbs
-	num_trees = bart_machine$num_trees
-	
-	all_tree_liks = matrix(NA, nrow = num_trees, ncol = num_gibbs + 1)	
-	for (t in 1 : num_trees){
-		all_tree_liks[t, ] = .jcall(java_bart_machine, "[D", "getLikForTree", as.integer(t - 1))
-	}	
-	assign("all_tree_liks", all_tree_liks, .GlobalEnv)
-	
-	if (save_plot){
-		save_plot_function(bart_machine, "tree_liks_hist", data_title)
-	}	
-	else {
-		dev.new()
-	}	
-	
-	all_liks_after_burn_in = as.vector(all_tree_liks[, (num_burn_in + 1) : (num_gibbs + 1)])
-	min_lik = min(all_liks_after_burn_in)
-	max_lik = max(all_liks_after_burn_in)	
-	hist(all_liks_after_burn_in, 
-			col = "white", 
-			br = seq(from = min_lik - 0.01, to = max_lik + 0.01, by = (max_lik - min_lik + 0.01) / 100), 
-			border = NA, 
-			main = "Histogram of tree prop likelihoods after burn-in")
-#	shapiro.test(all_liks_after_burn_in)
-	for (t in 1 : num_trees){
-		hist(all_tree_liks[t, (num_burn_in + 1) : (num_gibbs + 1)], 
-				col = rgb(runif(1, 0, 0.8), runif(1, 0, 0.8), runif(1, 0, 0.8), ALPHA), 
-				border = NA, 
-				br = seq(from = min_lik, to = max_lik, by = (max_lik - min_lik) / 100), 
-				add = TRUE)
-		
-	}
-	
-	if (save_plot){	
-		dev.off()
-	}	
-}
 
-plot_y_vs_yhat_a_bart = function(bart_predictions, extra_text = NULL, data_title = "data_model", save_plot = FALSE, bart_machine = NULL){
-	y = bart_predictions[["y"]]
+plot_y_vs_yhat_a_bart = function(bart_machine, extra_text = NULL, data_title = "data_model", save_plot = FALSE, bart_machine = NULL){
+	if (bart_machine$run_in_sample == FALSE){
+		cat("you can only plot after running in-sample\n")
+		return()
+	}
+	#TODO needs to be done
+	y = bart_machine
 	n = length(y)
 	y_hat = bart_predictions[["y_hat"]]
 	ppi_a = bart_predictions[["ppi_a"]]
@@ -798,7 +704,12 @@ bart_predict_for_test_data = function(bart_machine, test_data, num_cores = 1){
 	)
 }
 
-bart_predict = function(bart_machine, new_data, num_cores = 1){
+
+#
+#do all generic functions here
+#
+
+predict.bart_machine = function(bart_machine, new_data, num_cores = 1){
 	#pull out data objects for convenience
 	java_bart_machine = bart_machine$java_bart_machine
 	num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in
@@ -814,6 +725,10 @@ bart_predict = function(bart_machine, new_data, num_cores = 1){
 	}
 	
 	y_hat
+}
+
+summary.bart_machine = function(bart_machine){
+	
 }
 
 calc_ppis_from_prediction = function(bart_machine, new_data, ppi_conf = 0.95, num_cores = 1){
@@ -895,38 +810,6 @@ run_other_model_and_plot_y_vs_yhat = function(y_hat,
 		runtime = runtime)		
 }
 
-get_variable_significance = function(bart_machine, var_num, data = NULL, num_iter = 100, print_histogram = TRUE, num_cores = 1){
-	if (bart_machine$run_in_sample){
-		real_sse = bart_machine$L2_err_train
-		n = bart_machine$n
-		data = bart_machine$training_data
-	} else {
-		real_sse = bart_predict_for_test_data(bart_machine, data, num_cores)$L2_err
-		n = nrow(data)
-	}
-  
-  
-  sse_vec = array(NA, num_iter)
-  
-  for (i in 1 : num_iter){
-    data_scrambled = data
-    data_scrambled[, var_num] = data[sample(1 : n, n, replace = FALSE), var_num] ##scrambled column of interest
-    sse_vec[i] = bart_predict_for_test_data(bart_machine, data_scrambled, num_cores)$L2_err
-    if (i %% 10 == 0) print(i)
-  }
-  p_value = (1 + sum(real_sse > sse_vec)) / (1 + num_iter) ##how many null values greater than obs. 
-  if (print_histogram){
-	windows()
-    hist(sse_vec, 
-		 br = num_iter / 3,
-         col = "grey", 
-         main = paste("Null Distribution for Variable", var_num),
-         xlim = c(min(sse_vec,real_sse-1),max(sse_vec, real_sse+1)),
-         xlab = "SSE")
-    abline(v=real_sse, col="blue", lwd = 3)
-  }
-  list(p_value = p_value, sse_vec = sse_vec, real_sse = real_sse)
-}
 
 
 run_random_forests_and_plot_y_vs_yhat = function(training_data, test_data, extra_text = NULL, data_title = "data_model", save_plot = FALSE, bart_machine = NULL){
@@ -1017,12 +900,14 @@ error_in_data = function(data){
 
 pre_process_data = function(data){
 	#delete missing data just in case
-	data = data[!is.na(data), ]
+	data = na.omit(data)
 	#convert to model matrix with binary dummies (if factor has more than k>2 levels, we need dummies for all k, not k-1 (thanks Andreas) 
 	#see http://stackoverflow.com/questions/4560459/all-levels-of-a-factor-in-a-model-matrix-in-r
-	model_matrix = model.matrix(~ ., data)
+#	model_matrix = model.matrix(~ ., data)
 	#kill intercept since it's useless for BART anyway
-	model_matrix[, 2 : ncol(model_matrix)]
+#	model_matrix[, 2 : ncol(model_matrix)]
+	
+	data
 }
 
 #believe it or not... there's no standard R function for this, isn't that pathetic?
@@ -1042,4 +927,149 @@ save_plot_function = function(bart_machine, identifying_text, data_title){
 	plot_filename = paste(PLOTS_DIR, "/", data_title, "_", identifying_text, "_m_", num_trees, "_n_B_", num_burn_in, "_n_G_a_", num_iterations_after_burn_in, "_alpha_", alpha, "_beta_", beta, ".pdf", sep = "")
 	tryCatch({pdf(file = plot_filename)}, error = function(e){})
 	append_to_log(paste("plot saved as", plot_filename))
+}
+
+
+#plot_tree_liks_convergence_diagnostics = function(bart_machine, extra_text = NULL, data_title = "data_model", save_plot = FALSE){
+#	java_bart_machine = bart_machine$java_bart_machine
+#	num_burn_in = bart_machine$num_burn_in
+#	num_gibbs = bart_machine$num_gibbs
+#	num_trees = bart_machine$num_trees
+#	
+#	all_tree_liks = matrix(NA, nrow = num_trees, ncol = num_gibbs + 1)	
+#	for (t in 1 : num_trees){		
+##		tryCatch({
+#		all_tree_liks[t, ] = .jcall(java_bart_machine, "[D", "getLikForTree", as.integer(t - 1))
+##		},
+##		error = function(exc){return},
+##		finally = function(exc){})			
+#	}	
+#	assign("all_tree_liks", all_tree_liks, .GlobalEnv)
+#	
+#	treeliks_scale = (max(all_tree_liks, na.rm = TRUE) - min(all_tree_liks, na.rm = TRUE)) * 0.5
+#	
+#	if (save_plot){
+#		save_plot_function(bart_machine, "tree_liks_by_gibbs", data_title)
+#	}	
+#	else {
+#		dev.new()
+#	}	
+#	plot(1 : (num_gibbs + 1),  # + 1 for the prior
+#			all_tree_liks[1, ], 
+#			col = sample(COLORS, 1),
+#			pch = ".",
+#			main = paste("Tree ln(prop Lik) by Iteration", ifelse(is.null(extra_text), "", paste("\n", extra_text))), 
+#			ylim = quantile(all_tree_liks[1, ], c(0, .999), na.rm = TRUE),
+#			xlab = "Gibbs sample # (gray line indicates burn in)", 
+#			ylab = "log proportional likelihood")
+#	if (num_trees > 1){
+#		for (t in 2 : nrow(all_tree_liks)){
+#			points(1 : (num_gibbs + 1), all_tree_liks[t, ], col = sample(COLORS, 1), pch = ".", cex = 2)
+#		}
+#	}
+#	abline(v = num_burn_in, col = "gray")
+#	if (save_plot){	
+#		dev.off()
+#	}	
+#}
+#
+#hist_tree_liks = function(bart_machine, extra_text = NULL, data_title = "data_model", save_plot = FALSE){
+#	java_bart_machine = bart_machine$java_bart_machine
+#	num_burn_in = bart_machine$num_burn_in
+#	num_gibbs = bart_machine$num_gibbs
+#	num_trees = bart_machine$num_trees
+#	
+#	all_tree_liks = matrix(NA, nrow = num_trees, ncol = num_gibbs + 1)	
+#	for (t in 1 : num_trees){
+#		all_tree_liks[t, ] = .jcall(java_bart_machine, "[D", "getLikForTree", as.integer(t - 1))
+#	}	
+#	assign("all_tree_liks", all_tree_liks, .GlobalEnv)
+#	
+#	if (save_plot){
+#		save_plot_function(bart_machine, "tree_liks_hist", data_title)
+#	}	
+#	else {
+#		dev.new()
+#	}	
+#	
+#	all_liks_after_burn_in = as.vector(all_tree_liks[, (num_burn_in + 1) : (num_gibbs + 1)])
+#	min_lik = min(all_liks_after_burn_in)
+#	max_lik = max(all_liks_after_burn_in)	
+#	hist(all_liks_after_burn_in, 
+#			col = "white", 
+#			br = seq(from = min_lik - 0.01, to = max_lik + 0.01, by = (max_lik - min_lik + 0.01) / 100), 
+#			border = NA, 
+#			main = "Histogram of tree prop likelihoods after burn-in")
+##	shapiro.test(all_liks_after_burn_in)
+#	for (t in 1 : num_trees){
+#		hist(all_tree_liks[t, (num_burn_in + 1) : (num_gibbs + 1)], 
+#				col = rgb(runif(1, 0, 0.8), runif(1, 0, 0.8), runif(1, 0, 0.8), ALPHA), 
+#				border = NA, 
+#				br = seq(from = min_lik, to = max_lik, by = (max_lik - min_lik) / 100), 
+#				add = TRUE)
+#		
+#	}
+#	
+#	if (save_plot){	
+#		dev.off()
+#	}	
+#}
+
+
+#clean_previous_bart_data = function(){
+#	if (exists("sigsqs_after_burnin")){
+#		rm(sigsqs_after_burnin)
+#	}
+#	if (exists("all_tree_num_nodes")){
+#		rm(all_tree_num_nodes)
+#	}
+#	if (exists("all_tree_liks")){
+#		rm(all_tree_liks)
+#	}
+#	if (exists("y_hat")){
+#		rm(y_hat)
+#	}
+#	if (exists("all_mu_vals_for_all_trees")){
+#		rm(all_mu_vals_for_all_trees)
+#	}
+#}
+
+#printed_out_warnings = FALSE
+
+
+############# EXPERIMENTAL
+#############
+
+
+get_variable_significance = function(bart_machine, var_num, data = NULL, num_iter = 100, print_histogram = TRUE, num_cores = 1){
+	if (bart_machine$run_in_sample){
+		real_sse = bart_machine$L2_err_train
+		n = bart_machine$n
+		data = bart_machine$training_data
+	} else {
+		real_sse = bart_predict_for_test_data(bart_machine, data, num_cores)$L2_err
+		n = nrow(data)
+	}
+	
+	
+	sse_vec = array(NA, num_iter)
+	
+	for (i in 1 : num_iter){
+		data_scrambled = data
+		data_scrambled[, var_num] = data[sample(1 : n, n, replace = FALSE), var_num] ##scrambled column of interest
+		sse_vec[i] = bart_predict_for_test_data(bart_machine, data_scrambled, num_cores)$L2_err
+		if (i %% 10 == 0) print(i)
+	}
+	p_value = (1 + sum(real_sse > sse_vec)) / (1 + num_iter) ##how many null values greater than obs. 
+	if (print_histogram){
+		windows()
+		hist(sse_vec, 
+				br = num_iter / 3,
+				col = "grey", 
+				main = paste("Null Distribution for Variable", var_num),
+				xlim = c(min(sse_vec,real_sse-1),max(sse_vec, real_sse+1)),
+				xlab = "SSE")
+		abline(v=real_sse, col="blue", lwd = 3)
+	}
+	list(p_value = p_value, sse_vec = sse_vec, real_sse = real_sse)
 }

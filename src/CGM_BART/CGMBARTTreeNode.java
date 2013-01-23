@@ -40,7 +40,7 @@ import TroveExtension.TDoubleHashSetAndArray;
  * node in the Bayesian decision tree.
  * 
  * Unfortunately, this has parted ways too much with a CART
- * structure, that I needed to create something new
+ * structure, so I needed to create something new
  * 
  * @author Adam Kapelner
  */
