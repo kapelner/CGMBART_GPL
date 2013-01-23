@@ -625,7 +625,7 @@ ALPHA = 0.5
 
 
 
-plot_y_vs_yhat_a_bart = function(bart_machine, extra_text = NULL, data_title = "data_model", save_plot = FALSE, bart_machine = NULL){
+plot_y_vs_yhat_a_bart = function(bart_machine, extra_text = NULL, data_title = "data_model", save_plot = FALSE){
 	if (bart_machine$run_in_sample == FALSE){
 		cat("you can only plot after running in-sample\n")
 		return()
