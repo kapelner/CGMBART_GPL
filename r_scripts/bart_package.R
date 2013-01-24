@@ -690,7 +690,7 @@ look_at_sample_of_test_data = function(bart_predictions, grid_len = 3, extra_tex
 }
 
 bart_predict_for_test_data = function(bart_machine, test_data, num_cores = 1){
-	y_hat = bart_predict(bart_machine, test_data, num_cores)
+	y_hat = predict(bart_machine, test_data, num_cores)
 	y = test_data$y
 	n = nrow(test_data)
 	L2_err = sum((y - y_hat)^2)
