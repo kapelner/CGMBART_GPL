@@ -117,19 +117,22 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 	
 	protected double[] SampleTree(int sample_num, int t, CGMBARTTreeNode[] cgm_trees, TreeArrayIllustration tree_array_illustration) {
 		//first copy the tree from the previous gibbs position
-		final CGMBARTTreeNode copy_of_old_jth_tree_root = gibbs_samples_of_cgm_trees[sample_num - 1][t].clone();
+		final CGMBARTTreeNode copy_of_old_jth_tree = gibbs_samples_of_cgm_trees[sample_num - 1][t].clone();
 		
 		//okay so first we need to get "y" that this tree sees. This is defined as R_j in formula 12 on p274
 		//just go to sum_residual_vec and subtract it from y_trans
-		double[] R_j = Tools.add_arrays(Tools.subtract_arrays(y_trans, sum_resids_vec), copy_of_old_jth_tree_root.yhats);
+		double[] R_j = Tools.add_arrays(Tools.subtract_arrays(y_trans, sum_resids_vec), copy_of_old_jth_tree.yhats);
 //		System.out.println("sample tree gs#" + sample_num + " t = " + t + " sum_resids = " + Tools.StringJoin(sum_resids_vec));
 		
 		//now, (important!) set the R_j's as this tree's data.
-		copy_of_old_jth_tree_root.updateWithNewResponsesRecursively(R_j);
+		copy_of_old_jth_tree.updateWithNewResponsesRecursively(R_j);
 		
 		//sample from T_j | R_j, \sigma
 		//now we will run one M-H step on this tree with the y as the R_j
-		CGMBARTTreeNode new_jth_tree = metroHastingsPosteriorTreeSpaceIteration(copy_of_old_jth_tree_root);
+		CGMBARTTreeNode new_jth_tree = metroHastingsPosteriorTreeSpaceIteration(copy_of_old_jth_tree);
+		
+		//record accept or reject: accept means we got a new tree, reject means we kept old one
+		accept_reject_mh[sample_num][t] = new_jth_tree != copy_of_old_jth_tree;
 		
 		//add it to the vector of current sample's trees
 		cgm_trees[t] = new_jth_tree;

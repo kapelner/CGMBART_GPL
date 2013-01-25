@@ -30,7 +30,9 @@ public abstract class CGMBART_04_init extends CGMBART_03_debug implements Serial
 		gibbs_samples_of_cgm_trees = new CGMBARTTreeNode[num_gibbs_total_iterations + 1][num_trees];
 		gibbs_samples_of_cgm_trees_after_burn_in = new CGMBARTTreeNode[num_gibbs_total_iterations - num_gibbs_burn_in + 1][num_trees];
 		gibbs_samples_of_sigsq = new double[num_gibbs_total_iterations + 1];	
-		gibbs_samples_of_sigsq_after_burn_in = new double[num_gibbs_total_iterations - num_gibbs_burn_in];		
+		gibbs_samples_of_sigsq_after_burn_in = new double[num_gibbs_total_iterations - num_gibbs_burn_in];
+		
+		accept_reject_mh = new boolean[num_gibbs_total_iterations + 1][num_trees];	
 	}
 	
 	
@@ -84,5 +86,9 @@ public abstract class CGMBART_04_init extends CGMBART_03_debug implements Serial
 	
 	public void setSigsq(double fixed_sigsq){
 		this.fixed_sigsq = fixed_sigsq;
-	}	
+	}
+	
+	public boolean[][] getAcceptRejectMH(){
+		return accept_reject_mh;
+	}
 }

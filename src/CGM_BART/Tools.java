@@ -56,7 +56,14 @@ public class Tools {
 	}
 	public static String StringJoin(TIntArrayList all){
 		return StringJoin(all.toArray(), ", ");
-	}		
+	}	
+	public static String StringJoin(boolean[] all){
+		int[] all_ints = new int[all.length];
+		for (int i = 0; i < all.length; i++){
+			all_ints[i] = all[i] ? 1 : 0;
+		}
+		return StringJoin(all_ints, ", ");
+	}	
 	public static String StringJoin(int[] all){
 		return StringJoin(all, ", ");
 	}

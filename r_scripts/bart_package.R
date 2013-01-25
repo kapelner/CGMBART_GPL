@@ -136,6 +136,7 @@ build_bart_machine = function(training_data,
 		training_data = model_matrix_training_data,
 		n = nrow(model_matrix_training_data),
 		p = p,
+		num_cores = num_cores,
 		num_trees = num_trees,
 		num_burn_in = num_burn_in,
 		num_iterations_after_burn_in = num_iterations_after_burn_in, 
@@ -195,6 +196,51 @@ check_bart_error_assumptions = function(bart_machine, alpha_normal_test = 0.05, 
 	hetero_pval = 1 - pnorm(Q, 0, 1)
 	cat("p-val for szroeter's test of homoskedasticity of residuals (assuming inputted observation order):", hetero_pval, ifelse(hetero_pval > alpha_hetero_test, "(ppis believable)", "(exercise caution when using ppis!)"), "\n")		
 
+}
+
+get_mh_acceptance_reject = function(bart_machine){
+	a_r_before_burn_in = t(sapply(.jcall(bart_machine$java_bart_machine, "[[Z", "getAcceptRejectMHsBurnin"), .jevalArray)) * 1
+	
+	a_r_after_burn_in = list()
+	for (c in 1 : bart_machine$num_cores){
+		a_r_after_burn_in[[c]] = t(sapply(.jcall(bart_machine$java_bart_machine, "[[Z", "getAcceptRejectMHsAfterBurnIn", as.integer(c)), .jevalArray)) * 1
+	}
+	
+	list(
+		a_r_before_burn_in = a_r_before_burn_in,
+		a_r_after_burn_in = a_r_after_burn_in	
+	)
+}
+
+plot_mh_acceptance_reject = function(bart_machine){
+	mh_acceptance_reject = get_mh_acceptance_reject(bart_machine)
+	a_r_before_burn_in = mh_acceptance_reject[["a_r_before_burn_in"]]
+	a_r_before_burn_in_avg_over_trees = rowSums(a_r_before_burn_in) / bart_machine$num_trees
+	
+	a_r_after_burn_in_avgs_over_trees = list()
+	for (c in 1 : bart_machine$num_cores){
+		a_r_after_burn_in = mh_acceptance_reject[["a_r_after_burn_in"]][[c]]
+		a_r_after_burn_in_avgs_over_trees[[c]] = rowSums(a_r_after_burn_in) / bart_machine$num_trees		
+	}	
+	
+	num_after_burn_in_per_core = length(a_r_after_burn_in_avgs_over_trees[[1]])
+	num_gibbs_per_core = bart_machine$num_burn_in + num_after_burn_in_per_core
+	
+	
+	plot(1 : num_gibbs_per_core, rep(0, num_gibbs_per_core), ylim = c(0, 1), type = "n", 
+		main = "Percent Acceptance by Gibbs Sample", xlab = "Gibbs Sample", ylab = "% of Trees Accepting")
+	abline(v = bart_machine$num_burn_in, col = "grey")
+	#plot burn in
+	points(1 : bart_machine$num_burn_in, a_r_before_burn_in_avg_over_trees, col = "grey")
+	lines(loess.smooth(1 : bart_machine$num_burn_in, a_r_before_burn_in_avg_over_trees), col = "black", lwd = 4)
+	
+	for (c in 1 : bart_machine$num_cores){
+		points((bart_machine$num_burn_in + 1) : num_gibbs_per_core, a_r_after_burn_in_avgs_over_trees[[c]], col = COLORS[c])
+		lines(loess.smooth((bart_machine$num_burn_in + 1) : num_gibbs_per_core, a_r_after_burn_in_avgs_over_trees[[c]]), col = COLORS[c], lwd = 4)
+	}	
+	
+	
+	
 }
 
 plot_sigsqs_convergence_diagnostics = function(bart_machine, extra_text = NULL, data_title = "data_model", save_plot = FALSE){
@@ -673,12 +719,15 @@ summary.bart_machine = function(bart_machine){
 	es = bart_machine$residuals
 	normal_p_val = shapiro.test(es)$p.value
 	cat("\np-val for shapiro-wilk test of normality of residuals:", round(normal_p_val, 5), "\n")
+
+	centered_p_val = t.test(es)$p.value
+	cat("p-val for zero-mean noise:", round(centered_p_val, 5), "\n")
 	
 	sigsqs = .jcall(bart_machine$java_bart_machine, "[D", "getGibbsSamplesSigsqs")	
 	sigsqs_after_burnin = sigsqs[(length(sigsqs) - bart_machine$num_iterations_after_burn_in) : length(sigsqs)]
 	
 	cat(paste("\nsigsq est for y beforehand:", round(bart_machine$sig_sq_est, 3), "\n"))
-	cat(paste("avg sigsq estimate after burn-in:", round(mean(sigsqs_after_burnin), 5), "\n"))
+	cat(paste("avg sigsq estimate after burn-in:", round(mean(sigsqs_after_burnin), 5), "\n\n"))
 	
 #	cat(paste())
 #	cat(paste())

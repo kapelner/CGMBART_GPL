@@ -73,10 +73,22 @@ public class CGMBARTRegressionMultThread extends Classifier {
 		//run a build on all threads
 		BuildOnAllThreads();
 		//once it's done, now put together the chains
-		ConstructBurnedChainForTreesAndSigsq();	
+		ConstructBurnedChainForTreesAndOtherInformation();	
+		
+//		for (int t = 1; t <= num_cores; t++){
+//			System.out.println("core # " + t);
+//			boolean[][] accept_reject_mh_by_core = bart_gibbs_chain_threads[t - 1].getAcceptRejectMH();
+//			boolean[][] accept_reject_mh_after_burn_ins = new boolean[total_iterations_multithreaded - num_gibbs_burn_in][num_trees];
+//			for (int g = num_gibbs_burn_in; g < total_iterations_multithreaded; g++){
+//				accept_reject_mh_after_burn_ins[g - num_gibbs_burn_in] = accept_reject_mh_by_core[g];				
+//			}			
+//			for (int g = 0; g < total_iterations_multithreaded - num_gibbs_burn_in; g++){
+//				System.out.println("g:" + g + " " + Tools.StringJoin(accept_reject_mh_after_burn_ins[g]));
+//			}
+//		}
 	}	
 	
-	protected void ConstructBurnedChainForTreesAndSigsq() {
+	protected void ConstructBurnedChainForTreesAndOtherInformation() {
 		gibbs_samples_of_cgm_trees_after_burn_in = new CGMBARTTreeNode[numSamplesAfterBurning()][num_trees];
 		gibbs_samples_of_sigsq_after_burn_in = new double[numSamplesAfterBurning()];
 
@@ -275,6 +287,24 @@ public class CGMBARTRegressionMultThread extends Classifier {
 			}
 		}		
 		return sigsqs_to_export.toArray();
+	}
+	
+	public boolean[][] getAcceptRejectMHsBurnin(){
+		boolean[][] accept_reject_mh_first_thread = bart_gibbs_chain_threads[0].getAcceptRejectMH();
+		boolean[][] accept_reject_mh_burn_ins = new boolean[num_gibbs_burn_in][num_trees];
+		for (int g = 1; g < num_gibbs_burn_in + 1; g++){
+			accept_reject_mh_burn_ins[g - 1] = accept_reject_mh_first_thread[g];
+		}
+		return accept_reject_mh_burn_ins;
+	}
+	
+	public boolean[][] getAcceptRejectMHsAfterBurnIn(int thread_num){
+		boolean[][] accept_reject_mh_by_core = bart_gibbs_chain_threads[thread_num - 1].getAcceptRejectMH();
+		boolean[][] accept_reject_mh_after_burn_ins = new boolean[total_iterations_multithreaded - num_gibbs_burn_in][num_trees];
+		for (int g = num_gibbs_burn_in; g < total_iterations_multithreaded; g++){
+			accept_reject_mh_after_burn_ins[g - num_gibbs_burn_in] = accept_reject_mh_by_core[g];
+		}
+		return accept_reject_mh_after_burn_ins;
 	}	
 	
 //	public int[][] getCountForAttributesForEntireChain(){
