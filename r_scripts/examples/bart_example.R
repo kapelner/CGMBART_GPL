@@ -13,6 +13,7 @@ library(MASS)
 data(Boston)
 X = Boston
 X$medv = log(X$medv)
+X$chas = as.character(X$chas)
 colnames(X)[ncol(X)] = "y"
 
 #split it into test and training

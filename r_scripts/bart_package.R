@@ -1,4 +1,3 @@
-
 #libraries and dependencies
 options(repos = "http://lib.stat.cmu.edu/R/CRAN")
 tryCatch(library(randomForest), error = function(e){install.packages("randomForest")}, finally = library(randomForest))
@@ -16,7 +15,8 @@ tryCatch(library(BayesTree), error = function(e){install.packages("BayesTree")},
 #}
 
 #constants
-NUM_MEGS_RAM_TO_USE = 6000 #ifelse(.Platform$OS.type == "windows", 6000, 1600) #1690
+VERSION = "1.0b"
+BART_MAX_MEM_MB = 6000
 PLOTS_DIR = "output_plots"
 JAR_DEPENDENCIES = c("bart_java.jar", "commons-math-2.1.jar", "jai_codec.jar", "jai_core.jar", "trove-3.0.3.jar")
 DEFAULT_ALPHA = 0.95
@@ -26,40 +26,6 @@ for (i in 1 : 500){
 	COLORS[i] = rgb(runif(1, 0, 0.7), runif(1, 0, 0.7), runif(1, 0, 0.7))
 }
 
-#immediately initialize Java
-jinit_params = paste("-Xmx", NUM_MEGS_RAM_TO_USE, "m", sep = "")
-.jinit(parameters = jinit_params)
-
-
-#set up a logging system
-LOG_DIR = "r_log"
-log_file_name = "bart_log.txt"
-bart_log = matrix(nrow = 0, ncol = 1)
-
-
-append_to_log = function(text){
-	bart_log = rbind(bart_log, paste(Sys.time(), "\t", text)) #log the time and the actual message
-	assign("bart_log", bart_log, .GlobalEnv)
-	write.table(bart_log, paste(LOG_DIR, "/", log_file_name, sep = ""), quote = FALSE, col.names = FALSE, row.names = FALSE)
-}
-
-#some defaults if you want to run this
-num_trees = 1
-num_burn_in = 1000
-num_iterations_after_burn_in = 1000
-num_gibbs = num_burn_in + num_iterations_after_burn_in
-
-class_or_regr = "r"
-debug_log = TRUE
-print_tree_illustrations = FALSE
-PRINT_TREE_ILLUS = FALSE
-print_out_every = NULL
-fix_seed = FALSE
-JAVA_LOG = FALSE #to be overwritten later
-#source("r_scripts/create_simulated_models.R")
-#simulated_data_model_name = simulated_data_sets[1]
-#training_data = simulate_data_from_simulation_name(simulated_data_model_name)
-#test_data = simulate_data_from_simulation_name(simulated_data_model_name)
 
 build_bart_machine = function(training_data, 
 		num_trees = 200, 
@@ -75,16 +41,20 @@ build_bart_machine = function(training_data,
 		unique_name = "unnamed",
 		print_tree_illustrations = FALSE,
 		num_cores = 1,
-		use_heteroskedasticity = FALSE,
 		cov_prior_vec = NULL,
 		verbose = TRUE){
 	
+	t0 = Sys.time()
+	#immediately initialize Java
+	jinit_params = paste("-Xmx", BART_MAX_MEM_MB, "m", sep = "")
+	.jinit(parameters = jinit_params)
+	
 	num_gibbs = num_burn_in + num_iterations_after_burn_in
 	#check for errors in data
-	if (error_in_data(training_data)){
+	if (check_for_errors_in_training_data(training_data)){
 		return;
 	}
-	model_matrix_training_data = pre_process_data(training_data)
+	model_matrix_training_data = pre_process_training_data(training_data)
 	
 	#initialize the JVM
 	for (dependency in JAR_DEPENDENCIES){
@@ -115,11 +85,13 @@ build_bart_machine = function(training_data,
 		s_sq_y = "var"
 	}
 	if (s_sq_y == "mse"){
-		mod = lm(y ~ ., training_data)
+		mod = lm(y ~ ., model_matrix_training_data)
 		mse = var(mod$residuals)
-		.jcall(java_bart_machine, "V", "setSampleVarY", as.numeric(mse))
+		sig_sq_est = as.numeric(mse)
+		.jcall(java_bart_machine, "V", "setSampleVarY", sig_sq_est)
 	} else if (s_sq_y == "var"){
-		.jcall(java_bart_machine, "V", "setSampleVarY", as.numeric(var(model_matrix_training_data$y)))
+		sig_sq_est = as.numeric(var(model_matrix_training_data$y))
+		.jcall(java_bart_machine, "V", "setSampleVarY", sig_sq_est)
 	} else {
 		stop("s_sq_y must be \"rmse\" or \"sd\"", call. = FALSE)
 		return(TRUE)
@@ -147,9 +119,6 @@ build_bart_machine = function(training_data,
 		}
 		.jcall(java_bart_machine, "V", "setCovSplitPrior", as.numeric(cov_prior_vec))
 	}
-	if (use_heteroskedasticity){
-		.jcall(java_bart_machine, "V", "useHeteroskedasticity")
-	}
 	
 	#now load the training data into BART
 	for (i in 1 : nrow(model_matrix_training_data)){
@@ -157,16 +126,16 @@ build_bart_machine = function(training_data,
 	}
 	.jcall(java_bart_machine, "V", "finalizeTrainingData")
 	
-	#build the bart machine for use later
-	#need http://math.acadiau.ca/ACMMaC/Rmpi/sample.html RMPI here
-	#or better yet do this in pieces and plot slowly
+	#build the bart machine!
 	.jcall(java_bart_machine, "V", "Build")
 	
 	#now once it's done, let's extract things that are related to diagnosing the build of the BART model
-	bart_machine = list(java_bart_machine = java_bart_machine, 
+	p = ncol(model_matrix_training_data) - 1
+	bart_machine = list(java_bart_machine = java_bart_machine,
+		training_data_features = colnames(model_matrix_training_data)[1 : p],
 		training_data = model_matrix_training_data,
 		n = nrow(model_matrix_training_data),
-		p = ncol(model_matrix_training_data) - 1,
+		p = p,
 		num_trees = num_trees,
 		num_burn_in = num_burn_in,
 		num_iterations_after_burn_in = num_iterations_after_burn_in, 
@@ -175,7 +144,8 @@ build_bart_machine = function(training_data,
 		beta = beta,
 		run_in_sample = run_in_sample,
 		cov_prior_vec = cov_prior_vec,
-		use_heteroskedasticity = use_heteroskedasticity
+		sig_sq_est = sig_sq_est,
+		time_to_build = Sys.time() - t0
 	)
 	
 	#once its done gibbs sampling, see how the training data does if user wants
@@ -217,84 +187,17 @@ check_bart_error_assumptions = function(bart_machine, alpha_normal_test = 0.05, 
 	normal_p_val = shapiro.test(es)$p.value
 	cat("p-val for shapiro-wilk test of normality of residuals:", normal_p_val, ifelse(normal_p_val > alpha_normal_test, "(ppis believable)", "(exercise caution when using ppis!)"), "\n")
 	
-	if (!bart_machine$use_heteroskedasticity){
-		#TODO --- iterate over all x's and sort them
-		#see p225 in purple book for Szroeter's test
-		n = length(es)
-		h = sum(seq(1 : n) * es^2) / sum(es^2)
-		Q = sqrt(6 * n / (n^2 - 1)) * (h - (n + 1) / 2)
-		hetero_pval = 1 - pnorm(Q, 0, 1)
-		cat("p-val for szroeter's test of homoskedasticity of residuals (assuming inputted observation order):", hetero_pval, ifelse(hetero_pval > alpha_hetero_test, "(ppis believable)", "(exercise caution when using ppis!)"), "\n")		
-	}
-}
+	#TODO --- iterate over all x's and sort them
+	#see p225 in purple book for Szroeter's test
+	n = length(es)
+	h = sum(seq(1 : n) * es^2) / sum(es^2)
+	Q = sqrt(6 * n / (n^2 - 1)) * (h - (n + 1) / 2)
+	hetero_pval = 1 - pnorm(Q, 0, 1)
+	cat("p-val for szroeter's test of homoskedasticity of residuals (assuming inputted observation order):", hetero_pval, ifelse(hetero_pval > alpha_hetero_test, "(ppis believable)", "(exercise caution when using ppis!)"), "\n")		
 
-
-
-plot_sigsqs_convergence_diagnostics_hetero = function(bart_machine, records = c(1), extra_text = NULL, data_title = "data_model", save_plot = FALSE, moving_avgs = TRUE){
-	if (bart_machine$use_heteroskedasticity != TRUE){
-		stop("This BART machine was not created using the heteroskedasticity-robust feature, use \"plot_sigsqs_convergence_diagnostics\" instead")
-	}
-	sigsqs = .jcall(bart_machine$java_bart_machine, "[D", "getGibbsSamplesSigsqs")
-	
-	num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in
-	num_burn_in = bart_machine$num_burn_in
-	num_gibbs = bart_machine$num_gibbs
-	num_trees = bart_machine$num_trees
-	
-	sigsqs = matrix(NA, nrow = bart_machine$num_gibbs, ncol = bart_machine$n)
-	for (g in 1 : bart_machine$num_gibbs){
-		sigsqs[g, ] = .jcall(bart_machine$java_bart_machine, "[D", "getSigsqsByGibbsSample", as.integer(g - 1))
-	}
-	sigsqs_after_burnin = sigsqs[(length(sigsqs) - num_iterations_after_burn_in) : length(sigsqs), 1]
-	assign("sigsqs_after_burnin", sigsqs_after_burnin, .GlobalEnv)	
-	
-	if (save_plot){
-		save_plot_function(bart_machine, "sigsqs_by_gibbs", data_title)
-	}
-	else {
-		dev.new()
-	}	
-	
-	ymax = quantile(sigsqs, .95)
-#	ymax = max(sigsqs[bart_machine$num_burn_in : bart_machine$num_gibbs, ])
-	
-	plot(NA, 
-		main = paste("Sigsqs throughout entire chain", ifelse(is.null(extra_text), "", 
-						paste("\n", extra_text)), ifelse(length(records) < 10, paste("record #", paste(records, collapse = ", ")), "")), 
-		type = "n", 
-		xlab = "Gibbs sample",
-		ylab = "Var[Noise] estimate",
-		xlim = c(1, bart_machine$num_gibbs), 		
-		ylim = c(0, ymax)
-	)
-
-	#want to plot each sigsq as a function of gibbs
-	for (i in records){
-		sigsqis = sigsqs[, i]
-		points(sigsqis, pch = ".", col = COLORS[i %% 500])
-	}
-	abline(v = num_burn_in, col = "gray")
-	
-	#now maybe we want to see moving averages
-	if (moving_avgs){
-		for (i in records){
-			sigsqis = sigsqs[, i]
-			moving_avg = filter(sigsqis, rep(1/101, 101), sides = 2)
-			lines(moving_avg, col = COLORS[i %% 500])
-		}		
-	}
-	
-	if (save_plot){	
-		dev.off()
-	}
-	
-	sigsqs
 }
 
 plot_sigsqs_convergence_diagnostics = function(bart_machine, extra_text = NULL, data_title = "data_model", save_plot = FALSE){
-	if (bart_machine$use_heteroskedasticity == TRUE){
-		stop("This BART machine was created using the heteroskedasticity-robust feature, use \"plot_sigsqs_convergence_diagnostics_hetero\" instead")
-	}	
 	sigsqs = .jcall(bart_machine$java_bart_machine, "[D", "getGibbsSamplesSigsqs")
 	
 	num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in
@@ -709,7 +612,7 @@ bart_predict_for_test_data = function(bart_machine, test_data, num_cores = 1){
 #do all generic functions here
 #
 
-predict.bart_machine = function(bart_machine, new_data, num_cores = 1){
+bart_machine_predict = function(bart_machine, new_data, num_cores = 1){
 	#pull out data objects for convenience
 	java_bart_machine = bart_machine$java_bart_machine
 	num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in
@@ -717,18 +620,76 @@ predict.bart_machine = function(bart_machine, new_data, num_cores = 1){
 	
 	
 	#check for errors in data
-	new_data = pre_process_data(new_data)	
+	if (class(new_data) != "data.frame"){
+		stop("training data must be a data frame", call. = FALSE)
+		return(TRUE)		
+	}
+	#now process and make dummies if necessary
+	new_data = pre_process_new_data(new_data, bart_machine$training_data_features)	
+	
 	
 	y_hat = array(NA, n)
 	for (i in 1 : n){
 		y_hat[i] = .jcall(java_bart_machine, "D", "Evaluate", c(as.numeric(new_data[i, ])), as.integer(num_cores))
 	}
 	
-	y_hat
+	list(y_hat = y_hat, new_data = new_data)
+}
+
+predict.bart_machine = function(bart_machine, new_data, num_cores = 1){
+	bart_machine_predict(bart_machine, new_data, num_cores)$y_hat
 }
 
 summary.bart_machine = function(bart_machine){
+	#first print out characteristics of the training data
+	cat(paste("training data n =", bart_machine$n, " p =", bart_machine$p, " "))
 	
+	ttb = as.numeric(bart_machine$time_to_build, units = "secs")
+	if (ttb > 60){
+		ttb = as.numeric(bart_machine$time_to_build, units = "mins")
+		cat(paste("built in", round(ttb, 2), "mins\n"))
+	} else {
+		cat(paste("built in", round(ttb, 1), "secs\n"))
+	}
+	if (bart_machine$run_in_sample){
+		cat("\nin-sample statistics:\n")
+		cat(paste("  L1 = ", round(bart_machine$L1_err_train, 2), 
+					"L2 = ", round(bart_machine$L2_err_train), 
+					"R^2 =", round(bart_machine$Rsq), 
+					"rmse =", round(bart_machine$rmse_train, 2), "\n"))
+	} else {
+		cat("no in-sample information available (use option run_in_sample = TRUE next time)\n")
+	}
+	cat("\nproportion M-H steps accepted:\n")	
+	cat(paste("  before burn-in:", round(0, 2), "after burn-in:", round(0, 2), "overall:", round(0, 2), "\n"))
+	
+	cat(paste("\nquantiles of tree depths after burn in:\n"))
+	tree_depths = rnorm(1000)
+	print(round(summary(tree_depths), 2))
+	cat(paste("quantiles of number of splits after burn in:\n"))
+	tree_splits = rnorm(1000)
+	print(round(summary(tree_splits), 2))
+	
+	es = bart_machine$residuals
+	normal_p_val = shapiro.test(es)$p.value
+	cat("\np-val for shapiro-wilk test of normality of residuals:", round(normal_p_val, 5), "\n")
+	
+	sigsqs = .jcall(bart_machine$java_bart_machine, "[D", "getGibbsSamplesSigsqs")	
+	sigsqs_after_burnin = sigsqs[(length(sigsqs) - bart_machine$num_iterations_after_burn_in) : length(sigsqs)]
+	
+	cat(paste("\nsigsq est for y beforehand:", round(bart_machine$sig_sq_est, 3), "\n"))
+	cat(paste("avg sigsq estimate after burn-in:", round(mean(sigsqs_after_burnin), 5), "\n"))
+	
+#	cat(paste())
+#	cat(paste())
+}
+
+plot.bart_machine = function(bart_machine){
+	
+}
+
+print.bart_machine = function(bart_machine){
+	cat(paste("Bart Machine v", VERSION, "\n", sep = ""))
 }
 
 calc_ppis_from_prediction = function(bart_machine, new_data, ppi_conf = 0.95, num_cores = 1){
@@ -748,18 +709,11 @@ calc_ppis_from_prediction = function(bart_machine, new_data, ppi_conf = 0.95, nu
 	for (i in 1 : bart_machine$n){		
 		ppi_lower_bd[i] = quantile(sort(y_hat_posterior_samples[i, ]), (1 - ppi_conf) / 2)
 		ppi_upper_bd[i] = quantile(sort(y_hat_posterior_samples[i, ]), (1 + ppi_conf) / 2)
-	}	
-	#did the PPI capture the true y?
-	y_inside_ppi = new_data$y >= ppi_lower_bd & new_data$y <= ppi_upper_bd 
-	
-	list(ppis = cbind(ppi_lower_bd, ppi_upper_bd),
-		ppi_conf = ppi_conf,
-		y_inside_ppi = y_inside_ppi,
-		prop_ys_in_ppi = sum(y_inside_ppi) / n_test
-	)
+	}
+	#put them together and return
+	cbind(ppi_lower_bd, ppi_upper_bd)
 }
 
-#let's do sample medians like Rob
 calc_y_hat_from_gibbs_samples = function(y_hat_posterior_samples){
 	apply(y_hat_posterior_samples, 1, mean)
 }
@@ -886,7 +840,7 @@ run_cart_and_plot_y_vs_yhat = function(training_data, test_data, extra_text = NU
 		runtime = after - before)
 }
 
-error_in_data = function(data){
+check_for_errors_in_training_data = function(data){
 	if (is.null(colnames(data))){
 		stop("no colnames in data matrix", call. = FALSE)
 		return(TRUE)
@@ -895,19 +849,74 @@ error_in_data = function(data){
 		stop("last column of BART data must be the response and it must be named \"y\"", call. = FALSE)
 		return(TRUE)
 	}
+	if (class(data) != "data.frame"){
+		stop("training data must be a data frame", call. = FALSE)
+		return(TRUE)		
+	}
 	FALSE
 }
 
-pre_process_data = function(data){
+pre_process_training_data = function(data){
 	#delete missing data just in case
 	data = na.omit(data)
-	#convert to model matrix with binary dummies (if factor has more than k>2 levels, we need dummies for all k, not k-1 (thanks Andreas) 
-	#see http://stackoverflow.com/questions/4560459/all-levels-of-a-factor-in-a-model-matrix-in-r
-#	model_matrix = model.matrix(~ ., data)
-	#kill intercept since it's useless for BART anyway
-#	model_matrix[, 2 : ncol(model_matrix)]
+	
+	#pull off y
+	y = data$y
+	data$y = NULL	
+	
+	#first convert characters to factors
+	character_vars = names(which(sapply(data, class) == "character"))
+	for (character_var in character_vars){
+		data[, character_var] = as.factor(data[, character_var])
+	}
+		
+	factors = names(which(sapply(data, class) == "factor"))
+	
+	for (fac in factors){
+		dummied = do.call(cbind, lapply(levels(data[, fac]), function(lev){as.numeric(data[, fac] == lev)}))
+		colnames(dummied) <- paste(fac, levels(data[, fac]), sep = "_")		
+		data = cbind(data, dummied)
+		data[, fac] = NULL
+	}
+	
+	#tack y back on
+	data$y = y
 	
 	data
+}
+
+pre_process_new_data = function(new_data, training_data_features){
+	new_data = pre_process_training_data(new_data)
+	n = nrow(new_data)
+	new_data_features = colnames(new_data)
+	
+	#iterate through and see
+	for (j in 1 : length(training_data_features)){
+		training_data_feature = training_data_features[j]
+		new_data_feature = new_data_features[j]
+		if (training_data_feature != new_data_feature){
+			#create a new col of zeroes
+			new_col = rep(0, n)
+			#wedge it into the data set
+			temp_new_data = cbind(new_data[, 1 : (j - 1)], new_col)
+			#give it the same name as in the training set
+			colnames(temp_new_data)[j] = training_data_feature
+			#tack on the rest of the stuff
+			if (ncol(new_data) >= j){
+				rhs = new_data[, j : ncol(new_data)]
+				if (class(rhs) == "numeric"){
+					rhs = as.matrix(rhs)
+					colnames(rhs)[1] = new_data_feature
+				}
+				temp_new_data = cbind(temp_new_data, rhs)
+			} 
+			new_data = temp_new_data
+
+			#update list
+			new_data_features = colnames(new_data)
+		}
+	}
+	new_data
 }
 
 #believe it or not... there's no standard R function for this, isn't that pathetic?
@@ -1041,35 +1050,110 @@ save_plot_function = function(bart_machine, identifying_text, data_title){
 #############
 
 
-get_variable_significance = function(bart_machine, var_num, data = NULL, num_iter = 100, print_histogram = TRUE, num_cores = 1){
-	if (bart_machine$run_in_sample){
-		real_sse = bart_machine$L2_err_train
-		n = bart_machine$n
-		data = bart_machine$training_data
-	} else {
-		real_sse = bart_predict_for_test_data(bart_machine, data, num_cores)$L2_err
-		n = nrow(data)
-	}
-	
-	
-	sse_vec = array(NA, num_iter)
-	
-	for (i in 1 : num_iter){
-		data_scrambled = data
-		data_scrambled[, var_num] = data[sample(1 : n, n, replace = FALSE), var_num] ##scrambled column of interest
-		sse_vec[i] = bart_predict_for_test_data(bart_machine, data_scrambled, num_cores)$L2_err
-		if (i %% 10 == 0) print(i)
-	}
-	p_value = (1 + sum(real_sse > sse_vec)) / (1 + num_iter) ##how many null values greater than obs. 
-	if (print_histogram){
-		windows()
-		hist(sse_vec, 
-				br = num_iter / 3,
-				col = "grey", 
-				main = paste("Null Distribution for Variable", var_num),
-				xlim = c(min(sse_vec,real_sse-1),max(sse_vec, real_sse+1)),
-				xlab = "SSE")
-		abline(v=real_sse, col="blue", lwd = 3)
-	}
-	list(p_value = p_value, sse_vec = sse_vec, real_sse = real_sse)
+#get_variable_significance = function(bart_machine, var_num, data = NULL, num_iter = 100, print_histogram = TRUE, num_cores = 1){
+#	if (bart_machine$run_in_sample){
+#		real_sse = bart_machine$L2_err_train
+#		n = bart_machine$n
+#		data = bart_machine$training_data
+#	} else {
+#		real_sse = bart_predict_for_test_data(bart_machine, data, num_cores)$L2_err
+#		n = nrow(data)
+#	}
+#	
+#	
+#	sse_vec = array(NA, num_iter)
+#	
+#	for (i in 1 : num_iter){
+#		data_scrambled = data
+#		data_scrambled[, var_num] = data[sample(1 : n, n, replace = FALSE), var_num] ##scrambled column of interest
+#		sse_vec[i] = bart_predict_for_test_data(bart_machine, data_scrambled, num_cores)$L2_err
+#		if (i %% 10 == 0) print(i)
+#	}
+#	p_value = (1 + sum(real_sse > sse_vec)) / (1 + num_iter) ##how many null values greater than obs. 
+#	if (print_histogram){
+#		windows()
+#		hist(sse_vec, 
+#				br = num_iter / 3,
+#				col = "grey", 
+#				main = paste("Null Distribution for Variable", var_num),
+#				xlim = c(min(sse_vec,real_sse-1),max(sse_vec, real_sse+1)),
+#				xlab = "SSE")
+#		abline(v=real_sse, col="blue", lwd = 3)
+#	}
+#	list(p_value = p_value, sse_vec = sse_vec, real_sse = real_sse)
+#}
+
+
+
+#plot_sigsqs_convergence_diagnostics_hetero = function(bart_machine, records = c(1), extra_text = NULL, data_title = "data_model", save_plot = FALSE, moving_avgs = TRUE){
+#	if (bart_machine$use_heteroskedasticity != TRUE){
+#		stop("This BART machine was not created using the heteroskedasticity-robust feature, use \"plot_sigsqs_convergence_diagnostics\" instead")
+#	}
+#	sigsqs = .jcall(bart_machine$java_bart_machine, "[D", "getGibbsSamplesSigsqs")
+#	
+#	num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in
+#	num_burn_in = bart_machine$num_burn_in
+#	num_gibbs = bart_machine$num_gibbs
+#	num_trees = bart_machine$num_trees
+#	
+#	sigsqs = matrix(NA, nrow = bart_machine$num_gibbs, ncol = bart_machine$n)
+#	for (g in 1 : bart_machine$num_gibbs){
+#		sigsqs[g, ] = .jcall(bart_machine$java_bart_machine, "[D", "getSigsqsByGibbsSample", as.integer(g - 1))
+#	}
+#	sigsqs_after_burnin = sigsqs[(length(sigsqs) - num_iterations_after_burn_in) : length(sigsqs), 1]
+#	assign("sigsqs_after_burnin", sigsqs_after_burnin, .GlobalEnv)	
+#	
+#	if (save_plot){
+#		save_plot_function(bart_machine, "sigsqs_by_gibbs", data_title)
+#	}
+#	else {
+#		dev.new()
+#	}	
+#	
+#	ymax = quantile(sigsqs, .95)
+##	ymax = max(sigsqs[bart_machine$num_burn_in : bart_machine$num_gibbs, ])
+#	
+#	plot(NA, 
+#			main = paste("Sigsqs throughout entire chain", ifelse(is.null(extra_text), "", 
+#							paste("\n", extra_text)), ifelse(length(records) < 10, paste("record #", paste(records, collapse = ", ")), "")), 
+#			type = "n", 
+#			xlab = "Gibbs sample",
+#			ylab = "Var[Noise] estimate",
+#			xlim = c(1, bart_machine$num_gibbs), 		
+#			ylim = c(0, ymax)
+#	)
+#	
+#	#want to plot each sigsq as a function of gibbs
+#	for (i in records){
+#		sigsqis = sigsqs[, i]
+#		points(sigsqis, pch = ".", col = COLORS[i %% 500])
+#	}
+#	abline(v = num_burn_in, col = "gray")
+#	
+#	#now maybe we want to see moving averages
+#	if (moving_avgs){
+#		for (i in records){
+#			sigsqis = sigsqs[, i]
+#			moving_avg = filter(sigsqis, rep(1/101, 101), sides = 2)
+#			lines(moving_avg, col = COLORS[i %% 500])
+#		}		
+#	}
+#	
+#	if (save_plot){	
+#		dev.off()
+#	}
+#	
+#	sigsqs
+#}
+
+#set up a logging system
+LOG_DIR = "r_log"
+log_file_name = "bart_log.txt"
+bart_log = matrix(nrow = 0, ncol = 1)
+
+
+append_to_log = function(text){
+	bart_log = rbind(bart_log, paste(Sys.time(), "\t", text)) #log the time and the actual message
+	assign("bart_log", bart_log, .GlobalEnv)
+	write.table(bart_log, paste(LOG_DIR, "/", log_file_name, sep = ""), quote = FALSE, col.names = FALSE, row.names = FALSE)
 }
