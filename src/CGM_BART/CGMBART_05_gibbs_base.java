@@ -85,7 +85,7 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 	}
 
 	private void DeleteBurnInSampleOnOtherThreads() {
-		if (threadNum > 0 && gibbs_sample_num <= num_gibbs_burn_in + 1 && gibbs_sample_num >= 2){
+		if (gibbs_sample_num <= num_gibbs_burn_in + 1 && gibbs_sample_num >= 2){
 			gibbs_samples_of_cgm_trees[gibbs_sample_num - 2] = null;
 //			System.out.println("DeleteBurnInSampleOnOtherThreads() thread:" + (threadNum + 1) + " gibbs_sample_num = " + gibbs_sample_num + " num_gibbs_burn_in = " + num_gibbs_burn_in + " len = " + gibbs_samples_of_cgm_trees.size());
 			
