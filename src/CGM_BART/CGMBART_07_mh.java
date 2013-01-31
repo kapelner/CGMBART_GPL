@@ -74,7 +74,7 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 		CGMBARTTreeNode grow_node = pickGrowNode(T_star);
 		//if we can't grow, reject offhand
 		if (grow_node == null){ // || grow_node.generation >= 2
-			System.out.println("no valid grow nodes    proposal ln(r) = -oo DUE TO CANNOT GROW\n\n");
+//			System.out.println("no valid grow nodes    proposal ln(r) = -oo DUE TO CANNOT GROW\n\n");
 			return Double.NEGATIVE_INFINITY;					
 		}
 		
