@@ -74,18 +74,6 @@ public class CGMBARTRegressionMultThread extends Classifier {
 		BuildOnAllThreads();
 		//once it's done, now put together the chains
 		ConstructBurnedChainForTreesAndOtherInformation();	
-		
-//		for (int t = 1; t <= num_cores; t++){
-//			System.out.println("core # " + t);
-//			boolean[][] accept_reject_mh_by_core = bart_gibbs_chain_threads[t - 1].getAcceptRejectMH();
-//			boolean[][] accept_reject_mh_after_burn_ins = new boolean[total_iterations_multithreaded - num_gibbs_burn_in][num_trees];
-//			for (int g = num_gibbs_burn_in; g < total_iterations_multithreaded; g++){
-//				accept_reject_mh_after_burn_ins[g - num_gibbs_burn_in] = accept_reject_mh_by_core[g];				
-//			}			
-//			for (int g = 0; g < total_iterations_multithreaded - num_gibbs_burn_in; g++){
-//				System.out.println("g:" + g + " " + Tools.StringJoin(accept_reject_mh_after_burn_ins[g]));
-//			}
-//		}
 	}	
 	
 	protected void ConstructBurnedChainForTreesAndOtherInformation() {
@@ -377,4 +365,12 @@ public class CGMBARTRegressionMultThread extends Classifier {
 //		System.out.println("getSigsqsByGibbsSample  bart_gibbs_chain_threads[0]: " + bart_gibbs_chain_threads[0] + " g = " + g);
 		return bart_gibbs_chain_threads[0].un_transform_sigsq(bart_gibbs_chain_threads[0].gibbs_samples_of_sigsq_hetero[g]);
 	}	
+
+	public void destroy(){
+		bart_gibbs_chain_threads = null;
+		gibbs_samples_of_cgm_trees_after_burn_in = null;
+		gibbs_samples_of_sigsq_after_burn_in = null;
+		cov_split_prior = null;
+	}
+
 }

@@ -21,12 +21,16 @@ Xtrain = X[1 : (nrow(X) / 2), ]
 Xtest = X[(nrow(X) / 2 + 1) : nrow(X), ]
 
 #build the BART machine
-bart_machine = build_bart_machine(Xtrain, 
-	num_trees = 10,
-	num_burn_in = 10000, 
-	num_iterations_after_burn_in = 10000,
-	num_cores = 4)
-
+bart_machines = list()
+for (i in 1 : 5000){
+	bart_machines[[i]] = build_bart_machine(Xtrain, 
+		num_trees = 200,
+		num_burn_in = 1000, 
+		num_iterations_after_burn_in = 1000,
+		num_cores = 3)
+	destroy_bart_machine(bart_machines[[i]])
+	cat(paste("built bart machine #", i, "\n"))
+}
 plot_mh_acceptance_reject(bart_machine)
 		
 check_bart_error_assumptions(bart_machine)

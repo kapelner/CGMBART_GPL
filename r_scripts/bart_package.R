@@ -16,7 +16,7 @@ tryCatch(library(BayesTree), error = function(e){install.packages("BayesTree")},
 
 #constants
 VERSION = "1.0b"
-BART_MAX_MEM_MB = 6000
+BART_MAX_MEM_MB = 2000
 PLOTS_DIR = "output_plots"
 JAR_DEPENDENCIES = c("bart_java.jar", "commons-math-2.1.jar", "jai_codec.jar", "jai_core.jar", "trove-3.0.3.jar")
 DEFAULT_ALPHA = 0.95
@@ -178,7 +178,9 @@ build_bart_machine = function(training_data,
 	bart_machine
 }
 
-
+destroy_bart_machine = function(bart_machine){
+	.jcall(bart_machine$java_bart_machine, "V", "destroy")
+}
 
 check_bart_error_assumptions = function(bart_machine, alpha_normal_test = 0.05, alpha_hetero_test = 0.05){
 	graphics.off()
