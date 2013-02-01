@@ -77,13 +77,14 @@ public abstract class CGMBART_03_debug extends CGMBART_02_hyperparams implements
 		return num_nodes_by_tree;
 	}	
 	
-	public int[] getDepthsForTreesInGibbsSamp(int n_g){
-		CGMBARTTreeNode[] trees = gibbs_samples_of_cgm_trees[n_g];
-		int[] depth_by_tree = new int[trees.length];
-		for (int t = 0; t < trees.length; t++){
-			depth_by_tree[t] = trees[t].deepestNode();
+	public int[][] getDepthsForTrees(int n_g_i, int n_g_f){
+		int[][] all_depths = new int[n_g_f - n_g_i][num_trees];
+		for (int g = n_g_i; g < n_g_f; g++){
+			for (int t = 0; t < num_trees; t++){
+				all_depths[g - n_g_i][t] = gibbs_samples_of_cgm_trees[g][t].deepestNode();
+			}
 		}
-		return depth_by_tree;
+		return all_depths;
 	}
 	
 //	public String getRootSplits(int n_g){

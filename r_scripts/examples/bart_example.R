@@ -7,6 +7,7 @@ if (.Platform$OS.type == "windows"){
 setwd(directory_where_code_is)
 
 source("r_scripts/bart_package.R")
+source("r_scripts/bart_package_plots.R")
 
 #get some data
 library(MASS)
@@ -21,17 +22,21 @@ Xtrain = X[1 : (nrow(X) / 2), ]
 Xtest = X[(nrow(X) / 2 + 1) : nrow(X), ]
 
 #build the BART machine
-bart_machines = list()
-for (i in 1 : 5000){
-	bart_machines[[i]] = build_bart_machine(Xtrain, 
+#bart_machines = list()
+#for (i in 1 : 5000){
+	bart_machine = build_bart_machine(Xtrain, 
 		num_trees = 200,
 		num_burn_in = 1000, 
 		num_iterations_after_burn_in = 1000,
-		num_cores = 3)
-	destroy_bart_machine(bart_machines[[i]])
+		num_cores = 1)
+	
 	cat(paste("built bart machine #", i, "\n"))
-}
+#}
+plot_tree_depths(bart_machine)
 plot_mh_acceptance_reject(bart_machine)
+plot_tree_depths(bart_machine)
+
+destroy_bart_machine(bart_machine)
 		
 check_bart_error_assumptions(bart_machine)
 

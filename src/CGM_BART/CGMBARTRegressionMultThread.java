@@ -74,6 +74,11 @@ public class CGMBARTRegressionMultThread extends Classifier {
 		BuildOnAllThreads();
 		//once it's done, now put together the chains
 		ConstructBurnedChainForTreesAndOtherInformation();	
+		
+//		int[][] depths = getDepthsForTreesInGibbsSampAfterBurnIn(0);
+//		for (int g = 0 ; g < depths.length; g++){
+//			System.out.println("depths for gibbs sample " + g + ": " + Tools.StringJoin(depths[g]));
+//		}
 	}	
 	
 	protected void ConstructBurnedChainForTreesAndOtherInformation() {
@@ -366,6 +371,20 @@ public class CGMBARTRegressionMultThread extends Classifier {
 		return bart_gibbs_chain_threads[0].un_transform_sigsq(bart_gibbs_chain_threads[0].gibbs_samples_of_sigsq_hetero[g]);
 	}	
 
+	/**
+	public int[] getDepthsForTreesInGibbsSamp(int n_g){
+		CGMBARTTreeNode[] trees = gibbs_samples_of_cgm_trees[n_g];
+		int[] depth_by_tree = new int[trees.length];
+		for (int t = 0; t < trees.length; t++){
+			depth_by_tree[t] = trees[t].deepestNode();
+		}
+		return depth_by_tree;
+	}*/
+		
+	public int[][] getDepthsForTreesInGibbsSampAfterBurnIn(int thread_num){
+		return bart_gibbs_chain_threads[thread_num - 1].getDepthsForTrees(num_gibbs_burn_in + 1, total_iterations_multithreaded);
+	}	
+	
 	public void destroy(){
 		bart_gibbs_chain_threads = null;
 		gibbs_samples_of_cgm_trees_after_burn_in = null;
