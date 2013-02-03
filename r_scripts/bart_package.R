@@ -276,7 +276,7 @@ predict.bart_machine = function(bart_machine, new_data, num_cores = 1){
 	bart_machine_predict(bart_machine, new_data, num_cores)$y_hat
 }
 
-summary.bart_machine = function(bart_machine){
+summary.bart_machine = function(bart_machine, show_details_for_trees = FALSE){
 	cat(paste("Bart Machine v", VERSION, "\n\n", sep = ""))
 	#first print out characteristics of the training data
 	cat(paste("training data n =", bart_machine$n, " p =", bart_machine$p, " "))
@@ -296,15 +296,18 @@ summary.bart_machine = function(bart_machine){
 	} else {
 		cat("no in-sample information available (use option run_in_sample = TRUE next time)\n")
 	}
-	cat("\nproportion M-H steps accepted:\n")	
-	cat(paste("  before burn-in:", round(0, 2), "after burn-in:", round(0, 2), "overall:", round(0, 2), "\n"))
 	
-	cat(paste("\nquantiles of tree depths after burn in:\n"))
-	tree_depths = rnorm(1000)
-	print(round(summary(tree_depths), 2))
-	cat(paste("quantiles of number of splits after burn in:\n"))
-	tree_splits = rnorm(1000)
-	print(round(summary(tree_splits), 2))
+	if (show_details_for_trees){
+		cat("\nproportion M-H steps accepted:\n")	
+		cat(paste("  before burn-in:", round(0, 2), "after burn-in:", round(0, 2), "overall:", round(0, 2), "\n"))
+		
+		cat(paste("\nquantiles of tree depths after burn in:\n"))
+		tree_depths = rnorm(1000)
+		print(round(summary(tree_depths), 2))
+		cat(paste("quantiles of number of splits after burn in:\n"))
+		tree_splits = rnorm(1000)
+		print(round(summary(tree_splits), 2))		
+	}
 	
 	es = bart_machine$residuals
 	normal_p_val = shapiro.test(es)$p.value

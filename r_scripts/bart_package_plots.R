@@ -108,8 +108,6 @@ get_mh_acceptance_reject = function(bart_machine){
 	)
 }
 
-ALPHA = 0.5
-
 plot_y_vs_yhat = function(bart_machine, ppis = FALSE, ppi_conf = 0.95, num_cores = 1){
 	if (bart_machine$bart_destroyed){
 		stop("This BART machine has been destroyed. Please recreate.")
@@ -396,4 +394,42 @@ plot_sigsqs_convergence_diagnostics = function(bart_machine, extra_text = NULL, 
 	}
 	
 	sigsqs_after_burnin
+}
+
+investigate_var_importance = function(bart_machine, plot = TRUE, use_bottleneck = TRUE, num_replicates_for_avg = 10, num_trees_bottleneck = 20){
+	if (bart_machine$bart_destroyed){
+		stop("This BART machine has been destroyed. Please recreate.")
+	}	
+	
+	avg_var_props = get_averaged_true_var_props(bart_machine, use_bottleneck, num_replicates_for_avg, num_trees_bottleneck)
+	
+	if (plot){
+		barplot(avg_var_props, names = names(avg_var_props), las = 2, main = paste("Important Variables"), xlab = "Variable", ylab = "Inclusion Proportion")	
+	}
+	
+	avg_var_props
+}
+
+get_averaged_true_var_props = function(bart_machine, use_bottleneck, num_replicates_for_avg, num_trees_bottleneck){
+	if (!use_bottleneck){
+		get_var_props_over_chain(bart_machine)
+	}
+	else {
+		var_props = rep(0, ncol(bart_machine$training_data) - 1)
+		for (i in 1 : num_replicates_for_avg){
+			bart_machine_dup = build_bart_machine(bart_machine$training_data, 
+				num_trees = num_trees_bottleneck, 
+				num_burn_in = bart_machine$num_burn_in, 
+				num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in, 
+				cov_prior_vec = bart_machine$cov_prior_vec,
+				run_in_sample = FALSE,
+				verbose = FALSE)
+			var_props = var_props + get_var_props_over_chain(bart_machine_dup)
+			destroy_bart_machine(bart_machine_dup)
+			cat(".")
+		}
+		cat("\n")
+		#average over many runs
+		var_props / num_replicates_for_avg		
+	}
 }
