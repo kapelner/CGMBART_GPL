@@ -6,24 +6,24 @@ plot_tree_depths = function(bart_machine){
 	
 	tree_depths_after_burn_in = get_tree_depths(bart_machine)
 	
-	num_after_burn_in_per_core = ncol(tree_depths_after_burn_in)
+	num_after_burn_in_per_core = nrow(tree_depths_after_burn_in)
 	
 	plot(1 : num_after_burn_in_per_core, rep(0, num_after_burn_in_per_core), type = "n", 
 		main = "Tree Depth by Gibbs Sample After Burn-in", xlab = "Gibbs Sample", 
-		ylab = paste("Tree Depth for all cores (", nrow(tree_depths_after_burn_in), " trees)", sep = ""), ylim = c(0, max(tree_depths_after_burn_in)))
+		ylab = paste("Tree Depth for all cores"), ylim = c(0, max(tree_depths_after_burn_in)))
 	#plot burn in
-	for (t in 1 : nrow(tree_depths_after_burn_in)){
-		lines(1 : num_after_burn_in_per_core, tree_depths_after_burn_in[t, ], col = rgb(0.9,0.9,0.9))
+	for (t in 1 : ncol(tree_depths_after_burn_in)){
+		lines(1 : num_after_burn_in_per_core, tree_depths_after_burn_in[, t], col = rgb(0.9,0.9,0.9))
 	}
-	lines(1 : num_after_burn_in_per_core, apply(tree_depths_after_burn_in, 2, mean), col = "blue", lwd = 4)
-	lines(1 : num_after_burn_in_per_core, apply(tree_depths_after_burn_in, 2, min), col = "black")
-	lines(1 : num_after_burn_in_per_core, apply(tree_depths_after_burn_in, 2, max), col = "black")
+	lines(1 : num_after_burn_in_per_core, apply(tree_depths_after_burn_in, 1, mean), col = "blue", lwd = 4)
+	lines(1 : num_after_burn_in_per_core, apply(tree_depths_after_burn_in, 1, min), col = "black")
+	lines(1 : num_after_burn_in_per_core, apply(tree_depths_after_burn_in, 1, max), col = "black")
 }
 
 get_tree_depths = function(bart_machine){
 	tree_depths_after_burn_in = NULL
 	for (c in 1 : bart_machine$num_cores){
-		tree_depths_after_burn_in_core = sapply(.jcall(bart_machine$java_bart_machine, "[[I", "getDepthsForTreesInGibbsSampAfterBurnIn", as.integer(c)), .jevalArray)
+		tree_depths_after_burn_in_core = t(sapply(.jcall(bart_machine$java_bart_machine, "[[I", "getDepthsForTreesInGibbsSampAfterBurnIn", as.integer(c)), .jevalArray))
 		tree_depths_after_burn_in = rbind(tree_depths_after_burn_in, tree_depths_after_burn_in_core)
 	}
 	tree_depths_after_burn_in
@@ -36,25 +36,25 @@ plot_tree_num_nodes = function(bart_machine){
 	
 	tree_num_nodes_and_leaves_after_burn_in = get_tree_num_nodes_and_leaves(bart_machine)
 	
-	num_after_burn_in_per_core = ncol(tree_num_nodes_and_leaves_after_burn_in)
+	num_after_burn_in_per_core = nrow(tree_num_nodes_and_leaves_after_burn_in)
 	
 	plot(1 : num_after_burn_in_per_core, rep(0, num_after_burn_in_per_core), type = "n", 
 		main = "Tree Num Nodes And Leaves by Gibbs Sample After Burn-in", xlab = "Gibbs Sample", 
-		ylab = paste("Tree Num Nodes and Leaves for all cores (", nrow(tree_num_nodes_and_leaves_after_burn_in), " trees)", sep = ""), 
+		ylab = paste("Tree Num Nodes and Leaves for all cores"), 
 		ylim = c(0, max(tree_num_nodes_and_leaves_after_burn_in)))
 	#plot burn in
-	for (t in 1 : nrow(tree_num_nodes_and_leaves_after_burn_in)){
-		lines(1 : num_after_burn_in_per_core, tree_num_nodes_and_leaves_after_burn_in[t, ], col = rgb(0.9,0.9,0.9))
+	for (t in 1 : ncol(tree_num_nodes_and_leaves_after_burn_in)){
+		lines(1 : num_after_burn_in_per_core, tree_num_nodes_and_leaves_after_burn_in[, t], col = rgb(0.9, 0.9, 0.9))
 	}
-	lines(1 : num_after_burn_in_per_core, apply(tree_num_nodes_and_leaves_after_burn_in, 2, mean), col = "blue", lwd = 4)
-	lines(1 : num_after_burn_in_per_core, apply(tree_num_nodes_and_leaves_after_burn_in, 2, min), col = "black")
-	lines(1 : num_after_burn_in_per_core, apply(tree_num_nodes_and_leaves_after_burn_in, 2, max), col = "black")
+	lines(1 : num_after_burn_in_per_core, apply(tree_num_nodes_and_leaves_after_burn_in, 1, mean), col = "blue", lwd = 4)
+	lines(1 : num_after_burn_in_per_core, apply(tree_num_nodes_and_leaves_after_burn_in, 1, min), col = "black")
+	lines(1 : num_after_burn_in_per_core, apply(tree_num_nodes_and_leaves_after_burn_in, 1, max), col = "black")
 }
 
 get_tree_num_nodes_and_leaves = function(bart_machine){
 	tree_num_nodes_and_leaves_after_burn_in = NULL
 	for (c in 1 : bart_machine$num_cores){
-		tree_num_nodes_and_leaves_after_burn_in_core = sapply(.jcall(bart_machine$java_bart_machine, "[[I", "getNumNodesAndLeavesForTreesInGibbsSampAfterBurnIn", as.integer(c)), .jevalArray)
+		tree_num_nodes_and_leaves_after_burn_in_core = t(sapply(.jcall(bart_machine$java_bart_machine, "[[I", "getNumNodesAndLeavesForTreesInGibbsSampAfterBurnIn", as.integer(c)), .jevalArray))
 		tree_num_nodes_and_leaves_after_burn_in = rbind(tree_num_nodes_and_leaves_after_burn_in, tree_num_nodes_and_leaves_after_burn_in_core)
 	}
 	tree_num_nodes_and_leaves_after_burn_in
@@ -401,12 +401,12 @@ plot_sigsqs_convergence_diagnostics = function(bart_machine){
 	abline(v = num_burn_in, col = "gray")
 }
 
-investigate_var_importance = function(bart_machine, plot = TRUE, use_bottleneck = TRUE, num_replicates_for_avg = 10, num_trees_bottleneck = 20){
+investigate_var_importance = function(bart_machine, plot = TRUE, use_bottleneck = TRUE, num_replicates_for_avg = 5, num_trees_bottleneck = 20, num_cores = 1){
 	if (bart_machine$bart_destroyed){
 		stop("This BART machine has been destroyed. Please recreate.")
 	}	
 	
-	avg_var_props = get_averaged_true_var_props(bart_machine, use_bottleneck, num_replicates_for_avg, num_trees_bottleneck)
+	avg_var_props = get_averaged_true_var_props(bart_machine, use_bottleneck, num_replicates_for_avg, num_trees_bottleneck, num_cores)
 	
 	if (plot){
 		barplot(avg_var_props, names = names(avg_var_props), las = 2, main = paste("Important Variables"), xlab = "Variable", ylab = "Inclusion Proportion")	
@@ -415,21 +415,23 @@ investigate_var_importance = function(bart_machine, plot = TRUE, use_bottleneck 
 	avg_var_props
 }
 
-get_averaged_true_var_props = function(bart_machine, use_bottleneck, num_replicates_for_avg, num_trees_bottleneck){
+get_averaged_true_var_props = function(bart_machine, use_bottleneck, num_replicates_for_avg, num_trees_bottleneck, num_cores){
 	if (!use_bottleneck){
 		get_var_props_over_chain(bart_machine)
 	}
 	else {
-		var_props = rep(0, ncol(bart_machine$training_data) - 1)
+		var_props = rep(0, bart_machine$p)
 		for (i in 1 : num_replicates_for_avg){
 			bart_machine_dup = build_bart_machine(bart_machine$training_data, 
 				num_trees = num_trees_bottleneck, 
 				num_burn_in = bart_machine$num_burn_in, 
 				num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in, 
 				cov_prior_vec = bart_machine$cov_prior_vec,
+				num_cores = num_cores,
 				run_in_sample = FALSE,
 				verbose = FALSE)
-			var_props = var_props + get_var_props_over_chain(bart_machine_dup)
+		
+			var_props = var_props + get_var_props_over_chain(bart_machine_dup, num_cores)
 			destroy_bart_machine(bart_machine_dup)
 			cat(".")
 		}
@@ -437,4 +439,13 @@ get_averaged_true_var_props = function(bart_machine, use_bottleneck, num_replica
 		#average over many runs
 		var_props / num_replicates_for_avg		
 	}
+}
+
+plot_convergence_diagnostics = function(bart_machine){
+	par(mfrow = c(2, 2))
+	plot_sigsqs_convergence_diagnostics(bart_machine)
+	plot_mh_acceptance_reject(bart_machine)
+	plot_tree_num_nodes(bart_machine)
+	plot_tree_depths(bart_machine)	
+	par(mfrow = c(1, 1))
 }

@@ -325,25 +325,27 @@ public class CGMBARTRegressionMultThread extends Classifier {
 //		return var_count_matrix;
 //	}	
 
-	public int[] getCountForAttributeInGibbsSample(int g, int num_cores_count) {
-		final int[] counts = new int[p];		
-		final CGMBARTTreeNode[] cgm_trees = gibbs_samples_of_cgm_trees_after_burn_in[g];
+	public int[][] getCountForAttributeInGibbsSample(int num_cores) {
+		final int[][] counts = new int[num_gibbs_total_iterations - num_gibbs_burn_in][p];		
 		
-		ExecutorService get_count_for_attribute_pool = Executors.newFixedThreadPool(num_cores_count);
+		ExecutorService get_count_for_attribute_pool = Executors.newFixedThreadPool(num_cores);
 		
-		for (int j = 0; j < p; j++){
-			final int final_j = j;
+		for (int g = 0; g < num_gibbs_total_iterations - num_gibbs_burn_in; g++){
+			final CGMBARTTreeNode[] cgm_trees = gibbs_samples_of_cgm_trees_after_burn_in[g];
+			final int final_g = g;
 			get_count_for_attribute_pool.execute(new Runnable(){
 				public void run() {
-					int tot_for_attr_j = 0;
-					for (CGMBARTTreeNode root_node : cgm_trees){
-						tot_for_attr_j += root_node.numTimesAttrUsed(final_j);
-					}		
-					counts[final_j] = tot_for_attr_j;					
+					for (int j = 0; j < p; j++){
+						int tot_for_attr_j = 0;
+						for (CGMBARTTreeNode root_node : cgm_trees){
+							tot_for_attr_j += root_node.numTimesAttrUsed(j);
+						}		
+						counts[final_g][j] = tot_for_attr_j;	
+					}
 				}
 			});
-
 		}
+		
 		
 		//now join em up and ship out the result
 		get_count_for_attribute_pool.shutdown();
@@ -388,11 +390,11 @@ public class CGMBARTRegressionMultThread extends Classifier {
 	}	
 		
 	public int[][] getDepthsForTreesInGibbsSampAfterBurnIn(int thread_num){
-		return bart_gibbs_chain_threads[thread_num - 1].getDepthsForTrees(num_gibbs_burn_in + 1, total_iterations_multithreaded);
+		return bart_gibbs_chain_threads[thread_num - 1].getDepthsForTrees(num_gibbs_burn_in, total_iterations_multithreaded);
 	}	
 	
 	public int[][] getNumNodesAndLeavesForTreesInGibbsSampAfterBurnIn(int thread_num){
-		return bart_gibbs_chain_threads[thread_num - 1].getNumNodesAndLeavesForTrees(num_gibbs_burn_in + 1, total_iterations_multithreaded);
+		return bart_gibbs_chain_threads[thread_num - 1].getNumNodesAndLeavesForTrees(num_gibbs_burn_in, total_iterations_multithreaded);
 	}	
 	
 	public void destroy(){

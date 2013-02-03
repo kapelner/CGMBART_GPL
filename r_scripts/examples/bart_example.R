@@ -14,7 +14,7 @@ library(MASS)
 data(Boston)
 X = Boston
 X$medv = log(X$medv)
-X$chas = as.character(X$chas)
+#X$chas = as.character(X$chas)
 colnames(X)[ncol(X)] = "y"
 
 #split it into test and training
@@ -33,16 +33,15 @@ graphics.off()
 	
 	cat(paste("built bart machine #", i, "\n"))
 #}
-
+summary(bart_machine)
 investigate_var_importance(bart_machine)
 
 plot_y_vs_yhat(bart_machine)
 
 plot_tree_num_nodes(bart_machine)
-windows()
 plot_tree_depths(bart_machine)
 plot_mh_acceptance_reject(bart_machine)
-
+plot_convergence_diagnostics(bart_machine)
 
 plot_sigsqs_convergence_diagnostics(bart_machine)
 check_bart_error_assumptions(bart_machine)

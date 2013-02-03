@@ -488,6 +488,16 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		}
 		return (this.splitAttributeM == j ? 1 : 0) + this.left.numTimesAttrUsed(j) + this.right.numTimesAttrUsed(j);
 	}
+	
+	public boolean attrUsed(int j) {
+		if (this.isLeaf){
+			return false;
+		}
+		else if (this.splitAttributeM == j){
+			return true;
+		}
+		return this.left.attrUsed(j) || this.right.attrUsed(j);
+	}	
 
 	public void setStumpData(ArrayList<double[]> X_y, double[] y_trans, int p) {
 		//pull out X data, set y's, and indices appropriately

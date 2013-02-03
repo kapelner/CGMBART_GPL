@@ -85,7 +85,7 @@ build_bart_machine = function(training_data,
 		s_sq_y = "var"
 	}
 	if (s_sq_y == "mse"){
-		mod = lm(y ~ ., model_matrix_training_data)
+		mod = lm(y ~ ., as.data.frame(model_matrix_training_data))
 		mse = var(mod$residuals)
 		sig_sq_est = as.numeric(mse)
 		.jcall(java_bart_machine, "V", "setSampleVarY", sig_sq_est)
@@ -133,7 +133,8 @@ build_bart_machine = function(training_data,
 	p = ncol(model_matrix_training_data) - 1
 	bart_machine = list(java_bart_machine = java_bart_machine,
 		training_data_features = colnames(model_matrix_training_data)[1 : p],
-		training_data = model_matrix_training_data,
+		training_data = training_data,
+		model_matrix_training_data = model_matrix_training_data,
 		n = nrow(model_matrix_training_data),
 		p = p,
 		num_cores = num_cores,
@@ -156,7 +157,7 @@ build_bart_machine = function(training_data,
 			cat("evaluating in sample data...")
 		}
 		y_hat_posterior_samples = 
-			t(sapply(.jcall(bart_machine$java_bart_machine, "[[D", "getGibbsSamplesForPrediction", .jarray(training_data, dispatch = TRUE), as.integer(num_cores)), .jevalArray))
+			t(sapply(.jcall(bart_machine$java_bart_machine, "[[D", "getGibbsSamplesForPrediction", .jarray(model_matrix_training_data, dispatch = TRUE), as.integer(num_cores)), .jevalArray))
 		
 		#to get y_hat.. just take straight mean of posterior samples, alternatively, we can let java do it if we want more bells and whistles
 		y_hat_train = rowMeans(y_hat_posterior_samples)
@@ -212,17 +213,14 @@ check_bart_error_assumptions = function(bart_machine, alpha_normal_test = 0.05, 
 }
 
 
-get_var_counts_over_chain = function(bart_machine, num_cores_count = 1){
-	C = matrix(NA, nrow = bart_machine$num_iterations_after_burn_in, ncol = bart_machine$p)
-	for (g in 1 : bart_machine$num_iterations_after_burn_in){
-		C[g, ] = .jcall(bart_machine$java_bart_machine, "[I", "getCountForAttributeInGibbsSample", as.integer(g - 1), as.integer(num_cores_count))
-	}
-	colnames(C) = colnames(bart_machine$training_data)[1 : bart_machine$p]
+get_var_counts_over_chain = function(bart_machine, num_cores = 1){
+	C = t(sapply(.jcall(bart_machine$java_bart_machine, "[[I", "getCountForAttributeInGibbsSample", as.integer(num_cores)), .jevalArray))
+	colnames(C) = colnames(bart_machine$model_matrix_training_data)[1 : bart_machine$p]
 	C
 }
 
-get_var_props_over_chain = function(bart_machine, num_cores_count = 1){
-	C = get_var_counts_over_chain(bart_machine, num_cores_count)
+get_var_props_over_chain = function(bart_machine, num_cores = 1){
+	C = get_var_counts_over_chain(bart_machine, num_cores)
 	Ctot = apply(C, 2, sum)
 	Ctot / sum(Ctot)
 }
@@ -256,10 +254,7 @@ bart_machine_predict = function(bart_machine, new_data, num_cores = 1){
 	n = nrow(new_data)
 		
 	#check for errors in data
-	if (class(new_data) != "data.frame"){
-		stop("training data must be a data frame", call. = FALSE)
-		return(TRUE)		
-	}
+	#
 	#now process and make dummies if necessary
 	new_data = pre_process_new_data(new_data, bart_machine$training_data_features)	
 		
@@ -279,14 +274,14 @@ predict.bart_machine = function(bart_machine, new_data, num_cores = 1){
 summary.bart_machine = function(bart_machine, show_details_for_trees = FALSE){
 	cat(paste("Bart Machine v", VERSION, "\n\n", sep = ""))
 	#first print out characteristics of the training data
-	cat(paste("training data n =", bart_machine$n, " p =", bart_machine$p, " "))
+	cat(paste("training data n =", bart_machine$n, " p =", bart_machine$p, "\n"))
 	
 	ttb = as.numeric(bart_machine$time_to_build, units = "secs")
 	if (ttb > 60){
 		ttb = as.numeric(bart_machine$time_to_build, units = "mins")
-		cat(paste("built in", round(ttb, 2), "mins\n"))
+		cat(paste("built in", round(ttb, 2), "mins on", bart_machine$num_cores, "cores and", bart_machine$num_trees, "trees\n"))
 	} else {
-		cat(paste("built in", round(ttb, 1), "secs\n"))
+		cat(paste("built in", round(ttb, 1), "secs on", bart_machine$num_cores, "cores and", bart_machine$num_trees, "trees\n"))
 	}
 	if (bart_machine$run_in_sample){
 		cat("\nin-sample statistics:\n")
@@ -321,7 +316,6 @@ summary.bart_machine = function(bart_machine, show_details_for_trees = FALSE){
 	
 	cat(paste("\nsigsq est for y beforehand:", round(bart_machine$sig_sq_est, 3), "\n"))
 	cat(paste("avg sigsq estimate after burn-in:", round(mean(sigsqs_after_burnin), 5), "\n\n"))
-	
 #	cat(paste())
 #	cat(paste())
 }
@@ -403,7 +397,7 @@ pre_process_training_data = function(data){
 	#tack y back on
 	data$y = y
 	
-	data
+	data.matrix(data)
 }
 
 pre_process_new_data = function(new_data, training_data_features){
