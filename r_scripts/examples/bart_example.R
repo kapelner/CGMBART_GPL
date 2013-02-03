@@ -24,20 +24,25 @@ Xtest = X[(nrow(X) / 2 + 1) : nrow(X), ]
 #build the BART machine
 #bart_machines = list()
 #for (i in 1 : 5000){
+graphics.off()
 	bart_machine = build_bart_machine(Xtrain, 
 		num_trees = 200,
-		num_burn_in = 1000, 
+		num_burn_in = 250, 
 		num_iterations_after_burn_in = 1000,
-		num_cores = 1)
+		num_cores = 4)
 	
 	cat(paste("built bart machine #", i, "\n"))
 #}
+plot_y_vs_yhat(bart_machine)
+
+plot_tree_num_nodes(bart_machine)
+windows()
 plot_tree_depths(bart_machine)
 plot_mh_acceptance_reject(bart_machine)
 plot_tree_depths(bart_machine)
 
 destroy_bart_machine(bart_machine)
-		
+plot_sigsqs_convergence_diagnostics(bart_machine)
 check_bart_error_assumptions(bart_machine)
 
 #predict on the test data

@@ -66,15 +66,6 @@ public abstract class CGMBART_03_debug extends CGMBART_02_hyperparams implements
 			node_num += (int)Math.pow(2, g);
 		}
 		return node_num;
-	}
-	
-	public int[] getNumNodesForTreesInGibbsSamp(int n_g){
-		CGMBARTTreeNode[] trees = gibbs_samples_of_cgm_trees[n_g];
-		int[] num_nodes_by_tree = new int[trees.length];
-		for (int t = 0; t < trees.length; t++){
-			num_nodes_by_tree[t] = trees[t].numLeaves();
-		}
-		return num_nodes_by_tree;
 	}	
 	
 	public int[][] getDepthsForTrees(int n_g_i, int n_g_f){
@@ -86,6 +77,17 @@ public abstract class CGMBART_03_debug extends CGMBART_02_hyperparams implements
 		}
 		return all_depths;
 	}
+	
+	
+	public int[][] getNumNodesAndLeavesForTrees(int n_g_i, int n_g_f){
+		int[][] all_new_nodes = new int[n_g_f - n_g_i][num_trees];
+		for (int g = n_g_i; g < n_g_f; g++){
+			for (int t = 0; t < num_trees; t++){
+				all_new_nodes[g - n_g_i][t] = gibbs_samples_of_cgm_trees[g][t].numNodesAndLeaves();
+			}
+		}
+		return all_new_nodes;
+	}	
 	
 //	public String getRootSplits(int n_g){
 //		ArrayList<CGMBARTTreeNode> trees = gibbs_samples_of_cgm_trees.get(n_g);

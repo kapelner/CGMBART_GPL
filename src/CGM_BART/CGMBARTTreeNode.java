@@ -312,6 +312,16 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 			return this.left.numLeaves() + this.right.numLeaves();
 		}
 	}
+	
+
+	public int numNodesAndLeaves() {
+		if (this.isLeaf){
+			return 1;
+		}
+		else {
+			return 1 + this.left.numNodesAndLeaves() + this.right.numNodesAndLeaves();
+		}
+	}	
 
 	public int numPruneNodesAvailable() {
 		if (this.isLeaf){

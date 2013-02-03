@@ -164,6 +164,7 @@ build_bart_machine = function(training_data,
 		}
 		
 		bart_machine$y_hat_train = y_hat_train
+		bart_machine$y_train = training_data$y
 		bart_machine$residuals = training_data$y - bart_machine$y_hat_train
 		bart_machine$L1_err_train = sum(abs(bart_machine$residuals))
 		bart_machine$L2_err_train = sum(bart_machine$residuals^2)
@@ -186,19 +187,29 @@ destroy_bart_machine = function(bart_machine){
 
 check_bart_error_assumptions = function(bart_machine, alpha_normal_test = 0.05, alpha_hetero_test = 0.05){
 	graphics.off()
+	par(mfrow = c(1, 2))
 	es = bart_machine$residuals
-	qqnorm(es, main = "Normal Q-Q plot for in-sample residuals")
-	qqline(bart_machine$residuals)
+	y_hat = bart_machine$y_hat
+
+	#test for normality
 	normal_p_val = shapiro.test(es)$p.value
-	cat("p-val for shapiro-wilk test of normality of residuals:", normal_p_val, ifelse(normal_p_val > alpha_normal_test, "(ppis believable)", "(exercise caution when using ppis!)"), "\n")
-	
+	qqnorm(es, col = "blue",
+		main = paste("Assessment of Normality\n", "p-val for shapiro-wilk test of normality of residuals:", round(normal_p_val, 3)),
+		xlab = "Normal Q-Q plot for in-sample residuals\n(Theoretical Quantiles)")
+	qqline(bart_machine$residuals)	
+
+	#test for heteroskedasticity
+	plot(y_hat, es, main = paste("Assessment of Heteroskedasticity\nFitted vs residuals"), xlab = "Fitted Values", ylab = "Residuals", col = "blue")
+	abline(h = 0, col = "black")
+#	cat("p-val for shapiro-wilk test of normality of residuals:", normal_p_val, ifelse(normal_p_val > alpha_normal_test, "(ppis believable)", "(exercise caution when using ppis!)"), "\n")
+	par(mfrow = c(1, 1))
 	#TODO --- iterate over all x's and sort them
 	#see p225 in purple book for Szroeter's test
-	n = length(es)
-	h = sum(seq(1 : n) * es^2) / sum(es^2)
-	Q = sqrt(6 * n / (n^2 - 1)) * (h - (n + 1) / 2)
-	hetero_pval = 1 - pnorm(Q, 0, 1)
-	cat("p-val for szroeter's test of homoskedasticity of residuals (assuming inputted observation order):", hetero_pval, ifelse(hetero_pval > alpha_hetero_test, "(ppis believable)", "(exercise caution when using ppis!)"), "\n")		
+#	n = length(es)
+#	h = sum(seq(1 : n) * es^2) / sum(es^2)
+#	Q = sqrt(6 * n / (n^2 - 1)) * (h - (n + 1) / 2)
+#	hetero_pval = 1 - pnorm(Q, 0, 1)
+#	cat("p-val for szroeter's test of homoskedasticity of residuals (assuming inputted observation order):", hetero_pval, ifelse(hetero_pval > alpha_hetero_test, "(ppis believable)", "(exercise caution when using ppis!)"), "\n")		
 
 }
 
@@ -245,8 +256,7 @@ bart_machine_predict = function(bart_machine, new_data, num_cores = 1){
 	java_bart_machine = bart_machine$java_bart_machine
 	num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in
 	n = nrow(new_data)
-	
-	
+		
 	#check for errors in data
 	if (class(new_data) != "data.frame"){
 		stop("training data must be a data frame", call. = FALSE)
