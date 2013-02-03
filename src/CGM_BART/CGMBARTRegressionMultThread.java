@@ -180,11 +180,17 @@ public class CGMBARTRegressionMultThread extends Classifier {
 	}		
 	
 	public double EvaluateViaSampMed(double[] record, int num_cores_evaluate) { //posterior sample average		
-		return StatToolbox.sample_median(getGibbsSamplesForPrediction(record, num_cores_evaluate));
+		double[][] data = new double[1][record.length];
+		data[0] = record;
+		double[][] gibbs_samples = getGibbsSamplesForPrediction(data, num_cores_evaluate);
+		return StatToolbox.sample_median(gibbs_samples[0]);
 	}
 	
 	public double EvaluateViaSampAvg(double[] record, int num_cores_evaluate) { //posterior sample average		
-		return StatToolbox.sample_average(getGibbsSamplesForPrediction(record, num_cores_evaluate));
+		double[][] data = new double[1][record.length];
+		data[0] = record;
+		double[][] gibbs_samples = getGibbsSamplesForPrediction(data, num_cores_evaluate);
+		return StatToolbox.sample_average(gibbs_samples[0]);
 	}
 	
 	public int numSamplesAfterBurning(){
@@ -195,64 +201,74 @@ public class CGMBARTRegressionMultThread extends Classifier {
 	 * Code is ugly and not decomped because it is optimized
 	 * 
 	 * 
-	 * @param data_record
-	 * @param num_cores_evaluate
+	 * @param data
+	 * @param num_cores
 	 * @return
 	 */
-	protected double[] getGibbsSamplesForPrediction(final double[] data_record, final int num_cores_evaluate){
+	protected double[][] getGibbsSamplesForPrediction(final double[][] data, final int num_cores){
 		final int num_samples_after_burn_in = numSamplesAfterBurning();
-		//the results for each of the gibbs samples
-		final double[] y_gibbs_samples = new double[num_samples_after_burn_in];
-//		System.out.println("getGibbsSamplesForPrediction numSamplesAfterBurning = " + numSamplesAfterBurning() + " gibbs_samples_of_cgm_trees_after_burn_in size = " + gibbs_samples_of_cgm_trees_after_burn_in.size());
-		
 		final CGMBARTRegression first_bart = bart_gibbs_chain_threads[0];
 		
-		if (num_cores_evaluate == 1){
-			for (int g = 0; g < num_samples_after_burn_in; g++){
-				CGMBARTTreeNode[] cgm_trees = gibbs_samples_of_cgm_trees_after_burn_in[g];
-				double yt_i = 0;
-				for (int m = 0; m < num_trees; m++){ //sum of trees right?
-					yt_i += cgm_trees[m].Evaluate(data_record);
+		final int n = data.length;
+		final double[][] y_hat = new double[n][data[0].length];
+		
+		if (num_cores == 1){
+			for (int i = 0; i < n; i++){
+				double[] y_gibbs_samples = new double[num_samples_after_burn_in];
+				for (int g = 0; g < num_samples_after_burn_in; g++){
+					CGMBARTTreeNode[] cgm_trees = gibbs_samples_of_cgm_trees_after_burn_in[g];
+					double yt_i = 0;
+					for (int m = 0; m < num_trees; m++){ //sum of trees right?
+						yt_i += cgm_trees[m].Evaluate(data[i]);
+					}
+					//just make sure we switch it back to really what y is for the user
+					y_gibbs_samples[g] = first_bart.un_transform_y(yt_i);
 				}
-				//just make sure we switch it back to really what y is for the user
-				y_gibbs_samples[g] = first_bart.un_transform_y(yt_i);
+				y_hat[i] = y_gibbs_samples;
 			}			
 		}
 		else {
-			Thread[] fixed_thread_pool = new Thread[num_cores_evaluate];
-			for (int t = 0; t < num_cores_evaluate; t++){
+			Thread[] fixed_thread_pool = new Thread[num_cores];
+			for (int t = 0; t < num_cores; t++){
 				final int final_t = t;
 				Thread thread = new Thread(){
 					public void run(){
-						for (int g = 0; g < num_samples_after_burn_in; g++){
-							if (g % num_cores_evaluate == final_t){
-								CGMBARTTreeNode[] cgm_trees = gibbs_samples_of_cgm_trees_after_burn_in[g];
-								double yt_i = 0;
-								for (int m = 0; m < num_trees; m++){ //sum of trees right?
-									yt_i += cgm_trees[m].Evaluate(data_record);
+						for (int i = 0; i < n; i++){
+							if (i % num_cores == final_t){
+								double[] y_gibbs_samples = new double[num_samples_after_burn_in];
+								for (int g = 0; g < num_samples_after_burn_in; g++){									
+									CGMBARTTreeNode[] cgm_trees = gibbs_samples_of_cgm_trees_after_burn_in[g];
+									double yt_i = 0;
+									for (int m = 0; m < num_trees; m++){ //sum of trees right?
+										yt_i += cgm_trees[m].Evaluate(data[i]);
+									}
+									//just make sure we switch it back to really what y is for the user
+									y_gibbs_samples[g] = first_bart.un_transform_y(yt_i);	
 								}
-								//just make sure we switch it back to really what y is for the user
-								y_gibbs_samples[g] = first_bart.un_transform_y(yt_i);
-							}	
+								y_hat[i] = y_gibbs_samples;
+							}
 						}
 					}
 				};
 				thread.start();
 				fixed_thread_pool[t] = thread;
 			}
-			for (int t = 0; t < num_cores_evaluate; t++){
+			for (int t = 0; t < num_cores; t++){
 				try {
 					fixed_thread_pool[t].join();
 				} catch (InterruptedException e) {}
 			}
 		}		
 
-		return y_gibbs_samples;
+		return y_hat;
 	}
 
 	protected double[] getPostPredictiveIntervalForPrediction(double[] record, double coverage, int num_cores_evaluate){
+		double[][] data = new double[1][record.length];
+		data[0] = record;		
 		//get all gibbs samples sorted
-		double[] y_gibbs_samples_sorted = getGibbsSamplesForPrediction(record, num_cores_evaluate);
+		double[][] y_gibbs_samples_sorted_matrix = getGibbsSamplesForPrediction(data, num_cores_evaluate);
+		double[] y_gibbs_samples_sorted = y_gibbs_samples_sorted_matrix[0];
 		Arrays.sort(y_gibbs_samples_sorted);
 		
 		//calculate index of the CI_a and CI_b

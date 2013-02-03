@@ -153,15 +153,13 @@ build_bart_machine = function(training_data,
 	#once its done gibbs sampling, see how the training data does if user wants
 	if (run_in_sample){
 		if (verbose){
-			cat("evaluating in sample data")
+			cat("evaluating in sample data...")
 		}
-		y_hat_train = array(NA, nrow(model_matrix_training_data))
-		for (i in 1 : nrow(model_matrix_training_data)){
-			if (i %% as.integer(nrow(model_matrix_training_data) / 10) == 0 && verbose){
-				cat(".")
-			}
-			y_hat_train[i] = .jcall(java_bart_machine, "D", "Evaluate", c(as.numeric(model_matrix_training_data[i, ])), as.integer(num_cores))
-		}
+		y_hat_posterior_samples = 
+			t(sapply(.jcall(bart_machine$java_bart_machine, "[[D", "getGibbsSamplesForPrediction", .jarray(training_data, dispatch = TRUE), as.integer(num_cores)), .jevalArray))
+		
+		#to get y_hat.. just take straight mean of posterior samples, alternatively, we can let java do it if we want more bells and whistles
+		y_hat_train = rowMeans(y_hat_posterior_samples)
 		
 		bart_machine$y_hat_train = y_hat_train
 		bart_machine$y_train = training_data$y
@@ -264,12 +262,12 @@ bart_machine_predict = function(bart_machine, new_data, num_cores = 1){
 	}
 	#now process and make dummies if necessary
 	new_data = pre_process_new_data(new_data, bart_machine$training_data_features)	
-	
-	
-	y_hat = array(NA, n)
-	for (i in 1 : n){
-		y_hat[i] = .jcall(java_bart_machine, "D", "Evaluate", c(as.numeric(new_data[i, ])), as.integer(num_cores))
-	}
+		
+	y_hat_posterior_samples = 
+		t(sapply(.jcall(bart_machine$java_bart_machine, "[[D", "getGibbsSamplesForPrediction", .jarray(new_data, dispatch = TRUE), as.integer(num_cores)), .jevalArray))
+
+	#to get y_hat.. just take straight mean of posterior samples, alternatively, we can let java do it if we want more bells and whistles
+	y_hat = rowMeans(y_hat_posterior_samples)	
 	
 	list(y_hat = y_hat, new_data = new_data)
 }
@@ -279,7 +277,7 @@ predict.bart_machine = function(bart_machine, new_data, num_cores = 1){
 }
 
 summary.bart_machine = function(bart_machine){
-	cat(paste("Bart Machine v", VERSION, "\n", sep = ""))
+	cat(paste("Bart Machine v", VERSION, "\n\n", sep = ""))
 	#first print out characteristics of the training data
 	cat(paste("training data n =", bart_machine$n, " p =", bart_machine$p, " "))
 	
@@ -339,18 +337,18 @@ print.bart_machine = function(bart_machine){
 }
 
 calc_ppis_from_prediction = function(bart_machine, new_data, ppi_conf = 0.95, num_cores = 1){
+	#first convert the rows to the correct dummies etc
+	new_data = pre_process_new_data(new_data, bart_machine$training_data_features)
 	n_test = nrow(new_data)
 	
 	ppi_lower_bd = array(NA, n_test)
 	ppi_upper_bd = array(NA, n_test)	
 	
-	y_hat_posterior_samples = matrix(NA, nrow = n_test, ncol = bart_machine$num_iterations_after_burn_in)	
-	for (i in 1 : n_test){
-		y_hat_posterior_samples[i, ] = 
-			.jcall(bart_machine$java_bart_machine, "[D", "getGibbsSamplesForPrediction", c(as.numeric(new_data[i, ]), NA), as.integer(num_cores))
-	}
+	y_hat_posterior_samples = 
+		t(sapply(.jcall(bart_machine$java_bart_machine, "[[D", "getGibbsSamplesForPrediction",  .jarray(new_data, dispatch = TRUE), as.integer(num_cores)), .jevalArray))
+		
 	#to get y_hat.. just take straight mean of posterior samples, alternatively, we can let java do it if we want more bells and whistles
-	y_hat = calc_y_hat_from_gibbs_samples(y_hat_posterior_samples)	
+	y_hat = rowMeans(y_hat_posterior_samples)
 	
 	for (i in 1 : bart_machine$n){		
 		ppi_lower_bd[i] = quantile(sort(y_hat_posterior_samples[i, ]), (1 - ppi_conf) / 2)
@@ -359,12 +357,6 @@ calc_ppis_from_prediction = function(bart_machine, new_data, ppi_conf = 0.95, nu
 	#put them together and return
 	cbind(ppi_lower_bd, ppi_upper_bd)
 }
-
-calc_y_hat_from_gibbs_samples = function(y_hat_posterior_samples){
-	apply(y_hat_posterior_samples, 1, mean)
-}
-
-
 
 check_for_errors_in_training_data = function(data){
 	if (is.null(colnames(data))){
@@ -412,6 +404,10 @@ pre_process_training_data = function(data){
 }
 
 pre_process_new_data = function(new_data, training_data_features){
+	#we have to kill y if it exists
+	if (length(new_data$y) != 0){
+		new_data$y = NULL
+	}
 	new_data = pre_process_training_data(new_data)
 	n = nrow(new_data)
 	new_data_features = colnames(new_data)
@@ -442,29 +438,14 @@ pre_process_new_data = function(new_data, training_data_features){
 			new_data_features = colnames(new_data)
 		}
 	}
-	new_data
+	#coerce to numeric
+	data.matrix(new_data)
 }
 
 #believe it or not... there's no standard R function for this, isn't that pathetic?
 sample_mode = function(data){
 	as.numeric(names(sort(-table(data)))[1])
 }
-
-save_plot_function = function(bart_machine, identifying_text, data_title){
-	if (is.null(bart_machine)){
-		stop("you cannot save a plot unless you pass the bart_machine object", call. = FALSE)
-	}
-	num_iterations_after_burn_in = bart_machine[["num_iterations_after_burn_in"]]
-	num_burn_in = bart_machine$num_burn_in
-	num_trees = bart_machine$num_trees	
-	alpha = bart_machine$alpha
-	beta = bart_machine$beta
-	plot_filename = paste(PLOTS_DIR, "/", data_title, "_", identifying_text, "_m_", num_trees, "_n_B_", num_burn_in, "_n_G_a_", num_iterations_after_burn_in, "_alpha_", alpha, "_beta_", beta, ".pdf", sep = "")
-	tryCatch({pdf(file = plot_filename)}, error = function(e){})
-	append_to_log(paste("plot saved as", plot_filename))
-}
-
-
 
 #set up a logging system
 LOG_DIR = "r_log"
