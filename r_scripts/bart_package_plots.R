@@ -350,13 +350,31 @@ hist_mu_values_by_tree_and_leaf_after_burn_in = function(bart_machine, extra_tex
 	}
 }
 
+get_sigsqs = function(bart_machine, after_burn_in = TRUE){
+	if (bart_machine$bart_destroyed){
+		stop("This BART machine has been destroyed. Please recreate.")
+	}	
+	sigsqs = .jcall(bart_machine$java_bart_machine, "[D", "getGibbsSamplesSigsqs")
+	
+	if (after_burn_in){
+		num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in
+		num_burn_in = bart_machine$num_burn_in
+		num_gibbs = bart_machine$num_gibbs
+		num_trees = bart_machine$num_trees
+		
+		sigsqs[(length(sigsqs) - num_iterations_after_burn_in) : length(sigsqs)]
+	} else {
+		sigsqs
+	}
+	
+}
 
-plot_sigsqs_convergence_diagnostics = function(bart_machine, extra_text = NULL, data_title = "data_model", save_plot = FALSE){
+plot_sigsqs_convergence_diagnostics = function(bart_machine){
 	if (bart_machine$bart_destroyed){
 		stop("This BART machine has been destroyed. Please recreate.")
 	}	
 	
-	sigsqs = .jcall(bart_machine$java_bart_machine, "[D", "getGibbsSamplesSigsqs")
+	sigsqs = get_sigsqs(bart_machine, after_burn_in = FALSE)
 	
 	num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in
 	num_burn_in = bart_machine$num_burn_in
@@ -365,35 +383,22 @@ plot_sigsqs_convergence_diagnostics = function(bart_machine, extra_text = NULL, 
 	
 	#first look at sigsqs
 	sigsqs_after_burnin = sigsqs[(length(sigsqs) - num_iterations_after_burn_in) : length(sigsqs)]
-	assign("sigsqs_after_burnin", sigsqs_after_burnin, .GlobalEnv)
-	avg_sigsqs = mean(sigsqs_after_burnin, na.rm = TRUE)
+	avg_sigsqs_after_burn_in = mean(sigsqs_after_burnin, na.rm = TRUE)
 	
-	if (save_plot){
-		save_plot_function(bart_machine, "sigsqs_by_gibbs", data_title)
-	}
-	else {
-		dev.new()
-	}
 	plot(sigsqs, 
-			main = paste("Sigsq throughout entire project  sigsq after burn in", ifelse(is.null(extra_text), "", paste("\n", extra_text))), 
-			xlab = "Gibbs sample # (gray line indicates burn-in, yellow lines are the 95% PPI after burn-in)", 
-			ylab = paste("Sigsq by iteration, avg after burn-in =", round(avg_sigsqs, 3)),
-			ylim = c(quantile(sigsqs, 0.01), quantile(sigsqs, 0.99)),
-			pch = ".", 
-			cex = 3,
-			col = "gray")
+		main = paste("Sigsq Estimates over Gibbs Samples"), 
+		xlab = "Gibbs sample (yellow lines: after burn-in 95% PPI)", 
+		ylab = paste("Sigsq by iteration, avg after burn-in =", round(avg_sigsqs_after_burn_in, 3)),
+		ylim = c(quantile(sigsqs, 0.01), quantile(sigsqs, 0.99)),
+		pch = ".", 
+		cex = 3,
+		col = "gray")
 	points(sigsqs, pch = ".", col = "red")
 	ppi_sigsqs = quantile(sigsqs[num_burn_in : length(sigsqs)], c(.025, .975))
 	abline(a = ppi_sigsqs[1], b = 0, col = "yellow")
 	abline(a = ppi_sigsqs[2], b = 0, col = "yellow")
-	abline(a = avg_sigsqs, b = 0, col = "blue")
+	abline(a = avg_sigsqs_after_burn_in, b = 0, col = "blue")
 	abline(v = num_burn_in, col = "gray")
-	
-	if (save_plot){	
-		dev.off()
-	}
-	
-	sigsqs_after_burnin
 }
 
 investigate_var_importance = function(bart_machine, plot = TRUE, use_bottleneck = TRUE, num_replicates_for_avg = 10, num_trees_bottleneck = 20){

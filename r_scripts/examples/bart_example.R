@@ -33,15 +33,17 @@ graphics.off()
 	
 	cat(paste("built bart machine #", i, "\n"))
 #}
-plot_y_vs_yhat(bart_machine, ppis = F)
+
+investigate_var_importance(bart_machine)
+
+plot_y_vs_yhat(bart_machine)
 
 plot_tree_num_nodes(bart_machine)
 windows()
 plot_tree_depths(bart_machine)
 plot_mh_acceptance_reject(bart_machine)
-plot_tree_depths(bart_machine)
 
-destroy_bart_machine(bart_machine)
+
 plot_sigsqs_convergence_diagnostics(bart_machine)
 check_bart_error_assumptions(bart_machine)
 
