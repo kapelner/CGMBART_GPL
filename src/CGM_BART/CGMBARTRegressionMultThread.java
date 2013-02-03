@@ -2,6 +2,12 @@ package CGM_BART;
 
 import gnu.trove.list.array.TDoubleArrayList;
 
+import java.beans.XMLEncoder;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
@@ -9,7 +15,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 
-public class CGMBARTRegressionMultThread extends Classifier {
+public class CGMBARTRegressionMultThread extends Classifier implements Serializable {
 	private static final long serialVersionUID = -4537075714317768756L;
 	
 	private static final int DEFAULT_NUM_CORES = 3;//Runtime.getRuntime().availableProcessors() - 1;
@@ -17,7 +23,7 @@ public class CGMBARTRegressionMultThread extends Classifier {
 	private int num_cores;
 	private int num_trees;
 	
-	private CGMBARTRegression[] bart_gibbs_chain_threads;
+	private transient CGMBARTRegression[] bart_gibbs_chain_threads;
 	protected CGMBARTTreeNode[][] gibbs_samples_of_cgm_trees_after_burn_in;
 	protected double[] gibbs_samples_of_sigsq_after_burn_in;
 	
@@ -28,7 +34,7 @@ public class CGMBARTRegressionMultThread extends Classifier {
 
 	private double[] cov_split_prior;
 
-	private boolean use_heteroskedasticity;
+	private transient boolean use_heteroskedasticity;
 
 	
 	
@@ -73,7 +79,7 @@ public class CGMBARTRegressionMultThread extends Classifier {
 		//run a build on all threads
 		BuildOnAllThreads();
 		//once it's done, now put together the chains
-		ConstructBurnedChainForTreesAndOtherInformation();	
+		ConstructBurnedChainForTreesAndOtherInformation();
 		
 //		int[][] depths = getDepthsForTreesInGibbsSampAfterBurnIn(0);
 //		for (int g = 0 ; g < depths.length; g++){
@@ -403,5 +409,17 @@ public class CGMBARTRegressionMultThread extends Classifier {
 		gibbs_samples_of_sigsq_after_burn_in = null;
 		cov_split_prior = null;
 	}
+	
+	
+	public void saveTreesToXML(String filename){
+		System.out.print("saving \"" + filename + "\" . . . ");
+		XMLEncoder xmlOut = null;
+		try {
+			xmlOut = new XMLEncoder(new BufferedOutputStream(new FileOutputStream(new File(filename))));
+		} catch (IOException e){e.printStackTrace();}	
+		xmlOut.writeObject(gibbs_samples_of_cgm_trees_after_burn_in);
+		xmlOut.close();
+		System.out.print("done saving\n");
+	}	
 
 }

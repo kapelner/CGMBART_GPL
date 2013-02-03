@@ -73,7 +73,7 @@ public abstract class Classifier implements Serializable {
 	protected String unique_name = "unnamed";
 
 
-	private double[] in_sample_residuals;
+	private transient double[] in_sample_residuals;
 	
 	protected static PrintWriter output;
 	protected static final String DEBUG_EXT = ".csv";

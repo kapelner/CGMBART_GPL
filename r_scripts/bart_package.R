@@ -444,6 +444,7 @@ sample_mode = function(data){
 	as.numeric(names(sort(-table(data)))[1])
 }
 
+
 #set up a logging system
 LOG_DIR = "r_log"
 log_file_name = "bart_log.txt"
