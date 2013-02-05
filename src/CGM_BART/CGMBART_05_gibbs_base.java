@@ -35,7 +35,7 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 			//now flush the previous previous gibbs sample to not leak memory
 			FlushDataForSample(gibbs_samples_of_cgm_trees[gibbs_sample_num - 1]);
 			DeleteBurnInSampleOnOtherThreads();
-			gibbs_sample_num++;					
+			gibbs_sample_num++;
 		}
 	}
 	

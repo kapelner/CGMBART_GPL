@@ -145,9 +145,9 @@ addAll( collection );
 * @param array an array of <code>double</code> primitives
 */
 public TDoubleHashSetAndArray( double[] array ) {
-this( Math.max( array.length, DEFAULT_CAPACITY ) );
-this.array = new TDoubleArrayList(array.length);
-addAll( array );
+	this( Math.max( array.length, DEFAULT_CAPACITY ) );
+	this.array = new TDoubleArrayList(array.length);
+	addAll( array );
 }
 
 
@@ -214,15 +214,30 @@ public double[] getAsArray(){
 	return array.toArray();
 }
 
+/**
+ * Returns the number of distinct elements in this collection.
+ *
+ * @return an <code>int</code> value
+ */
+public int size() {
+    return array.size();
+}
 
 /** {@inheritDoc} */
 public boolean remove( double val ) {
-int index = index(val);
-if ( index >= 0 ) {
-removeAt( index );
-return true;
-}
-return false;
+	//we only need to remove the value from the array since that's all we care about
+	//the hash function is only needed during construction to get rid of the non-unique
+	//values.
+	array.remove(val);
+	return true;
+//int index = index(val);
+//if ( index >= 0 ) {
+//removeAt( index );
+////make sure we remove it
+//
+//return true;
+//}
+//return false;
 }
 
 

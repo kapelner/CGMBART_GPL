@@ -73,6 +73,7 @@ public class DataSetupForCSVFile {
 			}
 			String[] datums = datum.split(",");
 //			p = datums.length - 1;
+			
 
 			if (line_num == 0 && file_has_header){
 //				feature_types = new ArrayList<FeatureType>(p);

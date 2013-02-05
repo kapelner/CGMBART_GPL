@@ -73,3 +73,6 @@ r_log/*.txt
 *.dvi
 .RData
 .Rhistory
+bin/*
+
+datasets/r_zach.csv

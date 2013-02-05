@@ -30,6 +30,7 @@ import gnu.trove.list.array.TIntArrayList;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 
 import TroveExtension.TDoubleHashSetAndArray;
@@ -416,9 +417,9 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 				x_dot_j_node[i] = x_dot_j[indicies[i]];
 			}
 			
-			TDoubleHashSetAndArray unique_x_dot_j_node = new TDoubleHashSetAndArray(x_dot_j_node);	
-			double max = Tools.max(x_dot_j_node);
-			unique_x_dot_j_node.remove(max);
+			TDoubleHashSetAndArray unique_x_dot_j_node = new TDoubleHashSetAndArray(x_dot_j_node);			
+			double max = Tools.max(x_dot_j_node);				
+			unique_x_dot_j_node.remove(max);	
 			possible_split_vals_by_attr.put(splitAttributeM, unique_x_dot_j_node);
 		}
 		return possible_split_vals_by_attr.get(splitAttributeM);
@@ -427,11 +428,6 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 
 	public double pickRandomSplitValue() {	
 		TDoubleHashSetAndArray split_values = possibleSplitValuesGivenAttribute();
-//		if (splitAttributeM == 0){
-//			double[] split_values_as_arr = split_values.getAsArray();
-//			Arrays.sort(split_values_as_arr);
-//			System.out.println("split_values: " + Tools.StringJoin(split_values_as_arr));
-//		}
 		int rand_index = (int) Math.floor(StatToolbox.rand() * split_values.size());
 		return split_values.getAtIndex(rand_index);
 	}

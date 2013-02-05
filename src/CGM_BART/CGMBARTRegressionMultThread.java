@@ -79,12 +79,8 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 		//run a build on all threads
 		BuildOnAllThreads();
 		//once it's done, now put together the chains
-		ConstructBurnedChainForTreesAndOtherInformation();
+		ConstructBurnedChainForTreesAndOtherInformation();	
 		
-//		int[][] depths = getDepthsForTreesInGibbsSampAfterBurnIn(0);
-//		for (int g = 0 ; g < depths.length; g++){
-//			System.out.println("depths for gibbs sample " + g + ": " + Tools.StringJoin(depths[g]));
-//		}
 	}	
 	
 	protected void ConstructBurnedChainForTreesAndOtherInformation() {
@@ -331,7 +327,7 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 //		return var_count_matrix;
 //	}	
 
-	public int[][] getCountForAttributeInGibbsSample(int num_cores) {
+	public int[][] getCountsForAllAttribute(int num_cores) {
 		final int[][] counts = new int[num_gibbs_total_iterations - num_gibbs_burn_in][p];		
 		
 		ExecutorService get_count_for_attribute_pool = Executors.newFixedThreadPool(num_cores);

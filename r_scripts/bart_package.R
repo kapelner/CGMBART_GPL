@@ -214,7 +214,7 @@ check_bart_error_assumptions = function(bart_machine, alpha_normal_test = 0.05, 
 
 
 get_var_counts_over_chain = function(bart_machine, num_cores = 1){
-	C = t(sapply(.jcall(bart_machine$java_bart_machine, "[[I", "getCountForAttributeInGibbsSample", as.integer(num_cores)), .jevalArray))
+	C = t(sapply(.jcall(bart_machine$java_bart_machine, "[[I", "getCountsForAllAttribute", as.integer(num_cores)), .jevalArray))
 	colnames(C) = colnames(bart_machine$model_matrix_training_data)[1 : bart_machine$p]
 	C
 }

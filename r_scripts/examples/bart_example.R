@@ -43,7 +43,6 @@ plot_tree_depths(bart_machine)
 plot_mh_acceptance_reject(bart_machine)
 plot_convergence_diagnostics(bart_machine)
 
-save_trees_to_xml(bart_machine)
 
 plot_sigsqs_convergence_diagnostics(bart_machine)
 check_bart_error_assumptions(bart_machine)

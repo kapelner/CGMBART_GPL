@@ -5,7 +5,7 @@
 	<classpathentry kind="lib" path="jai_codec.jar"/>
 	<classpathentry kind="lib" path="jai_core.jar"/>
 	<classpathentry kind="lib" path="junit-4.10.jar"/>
-	<classpathentry kind="lib" path="trove-3.0.3.jar" sourcepath="C:/Users/kapelner/Desktop/3.0.3/trove-3.0.3-src.jar"/>
+	<classpathentry kind="lib" path="trove-3.0.3.jar" sourcepath="trove-3.0.3-src.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
