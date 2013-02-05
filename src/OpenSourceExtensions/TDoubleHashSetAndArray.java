@@ -1,4 +1,4 @@
-package TroveExtension;
+package OpenSourceExtensions;
 
 ///////////////////////////////////////////////////////////////////////////////
 //Copyright (c) 2001, Eric D. Friedman All Rights Reserved.

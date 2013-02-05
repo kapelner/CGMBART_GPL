@@ -248,3 +248,51 @@ look_at_sample_of_test_data = function(bart_predictions, grid_len = 3, extra_tex
 #	
 #	sigsqs
 #}
+
+
+plot_y_vs_yhat_with_predictions = function(bart_machine, extra_text = NULL, data_title = "data_model", save_plot = FALSE){
+	if (bart_machine$bart_destroyed){
+		stop("This BART machine has been destroyed. Please recreate.")
+	}	
+	if (bart_machine$run_in_sample == FALSE){
+		stop("you can only plot after running in-sample\n")
+	}
+	#TODO needs to be done
+	y = bart_machine
+	n = length(y)
+	y_hat = bart_predictions[["y_hat"]]
+	ppi_a = bart_predictions[["ppi_a"]]
+	ppi_b = bart_predictions[["ppi_b"]]
+	ppi_conf = bart_predictions[["ppi_conf"]]
+	y_inside_ppi = bart_predictions[["y_inside_ppi"]]
+	prop_ys_in_ppi = bart_predictions[["prop_ys_in_ppi"]]
+	L1_err = round(bart_predictions[["L1_err"]])
+	L2_err = round(bart_predictions[["L2_err"]])
+	rmse = bart_predictions[["rmse"]]
+	
+	#make the general plot
+	if (save_plot){	
+		save_plot_function(bart_machine, "yvyhat_A_Bart", data_title)
+	}
+	else {
+		dev.new()
+	}		
+	plot(y, 
+			y_hat, 
+			main = paste("BART y-yhat, ", (ppi_conf * 100), "% PPIs (", round(prop_ys_in_ppi * 100, 2), "% cvrg), L1/2 = ", L1_err, "/", L2_err, ", rmse = ", round(rmse, 2), ifelse(is.null(extra_text), "", paste("\n", extra_text)), sep = ""), 
+			xlab = paste("y\ngreen circle - the PPI for yhat captures true y", sep = ""), 
+			ylab = "y_hat", 
+			cex = 0)
+	#draw PPI's
+	for (i in 1 : n){
+		segments(y[i], ppi_a[i], y[i], ppi_b[i], col = "black", lwd = 0.1)	
+	}
+	#draw green dots or red dots depending upon inclusion in the PPI
+	for (i in 1 : n){
+		points(y[i], y_hat[i], col = ifelse(y_inside_ppi[i], "green", "red"), cex = 0.3, pch = 16)	
+	}
+	abline(a = 0, b = 1, col = "blue")
+	if (save_plot){	
+		dev.off()
+	}		
+}

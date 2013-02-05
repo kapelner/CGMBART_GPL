@@ -34,6 +34,7 @@ graphics.off()
 	cat(paste("built bart machine #", i, "\n"))
 #}
 summary(bart_machine)
+interaction_investigator(bart_machine)
 investigate_var_importance(bart_machine)
 
 plot_y_vs_yhat(bart_machine)
@@ -47,16 +48,30 @@ plot_convergence_diagnostics(bart_machine)
 plot_sigsqs_convergence_diagnostics(bart_machine)
 check_bart_error_assumptions(bart_machine)
 
-#predict on the test data
-predict_obj = bart_predict(bart_machine, Xtest, num_cores = 4)
-
 #convenience to predict on the test data automatically computing SSE, etc
 predict_obj = bart_predict_for_test_data(bart_machine, Xtest, num_cores = 4)
+
+rmses = array(NA, 20)
+for (k in 2 : 20){
+	rmse = k_fold_cv(X, k_folds = k, 
+		num_trees = 200,
+		num_burn_in = 250, 
+		num_iterations_after_burn_in = 1000,
+		num_cores = 3)$rmse
+	rmses[k] = rmse
+}
+plot(1:20, rmses, type="l")
+k = 1:20
+summary(lm(rmses ~ k))
+
 
 #get PPIs for test data
 ppi_obj = calc_ppis_from_prediction(bart_machine, Xtest)
 
-
+library(randomForest)
+rf = randomForest(x = Xtrain[,1:13], y =Xtrain[,14])
+preds = predict(rf,newdata = Xtest[,1:13])
+sqrt(sum((preds-Xtest[,14])^2)/length(preds))
 
 #now test the variable importance
 #generate the Friedman data

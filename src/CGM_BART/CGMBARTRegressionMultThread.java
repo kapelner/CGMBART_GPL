@@ -2,17 +2,15 @@ package CGM_BART;
 
 import gnu.trove.list.array.TDoubleArrayList;
 
-import java.beans.XMLEncoder;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+
+import OpenSourceExtensions.UnorderedPair;
 
 
 public class CGMBARTRegressionMultThread extends Classifier implements Serializable {
@@ -80,6 +78,12 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 		BuildOnAllThreads();
 		//once it's done, now put together the chains
 		ConstructBurnedChainForTreesAndOtherInformation();	
+		
+		int[][] ics = getInteractionCounts(num_cores);
+		System.out.println("interaction counts");
+		for (int j1 = 0; j1 < p; j1++){
+			System.out.println(Tools.StringJoin(ics[j1], "\t"));
+		}
 		
 	}	
 	
@@ -406,16 +410,41 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 		cov_split_prior = null;
 	}
 	
-	
-	public void saveTreesToXML(String filename){
-		System.out.print("saving \"" + filename + "\" . . . ");
-		XMLEncoder xmlOut = null;
-		try {
-			xmlOut = new XMLEncoder(new BufferedOutputStream(new FileOutputStream(new File(filename))));
-		} catch (IOException e){e.printStackTrace();}	
-		xmlOut.writeObject(gibbs_samples_of_cgm_trees_after_burn_in);
-		xmlOut.close();
-		System.out.print("done saving\n");
-	}	
+
+	public int[][] getInteractionCounts(int num_cores){
+		final int[][] interaction_count_matrix = new int[p][p];
+		ExecutorService interaction_count_getter_pool = Executors.newFixedThreadPool(num_cores);
+		
+		for (int g = 0; g < gibbs_samples_of_cgm_trees_after_burn_in.length; g++){
+			final int gf = g;
+	    	interaction_count_getter_pool.execute(new Runnable(){
+				public void run() {
+					CGMBARTTreeNode[] trees = gibbs_samples_of_cgm_trees_after_burn_in[gf];
+					
+					for (CGMBARTTreeNode tree : trees){
+						//get the set of pairs of interactions
+						HashSet<UnorderedPair<Integer>> set_of_interaction_pairs = new HashSet<UnorderedPair<Integer>>();
+						//find all interactions
+						tree.findInteractions(set_of_interaction_pairs);
+//						Tools.print_unordered_pair_set(set_of_interaction_pairs);
+						//now tabulate these interactions in our count matrix
+						synchronized(interaction_count_matrix){
+							for (UnorderedPair<Integer> pair : set_of_interaction_pairs){
+//								System.out.println("interaction: " + pair.getFirst() + " " + pair.getSecond());
+								interaction_count_matrix[pair.getFirst()][pair.getSecond()]++; 
+							}
+						}
+					}
+				}
+			});			
+			
+		}
+		interaction_count_getter_pool.shutdown();
+		try {	         
+	         interaction_count_getter_pool.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS); //effectively infinity
+		} catch (InterruptedException ignored){}
+		
+		return interaction_count_matrix;
+	}
 
 }

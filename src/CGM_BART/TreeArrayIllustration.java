@@ -58,7 +58,7 @@ public class TreeArrayIllustration {
 		likelihoods.add(lik);
 	}	
 	
-	public void CreateIllustrationAndSaveImage() {
+	public synchronized void CreateIllustrationAndSaveImage() {
 		//first pull out all the tree images
 		int m = trees.size();
 		int w = 0;
@@ -90,6 +90,7 @@ public class TreeArrayIllustration {
 	}
 	
 	private void saveImageFile(BufferedImage image) {
+//		System.out.println("w = " + image.getWidth() + " h = " + image.getHeight() + "sample_num: " + sample_num);
 		String title = "BART_" + unique_name + "_iter_" + LeadingZeroes(sample_num, 5);
 		try {
 			JAI.create("filestore", image, CGMBART_03_debug.DEBUG_DIR + "//" + title + ".png", "PNG");

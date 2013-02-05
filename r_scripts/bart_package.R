@@ -159,9 +159,9 @@ build_bart_machine = function(training_data,
 		y_hat_posterior_samples = 
 			t(sapply(.jcall(bart_machine$java_bart_machine, "[[D", "getGibbsSamplesForPrediction", .jarray(model_matrix_training_data, dispatch = TRUE), as.integer(num_cores)), .jevalArray))
 		
-		#to get y_hat.. just take straight mean of posterior samples, alternatively, we can let java do it if we want more bells and whistles
+		#to get y_hat.. just take straight mean of posterior samples
 		y_hat_train = rowMeans(y_hat_posterior_samples)
-		
+		#return a bunch more stuff
 		bart_machine$y_hat_train = y_hat_train
 		bart_machine$y_train = training_data$y
 		bart_machine$residuals = training_data$y - bart_machine$y_hat_train
@@ -279,9 +279,9 @@ summary.bart_machine = function(bart_machine, show_details_for_trees = FALSE){
 	ttb = as.numeric(bart_machine$time_to_build, units = "secs")
 	if (ttb > 60){
 		ttb = as.numeric(bart_machine$time_to_build, units = "mins")
-		cat(paste("built in", round(ttb, 2), "mins on", bart_machine$num_cores, "cores and", bart_machine$num_trees, "trees\n"))
+		cat(paste("built in", round(ttb, 2), "mins on", bart_machine$num_cores, "cores,", bart_machine$num_trees, "trees,", bart_machine$num_burn_in, "burn in and", bart_machine$num_iterations_after_burn_in, "posterior samples\n"))
 	} else {
-		cat(paste("built in", round(ttb, 1), "secs on", bart_machine$num_cores, "cores and", bart_machine$num_trees, "trees\n"))
+		cat(paste("built in", round(ttb, 1), "secs on", bart_machine$num_cores, "cores,", bart_machine$num_trees, "trees,", bart_machine$num_burn_in, "burn in and", bart_machine$num_iterations_after_burn_in, "posterior samples\n"))
 	}
 	if (bart_machine$run_in_sample){
 		cat("\nin-sample statistics:\n")

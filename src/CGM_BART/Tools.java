@@ -5,6 +5,9 @@ import gnu.trove.list.array.TIntArrayList;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
+
+import OpenSourceExtensions.UnorderedPair;
 
 public class Tools {
 	
@@ -63,7 +66,7 @@ public class Tools {
 			all_ints[i] = all[i] ? 1 : 0;
 		}
 		return StringJoin(all_ints, ", ");
-	}	
+	}
 	public static String StringJoin(int[] all){
 		return StringJoin(all, ", ");
 	}
@@ -176,6 +179,13 @@ public class Tools {
 			sum[i] = arr1[i] + arr2[i];
 		}
 		return sum;
+	}
+
+	public static void print_unordered_pair_set(HashSet<UnorderedPair<Integer>> pairs) {
+		for (UnorderedPair<Integer> pair : pairs){
+			System.out.print("<" + pair.getFirst() + ", " + pair.getSecond() + ">, ");
+		}
+		System.out.print("\n");
 	}
 
 }

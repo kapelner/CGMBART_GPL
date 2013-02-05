@@ -31,7 +31,7 @@ public abstract class CGMBART_03_debug extends CGMBART_02_hyperparams implements
 	}		
 
 	protected void DebugSample(int gibbs_sample_num, TreeArrayIllustration tree_array_illustration) {
-		if (TREE_ILLUST && gibbs_sample_num > 3900 && gibbs_sample_num < 4000 && num_trees == 1){ //
+		if (TREE_ILLUST){ //
 			tree_array_illustration.CreateIllustrationAndSaveImage();
 		}
 	}

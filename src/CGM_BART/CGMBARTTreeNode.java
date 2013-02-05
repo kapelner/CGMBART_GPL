@@ -32,8 +32,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 
-import TroveExtension.TDoubleHashSetAndArray;
+import OpenSourceExtensions.TDoubleHashSetAndArray;
+import OpenSourceExtensions.UnorderedPair;
+
 
 
 /**
@@ -594,6 +597,35 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 			yhats[indicies[i]] = y_pred;
 		}
 		printNodeDebugInfo("updateYHatsWithPrediction");
+	}
+
+	public void findInteractions(HashSet<UnorderedPair<Integer>> set_of_interaction_pairs) {		
+		if (this.isLeaf){
+			return;
+		}
+//		System.out.println("findInteractions " + this.stringLocation(true) + " L:" + this.left.splitAttributeM + " R:" + this.right.splitAttributeM);
+		//add all pairs for which this split at this node interacts
+		findSplitAttributesUsedUnderneath(this.splitAttributeM, set_of_interaction_pairs);
+		//recurse further
+		this.left.findInteractions(set_of_interaction_pairs);
+		this.right.findInteractions(set_of_interaction_pairs);
+		
+	}
+
+	private void findSplitAttributesUsedUnderneath(int interacted_attribute, HashSet<UnorderedPair<Integer>> set_of_interaction_pairs) {
+		if (this.isLeaf){
+			return;
+		}
+		//add new pair
+		if (!this.left.isLeaf){
+			set_of_interaction_pairs.add(new UnorderedPair<Integer>(interacted_attribute, this.left.splitAttributeM));
+		}
+		if (!this.right.isLeaf){
+			set_of_interaction_pairs.add(new UnorderedPair<Integer>(interacted_attribute, this.right.splitAttributeM));
+		}
+		//now recurse
+		this.left.findSplitAttributesUsedUnderneath(interacted_attribute, set_of_interaction_pairs);
+		this.right.findSplitAttributesUsedUnderneath(interacted_attribute, set_of_interaction_pairs);
 	}
 
 }
