@@ -296,3 +296,80 @@ plot_y_vs_yhat_with_predictions = function(bart_machine, extra_text = NULL, data
 		dev.off()
 	}		
 }
+
+
+plot_all_mu_values_for_tree = function(bart_machine, extra_text = NULL, data_title = "data_model", save_plot = FALSE, tree_num){
+	if (bart_machine$bart_destroyed){
+		stop("This BART machine has been destroyed. Please recreate.")
+	}		
+	num_burn_in = bart_machine$num_burn_in
+	num_gibbs = bart_machine$num_gibbs	
+	
+	get_mu_values_for_all_trees(bart_machine)
+	
+	all_mu_vals_for_tree = all_mu_vals_for_all_trees[, , tree_num]
+	
+	if (save_plot){
+		save_plot_function(bart_machine, paste("plot_mu_vals_t_", tree_num, sep = ""), data_title)
+	}	
+	else {
+		dev.new()
+	}
+	plot(1 : num_gibbs, 
+			NULL,  # + 1 for the prior
+			type = "n", 
+			main = paste("Mu Values for all leaves in tree ", tree_num, ifelse(is.null(extra_text), "", paste("\n", extra_text)), sep = ""), 
+			ylim = c(min(all_mu_vals_for_tree, na.rm = TRUE), max(all_mu_vals_for_tree, na.rm = TRUE)),
+			xlab = "Gibbs sample # (gray line indicates burn in)", 
+			ylab = "value")
+	for (b in 1 : maximum_nodes_over_all_trees(bart_machine)){
+		points(1 : num_gibbs, all_mu_vals_for_tree[b, ], col = COLORS[b], pch = ".", type = "l", cex = 2)
+	}
+	abline(v = num_burn_in, col = "gray")
+	
+	if (save_plot){
+		dev.off()
+	}
+}
+
+hist_all_mu_values_for_tree = function(bart_machine, extra_text = NULL, data_title = "data_model", save_plot = FALSE, tree_num){
+	if (bart_machine$bart_destroyed){
+		stop("This BART machine has been destroyed. Please recreate.")
+	}		
+	num_burn_in = bart_machine$num_burn_in
+	num_gibbs = bart_machine$num_gibbs	
+	
+	get_mu_values_for_all_trees(bart_machine)
+	
+	all_mu_vals_for_tree_after_burn_in = all_mu_vals_for_all_trees[, num_burn_in : num_gibbs, tree_num]
+	
+	if (save_plot){
+		save_plot_function(bart_machine, paste("hist_mu_vals_t_", tree_num, sep = ""), data_title)
+	}	
+	else {
+		dev.new()
+	}
+	
+	all_mu_vals_for_tree_vec_after_burn_in = as.vector(all_mu_vals_for_tree_after_burn_in)
+	min_mu = min(all_mu_vals_for_tree_vec_after_burn_in, na.rm = TRUE)
+	max_mu = max(all_mu_vals_for_tree_vec_after_burn_in, na.rm = TRUE)
+	
+	hist(all_mu_vals_for_tree_vec_after_burn_in, 
+			col = "white",
+			border = NA, 
+			br = seq(from = min_mu - 0.01, to = max_mu + 0.01, by = (max_mu - min_mu + 0.01) / 5000),
+			xlab = "Leaf value",
+			main = paste("Hist of all mu values for all leaves in tree ", tree_num, " after burn-in", ifelse(is.null(extra_text), "", paste("\n", extra_text)), sep = ""))
+	for (b in 1 : maximum_nodes_over_all_trees(bart_machine)){
+		hist(all_mu_vals_for_tree_after_burn_in[b, ], 
+				col = COLORS[b], 
+				border = NA, 
+				br = seq(from = min_mu - 0.01, to = max_mu + 0.01, by = (max_mu - min_mu + 0.01) / 2000), 
+				add = TRUE)
+	}
+	abline(v = num_burn_in, col = "gray")
+	
+	if (save_plot){
+		dev.off()
+	}
+}

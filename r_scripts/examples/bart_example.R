@@ -25,8 +25,9 @@ Xtest = X[(nrow(X) / 2 + 1) : nrow(X), ]
 #bart_machines = list()
 #for (i in 1 : 5000){
 graphics.off()
+windows()
 	bart_machine = build_bart_machine(Xtrain, 
-		num_trees = 200,
+		num_trees = 2,
 		num_burn_in = 250, 
 		num_iterations_after_burn_in = 1000,
 		num_cores = 4)
@@ -34,7 +35,7 @@ graphics.off()
 	cat(paste("built bart machine #", i, "\n"))
 #}
 summary(bart_machine)
-interaction_investigator(bart_machine)
+interaction_investigator(bart_machine, num_replicates_for_avg = 30)
 investigate_var_importance(bart_machine)
 
 plot_y_vs_yhat(bart_machine)

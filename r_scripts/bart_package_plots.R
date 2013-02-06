@@ -145,82 +145,6 @@ plot_y_vs_yhat = function(bart_machine, ppis = FALSE, ppi_conf = 0.95, num_cores
 }
 
 
-plot_all_mu_values_for_tree = function(bart_machine, extra_text = NULL, data_title = "data_model", save_plot = FALSE, tree_num){
-	if (bart_machine$bart_destroyed){
-		stop("This BART machine has been destroyed. Please recreate.")
-	}		
-	num_burn_in = bart_machine$num_burn_in
-	num_gibbs = bart_machine$num_gibbs	
-	
-	get_mu_values_for_all_trees(bart_machine)
-	
-	all_mu_vals_for_tree = all_mu_vals_for_all_trees[, , tree_num]
-	
-	if (save_plot){
-		save_plot_function(bart_machine, paste("plot_mu_vals_t_", tree_num, sep = ""), data_title)
-	}	
-	else {
-		dev.new()
-	}
-	plot(1 : num_gibbs, 
-			NULL,  # + 1 for the prior
-			type = "n", 
-			main = paste("Mu Values for all leaves in tree ", tree_num, ifelse(is.null(extra_text), "", paste("\n", extra_text)), sep = ""), 
-			ylim = c(min(all_mu_vals_for_tree, na.rm = TRUE), max(all_mu_vals_for_tree, na.rm = TRUE)),
-			xlab = "Gibbs sample # (gray line indicates burn in)", 
-			ylab = "value")
-	for (b in 1 : maximum_nodes_over_all_trees(bart_machine)){
-		points(1 : num_gibbs, all_mu_vals_for_tree[b, ], col = COLORS[b], pch = ".", type = "l", cex = 2)
-	}
-	abline(v = num_burn_in, col = "gray")
-	
-	if (save_plot){
-		dev.off()
-	}
-}
-
-hist_all_mu_values_for_tree = function(bart_machine, extra_text = NULL, data_title = "data_model", save_plot = FALSE, tree_num){
-	if (bart_machine$bart_destroyed){
-		stop("This BART machine has been destroyed. Please recreate.")
-	}		
-	num_burn_in = bart_machine$num_burn_in
-	num_gibbs = bart_machine$num_gibbs	
-	
-	get_mu_values_for_all_trees(bart_machine)
-	
-	all_mu_vals_for_tree_after_burn_in = all_mu_vals_for_all_trees[, num_burn_in : num_gibbs, tree_num]
-	
-	if (save_plot){
-		save_plot_function(bart_machine, paste("hist_mu_vals_t_", tree_num, sep = ""), data_title)
-	}	
-	else {
-		dev.new()
-	}
-	
-	all_mu_vals_for_tree_vec_after_burn_in = as.vector(all_mu_vals_for_tree_after_burn_in)
-	min_mu = min(all_mu_vals_for_tree_vec_after_burn_in, na.rm = TRUE)
-	max_mu = max(all_mu_vals_for_tree_vec_after_burn_in, na.rm = TRUE)
-	
-	hist(all_mu_vals_for_tree_vec_after_burn_in, 
-			col = "white",
-			border = NA, 
-			br = seq(from = min_mu - 0.01, to = max_mu + 0.01, by = (max_mu - min_mu + 0.01) / 5000),
-			xlab = "Leaf value",
-			main = paste("Hist of all mu values for all leaves in tree ", tree_num, " after burn-in", ifelse(is.null(extra_text), "", paste("\n", extra_text)), sep = ""))
-	for (b in 1 : maximum_nodes_over_all_trees(bart_machine)){
-		hist(all_mu_vals_for_tree_after_burn_in[b, ], 
-				col = COLORS[b], 
-				border = NA, 
-				br = seq(from = min_mu - 0.01, to = max_mu + 0.01, by = (max_mu - min_mu + 0.01) / 2000), 
-				add = TRUE)
-	}
-	abline(v = num_burn_in, col = "gray")
-	
-	if (save_plot){
-		dev.off()
-	}
-}
-
 
 hist_sigsqs = function(bart_machine, extra_text = NULL, data_title = "data_model", save_plot = FALSE){
 	if (bart_machine$bart_destroyed){
@@ -354,27 +278,16 @@ plot_sigsqs_convergence_diagnostics = function(bart_machine){
 	abline(v = num_burn_in, col = "gray")
 }
 
-investigate_var_importance = function(bart_machine, plot = TRUE, use_bottleneck = TRUE, num_replicates_for_avg = 5, num_trees_bottleneck = 20, num_cores = 1){
+investigate_var_importance = function(bart_machine, plot = TRUE, num_replicates_for_avg = 5, num_trees_bottleneck = 20, num_var_plot = Inf, num_cores = 1){
 	if (bart_machine$bart_destroyed){
 		stop("This BART machine has been destroyed. Please recreate.")
 	}	
-	
-	avg_var_props = get_averaged_true_var_props(bart_machine, use_bottleneck, num_replicates_for_avg, num_trees_bottleneck, num_cores)
-	
-	if (plot){
-		barplot(avg_var_props, names = names(avg_var_props), las = 2, main = paste("Important Variables"), xlab = "Variable", ylab = "Inclusion Proportion")	
-	}
-	
-	avg_var_props
-}
 
-get_averaged_true_var_props = function(bart_machine, use_bottleneck, num_replicates_for_avg, num_trees_bottleneck, num_cores){
-	if (!use_bottleneck){
-		get_var_props_over_chain(bart_machine)
-	}
-	else {
-		var_props = rep(0, bart_machine$p)
-		for (i in 1 : num_replicates_for_avg){
+	var_props = array(0, c(num_replicates_for_avg, bart_machine$p))
+	for (i in 1 : num_replicates_for_avg){
+		if (i == 1 & num_trees_bottleneck == bart_machine$num_trees){
+			var_props[i, ] = get_var_props_over_chain(bart_machine, num_cores)
+		} else {
 			bart_machine_dup = build_bart_machine(bart_machine$training_data, 
 				num_trees = num_trees_bottleneck, 
 				num_burn_in = bart_machine$num_burn_in, 
@@ -382,16 +295,43 @@ get_averaged_true_var_props = function(bart_machine, use_bottleneck, num_replica
 				cov_prior_vec = bart_machine$cov_prior_vec,
 				num_cores = num_cores,
 				run_in_sample = FALSE,
-				verbose = FALSE)
-		
-			var_props = var_props + get_var_props_over_chain(bart_machine_dup, num_cores)
-			destroy_bart_machine(bart_machine_dup)
-			cat(".")
+				verbose = FALSE)			
+			var_props[i, ] = get_var_props_over_chain(bart_machine_dup, num_cores)
+			destroy_bart_machine(bart_machine_dup)						
 		}
-		cat("\n")
-		#average over many runs
-		var_props / num_replicates_for_avg		
+		cat(".")
 	}
+	cat("\n")
+	
+	avg_var_props = colMeans(var_props)
+	names(avg_var_props) = bart_machine$training_data_features
+	sd_var_props = apply(var_props, 2, sd)
+	names(sd_var_props) = bart_machine$training_data_features
+	
+	if (num_var_plot == Inf){
+		num_var_plot = bart_machine$p
+	}
+	
+	avg_var_props_sorted_indices = sort(avg_var_props, decreasing = TRUE, index.return = TRUE)$ix
+	avg_var_props = avg_var_props[avg_var_props_sorted_indices][1 : num_var_plot]
+	sd_var_props = sd_var_props[avg_var_props_sorted_indices][1 : num_var_plot]		
+	
+	if (plot){
+		par(mar = c(5, 6, 3, 0))
+		bars = barplot(avg_var_props, 
+				names.arg = names(avg_var_props), 
+				las = 2, 
+				ylab = "Inclusion Proportion", 
+				col = "gray",#rgb(0.39, 0.39, 0.59),
+				ylim = c(0, max(avg_var_props + 1.96 * sd_var_props / sqrt(num_replicates_for_avg))),
+				main = paste("Important Variables Averaged over", num_replicates_for_avg, "Replicates"))
+		conf_upper = avg_var_props + 1.96 * sd_var_props / sqrt(num_replicates_for_avg)
+		conf_lower = avg_var_props - 1.96 * sd_var_props / sqrt(num_replicates_for_avg)
+		segments(bars, avg_var_props, bars, conf_upper, col = rgb(0.59, 0.39, 0.39), lwd = 3) # Draw error bars
+		segments(bars, avg_var_props, bars, conf_lower, col = rgb(0.59, 0.39, 0.39), lwd = 3)		
+	}
+	
+	list(avg_var_props = avg_var_props, sd_var_props = sd_var_props)
 }
 
 plot_convergence_diagnostics = function(bart_machine){
@@ -403,30 +343,79 @@ plot_convergence_diagnostics = function(bart_machine){
 	par(mfrow = c(1, 1))
 }
 
-interaction_investigator = function(bart_machine, num_cores = 1, plot = TRUE, num_replicates_for_avg = 10){
-	interaction_counts = sapply(.jcall(bart_machine$java_bart_machine, "[[I", "getInteractionCounts", as.integer(num_cores)), .jevalArray)
-	rownames(interaction_counts) = bart_machine$training_data_features
-	colnames(interaction_counts) = bart_machine$training_data_features
-	interaction_counts_avg_per_tree = interaction_counts / (bart_machine$num_trees * bart_machine$num_gibbs)
-	rownames(interaction_counts_avg_per_tree) = bart_machine$training_data_features
-	colnames(interaction_counts_avg_per_tree) = bart_machine$training_data_features	
+shapiro_wilk_p_val = function(vec){
+	tryCatch(shapiro.test(vec)$p.value, error = function(e){})
+}
+
+interaction_investigator = function(bart_machine, num_cores = 1, plot = TRUE, num_replicates_for_avg = 10, num_var_plot = Inf){
+	
+	interaction_counts = array(NA, c(bart_machine$p, bart_machine$p, num_replicates_for_avg))
+	interaction_counts[, , 1] = sapply(.jcall(bart_machine$java_bart_machine, "[[I", "getInteractionCounts", as.integer(num_cores)), .jevalArray)
+	cat(".")
+#	dimnames(interaction_counts)[[1]] = bart_machine$training_data_features
+#	dimnames(interaction_counts)[[2]] = bart_machine$training_data_features
+#	dimnames(interaction_counts)[[3]] = paste("rep", seq(from = 1, to = num_replicates_for_avg))
+#	interaction_counts_avg_per_tree = interaction_counts / (bart_machine$num_trees * bart_machine$num_gibbs)
+#	rownames(interaction_counts_avg_per_tree) = bart_machine$training_data_features
+#	colnames(interaction_counts_avg_per_tree) = bart_machine$training_data_features	
+	
+	for (r in 2 : num_replicates_for_avg){
+		bart_machine_dup = bart_machine_duplicate(bart_machine, run_in_sample = FALSE)
+		interaction_counts[, , r] = sapply(.jcall(bart_machine_dup$java_bart_machine, "[[I", "getInteractionCounts", as.integer(num_cores)), .jevalArray)
+		destroy_bart_machine(bart_machine_dup)
+		cat(".")
+	}
+	cat("\n")
+	
+	interaction_counts_avg = apply(interaction_counts, 1 : 2, mean)
+	rownames(interaction_counts_avg) = bart_machine$training_data_features
+	colnames(interaction_counts_avg) = bart_machine$training_data_features	
+	interaction_counts_sd = apply(interaction_counts, 1 : 2, sd)
+	interaction_counts_s_w_test = apply(interaction_counts, 1 : 2, shapiro_wilk_p_val)
 	
 	#now vectorize the interaction counts
-	counts = array(NA, bart_machine$p * (bart_machine$p - 1) / 2)
+	avg_counts = array(NA, bart_machine$p * (bart_machine$p - 1) / 2)
+	sd_counts = array(NA, bart_machine$p * (bart_machine$p - 1) / 2)
 	iter = 1
 	for (i in 1 : bart_machine$p){
 		for (j in 1 : bart_machine$p){
 			if (j <= i){
-				counts[iter] = interaction_counts[i, j]
-				names(counts)[iter] = paste(rownames(interaction_counts)[i], "x", rownames(interaction_counts)[j])
+				avg_counts[iter] = interaction_counts_avg[i, j]
+				sd_counts[iter] = interaction_counts_sd[i, j]
+				names(avg_counts)[iter] = paste(rownames(interaction_counts_avg)[i], "x", rownames(interaction_counts_avg)[j])
 				iter = iter + 1
 			}
 		}
 	}
-	counts = sort(counts, decreasing = TRUE)
+	if (num_var_plot == Inf){
+		num_var_plot = bart_machine$p * (bart_machine$p - 1) / 2
+	}
 	
-	par(mar = c(10, 6, 3, 0))
-	barplot(counts, names.arg = names(counts), las = 2, ylab = "Relative Importance", main = "Interactions in BART Model")
+	avg_counts_sorted_indices = sort(avg_counts, decreasing = TRUE, index.return = TRUE)$ix
+	avg_counts = avg_counts[avg_counts_sorted_indices][1 : num_var_plot]
+	sd_counts = sd_counts[avg_counts_sorted_indices][1 : num_var_plot]
 	
-	list(interaction_counts = interaction_counts, interaction_counts_avg_per_tree = interaction_counts_avg_per_tree)
+
+	
+	if (plot){
+		#now create the bar plot
+		par(mar = c(10, 6, 3, 0))
+		bars = barplot(avg_counts, 
+			names.arg = names(avg_counts), 
+			las = 2, 
+			ylab = "Relative Importance", 
+			col = "gray",#rgb(0.39, 0.39, 0.59),
+			ylim = c(0, max(avg_counts + 1.96 * sd_counts / sqrt(num_replicates_for_avg))),
+			main = paste("Interactions in BART Model Averaged over", num_replicates_for_avg, "Replicates"))
+		conf_upper = avg_counts + 1.96 * sd_counts / sqrt(num_replicates_for_avg)
+		conf_lower = avg_counts - 1.96 * sd_counts / sqrt(num_replicates_for_avg)
+		segments(bars, avg_counts, bars, conf_upper, col = rgb(0.59, 0.39, 0.39), lwd = 3) # Draw error bars
+		segments(bars, avg_counts, bars, conf_lower, col = rgb(0.59, 0.39, 0.39), lwd = 3)		
+	}
+	
+	list(
+		interaction_counts_avg = interaction_counts_avg, 
+		interaction_counts_sd = interaction_counts_sd, 
+		interaction_counts_s_w_test = interaction_counts_s_w_test
+	)
 }

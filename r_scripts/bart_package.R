@@ -5,6 +5,7 @@ tryCatch(library(rpart), error = function(e){install.packages("rpart")}, finally
 tryCatch(library(xtable), error = function(e){install.packages("xtable")}, finally = library(xtable))
 tryCatch(library(rJava), error = function(e){install.packages("rJava")}, finally = library(rJava))
 tryCatch(library(BayesTree), error = function(e){install.packages("BayesTree")}, finally = library(BayesTree))
+
 #
 #if (.Platform$OS.type == "windows"){
 #	tryCatch(library(rJava), error = function(e){install.packages("rJava")}, finally = library(rJava))
@@ -32,8 +33,7 @@ build_bart_machine = function(training_data,
 		num_burn_in = 2000, 
 		num_iterations_after_burn_in = 2000, 
 		alpha = DEFAULT_ALPHA,
-		beta = DEFAULT_BETA, 
-		regression_type = "r", #r, c, o, n (regression, classification, ordinal, count)
+		beta = DEFAULT_BETA,
 		debug_log = FALSE,
 		fix_seed = FALSE,
 		run_in_sample = TRUE,
@@ -144,10 +144,12 @@ build_bart_machine = function(training_data,
 		num_gibbs = num_gibbs,
 		alpha = alpha,
 		beta = beta,
+		s_sq_y = s_sq_y,
 		run_in_sample = run_in_sample,
 		cov_prior_vec = cov_prior_vec,
 		sig_sq_est = sig_sq_est,
 		time_to_build = Sys.time() - t0,
+		verbose = verbose,
 		bart_destroyed = FALSE
 	)
 	
@@ -177,6 +179,22 @@ build_bart_machine = function(training_data,
 	#use R's S3 object orientation
 	class(bart_machine) = "bart_machine"
 	bart_machine
+}
+
+bart_machine_duplicate = function(bart_machine, ...){
+	build_bart_machine(bart_machine$training_data,
+		num_trees = bart_machine$num_trees,
+		num_burn_in = bart_machine$num_burn_in, 
+		num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in, 
+		alpha = bart_machine$alpha,
+		beta = bart_machine$beta,
+		debug_log = FALSE,
+		s_sq_y = bart_machine$s_sq_y,
+		num_cores = bart_machine$num_cores,
+		cov_prior_vec = bart_machine$cov_prior_vec,
+		print_tree_illustrations = FALSE,
+		verbose = FALSE, 
+		...)
 }
 
 destroy_bart_machine = function(bart_machine){
