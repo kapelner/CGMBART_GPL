@@ -13,7 +13,7 @@ source("r_scripts/bart_package_plots.R")
 library(MASS)
 data(Boston)
 X = Boston
-X$medv = log(X$medv)
+#X$medv = log(X$medv)
 #X$chas = as.character(X$chas)
 colnames(X)[ncol(X)] = "y"
 
@@ -69,10 +69,7 @@ summary(lm(rmses ~ k))
 #get PPIs for test data
 ppi_obj = calc_ppis_from_prediction(bart_machine, Xtest)
 
-library(randomForest)
-rf = randomForest(x = Xtrain[,1:13], y =Xtrain[,14])
-preds = predict(rf,newdata = Xtest[,1:13])
-sqrt(sum((preds-Xtest[,14])^2)/length(preds))
+
 
 #now test the variable importance
 #generate the Friedman data
@@ -108,3 +105,35 @@ for (var in 1 : 10){
 	print(var)
 	print(varsign$p_value)
 }
+
+
+
+
+#X = read.csv("datasets/r_boston.csv")
+Xtrain = X[1 : (nrow(X) / 2), ]
+Xtest = X[(nrow(X) / 2 + 1) : nrow(X), ]
+bart_machine = build_bart_machine(Xtrain, 
+		num_trees = 200,
+		num_burn_in = 2000, 
+		num_iterations_after_burn_in = 2000,
+		num_cores = 1,
+		s_sq_y = "mse",
+		debug_log = TRUE)
+summary(bart_machine)
+plot_y_vs_yhat(bart_machine)
+
+pred_obj = bart_predict_for_test_data(bart_machine_cv, Xtest)
+pred_obj$rmse
+
+library(BayesTree)
+rob = bart(x.train = Xtrain[,1:13],y.train=Xtrain$y,x.test=Xtest[,1:13],ndpost=2000,nskip=2000,sigdf = 10, sigquant = 0.75, k =3)
+sqrt(sum((rob$yhat.test.mean - Xtest$y)^2) / length(Xtest$y))
+
+library(randomForest)
+rf = randomForest(x = Xtrain[, 1 : 13], y = Xtrain$y)
+preds = predict(rf,newdata = Xtest[, 1 : 13])
+sqrt(sum((preds - Xtest$y)^2) / length(preds))
+
+k_fold_cv
+
+

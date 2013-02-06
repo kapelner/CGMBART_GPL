@@ -139,7 +139,13 @@ plot_y_vs_yhat = function(bart_machine, ppis = FALSE, ppi_conf = 0.95, num_cores
 			points(y[i], y_hat[i], col = ifelse(y_in_ppi[i], "darkgreen", "red"), cex = 0.6, pch = 16)	
 		}		
 	} else {
-		plot(y, y_hat, main = "Fitted vs. Actual Values", xlab = "Actual Values", ylab = "Fitted Values", col = "blue")
+		plot(y, y_hat, 
+			main = "Fitted vs. Actual Values", 
+			xlab = "Actual Values", 
+			ylab = "Fitted Values", 
+			col = "blue", 
+			xlim = c(min(min(y), min(y_hat)), max(max(y), max(y_hat))),
+			ylim = c(min(min(y), min(y_hat)), max(max(y), max(y_hat))),)
 	}
 	abline(a = 0, b = 1, lty = 2)	
 }
@@ -347,17 +353,11 @@ shapiro_wilk_p_val = function(vec){
 	tryCatch(shapiro.test(vec)$p.value, error = function(e){})
 }
 
-interaction_investigator = function(bart_machine, num_cores = 1, plot = TRUE, num_replicates_for_avg = 10, num_var_plot = Inf){
+interaction_investigator = function(bart_machine, num_cores = 1, plot = TRUE, num_replicates_for_avg = 5, num_var_plot = Inf){
 	
 	interaction_counts = array(NA, c(bart_machine$p, bart_machine$p, num_replicates_for_avg))
 	interaction_counts[, , 1] = sapply(.jcall(bart_machine$java_bart_machine, "[[I", "getInteractionCounts", as.integer(num_cores)), .jevalArray)
 	cat(".")
-#	dimnames(interaction_counts)[[1]] = bart_machine$training_data_features
-#	dimnames(interaction_counts)[[2]] = bart_machine$training_data_features
-#	dimnames(interaction_counts)[[3]] = paste("rep", seq(from = 1, to = num_replicates_for_avg))
-#	interaction_counts_avg_per_tree = interaction_counts / (bart_machine$num_trees * bart_machine$num_gibbs)
-#	rownames(interaction_counts_avg_per_tree) = bart_machine$training_data_features
-#	colnames(interaction_counts_avg_per_tree) = bart_machine$training_data_features	
 	
 	for (r in 2 : num_replicates_for_avg){
 		bart_machine_dup = bart_machine_duplicate(bart_machine, run_in_sample = FALSE)
@@ -388,14 +388,12 @@ interaction_investigator = function(bart_machine, num_cores = 1, plot = TRUE, nu
 		}
 	}
 	if (num_var_plot == Inf){
-		num_var_plot = bart_machine$p * (bart_machine$p - 1) / 2
+		num_var_plot = bart_machine$p * (bart_machine$p + 1) / 2
 	}
 	
 	avg_counts_sorted_indices = sort(avg_counts, decreasing = TRUE, index.return = TRUE)$ix
 	avg_counts = avg_counts[avg_counts_sorted_indices][1 : num_var_plot]
 	sd_counts = sd_counts[avg_counts_sorted_indices][1 : num_var_plot]
-	
-
 	
 	if (plot){
 		#now create the bar plot

@@ -22,6 +22,9 @@ PLOTS_DIR = "output_plots"
 JAR_DEPENDENCIES = c("bart_java.jar", "commons-math-2.1.jar", "jai_codec.jar", "jai_core.jar", "trove-3.0.3.jar")
 DEFAULT_ALPHA = 0.95
 DEFAULT_BETA = 2
+DEFAULT_K = 2
+DEFAULT_Q = 0.9
+DEFAULT_NU = 3.0
 COLORS = array(NA, 500)
 for (i in 1 : 500){
 	COLORS[i] = rgb(runif(1, 0, 0.7), runif(1, 0, 0.7), runif(1, 0, 0.7))
@@ -30,14 +33,17 @@ for (i in 1 : 500){
 
 build_bart_machine = function(training_data, 
 		num_trees = 200, 
-		num_burn_in = 2000, 
-		num_iterations_after_burn_in = 2000, 
+		num_burn_in = 250, 
+		num_iterations_after_burn_in = 1000, 
 		alpha = DEFAULT_ALPHA,
 		beta = DEFAULT_BETA,
+		k = DEFAULT_K,
+		q = DEFAULT_Q,
+		nu = DEFAULT_NU,
 		debug_log = FALSE,
 		fix_seed = FALSE,
 		run_in_sample = TRUE,
-		s_sq_y = "mse", #"mse" or "var"
+		s_sq_y = "mse", # "mse" or "var"
 		unique_name = "unnamed",
 		print_tree_illustrations = FALSE,
 		num_cores = 1,
@@ -84,13 +90,14 @@ build_bart_machine = function(training_data,
 		cat("warning: cannot use MSE of linear model for s_sq_y if p > n\n")
 		s_sq_y = "var"
 	}
+	y_trans = (training_data$y - min(training_data$y)) / (max(training_data$y) - min(training_data$y)) - 0.5
 	if (s_sq_y == "mse"){
-		mod = lm(y ~ ., as.data.frame(model_matrix_training_data))
+		mod = lm(y_trans ~ ., as.data.frame(model_matrix_training_data)[1 : (ncol(model_matrix_training_data) - 1)])
 		mse = var(mod$residuals)
 		sig_sq_est = as.numeric(mse)
 		.jcall(java_bart_machine, "V", "setSampleVarY", sig_sq_est)
 	} else if (s_sq_y == "var"){
-		sig_sq_est = as.numeric(var(model_matrix_training_data$y))
+		sig_sq_est = as.numeric(var(y_trans))
 		.jcall(java_bart_machine, "V", "setSampleVarY", sig_sq_est)
 	} else {
 		stop("s_sq_y must be \"rmse\" or \"sd\"", call. = FALSE)
@@ -104,7 +111,9 @@ build_bart_machine = function(training_data,
 	.jcall(java_bart_machine, "V", "setNumGibbsTotalIterations", as.integer(num_gibbs))
 	.jcall(java_bart_machine, "V", "setAlpha", alpha)
 	.jcall(java_bart_machine, "V", "setBeta", beta)
-
+	.jcall(java_bart_machine, "V", "setK", k)
+	.jcall(java_bart_machine, "V", "setQ", q)
+	.jcall(java_bart_machine, "V", "setNU", nu)
 	
 	
 	if (length(cov_prior_vec) != 0){
@@ -144,6 +153,9 @@ build_bart_machine = function(training_data,
 		num_gibbs = num_gibbs,
 		alpha = alpha,
 		beta = beta,
+		k = k,
+		q = q,
+		nu = nu,
 		s_sq_y = s_sq_y,
 		run_in_sample = run_in_sample,
 		cov_prior_vec = cov_prior_vec,

@@ -16,7 +16,7 @@ import OpenSourceExtensions.UnorderedPair;
 public class CGMBARTRegressionMultThread extends Classifier implements Serializable {
 	private static final long serialVersionUID = -4537075714317768756L;
 	
-	private static final int DEFAULT_NUM_CORES = 3;//Runtime.getRuntime().availableProcessors() - 1;
+	private static final int DEFAULT_NUM_CORES = 1;//Runtime.getRuntime().availableProcessors() - 1;
 	
 	private int num_cores;
 	private int num_trees;
@@ -25,7 +25,7 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 	protected CGMBARTTreeNode[][] gibbs_samples_of_cgm_trees_after_burn_in;
 	protected double[] gibbs_samples_of_sigsq_after_burn_in;
 	
-	private double sample_var_y;
+	private Double sample_var_y;
 	private int num_gibbs_burn_in;
 	private int num_gibbs_total_iterations;
 	private int total_iterations_multithreaded;
@@ -78,13 +78,6 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 		BuildOnAllThreads();
 		//once it's done, now put together the chains
 		ConstructBurnedChainForTreesAndOtherInformation();	
-		
-		int[][] ics = getInteractionCounts(num_cores);
-		System.out.println("interaction counts");
-		for (int j1 = 0; j1 < p; j1++){
-			System.out.println(Tools.StringJoin(ics[j1], "\t"));
-		}
-		
 	}	
 	
 	protected void ConstructBurnedChainForTreesAndOtherInformation() {
@@ -163,6 +156,18 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 	public void setBeta(double beta){
 //		System.out.print("setBeta()");
 		CGMBART_01_base.BETA = beta;
+	}	
+	
+	public static void setK(double hyper_k) {
+		CGMBART_02_hyperparams.hyper_k = hyper_k;
+	}
+
+	public static void setQ(double hyper_q) {
+		CGMBART_02_hyperparams.hyper_q = hyper_q;
+	}
+
+	public static void setNU(double hyper_nu) {
+		CGMBART_02_hyperparams.hyper_nu = hyper_nu;
 	}	
 	
 	public void setNumCores(int num_cores){
@@ -447,4 +452,9 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 		return interaction_count_matrix;
 	}
 
+//	int[][] ics = getInteractionCounts(num_cores);
+//	System.out.println("interaction counts");
+//	for (int j1 = 0; j1 < p; j1++){
+//		System.out.println(Tools.StringJoin(ics[j1], "\t"));
+//	}
 }
