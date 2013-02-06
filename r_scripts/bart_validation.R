@@ -42,7 +42,7 @@ bart_machine_cv = function(training_data,
 	}
 	
 	#now that we've found the best settings, return that bart machine
-	bart_machine_cv = build_bart_machine(training_data, 
+	build_bart_machine(training_data, 
 		num_cores = num_cores,
 		num_burn_in = num_burn_in,
 		num_iterations_after_burn_in = num_iterations_after_burn_in,

@@ -14,7 +14,8 @@ library(MASS)
 data(Boston)
 X = Boston
 #X$medv = log(X$medv)
-#X$chas = as.character(X$chas)
+X$chas = as.character(X$chas)
+X$rad = as.factor(X$rad)
 colnames(X)[ncol(X)] = "y"
 
 #split it into test and training
@@ -27,9 +28,9 @@ Xtest = X[(nrow(X) / 2 + 1) : nrow(X), ]
 graphics.off()
 windows()
 	bart_machine = build_bart_machine(Xtrain, 
-		num_trees = 2,
-		num_burn_in = 250, 
-		num_iterations_after_burn_in = 1000,
+		num_trees = 200,
+		num_burn_in = 1000, 
+		num_iterations_after_burn_in = 500,
 		num_cores = 4)
 	
 	cat(paste("built bart machine #", i, "\n"))
@@ -112,28 +113,34 @@ for (var in 1 : 10){
 #X = read.csv("datasets/r_boston.csv")
 Xtrain = X[1 : (nrow(X) / 2), ]
 Xtest = X[(nrow(X) / 2 + 1) : nrow(X), ]
-bart_machine = build_bart_machine(Xtrain, 
+bart_machine = build_bart_machine(X, 
 		num_trees = 200,
 		num_burn_in = 2000, 
-		num_iterations_after_burn_in = 2000,
-		num_cores = 1,
-		s_sq_y = "mse",
-		debug_log = TRUE)
+		num_iterations_after_burn_in = 500,
+		num_cores = 4)
 summary(bart_machine)
 plot_y_vs_yhat(bart_machine)
 
 pred_obj = bart_predict_for_test_data(bart_machine_cv, Xtest)
 pred_obj$rmse
 
+pd_plot(bart_machine, 6)
+
 library(BayesTree)
 rob = bart(x.train = Xtrain[,1:13],y.train=Xtrain$y,x.test=Xtest[,1:13],ndpost=2000,nskip=2000,sigdf = 10, sigquant = 0.75, k =3)
 sqrt(sum((rob$yhat.test.mean - Xtest$y)^2) / length(Xtest$y))
 
 library(randomForest)
-rf = randomForest(x = Xtrain[, 1 : 13], y = Xtrain$y)
+rf = randomForest(x = Xtrain[, 1 : 13], y = Xtrain$y, importance = TRUE)
+importance(rf, type=1)
 preds = predict(rf,newdata = Xtest[, 1 : 13])
 sqrt(sum((preds - Xtest$y)^2) / length(preds))
 
-k_fold_cv
 
 
+
+source("r_scripts/create_simulated_models.R")
+
+Xy = simulate_data_from_simulation_name("bivariate_linear")
+Xy=Xy[1:500,]
+training_data = Xy

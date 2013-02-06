@@ -1,10 +1,5 @@
 #libraries and dependencies
-options(repos = "http://lib.stat.cmu.edu/R/CRAN")
-tryCatch(library(randomForest), error = function(e){install.packages("randomForest")}, finally = library(randomForest))
-tryCatch(library(rpart), error = function(e){install.packages("rpart")}, finally = library(rpart))
-tryCatch(library(xtable), error = function(e){install.packages("xtable")}, finally = library(xtable))
 tryCatch(library(rJava), error = function(e){install.packages("rJava")}, finally = library(rJava))
-tryCatch(library(BayesTree), error = function(e){install.packages("BayesTree")}, finally = library(BayesTree))
 
 #
 #if (.Platform$OS.type == "windows"){
@@ -294,7 +289,7 @@ bart_machine_predict = function(bart_machine, new_data, num_cores = 1){
 	#to get y_hat.. just take straight mean of posterior samples, alternatively, we can let java do it if we want more bells and whistles
 	y_hat = rowMeans(y_hat_posterior_samples)	
 	
-	list(y_hat = y_hat, new_data = new_data)
+	list(y_hat = y_hat, new_data = new_data, y_hat_posterior_samples = y_hat_posterior_samples)
 }
 
 predict.bart_machine = function(bart_machine, new_data, num_cores = 1){

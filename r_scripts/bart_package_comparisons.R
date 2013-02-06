@@ -1,3 +1,11 @@
+options(repos = "http://lib.stat.cmu.edu/R/CRAN")
+
+tryCatch(library(randomForest), error = function(e){install.packages("randomForest")}, finally = library(randomForest))
+tryCatch(library(rpart), error = function(e){install.packages("rpart")}, finally = library(rpart))
+tryCatch(library(xtable), error = function(e){install.packages("xtable")}, finally = library(xtable))
+tryCatch(library(BayesTree), error = function(e){install.packages("BayesTree")}, finally = library(BayesTree))
+
+
 run_other_model_and_plot_y_vs_yhat = function(y_hat, 
 		model_name, 
 		test_data, 

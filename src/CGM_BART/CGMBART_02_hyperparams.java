@@ -78,7 +78,7 @@ public abstract class CGMBART_02_hyperparams extends CGMBART_01_base implements 
 //		}
 //		System.out.println("hyper_lambda via grid: " + hyper_lambda);
 //		System.out.println("y_min = " + y_min + " y_max = " + y_max + " R_y = " + Math.sqrt(y_range_sq));
-		System.out.println("hyperparams:  k = " + hyper_k + " hyper_mu_mu = " + hyper_mu_mu + " sigsq_mu = " + hyper_sigsq_mu + " hyper_lambda = " + hyper_lambda + " hyper_nu = " + hyper_nu + " hyper_q = " + hyper_q + " s_y_trans^2 = " + sample_var_y + " R_y = " + Math.sqrt(y_range_sq) + "\n\n");
+//		System.out.println("hyperparams:  k = " + hyper_k + " hyper_mu_mu = " + hyper_mu_mu + " sigsq_mu = " + hyper_sigsq_mu + " hyper_lambda = " + hyper_lambda + " hyper_nu = " + hyper_nu + " hyper_q = " + hyper_q + " s_y_trans^2 = " + sample_var_y + " R_y = " + Math.sqrt(y_range_sq) + "\n\n");
 	}	
 	
 	public static void setK(double hyper_k) {

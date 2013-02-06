@@ -417,3 +417,53 @@ interaction_investigator = function(bart_machine, num_cores = 1, plot = TRUE, nu
 		interaction_counts_s_w_test = interaction_counts_s_w_test
 	)
 }
+
+pd_plot = function(bart_machine, j, levs = c(0.05, seq(from = 0.10, to = 0.90, by = 0.10), 0.95), num_cores = 1, lower_ci = 0.05, upper_ci = 0.95){
+	if (bart_machine$bart_destroyed){
+		stop("This BART machine has been destroyed. Please recreate.")
+	}
+	if (j < 1 || j > bart_machine$p){
+		stop(paste("You must set j to a number between 1 and p =", bart_machine$p))
+	}
+	
+	x_j = bart_machine$training_data[, j]
+	x_j_quants = quantile(x_j, levs)
+	bart_predictions_by_quantile = array(NA, c(length(levs), bart_machine$n, bart_machine$num_iterations_after_burn_in))
+	
+	for (q in 1 : length(levs)){
+		x_j_quant = x_j_quants[q]
+		
+		#now create test data matrix
+		test_data = bart_machine$training_data
+		test_data[, j] = rep(x_j_quant, bart_machine$n)
+		
+		bart_predictions_by_quantile[q, , ] = bart_machine_predict(bart_machine, test_data, num_cores)$y_hat_posterior_samples
+		cat(".")
+	}
+	cat("\n")
+	
+	bart_avg_predictions_by_quantile_by_gibbs = array(NA, c(length(levs), bart_machine$num_iterations_after_burn_in))
+	for (q in 1 : length(levs)){
+		for (g in 1 : bart_machine$num_iterations_after_burn_in){
+			bart_avg_predictions_by_quantile_by_gibbs[q, g] = mean(bart_predictions_by_quantile[q, , g])
+		}
+		
+	}
+	
+	bart_avg_predictions_by_quantile = apply(bart_avg_predictions_by_quantile_by_gibbs, 1, mean)
+	bart_avg_predictions_lower = apply(bart_avg_predictions_by_quantile_by_gibbs, 1, quantile, probs = lower_ci)
+	bart_avg_predictions_upper = apply(bart_avg_predictions_by_quantile_by_gibbs, 1, quantile, probs = upper_ci)
+	
+	plot(x_j_quants, bart_avg_predictions_by_quantile, 
+			type = "o", 
+			main = "Partial Dependence Plot",
+			ylim = c(min(bart_avg_predictions_lower, bart_avg_predictions_upper), max(bart_avg_predictions_lower, bart_avg_predictions_upper)),
+			ylab = "Partial Effect",
+			xlab = paste("Quantiles for Variable", bart_machine$training_data_features[j]))
+	lines(x_j_quants, bart_avg_predictions_lower, type = "o", col = "blue")
+	lines(x_j_quants, bart_avg_predictions_upper, type = "o", col = "blue")
+	
+	list(x_j_quants = x_j_quants, bart_avg_predictions_by_quantile = bart_avg_predictions_by_quantile)
+	rob = bart(x.train = bart_machine$training_data[, 1:13], y.train = bart_machine$training_data[, 14], ndpost = 100, nskip = 500, keepevery = 10)
+	pdbart(x.train = bart_machine$training_data[, 1:13], y.train = bart_machine$training_data[, 14], xind = 6, ndpost = 200, nskip = 500)
+}
