@@ -14,7 +14,7 @@ library(MASS)
 data(Boston)
 X = Boston
 #X$medv = log(X$medv)
-X$chas = as.character(X$chas)
+#X$chas = as.character(X$chas)
 X$rad = as.factor(X$rad)
 colnames(X)[ncol(X)] = "y"
 
@@ -25,18 +25,19 @@ Xtest = X[(nrow(X) / 2 + 1) : nrow(X), ]
 #build the BART machine
 #bart_machines = list()
 #for (i in 1 : 5000){
-graphics.off()
-windows()
+#graphics.off()
+#windows()
 	bart_machine = build_bart_machine(Xtrain, 
 		num_trees = 200,
-		num_burn_in = 1000, 
-		num_iterations_after_burn_in = 500,
+		num_burn_in = 3000, 
+		num_iterations_after_burn_in = 2000,
 		num_cores = 4)
 	
 	cat(paste("built bart machine #", i, "\n"))
 #}
 summary(bart_machine)
-interaction_investigator(bart_machine, num_replicates_for_avg = 30)
+bart_machine$training_data_features
+interaction_investigator(bart_machine, num_replicates_for_avg = 5)
 investigate_var_importance(bart_machine)
 
 plot_y_vs_yhat(bart_machine)
@@ -52,6 +53,8 @@ check_bart_error_assumptions(bart_machine)
 
 #convenience to predict on the test data automatically computing SSE, etc
 predict_obj = bart_predict_for_test_data(bart_machine, Xtest, num_cores = 4)
+predict_obj$rmse
+
 
 rmses = array(NA, 20)
 for (k in 2 : 20){
@@ -144,3 +147,5 @@ source("r_scripts/create_simulated_models.R")
 Xy = simulate_data_from_simulation_name("bivariate_linear")
 Xy=Xy[1:500,]
 training_data = Xy
+
+

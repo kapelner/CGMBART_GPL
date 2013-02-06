@@ -18,7 +18,7 @@ bart_machine_cv = function(training_data,
 	for (k in k_cvs){
 		for (nu_q in nu_q_cvs){
 			for (num_trees in num_tree_cvs){
-				print(paste("k", k, "nu_q", paste(as.numeric(nu_q), collapse = ", "), "m", num_trees))
+#				print(paste("k", k, "nu_q", paste(as.numeric(nu_q), collapse = ", "), "m", num_trees))
 				rmse = k_fold_cv(training_data, 
 						k_folds = k_folds, 
 						num_cores = num_cores,
@@ -29,9 +29,9 @@ bart_machine_cv = function(training_data,
 						k = k,
 						nu = nu_q[1],
 						q = nu_q[2])$rmse
-				print(paste("rmse:", rmse))
+#				print(paste("rmse:", rmse))
 				if (rmse < min_oos_rmse){
-					print(paste("new winner!"))
+#					print(paste("new winner!"))
 					min_oos_rmse = rmse					
 					min_rmse_k = k
 					min_rmse_nu_q = nu_q
@@ -40,6 +40,8 @@ bart_machine_cv = function(training_data,
 			}
 		}
 	}
+	
+	cat(paste("BART CV params: k =", min_rmse_k, "nu, q =", paste(as.numeric(min_rmse_nu_q), collapse = ", "), "m =", min_rmse_num_tree, "\n"))
 	
 	#now that we've found the best settings, return that bart machine
 	build_bart_machine(training_data, 
@@ -75,12 +77,12 @@ k_fold_cv = function(training_data, k_folds = 5, num_cores = 1, ...){
 	for (k in 1 : k_folds){
 		holdout_index_i = split_points[k]
 		holdout_index_f = ifelse(k == k_folds, n, split_points[k + 1] - 1)
-		print(paste("i:", holdout_index_i, "f:", holdout_index_f))
+#		print(paste("i:", holdout_index_i, "f:", holdout_index_f))
 		
 		test_data_k = training_data[holdout_index_i : holdout_index_f, ]
 		training_data_k = training_data[-c(holdout_index_i : holdout_index_f), ]
 		
-		bart_machine_cv = build_bart_machine(training_data_k, run_in_sample = FALSE, ...)
+		bart_machine_cv = build_bart_machine(training_data_k, run_in_sample = FALSE, num_cores = num_cores, ...)
 		predict_obj = bart_predict_for_test_data(bart_machine_cv, test_data_k, num_cores)
 		destroy_bart_machine(bart_machine_cv)
 		

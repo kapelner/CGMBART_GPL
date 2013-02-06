@@ -18,6 +18,13 @@ plot_tree_depths = function(bart_machine){
 	lines(1 : num_after_burn_in_per_core, apply(tree_depths_after_burn_in, 1, mean), col = "blue", lwd = 4)
 	lines(1 : num_after_burn_in_per_core, apply(tree_depths_after_burn_in, 1, min), col = "black")
 	lines(1 : num_after_burn_in_per_core, apply(tree_depths_after_burn_in, 1, max), col = "black")
+	
+	
+	if (bart_machine$num_cores > 1){
+		for (c in 2 : bart_machine$num_cores){
+			abline(v = (c - 1) * bart_machine$num_iterations_after_burn_in / bart_machine$num_cores, col = "gray")
+		}		
+	}		
 }
 
 get_tree_depths = function(bart_machine){
@@ -49,6 +56,12 @@ plot_tree_num_nodes = function(bart_machine){
 	lines(1 : num_after_burn_in_per_core, apply(tree_num_nodes_and_leaves_after_burn_in, 1, mean), col = "blue", lwd = 4)
 	lines(1 : num_after_burn_in_per_core, apply(tree_num_nodes_and_leaves_after_burn_in, 1, min), col = "black")
 	lines(1 : num_after_burn_in_per_core, apply(tree_num_nodes_and_leaves_after_burn_in, 1, max), col = "black")
+	
+	if (bart_machine$num_cores > 1){
+		for (c in 2 : bart_machine$num_cores){
+			abline(v = (c - 1) * bart_machine$num_iterations_after_burn_in / bart_machine$num_cores, col = "gray")
+		}		
+	}	
 }
 
 get_tree_num_nodes_and_leaves = function(bart_machine){
@@ -282,6 +295,12 @@ plot_sigsqs_convergence_diagnostics = function(bart_machine){
 	abline(a = ppi_sigsqs[2], b = 0, col = "yellow")
 	abline(a = avg_sigsqs_after_burn_in, b = 0, col = "blue")
 	abline(v = num_burn_in, col = "gray")
+	if (bart_machine$num_cores > 1){
+		for (c in 2 : bart_machine$num_cores){
+			abline(v = num_burn_in + (c - 1) * bart_machine$num_iterations_after_burn_in / bart_machine$num_cores, col = "gray")
+		}		
+	}
+
 }
 
 investigate_var_importance = function(bart_machine, plot = TRUE, num_replicates_for_avg = 5, num_trees_bottleneck = 20, num_var_plot = Inf, num_cores = 1){
