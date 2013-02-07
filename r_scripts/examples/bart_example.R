@@ -3,6 +3,8 @@ directory_where_code_is = getwd() #usually we're on a linux box and we'll just n
 #if we're on windows, then we're on the dev box, so use a prespecified directory
 if (.Platform$OS.type == "windows"){
 	directory_where_code_is = "C:\\Users\\kapelner\\workspace\\CGMBART_GPL"
+} else {
+  directory_where_code_is = "~/workspace/CGMBART_GPL"
 }
 setwd(directory_where_code_is)
 

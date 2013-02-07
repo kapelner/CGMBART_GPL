@@ -85,7 +85,7 @@ void mbart(int *iNumObs, int *iNumX, int *inrowTest,
    double binary_offset = *ibinary_offset;
 
    if(*verbose) {
-	   Rprintf("J & A Ver. 12:41AM 11/8 BD");
+	   Rprintf("J & A Ver. 6PM 2/7/13 CBD");
       if(binary)
          Rprintf("\n\nRunning BART with binary y\n\n");
       else
