@@ -25,6 +25,11 @@ for (i in 1 : 500){
 	COLORS[i] = rgb(runif(1, 0, 0.7), runif(1, 0, 0.7), runif(1, 0, 0.7))
 }
 
+BART_NUM_CORES = 1
+
+set_bart_machine_num_cores = function(num_cores){
+	BART_NUM_CORES = num_cores
+}
 
 build_bart_machine = function(training_data, 
 		num_trees = 200, 
@@ -41,7 +46,6 @@ build_bart_machine = function(training_data,
 		s_sq_y = "mse", # "mse" or "var"
 		unique_name = "unnamed",
 		print_tree_illustrations = FALSE,
-		num_cores = 1,
 		cov_prior_vec = NULL,
 		verbose = TRUE){
 	
@@ -66,7 +70,7 @@ build_bart_machine = function(training_data,
 	#first set the name
 	.jcall(java_bart_machine, "V", "setUniqueName", unique_name)
 	#now set whether we want the program to log to a file
-	if (debug_log){
+	if (debug_log & verbose){
 		cat("warning: printing out the log file will slow down the runtime significantly\n")
 		.jcall(java_bart_machine, "V", "writeStdOutToLogFile")
 	}
@@ -75,14 +79,16 @@ build_bart_machine = function(training_data,
 		.jcall(java_bart_machine, "V", "fixRandSeed")		
 	}
 	#set whether we want there to be tree illustrations
-	if (print_tree_illustrations){
+	if (print_tree_illustrations & verbose){
 		cat("warning: printing tree illustrations will slow down the runtime significantly\n")
 		.jcall(java_bart_machine, "V", "printTreeIllustations")
 	}
 	
 	#set the std deviation of y to use
 	if (ncol(model_matrix_training_data) - 1 >= nrow(model_matrix_training_data)){
-		cat("warning: cannot use MSE of linear model for s_sq_y if p > n\n")
+		if (verbose){
+			cat("warning: cannot use MSE of linear model for s_sq_y if p > n\n")
+		}
 		s_sq_y = "var"
 
 	}
@@ -104,7 +110,7 @@ build_bart_machine = function(training_data,
 	sig_sq_est = sig_sq_est * y_range^2
 	
 	#make bart to spec with what the user wants
-	.jcall(java_bart_machine, "V", "setNumCores", as.integer(num_cores)) #this must be set FIRST!!!
+	.jcall(java_bart_machine, "V", "setNumCores", as.integer(BART_NUM_CORES)) #this must be set FIRST!!!
 	.jcall(java_bart_machine, "V", "setNumTrees", as.integer(num_trees))
 	.jcall(java_bart_machine, "V", "setNumGibbsBurnIn", as.integer(num_burn_in))
 	.jcall(java_bart_machine, "V", "setNumGibbsTotalIterations", as.integer(num_gibbs))
@@ -145,7 +151,7 @@ build_bart_machine = function(training_data,
 		model_matrix_training_data = model_matrix_training_data,
 		n = nrow(model_matrix_training_data),
 		p = p,
-		num_cores = num_cores,
+		num_cores = BART_NUM_CORES,
 		num_trees = num_trees,
 		num_burn_in = num_burn_in,
 		num_iterations_after_burn_in = num_iterations_after_burn_in, 
@@ -170,7 +176,7 @@ build_bart_machine = function(training_data,
 			cat("evaluating in sample data...")
 		}
 		y_hat_posterior_samples = 
-			t(sapply(.jcall(bart_machine$java_bart_machine, "[[D", "getGibbsSamplesForPrediction", .jarray(model_matrix_training_data, dispatch = TRUE), as.integer(num_cores)), .jevalArray))
+			t(sapply(.jcall(bart_machine$java_bart_machine, "[[D", "getGibbsSamplesForPrediction", .jarray(model_matrix_training_data, dispatch = TRUE), as.integer(BART_NUM_CORES)), .jevalArray))
 		
 		#to get y_hat.. just take straight mean of posterior samples
 		y_hat_train = rowMeans(y_hat_posterior_samples)
@@ -242,22 +248,22 @@ check_bart_error_assumptions = function(bart_machine, alpha_normal_test = 0.05, 
 }
 
 
-get_var_counts_over_chain = function(bart_machine, num_cores = 1){
-	C = t(sapply(.jcall(bart_machine$java_bart_machine, "[[I", "getCountsForAllAttribute", as.integer(num_cores)), .jevalArray))
+get_var_counts_over_chain = function(bart_machine){
+	C = t(sapply(.jcall(bart_machine$java_bart_machine, "[[I", "getCountsForAllAttribute", as.integer(BART_NUM_CORES)), .jevalArray))
 	colnames(C) = colnames(bart_machine$model_matrix_training_data)[1 : bart_machine$p]
 	C
 }
 
-get_var_props_over_chain = function(bart_machine, num_cores = 1){
-	C = get_var_counts_over_chain(bart_machine, num_cores)
+get_var_props_over_chain = function(bart_machine){
+	C = get_var_counts_over_chain(bart_machine)
 	Ctot = apply(C, 2, sum)
 	Ctot / sum(Ctot)
 }
 
 
 
-bart_predict_for_test_data = function(bart_machine, test_data, num_cores = 1){
-	y_hat = predict(bart_machine, test_data, num_cores)
+bart_predict_for_test_data = function(bart_machine, test_dat){
+	y_hat = predict(bart_machine, test_data)
 	y = test_data$y
 	n = nrow(test_data)
 	L2_err = sum((y - y_hat)^2)
@@ -276,7 +282,7 @@ bart_predict_for_test_data = function(bart_machine, test_data, num_cores = 1){
 #do all generic functions here
 #
 
-bart_machine_predict = function(bart_machine, new_data, num_cores = 1){
+bart_machine_predict = function(bart_machine, new_data){
 	#pull out data objects for convenience
 	java_bart_machine = bart_machine$java_bart_machine
 	num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in
@@ -288,7 +294,7 @@ bart_machine_predict = function(bart_machine, new_data, num_cores = 1){
 	new_data = pre_process_new_data(new_data, bart_machine$training_data_features)	
 		
 	y_hat_posterior_samples = 
-		t(sapply(.jcall(bart_machine$java_bart_machine, "[[D", "getGibbsSamplesForPrediction", .jarray(new_data, dispatch = TRUE), as.integer(num_cores)), .jevalArray))
+		t(sapply(.jcall(bart_machine$java_bart_machine, "[[D", "getGibbsSamplesForPrediction", .jarray(new_data, dispatch = TRUE), as.integer(BART_NUM_CORES)), .jevalArray))
 
 	#to get y_hat.. just take straight mean of posterior samples, alternatively, we can let java do it if we want more bells and whistles
 	y_hat = rowMeans(y_hat_posterior_samples)	
@@ -296,8 +302,8 @@ bart_machine_predict = function(bart_machine, new_data, num_cores = 1){
 	list(y_hat = y_hat, new_data = new_data, y_hat_posterior_samples = y_hat_posterior_samples)
 }
 
-predict.bart_machine = function(bart_machine, new_data, num_cores = 1){
-	bart_machine_predict(bart_machine, new_data, num_cores)$y_hat
+predict.bart_machine = function(bart_machine, new_data){
+	bart_machine_predict(bart_machine, new_data, BART_NUM_CORES)$y_hat
 }
 
 summary.bart_machine = function(bart_machine, show_details_for_trees = FALSE){
@@ -362,7 +368,7 @@ print.bart_machine = function(bart_machine){
 	summary(bart_machine)
 }
 
-calc_ppis_from_prediction = function(bart_machine, new_data, ppi_conf = 0.95, num_cores = 1){
+calc_ppis_from_prediction = function(bart_machine, new_data, ppi_conf = 0.95){
 	#first convert the rows to the correct dummies etc
 	new_data = pre_process_new_data(new_data, bart_machine$training_data_features)
 	n_test = nrow(new_data)
@@ -371,7 +377,7 @@ calc_ppis_from_prediction = function(bart_machine, new_data, ppi_conf = 0.95, nu
 	ppi_upper_bd = array(NA, n_test)	
 	
 	y_hat_posterior_samples = 
-		t(sapply(.jcall(bart_machine$java_bart_machine, "[[D", "getGibbsSamplesForPrediction",  .jarray(new_data, dispatch = TRUE), as.integer(num_cores)), .jevalArray))
+		t(sapply(.jcall(bart_machine$java_bart_machine, "[[D", "getGibbsSamplesForPrediction",  .jarray(new_data, dispatch = TRUE), as.integer(BART_NUM_CORES)), .jevalArray))
 		
 	#to get y_hat.. just take straight mean of posterior samples, alternatively, we can let java do it if we want more bells and whistles
 	y_hat = rowMeans(y_hat_posterior_samples)

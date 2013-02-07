@@ -40,6 +40,9 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 			case PRUNE:
 				log_r = doMHPruneAndCalcLnR(T_i, T_star);
 				break;
+			case CHANGE:
+				log_r = doMHChangeAndCalcLnR(T_i, T_star);
+				break;				
 		}		
 		double ln_u_0_1 = Math.log(StatToolbox.rand());
 //		if (log_r > Double.MIN_VALUE){
@@ -253,6 +256,13 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 		//if we passed, we can use this node
 		return growth_node;
 	}
+
+
+	protected double doMHChangeAndCalcLnR(CGMBARTTreeNode t_i, CGMBARTTreeNode t_star) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+	
 	
 	//a hidden parameter in the BART model, P(PRUNE) = 1 - P(GROW) so only one needs to be defined here
 	protected final static double PROB_GROW = 0.5;
@@ -262,4 +272,6 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 			return Steps.GROW;
 		return Steps.PRUNE;	
 	}
+	
+	
 }

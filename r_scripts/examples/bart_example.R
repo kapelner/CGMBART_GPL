@@ -27,18 +27,20 @@ Xtest = X[(nrow(X) / 2 + 1) : nrow(X), ]
 #for (i in 1 : 5000){
 #graphics.off()
 #windows()
+
+set_bart_machine_num_cores(4)
+
 	bart_machine = build_bart_machine(Xtrain, 
 		num_trees = 200,
 		num_burn_in = 3000, 
 		num_iterations_after_burn_in = 500,
-		num_cores = 4, 
 		debug_log = TRUE)
 	
 	cat(paste("built bart machine #", i, "\n"))
 #}
 summary(bart_machine)
 bart_machine$training_data_features
-interaction_investigator(bart_machine, num_replicates_for_avg = 5)
+interaction_investigator(bart_machine, num_replicates_for_avg = 500, num_var_plot = 20)
 investigate_var_importance(bart_machine)
 
 plot_y_vs_yhat(bart_machine, ppis=T)
@@ -54,7 +56,7 @@ hist_sigsqs(bart_machine)
 check_bart_error_assumptions(bart_machine)
 
 #convenience to predict on the test data automatically computing SSE, etc
-predict_obj = bart_predict_for_test_data(bart_machine, Xtest, num_cores = 4)
+predict_obj = bart_predict_for_test_data(bart_machine, Xtest)
 predict_obj$rmse
 
 
@@ -63,8 +65,7 @@ for (k in 2 : 20){
 	rmse = k_fold_cv(X, k_folds = k, 
 		num_trees = 200,
 		num_burn_in = 250, 
-		num_iterations_after_burn_in = 1000,
-		num_cores = 3)$rmse
+		num_iterations_after_burn_in = 1000)$rmse
 	rmses[k] = rmse
 }
 plot(1:20, rmses, type="l")
@@ -91,10 +92,10 @@ ppi_obj = calc_ppis_from_prediction(bart_machine, Xtest)
 Xy = read.csv("datasets/r_friedman_hd.csv")
 
 bart_machine = build_bart_machine(Xy,
-	num_trees = 200,
-	num_burn_in = 2000, 
-	num_iterations_after_burn_in = 1000, 
-	num_cores = 1, debug_log=T)
+	num_trees = 20,
+	num_burn_in = 1000, 
+	num_iterations_after_burn_in = 500, 
+	debug_log=T)
 
 summary(bart_machine)
 hist_sigsqs(bart_machine)
@@ -105,10 +106,10 @@ windows()
 plot_y_vs_yhat(bart_machine, ppis = T)
 
 windows()
-investigate_var_importance(bart_machine, num_replicates_for_avg=2)
+investigate_var_importance(bart_machine, num_replicates_for_avg=10,num_var_plot=15)
 windows()
 
-
+library(BayesTree)
 rob = bart(x.train = Xy[, 1:100], y.train = Xy[ ,101], ndpost = 1000, nskip = 1000, sigest = sd(Xy[,101]), ntree = 200)
 counts = apply(rob$varcount,2,sum)
 rob$sigest
@@ -116,7 +117,7 @@ mean(rob$sigma)
 counts/sum(counts)
 names(counts)=colnames(Xy)[1:100]
 sort(counts, dec = T)
-interaction_investigator(bart_machine, num_replicates_for_avg = 5)
+interaction_investigator(bart_machine, num_replicates_for_avg = 5, num_var_plot=20)
 
 
 
@@ -127,8 +128,7 @@ Xtest = X[(nrow(X) / 2 + 1) : nrow(X), ]
 bart_machine = build_bart_machine(X, 
 		num_trees = 200,
 		num_burn_in = 2000, 
-		num_iterations_after_burn_in = 500,
-		num_cores = 4)
+		num_iterations_after_burn_in = 500)
 summary(bart_machine)
 plot_y_vs_yhat(bart_machine)
 
@@ -160,9 +160,8 @@ training_data = Xy
 
 bart_machine = build_bart_machine(Xy, 
 		num_trees = 200,
-		num_burn_in = 2000, 
-		num_iterations_after_burn_in = 2000,
-		num_cores = 4,
+		num_burn_in = 1000, 
+		num_iterations_after_burn_in = 500,
 		s_sq_y = "mse",
 		debug_log = T)
 summary(bart_machine)
@@ -170,7 +169,10 @@ hist_sigsqs(bart_machine)
 plot_sigsqs_convergence_diagnostics(bart_machine)
 
 library(BayesTree)
-rob = bart(x.train = Xy[, 1:2], y.train = Xy[ , 3], ndpost = 500, nskip = 1000, ntree = 200)
+rob = bart(x.train = Xy[, 1:100], y.train = Xy[ , 101], ndpost = 500, nskip = 1000, ntree = 20, sigest = sd(Xy[,101]))
 counts = apply(rob$varcount,2,sum)
+
+ counts/sum(counts)
+
 rob$sigest
 mean(rob$sigma)
