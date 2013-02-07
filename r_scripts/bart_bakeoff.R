@@ -254,8 +254,7 @@ run_bart_model_and_save_diags_and_results = function(training_data, test_data, d
 		debug_log = JAVA_LOG,
 		unique_name = paste(data_title, "_m_", num_trees, "_run_", formatC(duplicate_run, width = 2, format = "d", flag = "0")),
 		run_in_sample = TRUE,
-		use_heteroskedasticity = FALSE,
-		num_cores = num_cores)
+		use_heteroskedasticity = FALSE)
 	time_finished = Sys.time()
 	print(paste("A BART run time:", time_finished - time_started))
 	
@@ -263,7 +262,7 @@ run_bart_model_and_save_diags_and_results = function(training_data, test_data, d
 	append_to_log("built")
 	
 	#now use the bart model to predict y_hat's for the test data
-	a_bart_predictions_obj = bart_predict(bart_machine, test_data, num_cores = num_cores)
+	a_bart_predictions_obj = bart_predict(bart_machine, test_data)
 	append_to_log("test data predicted")
 	#diagnose how good the y_hat's from the bart model are
 #	plot_y_vs_yhat_a_bart(a_bart_predictions_obj, extra_text = extra_text, data_title = data_title, save_plot = save_plot, bart_machine = bart_machine)

@@ -153,13 +153,13 @@ look_at_sample_of_test_data = function(bart_predictions, grid_len = 3, extra_tex
 #############
 
 
-#get_variable_significance = function(bart_machine, var_num, data = NULL, num_iter = 100, print_histogram = TRUE, num_cores = 1){
+#get_variable_significance = function(bart_machine, var_num, data = NULL, num_iter = 100, print_histogram = TRUE){
 #	if (bart_machine$run_in_sample){
 #		real_sse = bart_machine$L2_err_train
 #		n = bart_machine$n
 #		data = bart_machine$training_data
 #	} else {
-#		real_sse = bart_predict_for_test_data(bart_machine, data, num_cores)$L2_err
+#		real_sse = bart_predict_for_test_data(bart_machine, data)$L2_err
 #		n = nrow(data)
 #	}
 #	
@@ -169,7 +169,7 @@ look_at_sample_of_test_data = function(bart_predictions, grid_len = 3, extra_tex
 #	for (i in 1 : num_iter){
 #		data_scrambled = data
 #		data_scrambled[, var_num] = data[sample(1 : n, n, replace = FALSE), var_num] ##scrambled column of interest
-#		sse_vec[i] = bart_predict_for_test_data(bart_machine, data_scrambled, num_cores)$L2_err
+#		sse_vec[i] = bart_predict_for_test_data(bart_machine, data_scrambled)$L2_err
 #		if (i %% 10 == 0) print(i)
 #	}
 #	p_value = (1 + sum(real_sse > sse_vec)) / (1 + num_iter) ##how many null values greater than obs. 

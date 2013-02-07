@@ -121,7 +121,7 @@ get_mh_acceptance_reject = function(bart_machine){
 	)
 }
 
-plot_y_vs_yhat = function(bart_machine, ppis = FALSE, ppi_conf = 0.95, num_cores = 1){
+plot_y_vs_yhat = function(bart_machine, ppis = FALSE, ppi_conf = 0.95){
 	if (bart_machine$bart_destroyed){
 		stop("This BART machine has been destroyed. Please recreate.")
 	}	
@@ -130,7 +130,7 @@ plot_y_vs_yhat = function(bart_machine, ppis = FALSE, ppi_conf = 0.95, num_cores
 
 	
 	if (ppis){
-		ppis = calc_ppis_from_prediction(bart_machine, bart_machine$training_data, ppi_conf, num_cores)
+		ppis = calc_ppis_from_prediction(bart_machine, bart_machine$training_data, ppi_conf)
 		ppi_a = ppis[, 1]
 		ppi_b = ppis[, 2]
 		y_in_ppi = y >= ppi_a & y <= ppi_b
@@ -303,7 +303,7 @@ plot_sigsqs_convergence_diagnostics = function(bart_machine){
 
 }
 
-investigate_var_importance = function(bart_machine, plot = TRUE, num_replicates_for_avg = 5, num_trees_bottleneck = 20, num_var_plot = Inf, num_cores = 1){
+investigate_var_importance = function(bart_machine, plot = TRUE, num_replicates_for_avg = 5, num_trees_bottleneck = 20, num_var_plot = Inf){
 	if (bart_machine$bart_destroyed){
 		stop("This BART machine has been destroyed. Please recreate.")
 	}	
@@ -311,17 +311,16 @@ investigate_var_importance = function(bart_machine, plot = TRUE, num_replicates_
 	var_props = array(0, c(num_replicates_for_avg, bart_machine$p))
 	for (i in 1 : num_replicates_for_avg){
 		if (i == 1 & num_trees_bottleneck == bart_machine$num_trees){
-			var_props[i, ] = get_var_props_over_chain(bart_machine, num_cores)
+			var_props[i, ] = get_var_props_over_chain(bart_machine)
 		} else {
 			bart_machine_dup = build_bart_machine(bart_machine$training_data, 
 				num_trees = num_trees_bottleneck, 
 				num_burn_in = bart_machine$num_burn_in, 
 				num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in, 
 				cov_prior_vec = bart_machine$cov_prior_vec,
-				num_cores = num_cores,
 				run_in_sample = FALSE,
 				verbose = FALSE)			
-			var_props[i, ] = get_var_props_over_chain(bart_machine_dup, num_cores)
+			var_props[i, ] = get_var_props_over_chain(bart_machine_dup)
 			destroy_bart_machine(bart_machine_dup)						
 		}
 		cat(".")
@@ -372,17 +371,20 @@ shapiro_wilk_p_val = function(vec){
 	tryCatch(shapiro.test(vec)$p.value, error = function(e){})
 }
 
-interaction_investigator = function(bart_machine, num_cores = 1, plot = TRUE, num_replicates_for_avg = 5, num_var_plot = Inf){
+interaction_investigator = function(bart_machine, plot = TRUE, num_replicates_for_avg = 5, num_var_plot = Inf){
 	
 	interaction_counts = array(NA, c(bart_machine$p, bart_machine$p, num_replicates_for_avg))
-	interaction_counts[, , 1] = sapply(.jcall(bart_machine$java_bart_machine, "[[I", "getInteractionCounts", as.integer(num_cores)), .jevalArray)
+	interaction_counts[, , 1] = sapply(.jcall(bart_machine$java_bart_machine, "[[I", "getInteractionCounts", as.integer(BART_NUM_CORES)), .jevalArray)
 	cat(".")
 	
 	for (r in 2 : num_replicates_for_avg){
 		bart_machine_dup = bart_machine_duplicate(bart_machine, run_in_sample = FALSE)
-		interaction_counts[, , r] = sapply(.jcall(bart_machine_dup$java_bart_machine, "[[I", "getInteractionCounts", as.integer(num_cores)), .jevalArray)
+		interaction_counts[, , r] = sapply(.jcall(bart_machine_dup$java_bart_machine, "[[I", "getInteractionCounts", as.integer(BART_NUM_CORES)), .jevalArray)
 		destroy_bart_machine(bart_machine_dup)
 		cat(".")
+		if (r %% 40 == 0){
+			cat("\n")
+		}
 	}
 	cat("\n")
 	
@@ -430,14 +432,14 @@ interaction_investigator = function(bart_machine, num_cores = 1, plot = TRUE, nu
 		segments(bars, avg_counts, bars, conf_lower, col = rgb(0.59, 0.39, 0.39), lwd = 3)		
 	}
 	
-	list(
+	invisible(list(
 		interaction_counts_avg = interaction_counts_avg, 
 		interaction_counts_sd = interaction_counts_sd, 
 		interaction_counts_s_w_test = interaction_counts_s_w_test
-	)
+	))
 }
 
-pd_plot = function(bart_machine, j, levs = c(0.05, seq(from = 0.10, to = 0.90, by = 0.10), 0.95), num_cores = 1, lower_ci = 0.05, upper_ci = 0.95){
+pd_plot = function(bart_machine, j, levs = c(0.05, seq(from = 0.10, to = 0.90, by = 0.10), 0.95), lower_ci = 0.05, upper_ci = 0.95){
 	if (bart_machine$bart_destroyed){
 		stop("This BART machine has been destroyed. Please recreate.")
 	}
@@ -456,7 +458,7 @@ pd_plot = function(bart_machine, j, levs = c(0.05, seq(from = 0.10, to = 0.90, b
 		test_data = bart_machine$training_data
 		test_data[, j] = rep(x_j_quant, bart_machine$n)
 		
-		bart_predictions_by_quantile[q, , ] = bart_machine_predict(bart_machine, test_data, num_cores)$y_hat_posterior_samples
+		bart_predictions_by_quantile[q, , ] = bart_machine_predict(bart_machine, test_data)$y_hat_posterior_samples
 		cat(".")
 	}
 	cat("\n")
@@ -482,7 +484,7 @@ pd_plot = function(bart_machine, j, levs = c(0.05, seq(from = 0.10, to = 0.90, b
 	lines(x_j_quants, bart_avg_predictions_lower, type = "o", col = "blue")
 	lines(x_j_quants, bart_avg_predictions_upper, type = "o", col = "blue")
 	
-	list(x_j_quants = x_j_quants, bart_avg_predictions_by_quantile = bart_avg_predictions_by_quantile)
-	rob = bart(x.train = bart_machine$training_data[, 1:13], y.train = bart_machine$training_data[, 14], ndpost = 100, nskip = 500, keepevery = 10)
-	pdbart(x.train = bart_machine$training_data[, 1:13], y.train = bart_machine$training_data[, 14], xind = 6, ndpost = 200, nskip = 500)
+	invisible(list(x_j_quants = x_j_quants, bart_avg_predictions_by_quantile = bart_avg_predictions_by_quantile))
+#	rob = bart(x.train = bart_machine$training_data[, 1:13], y.train = bart_machine$training_data[, 14], ndpost = 100, nskip = 500, keepevery = 10)
+#	pdbart(x.train = bart_machine$training_data[, 1:13], y.train = bart_machine$training_data[, 14], xind = 6, ndpost = 200, nskip = 500)
 }

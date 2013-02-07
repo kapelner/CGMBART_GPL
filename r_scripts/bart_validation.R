@@ -6,8 +6,7 @@ bart_machine_cv = function(training_data,
 		num_tree_cvs = c(200),
 		k_cvs = c(2, 3, 5),
 		nu_q_cvs = list(c(3, 0.9), c(3, 0.99), c(10, 0.75)),
-		k_folds = 5,
-		num_cores = 4){
+		k_folds = 5){
 	
 	
 	min_rmse_num_tree = NULL
@@ -20,8 +19,7 @@ bart_machine_cv = function(training_data,
 			for (num_trees in num_tree_cvs){
 #				print(paste("k", k, "nu_q", paste(as.numeric(nu_q), collapse = ", "), "m", num_trees))
 				rmse = k_fold_cv(training_data, 
-						k_folds = k_folds, 
-						num_cores = num_cores,
+						k_folds = k_folds,
 						num_burn_in = num_burn_in,
 						num_iterations_after_burn_in = num_iterations_after_burn_in,
 						cov_prior_vec = cov_prior_vec,
@@ -44,8 +42,7 @@ bart_machine_cv = function(training_data,
 	cat(paste("BART CV params: k =", min_rmse_k, "nu, q =", paste(as.numeric(min_rmse_nu_q), collapse = ", "), "m =", min_rmse_num_tree, "\n"))
 	
 	#now that we've found the best settings, return that bart machine
-	build_bart_machine(training_data, 
-		num_cores = num_cores,
+	build_bart_machine(training_data,
 		num_burn_in = num_burn_in,
 		num_iterations_after_burn_in = num_iterations_after_burn_in,
 		cov_prior_vec = cov_prior_vec,
@@ -56,7 +53,7 @@ bart_machine_cv = function(training_data,
 }
 
 
-k_fold_cv = function(training_data, k_folds = 5, num_cores = 1, ...){
+k_fold_cv = function(training_data, k_folds = 5, ...){
 	n = nrow(training_data)
 	
 	if (k_folds <= 1 || k_folds > n){
@@ -82,8 +79,8 @@ k_fold_cv = function(training_data, k_folds = 5, num_cores = 1, ...){
 		test_data_k = training_data[holdout_index_i : holdout_index_f, ]
 		training_data_k = training_data[-c(holdout_index_i : holdout_index_f), ]
 		
-		bart_machine_cv = build_bart_machine(training_data_k, run_in_sample = FALSE, num_cores = num_cores, ...)
-		predict_obj = bart_predict_for_test_data(bart_machine_cv, test_data_k, num_cores)
+		bart_machine_cv = build_bart_machine(training_data_k, run_in_sample = FALSE, ...)
+		predict_obj = bart_predict_for_test_data(bart_machine_cv, test_data_k)
 		destroy_bart_machine(bart_machine_cv)
 		
 		#tabulate errors

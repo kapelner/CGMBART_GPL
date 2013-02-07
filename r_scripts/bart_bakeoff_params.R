@@ -2,7 +2,7 @@
 PRINT_TREE_ILLUS = FALSE
 JAVA_LOG = FALSE
 
-num_cores = 15 #a blade is 16 and I want to keep one core for switching and miscellaneous
+set_bart_machine_num_cores(1) #we're going to keep this one thread for the bakeoff since we'll be parallelizing over sim params
 
 run_model_N_times = 10
 real_regression_data_sets = c(
