@@ -28,7 +28,7 @@ for (i in 1 : 500){
 BART_NUM_CORES = 1
 
 set_bart_machine_num_cores = function(num_cores){
-	BART_NUM_CORES = num_cores
+	assign("BART_NUM_CORES", num_cores, ".GlobalEnv")
 }
 
 build_bart_machine = function(training_data, 
