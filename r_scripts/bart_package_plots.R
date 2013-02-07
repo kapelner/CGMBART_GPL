@@ -201,7 +201,7 @@ hist_sigsqs = function(bart_machine, extra_text = NULL, data_title = "data_model
 		dev.off()
 	}
 	
-	sigsqs_after_burnin
+	invisible(sigsqs_after_burnin)
 }
 
 hist_mu_values_by_tree_and_leaf_after_burn_in = function(bart_machine, extra_text = NULL, data_title = "data_model", save_plot = FALSE, tree_num, leaf_num){
@@ -348,7 +348,7 @@ investigate_var_importance = function(bart_machine, plot = TRUE, num_replicates_
 				las = 2, 
 				ylab = "Inclusion Proportion", 
 				col = "gray",#rgb(0.39, 0.39, 0.59),
-				ylim = c(0, max(avg_var_props + 1.96 * sd_var_props / sqrt(num_replicates_for_avg))),
+				#ylim = c(0, max(avg_var_props + 1.96 * sd_var_props / sqrt(num_replicates_for_avg))),
 				main = paste("Important Variables Averaged over", num_replicates_for_avg, "Replicates"))
 		conf_upper = avg_var_props + 1.96 * sd_var_props / sqrt(num_replicates_for_avg)
 		conf_lower = avg_var_props - 1.96 * sd_var_props / sqrt(num_replicates_for_avg)

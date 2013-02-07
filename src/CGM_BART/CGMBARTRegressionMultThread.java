@@ -23,7 +23,6 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 	
 	private transient CGMBARTRegression[] bart_gibbs_chain_threads;
 	protected CGMBARTTreeNode[][] gibbs_samples_of_cgm_trees_after_burn_in;
-	protected double[] gibbs_samples_of_sigsq_after_burn_in;
 	
 	private Double sample_var_y;
 	private int num_gibbs_burn_in;
@@ -78,11 +77,11 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 		BuildOnAllThreads();
 		//once it's done, now put together the chains
 		ConstructBurnedChainForTreesAndOtherInformation();	
+		getGibbsSamplesSigsqs();
 	}	
 	
 	protected void ConstructBurnedChainForTreesAndOtherInformation() {
 		gibbs_samples_of_cgm_trees_after_burn_in = new CGMBARTTreeNode[numSamplesAfterBurning()][num_trees];
-		gibbs_samples_of_sigsq_after_burn_in = new double[numSamplesAfterBurning()];
 
 		System.out.print("burning and aggregating chains from all threads... ");
 		//go through each thread and get the tail and put them together
@@ -96,7 +95,6 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 					break;
 				}
 				gibbs_samples_of_cgm_trees_after_burn_in[g] = bart_model.gibbs_samples_of_cgm_trees[i];
-				gibbs_samples_of_sigsq_after_burn_in[i - num_gibbs_burn_in] = bart_model.gibbs_samples_of_sigsq[i];
 			}			
 		}				
 		System.out.print("done\n");
@@ -305,7 +303,13 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 			else {
 				sigsqs_to_export.addAll(sigsqs_to_export_by_thread.subList(num_gibbs_burn_in, total_iterations_multithreaded));
 			}
-		}		
+		}	
+		//what's the SIGSQ?
+		for (int g = 0; g < sigsqs_to_export.size(); g++){
+			System.out.println("g = " + g + " sigsq: " + sigsqs_to_export.get(g));			
+		}
+		System.out.println("MEAN: " + StatToolbox.sample_average(sigsqs_to_export.toArray()));
+		
 		return sigsqs_to_export.toArray();
 	}
 	
@@ -411,7 +415,6 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 	public void destroy(){
 		bart_gibbs_chain_threads = null;
 		gibbs_samples_of_cgm_trees_after_burn_in = null;
-		gibbs_samples_of_sigsq_after_burn_in = null;
 		cov_split_prior = null;
 	}
 	

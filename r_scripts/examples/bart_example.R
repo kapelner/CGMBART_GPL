@@ -30,8 +30,9 @@ Xtest = X[(nrow(X) / 2 + 1) : nrow(X), ]
 	bart_machine = build_bart_machine(Xtrain, 
 		num_trees = 200,
 		num_burn_in = 3000, 
-		num_iterations_after_burn_in = 2000,
-		num_cores = 4)
+		num_iterations_after_burn_in = 500,
+		num_cores = 4, 
+		debug_log = TRUE)
 	
 	cat(paste("built bart machine #", i, "\n"))
 #}
@@ -40,7 +41,7 @@ bart_machine$training_data_features
 interaction_investigator(bart_machine, num_replicates_for_avg = 5)
 investigate_var_importance(bart_machine)
 
-plot_y_vs_yhat(bart_machine)
+plot_y_vs_yhat(bart_machine, ppis=T)
 
 plot_tree_num_nodes(bart_machine)
 plot_tree_depths(bart_machine)
@@ -49,6 +50,7 @@ plot_convergence_diagnostics(bart_machine)
 
 
 plot_sigsqs_convergence_diagnostics(bart_machine)
+hist_sigsqs(bart_machine)
 check_bart_error_assumptions(bart_machine)
 
 #convenience to predict on the test data automatically computing SSE, etc
@@ -76,39 +78,45 @@ ppi_obj = calc_ppis_from_prediction(bart_machine, Xtest)
 
 
 #now test the variable importance
-#generate the Friedman data
-n = 500
-x1 = runif(n, 0, 1)
-x2 = runif(n, 0, 1)
-x3 = runif(n, 0, 1)
-x4 = runif(n, 0, 1)
-x5 = runif(n, 0, 1)
-x6 = runif(n, 0, 1)
-x7 = runif(n, 0, 1)
-x8 = runif(n, 0, 1)
-x9 = runif(n, 0, 1)
-x10 = runif(n, 0, 1)
-error = rnorm(n, 0, 10)
+##generate the Friedman data
+#n = 100
+#p = 100
+#X = matrix(runif(n * p, 0 , 1), ncol = p)
+#error = rnorm(n, 0, 1)
+#
+#y = 10 * sin(pi * X[, 1] * X[, 2]) + 20 * (X[, 3] - 0.5)^2 + 10 * X[, 4] + 5 * X[, 5] + error
+#
+#Xy = data.frame(X, y)
+#summary(lm(y ~ ., Xy))
+Xy = read.csv("datasets/r_friedman_hd.csv")
 
-y = 1-sin(pi * x1 * x2) + 20 * (x3 - 0.5)^2 + 10 * x4 + 5 * x5 + error
-
-Xy = data.frame(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, y)
-summary(lm(y ~ ., Xy))
-
-bart_machine = build_bart_machine(Xy, 
-	run_in_sample = TRUE, 
+bart_machine = build_bart_machine(Xy,
 	num_trees = 200,
-	num_burn_in = 1000, 
+	num_burn_in = 2000, 
 	num_iterations_after_burn_in = 1000, 
-	num_cores = 4)
+	num_cores = 1, debug_log=T)
 
+summary(bart_machine)
+hist_sigsqs(bart_machine)
+windows()
+plot_sigsqs_convergence_diagnostics(bart_machine)
 check_bart_error_assumptions(bart_machine)
+windows()
+plot_y_vs_yhat(bart_machine, ppis = T)
 
-for (var in 1 : 10){
-	varsign = get_variable_significance(bart_machine, var, num_cores = 3)
-	print(var)
-	print(varsign$p_value)
-}
+windows()
+investigate_var_importance(bart_machine, num_replicates_for_avg=2)
+windows()
+
+
+rob = bart(x.train = Xy[, 1:100], y.train = Xy[ ,101], ndpost = 1000, nskip = 1000, sigest = sd(Xy[,101]), ntree = 200)
+counts = apply(rob$varcount,2,sum)
+rob$sigest
+mean(rob$sigma)
+counts/sum(counts)
+names(counts)=colnames(Xy)[1:100]
+sort(counts, dec = T)
+interaction_investigator(bart_machine, num_replicates_for_avg = 5)
 
 
 
@@ -132,6 +140,7 @@ pd_plot(bart_machine, 6)
 library(BayesTree)
 rob = bart(x.train = Xtrain[,1:13],y.train=Xtrain$y,x.test=Xtest[,1:13],ndpost=2000,nskip=2000,sigdf = 10, sigquant = 0.75, k =3)
 sqrt(sum((rob$yhat.test.mean - Xtest$y)^2) / length(Xtest$y))
+mean(rob$sigma)
 
 library(randomForest)
 rf = randomForest(x = Xtrain[, 1 : 13], y = Xtrain$y, importance = TRUE)
@@ -145,7 +154,23 @@ sqrt(sum((preds - Xtest$y)^2) / length(preds))
 source("r_scripts/create_simulated_models.R")
 
 Xy = simulate_data_from_simulation_name("bivariate_linear")
-Xy=Xy[1:500,]
+#Xy = read.csv("datasets/r_just_noise.csv")
+#Xy=Xy[1:500,]
 training_data = Xy
 
+bart_machine = build_bart_machine(Xy, 
+		num_trees = 200,
+		num_burn_in = 2000, 
+		num_iterations_after_burn_in = 2000,
+		num_cores = 4,
+		s_sq_y = "mse",
+		debug_log = T)
+summary(bart_machine)
+hist_sigsqs(bart_machine)
+plot_sigsqs_convergence_diagnostics(bart_machine)
 
+library(BayesTree)
+rob = bart(x.train = Xy[, 1:2], y.train = Xy[ , 3], ndpost = 500, nskip = 1000, ntree = 200)
+counts = apply(rob$varcount,2,sum)
+rob$sigest
+mean(rob$sigma)

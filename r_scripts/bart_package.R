@@ -84,8 +84,11 @@ build_bart_machine = function(training_data,
 	if (ncol(model_matrix_training_data) - 1 >= nrow(model_matrix_training_data)){
 		cat("warning: cannot use MSE of linear model for s_sq_y if p > n\n")
 		s_sq_y = "var"
+
 	}
-	y_trans = (training_data$y - min(training_data$y)) / (max(training_data$y) - min(training_data$y)) - 0.5
+	
+	y_range = max(training_data$y) - min(training_data$y)
+	y_trans = (training_data$y - min(training_data$y)) / y_range - 0.5
 	if (s_sq_y == "mse"){
 		mod = lm(y_trans ~ ., as.data.frame(model_matrix_training_data)[1 : (ncol(model_matrix_training_data) - 1)])
 		mse = var(mod$residuals)
@@ -98,6 +101,7 @@ build_bart_machine = function(training_data,
 		stop("s_sq_y must be \"rmse\" or \"sd\"", call. = FALSE)
 		return(TRUE)
 	}
+	sig_sq_est = sig_sq_est * y_range^2
 	
 	#make bart to spec with what the user wants
 	.jcall(java_bart_machine, "V", "setNumCores", as.integer(num_cores)) #this must be set FIRST!!!
