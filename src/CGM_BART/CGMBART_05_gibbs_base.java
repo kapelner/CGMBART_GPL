@@ -1,6 +1,7 @@
 package CGM_BART;
 
 import java.io.Serializable;
+import java.util.HashMap;
 
 public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements Serializable {
 	private static final long serialVersionUID = 1280579612167425306L;
@@ -19,6 +20,33 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 //		BurnTreeAndSigsqChain();
 		//make sure debug files are closed
 //		CloseDebugFiles();
+		
+		//print out pctg of steps
+//		HashMap<Character, Integer> total_counts = new HashMap<Character, Integer>(3);
+//		total_counts.put('G', 0);
+//		total_counts.put('P', 0);
+//		total_counts.put('C', 0);
+//		HashMap<Character, Integer> counts_accepted = new HashMap<Character, Integer>(3);
+//		counts_accepted.put('G', 0);
+//		counts_accepted.put('P', 0);
+//		counts_accepted.put('C', 0);		
+//		for (int g = 1; g < num_gibbs_total_iterations; g++){
+//			for (int t = 0; t < num_trees; t++){
+//				char step = accept_reject_mh_steps[g][t];
+//				total_counts.put(step, total_counts.get(step) + 1);
+//				if (accept_reject_mh[g][t]){
+//					counts_accepted.put(step, counts_accepted.get(step) + 1);
+//				}
+//			}			
+//		}
+//		//print pctg of grows
+//		System.out.println("%grow total: " + total_counts.get('G') / (double) ((num_gibbs_total_iterations - 1) * num_trees));
+//		System.out.println("%prun total: " + total_counts.get('P') / (double) ((num_gibbs_total_iterations - 1) * num_trees));
+//		System.out.println("%chan total: " + total_counts.get('C') / (double) ((num_gibbs_total_iterations - 1) * num_trees));
+//		
+//		System.out.println("%grow acc: " + counts_accepted.get('G') / (double) total_counts.get('G'));
+//		System.out.println("%prun acc: " + counts_accepted.get('P') / (double) total_counts.get('P'));
+//		System.out.println("%chan acc: " + counts_accepted.get('C') / (double) total_counts.get('C'));		
 	}	
 
 	protected void DoGibbsSampling(){	
@@ -129,10 +157,7 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 		
 		//sample from T_j | R_j, \sigma
 		//now we will run one M-H step on this tree with the y as the R_j
-		CGMBARTTreeNode new_jth_tree = metroHastingsPosteriorTreeSpaceIteration(copy_of_old_jth_tree);
-		
-		//record accept or reject: accept means we got a new tree, reject means we kept old one
-		accept_reject_mh[sample_num][t] = new_jth_tree != copy_of_old_jth_tree;
+		CGMBARTTreeNode new_jth_tree = metroHastingsPosteriorTreeSpaceIteration(copy_of_old_jth_tree, t, accept_reject_mh, accept_reject_mh_steps);
 		
 		//add it to the vector of current sample's trees
 		cgm_trees[t] = new_jth_tree;
@@ -143,7 +168,7 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 		return R_j;
 	}
 	
-	protected abstract CGMBARTTreeNode metroHastingsPosteriorTreeSpaceIteration(CGMBARTTreeNode copy_of_old_jth_tree);
+	protected abstract CGMBARTTreeNode metroHastingsPosteriorTreeSpaceIteration(CGMBARTTreeNode copy_of_old_jth_tree, int t, boolean[][] accept_reject_mh, char[][] accept_reject_mh_steps);
 
 //	private void BurnTreeAndSigsqChain() {		
 //		for (int i = num_gibbs_burn_in; i < num_gibbs_total_iterations; i++){

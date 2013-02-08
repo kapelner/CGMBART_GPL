@@ -217,6 +217,8 @@ bart_machine_duplicate = function(bart_machine, ...){
 destroy_bart_machine = function(bart_machine){
 	.jcall(bart_machine$java_bart_machine, "V", "destroy")
 	bart_machine$bart_destroyed = TRUE
+	#explicitly ask the JVM to give use the RAM back right now
+	.jcall("java/lang/System", , "gc")
 }
 
 check_bart_error_assumptions = function(bart_machine, alpha_normal_test = 0.05, alpha_hetero_test = 0.05){
@@ -262,7 +264,7 @@ get_var_props_over_chain = function(bart_machine){
 
 
 
-bart_predict_for_test_data = function(bart_machine, test_dat){
+bart_predict_for_test_data = function(bart_machine, test_data){
 	y_hat = predict(bart_machine, test_data)
 	y = test_data$y
 	n = nrow(test_data)
@@ -303,7 +305,7 @@ bart_machine_predict = function(bart_machine, new_data){
 }
 
 predict.bart_machine = function(bart_machine, new_data){
-	bart_machine_predict(bart_machine, new_data, BART_NUM_CORES)$y_hat
+	bart_machine_predict(bart_machine, new_data)$y_hat
 }
 
 summary.bart_machine = function(bart_machine, show_details_for_trees = FALSE){

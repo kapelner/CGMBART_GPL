@@ -32,14 +32,25 @@ set_bart_machine_num_cores(4)
 
 	bart_machine = build_bart_machine(Xtrain, 
 		num_trees = 200,
-		num_burn_in = 3000, 
-		num_iterations_after_burn_in = 500,
-		debug_log = TRUE)
+		num_burn_in = 2000, 
+		num_iterations_after_burn_in = 2000)
 	
 	cat(paste("built bart machine #", i, "\n"))
 #}
 summary(bart_machine)
 bart_machine$training_data_features
+
+#convenience to predict on the test data automatically computing SSE, etc
+predict_obj = bart_predict_for_test_data(bart_machine, Xtest)
+predict_obj$rmse
+
+
+library(BayesTree)
+rob = bart(x.train = Xtrain[,1:13],y.train=Xtrain$y,x.test=Xtest[,1:13],ndpost=2000,nskip=2000)
+sqrt(sum((rob$yhat.test.mean - Xtest$y)^2) / length(Xtest$y))
+mean(rob$sigma)
+
+
 interaction_investigator(bart_machine, num_replicates_for_avg = 500, num_var_plot = 20)
 investigate_var_importance(bart_machine)
 
@@ -55,9 +66,9 @@ plot_sigsqs_convergence_diagnostics(bart_machine)
 hist_sigsqs(bart_machine)
 check_bart_error_assumptions(bart_machine)
 
-#convenience to predict on the test data automatically computing SSE, etc
-predict_obj = bart_predict_for_test_data(bart_machine, Xtest)
-predict_obj$rmse
+
+
+pd_plot(bart_machine, 6)
 
 
 rmses = array(NA, 20)
@@ -106,7 +117,7 @@ windows()
 plot_y_vs_yhat(bart_machine, ppis = T)
 
 windows()
-investigate_var_importance(bart_machine, num_replicates_for_avg=10,num_var_plot=15)
+investigate_var_importance(bart_machine, num_replicates_for_avg=50,num_var_plot=15)
 windows()
 
 library(BayesTree)
@@ -135,12 +146,8 @@ plot_y_vs_yhat(bart_machine)
 pred_obj = bart_predict_for_test_data(bart_machine_cv, Xtest)
 pred_obj$rmse
 
-pd_plot(bart_machine, 6)
 
-library(BayesTree)
-rob = bart(x.train = Xtrain[,1:13],y.train=Xtrain$y,x.test=Xtest[,1:13],ndpost=2000,nskip=2000,sigdf = 10, sigquant = 0.75, k =3)
-sqrt(sum((rob$yhat.test.mean - Xtest$y)^2) / length(Xtest$y))
-mean(rob$sigma)
+
 
 library(randomForest)
 rf = randomForest(x = Xtrain[, 1 : 13], y = Xtrain$y, importance = TRUE)

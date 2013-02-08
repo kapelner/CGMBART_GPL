@@ -42,7 +42,7 @@ public abstract class CGMBART_02_hyperparams extends CGMBART_01_base implements 
 	
 	// hist(1 / rgamma(5000, 1.5, 1.5 * 153.65), br=100)
 	protected void calculateHyperparameters() {
-		System.out.println("calculateHyperparameters in BART\n\n");
+//		System.out.println("calculateHyperparameters in BART\n\n");
 		hyper_mu_mu = 0;
 		hyper_sigsq_mu = Math.pow(YminAndYmaxHalfDiff / (hyper_k * Math.sqrt(num_trees)), 2);
 //		System.out.println("hyper_sigsq_mu: " + hyper_sigsq_mu);
@@ -80,7 +80,7 @@ public abstract class CGMBART_02_hyperparams extends CGMBART_01_base implements 
 //		}
 //		System.out.println("hyper_lambda via grid: " + hyper_lambda);
 //		System.out.println("y_min = " + y_min + " y_max = " + y_max + " R_y = " + Math.sqrt(y_range_sq));
-		System.out.println("hyperparams:  k = " + hyper_k + " hyper_mu_mu = " + hyper_mu_mu + " sigsq_mu = " + hyper_sigsq_mu + " hyper_lambda = " + hyper_lambda + " hyper_nu = " + hyper_nu + " hyper_q = " + hyper_q + " s_y_trans^2 = " + sample_var_y + " R_y = " + Math.sqrt(y_range_sq) + "\n\n");
+//		System.out.println("hyperparams:  k = " + hyper_k + " hyper_mu_mu = " + hyper_mu_mu + " sigsq_mu = " + hyper_sigsq_mu + " hyper_lambda = " + hyper_lambda + " hyper_nu = " + hyper_nu + " hyper_q = " + hyper_q + " s_y_trans^2 = " + sample_var_y + " R_y = " + Math.sqrt(y_range_sq) + "\n\n");
 	}	
 	
 	public static void setK(double hyper_k) {
@@ -96,14 +96,13 @@ public abstract class CGMBART_02_hyperparams extends CGMBART_01_base implements 
 	}
 
 	protected void transformResponseVariable() {
-		System.out.println("CGMBART transformResponseVariable");
+//		System.out.println("CGMBART transformResponseVariable");
 		//make sure to initialize the y_trans to be y first
 		super.transformResponseVariable();
 		//make data we need later
 		y_min = StatToolbox.sample_minimum(y_orig);
 		y_max = StatToolbox.sample_maximum(y_orig);
 		y_range_sq = Math.pow(y_max - y_min, 2);
-		System.out.println("y_range_sq: " + y_range_sq);
 	
 		for (int i = 0; i < n; i++){
 			y_trans[i] = transform_y(y_orig[i]);

@@ -26,6 +26,7 @@ package CGM_BART;
 
 import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.list.array.TIntArrayList;
+import gnu.trove.set.hash.TDoubleHashSet;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -125,7 +126,14 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		copy.isLeaf = isLeaf;
 		copy.splitAttributeM = splitAttributeM;
 		copy.splitValue = splitValue;
+//		//deep copy
+//		if (possible_rule_variables != null){
+//			TIntArrayList possible_rule_variables_clone = new TIntArrayList(possible_rule_variables.size());
+//			possible_rule_variables_clone.addAll(possible_rule_variables);
+//			copy.possible_rule_variables = possible_rule_variables_clone;
+//		}
 		copy.possible_rule_variables = possible_rule_variables;
+		//deep copy
 		copy.possible_split_vals_by_attr = possible_split_vals_by_attr;
 		copy.depth = depth;
 		//////do not copy y_pred
@@ -235,23 +243,17 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 
 	public double Evaluate(double[] xs) {
 		CGMBARTTreeNode evalNode = this;
-//		System.out.println("Evaluate record: " + IOTools.StringJoin(record, " "));
 		while (true){
-//			System.out.println("evaluate via node: " + evalNode.stringID());
-//			CGMTreeNode.DebugNode((CGMTreeNode)evalNode);
 			if (evalNode.isLeaf){
 				return evalNode.y_pred;
 			}
 			//all split rules are less than or equals (this is merely a convention)
 			//it's a convention that makes sense - if X_.j is binary, and the split values can only be 0/1
 			//then it MUST be <= so both values can be considered
-//			System.out.println("Rule: X_" + evalNode.splitAttributeM + " < " + evalNode.splitValue + " ie " + record[evalNode.splitAttributeM] + " < " + evalNode.splitValue);
 			if (xs[evalNode.splitAttributeM] <= evalNode.splitValue){
-//				System.out.println("went left");
 				evalNode = evalNode.left;
 			}
 			else {
-//				System.out.println("went right");
 				evalNode = evalNode.right;
 			}
 		}
@@ -273,7 +275,9 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 	public static final boolean DEBUG_NODES = false;
 	public void propagateDataByChangedRule() {		
 		if (isLeaf){ //only propagate if we are in a split node and NOT a leaf
-			printNodeDebugInfo("propagateDataByChangedRule LEAF");
+			if (DEBUG_NODES){
+				printNodeDebugInfo("propagateDataByChangedRule LEAF");
+			}
 			return;
 		}
 		
@@ -356,8 +360,11 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		else if (this.parent.left == this){
 			return this.parent.stringLocation(false) + "L";
 		}
-		else {
+		else if (this.parent.right == this){
 			return this.parent.stringLocation(false) + "R";
+		}
+		else {
+			return this.parent.stringLocation(false) + "?";
 		}
 	}
 
@@ -374,7 +381,6 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 			for (int i = 0; i < n_eta; i++){
 				sum_responses_qty += responses[i];
 			}
-//			System.out.println("sum_responses_qty " + sum_responses_qty);
 		}
 		return sum_responses_qty;
 	}	
@@ -382,8 +388,6 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 	protected TIntArrayList predictorsThatCouldBeUsedToSplitAtNode() {
 		if (possible_rule_variables == null){
 			possible_rule_variables = new TIntArrayList();
-			
-//			System.out.println("predictorsThatCouldBeUsedToSplitAtNode " + this.stringLocation(true) + " data is " + data.size() + " x " + data.get(0).length);
 			
 			for (int j = 0; j < cgmbart.p; j++){
 				//if size of unique of x_i > 1
@@ -420,9 +424,9 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 				x_dot_j_node[i] = x_dot_j[indicies[i]];
 			}
 			
-			TDoubleHashSetAndArray unique_x_dot_j_node = new TDoubleHashSetAndArray(x_dot_j_node);			
-			double max = Tools.max(x_dot_j_node);				
-			unique_x_dot_j_node.remove(max);	
+			TDoubleHashSetAndArray unique_x_dot_j_node = new TDoubleHashSetAndArray(x_dot_j_node);
+			double max = Tools.max(x_dot_j_node);
+			unique_x_dot_j_node.remove(max);
 			possible_split_vals_by_attr.put(splitAttributeM, unique_x_dot_j_node);
 		}
 		return possible_split_vals_by_attr.get(splitAttributeM);
@@ -431,6 +435,9 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 
 	public double pickRandomSplitValue() {	
 		TDoubleHashSetAndArray split_values = possibleSplitValuesGivenAttribute();
+		if (split_values.size() == 0){
+			return CGMBARTTreeNode.BAD_FLAG_double;
+		}
 		int rand_index = (int) Math.floor(StatToolbox.rand() * split_values.size());
 		return split_values.getAtIndex(rand_index);
 	}
@@ -519,58 +526,73 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 
 		//initialize the yhats
 		yhats = new double[n_eta];
-//		System.out.println("setStumpData  X is " + data.size() + " x " + data.get(0).length + "  y is " + y.length + " x " + 1);
-		printNodeDebugInfo("setStumpData");
+		if (DEBUG_NODES){printNodeDebugInfo("setStumpData");}
 	}
 
-	public void printNodeDebugInfo(String title) {
-		if (DEBUG_NODES){
-			System.out.println("\n" + title + " node debug info for " + this.stringLocation(true) + (isLeaf ? " (LEAF) " : " (INTERNAL NODE) ") + " d = " + depth);
-			System.out.println("-----------------------------------------");
-			
-			System.out.println("cgmbart = " + cgmbart + " parent = " + parent + " left = " + left + " right = " + right);
-			System.out.println("----- RULE:   X_" + splitAttributeM + " <= " + splitValue + " ------");
-			System.out.println("n_eta = " + n_eta + " y_pred = " + (y_pred == BAD_FLAG_double ? "BLANK" : cgmbart.un_transform_y_and_round(y_pred)));
-			System.out.println("sum_responses_qty = " + sum_responses_qty + " sum_responses_qty_sqd = " + sum_responses_qty_sqd);
-			
-			System.out.println("possible_rule_variables: [" + Tools.StringJoin(possible_rule_variables, ", ") + "]");
-			System.out.print("possible_split_vals_by_attr: {");
-			if (possible_split_vals_by_attr != null){
-				for (int key : possible_split_vals_by_attr.keySet()){
-					System.out.print(" " + key + " -> [" + Tools.StringJoin(possible_split_vals_by_attr.get(key).toArray()) + "]");
-				}
-				System.out.print(" }\n");
+	public void printNodeDebugInfo(String title) {		
+		System.out.println("\n" + title + " node debug info for " + this.stringLocation(true) + (isLeaf ? " (LEAF) " : " (INTERNAL NODE) ") + " d = " + depth);
+		System.out.println("-----------------------------------------");
+		System.out.println("n_eta = " + n_eta + " y_pred = " + (y_pred == BAD_FLAG_double ? "BLANK" : cgmbart.un_transform_y_and_round(y_pred)));
+		
+		System.out.println("cgmbart = " + cgmbart + " parent = " + parent + " left = " + left + " right = " + right);
+		
+		if (this.parent != null){
+			System.out.println("----- PARENT RULE:   X_" + parent.splitAttributeM + " <= " + parent.splitValue + " ------");
+			//get vals of this x currently here
+			double[] x_dot_j = cgmbart.X_y_by_col.get(parent.splitAttributeM);
+			double[] x_dot_j_node = new double[n_eta];
+			for (int i = 0; i < n_eta; i++){
+				x_dot_j_node[i] = x_dot_j[indicies[i]];
 			}
-			else {
-				System.out.println(" NULL MAP }");
+			Arrays.sort(x_dot_j_node);
+			System.out.println("   all X_" + parent.splitAttributeM + " values here: [" + Tools.StringJoin(x_dot_j_node) + "]");
+		}
+		
+		if (!isLeaf){
+			System.out.println("\n----- RULE:   X_" + splitAttributeM + " <= " + splitValue + " ------");
+			//get vals of this x currently here
+			double[] x_dot_j = cgmbart.X_y_by_col.get(splitAttributeM);
+			double[] x_dot_j_node = new double[n_eta];
+			for (int i = 0; i < n_eta; i++){
+				x_dot_j_node[i] = x_dot_j[indicies[i]];
 			}
-			
-//			System.out.println("X is " + data.size() + " x " + data.get(0).length + " and below:");
-//			for (int i = 0; i < data.size(); i++){
-//				double[] record = data.get(i).clone();
-//				record[cgmbart.p] = cgmbart.un_transform_y_and_round(record[cgmbart.p]);
-//				System.out.println("  " + Tools.StringJoin(record));
-//			}
-			
-			System.out.println("responses: (size " + responses.length + ") [" + Tools.StringJoin(cgmbart.un_transform_y_and_round(responses)) + "]");
-			System.out.println("indicies: (size " + indicies.length + ") [" + Tools.StringJoin(indicies) + "]");
-			if (Arrays.equals(yhats, new double[yhats.length])){
-				System.out.println("y_hat_vec: (size " + yhats.length + ") [ BLANK ]");
+			Arrays.sort(x_dot_j_node);
+			System.out.println("   all X_" + splitAttributeM + " values here: [" + Tools.StringJoin(x_dot_j_node) + "]");
+		}	
+
+		
+		System.out.println("sum_responses_qty = " + sum_responses_qty + " sum_responses_qty_sqd = " + sum_responses_qty_sqd);
+		
+		System.out.println("possible_rule_variables: [" + Tools.StringJoin(possible_rule_variables, ", ") + "]");
+		System.out.println("possible_split_vals_by_attr: {");
+		if (possible_split_vals_by_attr != null){
+			for (int key : possible_split_vals_by_attr.keySet()){
+				double[] array = possible_split_vals_by_attr.get(key).toArray();
+				Arrays.sort(array);
+				System.out.println("  " + key + " -> [" + Tools.StringJoin(array) + "],");
 			}
-			else {
-				System.out.println("y_hat_vec: (size " + yhats.length + ") [" + Tools.StringJoin(cgmbart.un_transform_y_and_round(yhats)) + "]");
-			}
-			System.out.println("-----------------------------------------\n\n\n");
+			System.out.print(" }\n");
+		}
+		else {
+			System.out.println(" NULL MAP\n}");
+		}
+		
+		System.out.println("responses: (size " + responses.length + ") [" + Tools.StringJoin(cgmbart.un_transform_y_and_round(responses)) + "]");
+		System.out.println("indicies: (size " + indicies.length + ") [" + Tools.StringJoin(indicies) + "]");
+		if (Arrays.equals(yhats, new double[yhats.length])){
+			System.out.println("y_hat_vec: (size " + yhats.length + ") [ BLANK ]");
+		}
+		else {
+			System.out.println("y_hat_vec: (size " + yhats.length + ") [" + Tools.StringJoin(cgmbart.un_transform_y_and_round(yhats)) + "]");
+		}
+		System.out.println("-----------------------------------------\n\n\n");
 //			System.out.println("X_y y:   " + Tools.StringJoin(cgmbart.getResponses()));
 //			System.out.println("y_trans: " + Tools.StringJoin(cgmbart.un_transform_y_and_round(cgmbart.y_trans)));
 //			
 //			System.out.println("-----------------------------------------\n\n\n");
-		}
 	}
 
 	public void updateWithNewResponsesRecursively(double[] new_responses) {
-		
-//		System.out.println("updateWithNewResponsesRecursively " + this.stringLocation(true) + " indicies: " + Tools.StringJoin(indicies));
 		//nuke previous responses and sums
 		responses = new double[n_eta]; //ensure correct dimension
 		sum_responses_qty_sqd = 0; //need to be primitives
@@ -583,8 +605,9 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		}
 		if (DEBUG_NODES){
 			System.out.println("new_responses: (size " + new_responses.length + ") [" + Tools.StringJoin(cgmbart.un_transform_y_and_round(new_responses)) + "]");
+			printNodeDebugInfo("updateWithNewResponsesRecursively");
 		}
-		printNodeDebugInfo("updateWithNewResponsesRecursively");
+		
 		if (this.isLeaf){
 			return;
 		}		
@@ -596,14 +619,15 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		for (int i = 0; i < indicies.length; i++){
 			yhats[indicies[i]] = y_pred;
 		}
-		printNodeDebugInfo("updateYHatsWithPrediction");
+		if (DEBUG_NODES){
+			printNodeDebugInfo("updateYHatsWithPrediction");
+		}
 	}
 
 	public void findInteractions(HashSet<UnorderedPair<Integer>> set_of_interaction_pairs) {		
 		if (this.isLeaf){
 			return;
 		}
-//		System.out.println("findInteractions " + this.stringLocation(true) + " L:" + this.left.splitAttributeM + " R:" + this.right.splitAttributeM);
 		//add all pairs for which this split at this node interacts
 		findSplitAttributesUsedUnderneath(this.splitAttributeM, set_of_interaction_pairs);
 		//recurse further
@@ -626,6 +650,11 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		//now recurse
 		this.left.findSplitAttributesUsedUnderneath(interacted_attribute, set_of_interaction_pairs);
 		this.right.findSplitAttributesUsedUnderneath(interacted_attribute, set_of_interaction_pairs);
+	}
+
+	public void clearRulesAndSplitCache() {
+		possible_rule_variables = null;
+		possible_split_vals_by_attr = null;
 	}
 
 }

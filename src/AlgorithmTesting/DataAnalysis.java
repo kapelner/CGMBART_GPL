@@ -39,10 +39,10 @@ public class DataAnalysis {
 //	private static final String DataSetFilename = "r_treemodel_high_n";
 //	private static final String DataSetFilename = "r_treemodel_low_n";	
 //	private static final String DataSetFilename = "r_friedman";
-	private static final String DataSetFilename = "r_friedman_hd";	
+//	private static final String DataSetFilename = "r_friedman_hd";	
 //	private static final String DataSetFilename = "r_univariatelinear";
 //	private static final String DataSetFilename = "r_bivariatelinear";
-//	private static final String DataSetFilename = "r_boston";
+	private static final String DataSetFilename = "r_boston";
 //	private static final String DataSetFilename = "r_boston_half";	
 //	private static final String DataSetFilename = "r_zach";
 //	private static final String DataSetFilename = "r_forestfires";
@@ -52,7 +52,7 @@ public class DataAnalysis {
 	public static void main(String[] args) throws IOException{
 		System.out.println("java ver: " + System.getProperty("java.version"));
 		//make sure y is last column of data matrix
-		DataSetupForCSVFile data = new DataSetupForCSVFile(new File("datasets", "r_boston" + ".csv"), true);
+		DataSetupForCSVFile data = new DataSetupForCSVFile(new File("datasets", DataSetFilename + ".csv"), true);
 		Classifier machine = null; //we're going to use some machine to do it... 
 
 		//if the filename begins with a "c" => classification task, if it begins with an "r" => regression task
@@ -65,33 +65,9 @@ public class DataAnalysis {
 //				((CGMBARTRegressionMultThread)machine).setCovSplitPrior(cov_split_prior);
 //				((CGMBARTRegressionMultThread)machine).useHeteroskedasticity();
 			machine.Build();
+			long L2 = Math.round(machine.calculateInSampleLoss(Classifier.ErrorTypes.L2, 4));
 			System.out.println("(in sample) L1 error: " + 
 				Math.round(machine.calculateInSampleLoss(Classifier.ErrorTypes.L1, 4)) +
-				" L2 error: " + 
-				Math.round(machine.calculateInSampleLoss(Classifier.ErrorTypes.L2, 4)));
-			
-			
-		
-		System.out.println("java ver: " + System.getProperty("java.version"));
-		//make sure y is last column of data matrix
-		data = new DataSetupForCSVFile(new File("datasets", "r_friedman_hd" + ".csv"), true);
-		machine = null; //we're going to use some machine to do it... 
-
-		//if the filename begins with a "c" => classification task, if it begins with an "r" => regression task
-
-//			machine = new RandomForest(data, new JProgressBarAndLabel(0, 0, null));
-//			for (int num_times = 0; num_times < 100; num_times++){
-				machine = new CGMBARTRegressionMultThread();
-				machine.setData(data.getX_y());
-//				double[] cov_split_prior = {1, 1000,1000};
-//				((CGMBARTRegressionMultThread)machine).setCovSplitPrior(cov_split_prior);
-//				((CGMBARTRegressionMultThread)machine).useHeteroskedasticity();
-				machine.Build();
-				System.out.println("(in sample) L1 error: " + 
-					Math.round(machine.calculateInSampleLoss(Classifier.ErrorTypes.L1, 4)) +
-					" L2 error: " + 
-					Math.round(machine.calculateInSampleLoss(Classifier.ErrorTypes.L2, 4)));
-//			}
-		}
-
+				" L2 error: " + L2 + " rmse: " + Math.sqrt(L2 / (double)machine.getN()));
+	}
 }

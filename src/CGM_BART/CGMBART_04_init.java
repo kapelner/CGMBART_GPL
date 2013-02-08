@@ -32,6 +32,7 @@ public abstract class CGMBART_04_init extends CGMBART_03_debug implements Serial
 		gibbs_samples_of_sigsq_after_burn_in = new double[num_gibbs_total_iterations - num_gibbs_burn_in];
 		
 		accept_reject_mh = new boolean[num_gibbs_total_iterations + 1][num_trees];	
+		accept_reject_mh_steps = new char[num_gibbs_total_iterations + 1][num_trees];
 	}
 	
 	

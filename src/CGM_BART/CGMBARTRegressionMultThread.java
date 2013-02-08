@@ -76,8 +76,7 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 		//run a build on all threads
 		BuildOnAllThreads();
 		//once it's done, now put together the chains
-		ConstructBurnedChainForTreesAndOtherInformation();	
-		getGibbsSamplesSigsqs();
+		ConstructBurnedChainForTreesAndOtherInformation();
 	}	
 	
 	protected void ConstructBurnedChainForTreesAndOtherInformation() {
@@ -305,10 +304,10 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 			}
 		}	
 		//what's the SIGSQ?
-		for (int g = 0; g < sigsqs_to_export.size(); g++){
-			System.out.println("g = " + g + " sigsq: " + sigsqs_to_export.get(g));			
-		}
-		System.out.println("MEAN: " + StatToolbox.sample_average(sigsqs_to_export.toArray()));
+//		for (int g = 0; g < sigsqs_to_export.size(); g++){
+//			System.out.println("g = " + g + " sigsq: " + sigsqs_to_export.get(g));			
+//		}
+//		System.out.println("MEAN: " + StatToolbox.sample_average(sigsqs_to_export.toArray()));
 		
 		return sigsqs_to_export.toArray();
 	}

@@ -256,7 +256,7 @@ public class StatToolbox {
 	}
 	
 	public static double sample_maximum(double[] y){
-		double max = Double.MIN_VALUE;
+		double max = Double.NEGATIVE_INFINITY;
 		for (double y_i : y){
 			if (y_i > max){
 				max = y_i;
