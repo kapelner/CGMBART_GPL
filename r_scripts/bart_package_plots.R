@@ -376,19 +376,21 @@ shapiro_wilk_p_val = function(vec){
 	tryCatch(shapiro.test(vec)$p.value, error = function(e){})
 }
 
-interaction_investigator = function(bart_machine, plot = TRUE, num_replicates_for_avg = 5, num_var_plot = Inf){
+interaction_investigator = function(bart_machine, plot = TRUE, num_replicates_for_avg = 5, num_trees_bottleneck = 20, num_var_plot = Inf){
 	
 	interaction_counts = array(NA, c(bart_machine$p, bart_machine$p, num_replicates_for_avg))
-	interaction_counts[, , 1] = sapply(.jcall(bart_machine$java_bart_machine, "[[I", "getInteractionCounts", as.integer(BART_NUM_CORES)), .jevalArray)
-	cat(".")
 	
-	for (r in 2 : num_replicates_for_avg){
-		bart_machine_dup = bart_machine_duplicate(bart_machine, run_in_sample = FALSE)
-		interaction_counts[, , r] = sapply(.jcall(bart_machine_dup$java_bart_machine, "[[I", "getInteractionCounts", as.integer(BART_NUM_CORES)), .jevalArray)
-		destroy_bart_machine(bart_machine_dup)
-		cat(".")
-		if (r %% 40 == 0){
-			cat("\n")
+	for (r in 1 : num_replicates_for_avg){
+		if (r == 1 & num_trees_bottleneck == bart_machine$num_trees){
+			interaction_counts[, , r] = sapply(.jcall(bart_machine$java_bart_machine, "[[I", "getInteractionCounts", as.integer(BART_NUM_CORES)), .jevalArray)
+		} else {
+			bart_machine_dup = bart_machine_duplicate(bart_machine, run_in_sample = FALSE)			
+			interaction_counts[, , r] = sapply(.jcall(bart_machine_dup$java_bart_machine, "[[I", "getInteractionCounts", as.integer(BART_NUM_CORES)), .jevalArray)
+			destroy_bart_machine(bart_machine_dup)
+			cat(".")
+			if (r %% 40 == 0){
+				cat("\n")
+			}					
 		}
 	}
 	cat("\n")

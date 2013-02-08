@@ -52,7 +52,7 @@ sqrt(sum((rob$yhat.test.mean - ytest)^2) / length(ytest))
 mean(rob$sigma)
 
 
-interaction_investigator(bart_machine, num_replicates_for_avg = 5, num_var_plot = 20)
+interaction_investigator(bart_machine, num_replicates_for_avg = 5, num_var_plot = 20, num_trees_bottleneck = 200)
 investigate_var_importance(bart_machine)
 
 plot_y_vs_yhat(bart_machine, ppis=T)
