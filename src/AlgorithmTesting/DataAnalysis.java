@@ -52,22 +52,33 @@ public class DataAnalysis {
 	public static void main(String[] args) throws IOException{
 		System.out.println("java ver: " + System.getProperty("java.version"));
 		//make sure y is last column of data matrix
-		DataSetupForCSVFile data = new DataSetupForCSVFile(new File("datasets", DataSetFilename + ".csv"), true);
+		DataSetupForCSVFile data = new DataSetupForCSVFile(new File("datasets", "r_boston" + ".csv"), true);
 		Classifier machine = null; //we're going to use some machine to do it... 
 
 		//if the filename begins with a "c" => classification task, if it begins with an "r" => regression task
-		if (DataSetFilename.charAt(0) == 'c'){ //classification problem
-//			CGMClassificationTree tree = new CGMClassificationTree(data, new JProgressBarAndLabel(0, 0, null), data.getK());
-			machine = new CGMBARTClassification(data.getK());
+		//regression problem
+//			machine = new RandomForest(data, new JProgressBarAndLabel(0, 0, null));
+//			for (int num_times = 0; num_times < 100; num_times++){
+			machine = new CGMBARTRegressionMultThread();
 			machine.setData(data.getX_y());
+//				double[] cov_split_prior = {1, 1000,1000};
+//				((CGMBARTRegressionMultThread)machine).setCovSplitPrior(cov_split_prior);
+//				((CGMBARTRegressionMultThread)machine).useHeteroskedasticity();
 			machine.Build();
-			System.out.println("errors: " + 
-					(int)machine.calculateInSampleLoss(Classifier.ErrorTypes.MISCLASSIFICATION, 4) + 
-					"/" + 
-					machine.getN() + 
-					"  (" + machine.calculateMisclassificationRate(4) + "%)");
-		}
-		else { //regression problem
+			System.out.println("(in sample) L1 error: " + 
+				Math.round(machine.calculateInSampleLoss(Classifier.ErrorTypes.L1, 4)) +
+				" L2 error: " + 
+				Math.round(machine.calculateInSampleLoss(Classifier.ErrorTypes.L2, 4)));
+			
+			
+		
+		System.out.println("java ver: " + System.getProperty("java.version"));
+		//make sure y is last column of data matrix
+		data = new DataSetupForCSVFile(new File("datasets", "r_friedman_hd" + ".csv"), true);
+		machine = null; //we're going to use some machine to do it... 
+
+		//if the filename begins with a "c" => classification task, if it begins with an "r" => regression task
+
 //			machine = new RandomForest(data, new JProgressBarAndLabel(0, 0, null));
 //			for (int num_times = 0; num_times < 100; num_times++){
 				machine = new CGMBARTRegressionMultThread();
@@ -81,7 +92,6 @@ public class DataAnalysis {
 					" L2 error: " + 
 					Math.round(machine.calculateInSampleLoss(Classifier.ErrorTypes.L2, 4)));
 //			}
-		}		
-	}
+		}
 
 }

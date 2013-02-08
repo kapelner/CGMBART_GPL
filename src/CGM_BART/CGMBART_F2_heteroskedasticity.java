@@ -69,7 +69,7 @@ public class CGMBART_F2_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
 //		else {
 //			double sigsq = drawSigsqFromPosterior(sample_num, es);
 			for (int i = 0; i < n; i++){
-				double sigsq = StatToolbox.sample_from_inv_gamma((hyper_nu + es.length) / 2, 2 / (es.length * es[i] * es[i] + hyper_nu * hyper_lambda));
+				double sigsq = StatToolbox.sample_from_inv_gamma((hyper_nu + es.length) / 2, 2 / (es.length * es[i] * es[i] + hyper_nu * hyper_lambda), this);
 				gibbs_samples_of_sigsq_hetero[sample_num][i] = sigsq;	
 //				System.out.println("sample sigsq e_i = " + es[i] + " sigsq_i = " + sigsq);
 			}				

@@ -28,6 +28,8 @@ public abstract class CGMBART_02_hyperparams extends CGMBART_01_base implements 
 	protected double y_range_sq;	
 	protected Double sample_var_y;
 	
+	protected transient double[] samps_chi_sq_df_eq_nu_plus_n;	
+	
 	
 	public void setData(ArrayList<double[]> X_y){
 		super.setData(X_y);
@@ -35,7 +37,7 @@ public abstract class CGMBART_02_hyperparams extends CGMBART_01_base implements 
 //		for (int i = 0; i < n; i++){
 //			System.out.println("i: " + i + " ROW: " + Tools.StringJoin(X_y.get(i), "\t"));
 //		}
-		StatToolbox.cacheInvGammas(n, hyper_nu);
+		StatToolbox.cacheInvGammas(n, hyper_nu, this);
 	}		
 	
 	// hist(1 / rgamma(5000, 1.5, 1.5 * 153.65), br=100)

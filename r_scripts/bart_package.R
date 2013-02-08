@@ -122,7 +122,7 @@ build_bart_machine = function(training_data,
 	
 	
 	if (length(cov_prior_vec) != 0){
-		#put in checks here for user to make sure it's correct length
+		#put in checks here for user to make sure the covariate prior vec is the correct length
 		if (length(cov_prior_vec) != ncol(model_matrix_training_data) - 1){
 			attribute_names = paste(colnames(model_matrix_training_data)[1 : ncol(model_matrix_training_data) - 1], collapse = ", ")
 			stop(paste("covariate prior vector length =", length(cov_prior_vec), "has to be equal to p =", ncol(model_matrix_training_data) - 1, "\nattribute names in order for the prior:", attribute_names), call. = FALSE)
