@@ -20,6 +20,7 @@ DEFAULT_BETA = 2
 DEFAULT_K = 2
 DEFAULT_Q = 0.9
 DEFAULT_NU = 3.0
+DEFAULT_PROB_STEPS = c(2.5, 2.5, 4) / 9
 COLORS = array(NA, 500)
 for (i in 1 : 500){
 	COLORS[i] = rgb(runif(1, 0, 0.7), runif(1, 0, 0.7), runif(1, 0, 0.7))
@@ -31,7 +32,7 @@ set_bart_machine_num_cores = function(num_cores){
 	assign("BART_NUM_CORES", num_cores, ".GlobalEnv")
 }
 
-build_bart_machine = function(training_data, 
+build_bart_machine = function(X, y, 
 		num_trees = 200, 
 		num_burn_in = 250, 
 		num_iterations_after_burn_in = 1000, 
@@ -40,12 +41,14 @@ build_bart_machine = function(training_data,
 		k = DEFAULT_K,
 		q = DEFAULT_Q,
 		nu = DEFAULT_NU,
+		mh_prob_steps = DEFAULT_PROB_STEPS,
 		debug_log = FALSE,
 		fix_seed = FALSE,
 		run_in_sample = TRUE,
 		s_sq_y = "mse", # "mse" or "var"
 		unique_name = "unnamed",
 		print_tree_illustrations = FALSE,
+		num_cores = NULL,
 		cov_prior_vec = NULL,
 		verbose = TRUE){
 	
@@ -56,10 +59,10 @@ build_bart_machine = function(training_data,
 	
 	num_gibbs = num_burn_in + num_iterations_after_burn_in
 	#check for errors in data
-	if (check_for_errors_in_training_data(training_data)){
+	if (check_for_errors_in_training_data(X)){
 		return;
 	}
-	model_matrix_training_data = pre_process_training_data(training_data)
+	model_matrix_training_data = cbind(pre_process_training_data(X), y)
 	
 	#initialize the JVM
 	for (dependency in JAR_DEPENDENCIES){
@@ -93,8 +96,8 @@ build_bart_machine = function(training_data,
 
 	}
 	
-	y_range = max(training_data$y) - min(training_data$y)
-	y_trans = (training_data$y - min(training_data$y)) / y_range - 0.5
+	y_range = max(y) - min(y)
+	y_trans = (y - min(y)) / y_range - 0.5
 	if (s_sq_y == "mse"){
 		mod = lm(y_trans ~ ., as.data.frame(model_matrix_training_data)[1 : (ncol(model_matrix_training_data) - 1)])
 		mse = var(mod$residuals)
@@ -110,7 +113,7 @@ build_bart_machine = function(training_data,
 	sig_sq_est = sig_sq_est * y_range^2
 	
 	#make bart to spec with what the user wants
-	.jcall(java_bart_machine, "V", "setNumCores", as.integer(BART_NUM_CORES)) #this must be set FIRST!!!
+	.jcall(java_bart_machine, "V", "setNumCores", as.integer(ifelse(is.null(num_cores), BART_NUM_CORES, num_cores))) #this must be set FIRST!!!
 	.jcall(java_bart_machine, "V", "setNumTrees", as.integer(num_trees))
 	.jcall(java_bart_machine, "V", "setNumGibbsBurnIn", as.integer(num_burn_in))
 	.jcall(java_bart_machine, "V", "setNumGibbsTotalIterations", as.integer(num_gibbs))
@@ -119,6 +122,9 @@ build_bart_machine = function(training_data,
 	.jcall(java_bart_machine, "V", "setK", k)
 	.jcall(java_bart_machine, "V", "setQ", q)
 	.jcall(java_bart_machine, "V", "setNU", nu)
+	mh_prob_steps = mh_prob_steps / sum(mh_prob_steps) #make sure it's a prob vec
+	.jcall(java_bart_machine, "V", "setProbGrow", mh_prob_steps[1])
+	.jcall(java_bart_machine, "V", "setProbPrune", mh_prob_steps[2])
 	
 	
 	if (length(cov_prior_vec) != 0){
@@ -147,7 +153,8 @@ build_bart_machine = function(training_data,
 	p = ncol(model_matrix_training_data) - 1
 	bart_machine = list(java_bart_machine = java_bart_machine,
 		training_data_features = colnames(model_matrix_training_data)[1 : p],
-		training_data = training_data,
+		X = X,
+		y = y,
 		model_matrix_training_data = model_matrix_training_data,
 		n = nrow(model_matrix_training_data),
 		p = p,
@@ -161,6 +168,7 @@ build_bart_machine = function(training_data,
 		k = k,
 		q = q,
 		nu = nu,
+		mh_prob_steps = mh_prob_steps,
 		s_sq_y = s_sq_y,
 		run_in_sample = run_in_sample,
 		cov_prior_vec = cov_prior_vec,
@@ -182,11 +190,10 @@ build_bart_machine = function(training_data,
 		y_hat_train = rowMeans(y_hat_posterior_samples)
 		#return a bunch more stuff
 		bart_machine$y_hat_train = y_hat_train
-		bart_machine$y_train = training_data$y
-		bart_machine$residuals = training_data$y - bart_machine$y_hat_train
+		bart_machine$residuals = y - bart_machine$y_hat_train
 		bart_machine$L1_err_train = sum(abs(bart_machine$residuals))
 		bart_machine$L2_err_train = sum(bart_machine$residuals^2)
-		bart_machine$Rsq = 1 - bart_machine$L2_err_train / sum((training_data$y - mean(training_data$y))^2) #1 - SSE / SST
+		bart_machine$Rsq = 1 - bart_machine$L2_err_train / sum((y - mean(y))^2) #1 - SSE / SST
 		bart_machine$rmse_train = sqrt(bart_machine$L2_err_train / bart_machine$n)
 		if (verbose){
 			cat("done\n")
@@ -199,7 +206,7 @@ build_bart_machine = function(training_data,
 }
 
 bart_machine_duplicate = function(bart_machine, ...){
-	build_bart_machine(bart_machine$training_data,
+	build_bart_machine(bart_machine$X, bart_machine$y,
 		num_trees = bart_machine$num_trees,
 		num_burn_in = bart_machine$num_burn_in, 
 		num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in, 
@@ -264,10 +271,9 @@ get_var_props_over_chain = function(bart_machine){
 
 
 
-bart_predict_for_test_data = function(bart_machine, test_data){
-	y_hat = predict(bart_machine, test_data)
-	y = test_data$y
-	n = nrow(test_data)
+bart_predict_for_test_data = function(bart_machine, X, y){
+	y_hat = predict(bart_machine, X)
+	n = nrow(X)
 	L2_err = sum((y - y_hat)^2)
 	
 	list(
@@ -284,24 +290,24 @@ bart_predict_for_test_data = function(bart_machine, test_data){
 #do all generic functions here
 #
 
-bart_machine_predict = function(bart_machine, new_data){
+bart_machine_predict = function(bart_machine, X){
 	#pull out data objects for convenience
 	java_bart_machine = bart_machine$java_bart_machine
 	num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in
-	n = nrow(new_data)
+	n = nrow(X)
 		
 	#check for errors in data
 	#
 	#now process and make dummies if necessary
-	new_data = pre_process_new_data(new_data, bart_machine$training_data_features)	
+	X = pre_process_new_data(X, bart_machine$training_data_features)	
 		
 	y_hat_posterior_samples = 
-		t(sapply(.jcall(bart_machine$java_bart_machine, "[[D", "getGibbsSamplesForPrediction", .jarray(new_data, dispatch = TRUE), as.integer(BART_NUM_CORES)), .jevalArray))
+		t(sapply(.jcall(bart_machine$java_bart_machine, "[[D", "getGibbsSamplesForPrediction", .jarray(X, dispatch = TRUE), as.integer(BART_NUM_CORES)), .jevalArray))
 
 	#to get y_hat.. just take straight mean of posterior samples, alternatively, we can let java do it if we want more bells and whistles
 	y_hat = rowMeans(y_hat_posterior_samples)	
 	
-	list(y_hat = y_hat, new_data = new_data, y_hat_posterior_samples = y_hat_posterior_samples)
+	list(y_hat = y_hat, X = X, y_hat_posterior_samples = y_hat_posterior_samples)
 }
 
 predict.bart_machine = function(bart_machine, new_data){
@@ -397,10 +403,6 @@ check_for_errors_in_training_data = function(data){
 		stop("no colnames in data matrix", call. = FALSE)
 		return(TRUE)
 	}
-	if (colnames(data)[ncol(data)] != "y"){
-		stop("last column of BART data must be the response and it must be named \"y\"", call. = FALSE)
-		return(TRUE)
-	}
 	if (class(data) != "data.frame"){
 		stop("training data must be a data frame", call. = FALSE)
 		return(TRUE)		
@@ -411,10 +413,6 @@ check_for_errors_in_training_data = function(data){
 pre_process_training_data = function(data){
 	#delete missing data just in case
 	data = na.omit(data)
-	
-	#pull off y
-	y = data$y
-	data$y = NULL	
 	
 	#first convert characters to factors
 	character_vars = names(which(sapply(data, class) == "character"))
@@ -431,17 +429,10 @@ pre_process_training_data = function(data){
 		data[, fac] = NULL
 	}
 	
-	#tack y back on
-	data$y = y
-	
 	data.matrix(data)
 }
 
 pre_process_new_data = function(new_data, training_data_features){
-	#we have to kill y if it exists
-	if (length(new_data$y) != 0){
-		new_data$y = NULL
-	}
 	new_data = pre_process_training_data(new_data)
 	n = nrow(new_data)
 	new_data_features = colnames(new_data)

@@ -312,7 +312,6 @@ return changed;
 
 
 /** {@inheritDoc} */
-@SuppressWarnings({"SuspiciousMethodCalls"})
 public boolean retainAll( Collection<?> collection ) {
 boolean modified = false;
 TDoubleIterator iter = iterator();

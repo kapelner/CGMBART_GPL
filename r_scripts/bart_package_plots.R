@@ -126,11 +126,11 @@ plot_y_vs_yhat = function(bart_machine, ppis = FALSE, ppi_conf = 0.95){
 		stop("This BART machine has been destroyed. Please recreate.")
 	}	
 	y_hat = bart_machine$y_hat_train
-	y = bart_machine$y_train
+	y = bart_machine$y
 
 	
 	if (ppis){
-		ppis = calc_ppis_from_prediction(bart_machine, bart_machine$training_data, ppi_conf)
+		ppis = calc_ppis_from_prediction(bart_machine, bart_machine$X, ppi_conf)
 		ppi_a = ppis[, 1]
 		ppi_b = ppis[, 2]
 		y_in_ppi = y >= ppi_a & y <= ppi_b
@@ -313,7 +313,7 @@ investigate_var_importance = function(bart_machine, plot = TRUE, num_replicates_
 		if (i == 1 & num_trees_bottleneck == bart_machine$num_trees){
 			var_props[i, ] = get_var_props_over_chain(bart_machine)
 		} else {
-			bart_machine_dup = build_bart_machine(bart_machine$training_data, 
+			bart_machine_dup = build_bart_machine(bart_machine$X, bart_machine$y, 
 				num_trees = num_trees_bottleneck, 
 				num_burn_in = bart_machine$num_burn_in, 
 				num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in, 
@@ -342,12 +342,17 @@ investigate_var_importance = function(bart_machine, plot = TRUE, num_replicates_
 	
 	if (plot){
 		par(mar = c(5, 6, 3, 0))
+		if (is.na(sd_var_props[1])){
+			moe = 0
+		} else {
+			moe = 1.96 * sd_var_props / sqrt(num_replicates_for_avg)
+		}
 		bars = barplot(avg_var_props, 
 				names.arg = names(avg_var_props), 
 				las = 2, 
 				ylab = "Inclusion Proportion", 
 				col = "gray",#rgb(0.39, 0.39, 0.59),
-				#ylim = c(0, max(avg_var_props + 1.96 * sd_var_props / sqrt(num_replicates_for_avg))),
+				ylim = c(0, max(avg_var_props + moe)),
 				main = paste("Important Variables Averaged over", num_replicates_for_avg, "Replicates"))
 		conf_upper = avg_var_props + 1.96 * sd_var_props / sqrt(num_replicates_for_avg)
 		conf_lower = avg_var_props - 1.96 * sd_var_props / sqrt(num_replicates_for_avg)
@@ -355,7 +360,7 @@ investigate_var_importance = function(bart_machine, plot = TRUE, num_replicates_
 		segments(bars, avg_var_props, bars, conf_lower, col = rgb(0.59, 0.39, 0.39), lwd = 3)		
 	}
 	
-	list(avg_var_props = avg_var_props, sd_var_props = sd_var_props)
+	invisible(list(avg_var_props = avg_var_props, sd_var_props = sd_var_props))	
 }
 
 plot_convergence_diagnostics = function(bart_machine){
@@ -419,17 +424,24 @@ interaction_investigator = function(bart_machine, plot = TRUE, num_replicates_fo
 	if (plot){
 		#now create the bar plot
 		par(mar = c(10, 6, 3, 0))
+		if (is.na(sd_counts[1])){
+			moe = 0
+		} else {
+			moe = 1.96 * sd_counts / sqrt(num_replicates_for_avg)
+		}
 		bars = barplot(avg_counts, 
 			names.arg = names(avg_counts), 
 			las = 2, 
 			ylab = "Relative Importance", 
 			col = "gray",#rgb(0.39, 0.39, 0.59),
-			ylim = c(0, max(avg_counts + 1.96 * sd_counts / sqrt(num_replicates_for_avg))),
+			ylim = c(0, max(avg_counts + moe)),
 			main = paste("Interactions in BART Model Averaged over", num_replicates_for_avg, "Replicates"))
-		conf_upper = avg_counts + 1.96 * sd_counts / sqrt(num_replicates_for_avg)
-		conf_lower = avg_counts - 1.96 * sd_counts / sqrt(num_replicates_for_avg)
-		segments(bars, avg_counts, bars, conf_upper, col = rgb(0.59, 0.39, 0.39), lwd = 3) # Draw error bars
-		segments(bars, avg_counts, bars, conf_lower, col = rgb(0.59, 0.39, 0.39), lwd = 3)		
+		if (!is.na(sd_counts[1])){
+			conf_upper = avg_counts + 1.96 * sd_counts / sqrt(num_replicates_for_avg)
+			conf_lower = avg_counts - 1.96 * sd_counts / sqrt(num_replicates_for_avg)
+			segments(bars, avg_counts, bars, conf_upper, col = rgb(0.59, 0.39, 0.39), lwd = 3) # Draw error bars
+			segments(bars, avg_counts, bars, conf_lower, col = rgb(0.59, 0.39, 0.39), lwd = 3)			
+		}		
 	}
 	
 	invisible(list(
@@ -447,7 +459,7 @@ pd_plot = function(bart_machine, j, levs = c(0.05, seq(from = 0.10, to = 0.90, b
 		stop(paste("You must set j to a number between 1 and p =", bart_machine$p))
 	}
 	
-	x_j = bart_machine$training_data[, j]
+	x_j = bart_machine$X[, j]
 	x_j_quants = quantile(x_j, levs)
 	bart_predictions_by_quantile = array(NA, c(length(levs), bart_machine$n, bart_machine$num_iterations_after_burn_in))
 	
@@ -455,7 +467,7 @@ pd_plot = function(bart_machine, j, levs = c(0.05, seq(from = 0.10, to = 0.90, b
 		x_j_quant = x_j_quants[q]
 		
 		#now create test data matrix
-		test_data = bart_machine$training_data
+		test_data = bart_machine$X
 		test_data[, j] = rep(x_j_quant, bart_machine$n)
 		
 		bart_predictions_by_quantile[q, , ] = bart_machine_predict(bart_machine, test_data)$y_hat_posterior_samples
@@ -485,6 +497,6 @@ pd_plot = function(bart_machine, j, levs = c(0.05, seq(from = 0.10, to = 0.90, b
 	lines(x_j_quants, bart_avg_predictions_upper, type = "o", col = "blue")
 	
 	invisible(list(x_j_quants = x_j_quants, bart_avg_predictions_by_quantile = bart_avg_predictions_by_quantile))
-#	rob = bart(x.train = bart_machine$training_data[, 1:13], y.train = bart_machine$training_data[, 14], ndpost = 100, nskip = 500, keepevery = 10)
-#	pdbart(x.train = bart_machine$training_data[, 1:13], y.train = bart_machine$training_data[, 14], xind = 6, ndpost = 200, nskip = 500)
+#	rob = bart(x.train = bart_machine$X, y.train = bart_machine$y, ndpost = 100, nskip = 500, keepevery = 10)
+#	pdbart(x.train = bart_machine$X, y.train = bart_machine$y, xind = 6, ndpost = 200, nskip = 500)
 }

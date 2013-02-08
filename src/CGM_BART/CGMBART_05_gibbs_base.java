@@ -1,7 +1,6 @@
 package CGM_BART;
 
 import java.io.Serializable;
-import java.util.HashMap;
 
 public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements Serializable {
 	private static final long serialVersionUID = 1280579612167425306L;

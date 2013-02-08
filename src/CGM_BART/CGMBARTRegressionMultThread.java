@@ -167,6 +167,15 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 		CGMBART_02_hyperparams.hyper_nu = hyper_nu;
 	}	
 	
+	
+	public static void setProbGrow(double PROB_GROW) {
+		CGMBART_07_mh.PROB_GROW = PROB_GROW;
+	}
+
+	public static void setProbPrune(double PROB_PRUNE) {
+		CGMBART_07_mh.PROB_PRUNE = PROB_PRUNE;
+	}	
+	
 	public void setNumCores(int num_cores){
 //		System.out.print("setNumCores()");
 		this.num_cores = num_cores;

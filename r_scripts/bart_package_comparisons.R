@@ -9,7 +9,7 @@ tryCatch(library(BayesTree), error = function(e){install.packages("BayesTree")},
 run_other_model_and_plot_y_vs_yhat = function(y_hat, 
 		model_name, 
 		test_data, 
-		training_data,
+		X, y,
 		extra_text = NULL, 
 		data_title = "data_model", 
 		save_plot = FALSE,
@@ -22,7 +22,7 @@ run_other_model_and_plot_y_vs_yhat = function(y_hat,
 	L1_err = sum(abs(test_data$y - y_hat))
 	L2_err = sum((test_data$y - y_hat)^2)	
 	rmse = sqrt(L2_err / length(y_hat))
-	L2_err_train = sum((training_data$y - y_hat_train)^2)
+	L2_err_train = sum((y - y_hat_train)^2)
 	rmse_train = sqrt(L2_err_train / length(y_hat_train))
 	
 	if (create_plot){

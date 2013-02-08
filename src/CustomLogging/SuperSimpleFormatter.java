@@ -1,8 +1,6 @@
 package CustomLogging;
 
 import java.io.*;
-import java.text.*;
-import java.util.Date;
 import java.util.logging.*;
 
 /**
