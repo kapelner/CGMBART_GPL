@@ -29,7 +29,17 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 	private int num_gibbs_total_iterations;
 	private int total_iterations_multithreaded;
 
+	//set all hyperparameters here
 	private double[] cov_split_prior;
+	private Double alpha;
+	private Double beta;
+	private Double hyper_k;
+	private Double hyper_q;
+	private Double hyper_nu;
+	private Double prob_grow;
+	private Double prob_prune;
+	private Double prob_change;
+	
 
 	private transient boolean use_heteroskedasticity;
 
@@ -55,6 +65,16 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 			bart.num_gibbs_total_iterations = total_iterations_multithreaded;
 			bart.num_gibbs_burn_in = num_gibbs_burn_in;
 			bart.sample_var_y = sample_var_y;
+			//now some hyperparams
+			bart.setAlpha(alpha);
+			bart.setBeta(beta);
+			bart.setNu(hyper_nu);
+			bart.setK(hyper_k);
+			bart.setQ(hyper_q);
+			bart.setProbGrow(prob_grow);
+			bart.setProbPrune(prob_prune);
+			bart.setProbChange(prob_change);		
+			//set thread num and data
 			bart.setThreadNum(t);
 			bart.setData(X_y);
 			//set features
@@ -146,35 +166,37 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 	
 	
 	public void setAlpha(double alpha){
-//		System.out.print("setAlpha()");
-		CGMBART_01_base.ALPHA = alpha;
+		this.alpha = alpha;
 	}
 	
 	public void setBeta(double beta){
-//		System.out.print("setBeta()");
-		CGMBART_01_base.BETA = beta;
+		this.beta = beta;
 	}	
 	
-	public static void setK(double hyper_k) {
-		CGMBART_02_hyperparams.hyper_k = hyper_k;
+	public void setK(double hyper_k) {
+		this.hyper_k = hyper_k;
 	}
 
-	public static void setQ(double hyper_q) {
-		CGMBART_02_hyperparams.hyper_q = hyper_q;
+	public void setQ(double hyper_q) {
+		this.hyper_q = hyper_q;
 	}
 
-	public static void setNU(double hyper_nu) {
-		CGMBART_02_hyperparams.hyper_nu = hyper_nu;
+	public void setNU(double hyper_nu) {
+		this.hyper_nu = hyper_nu;
 	}	
 	
 	
-	public static void setProbGrow(double PROB_GROW) {
-		CGMBART_07_mh.PROB_GROW = PROB_GROW;
+	public void setProbGrow(double prob_grow) {
+		this.prob_grow = prob_grow;
 	}
 
-	public static void setProbPrune(double PROB_PRUNE) {
-		CGMBART_07_mh.PROB_PRUNE = PROB_PRUNE;
+	public void setProbPrune(double prob_prune) {
+		this.prob_prune = prob_prune;
 	}	
+
+	public void setProbChange(double prob_change) {
+		this.prob_change = prob_change;
+	}
 	
 	public void setNumCores(int num_cores){
 //		System.out.print("setNumCores()");

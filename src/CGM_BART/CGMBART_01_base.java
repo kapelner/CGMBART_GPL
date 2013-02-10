@@ -15,8 +15,6 @@ public abstract class CGMBART_01_base extends Classifier implements Serializable
 	protected static final int DEFAULT_NUM_GIBBS_BURN_IN = 1000;
 	protected static final int DEFAULT_NUM_GIBBS_TOTAL_ITERATIONS = 2000; //this must be larger than the number of burn in!!!
 	
-	protected static double ALPHA = 0.95;
-	protected static double BETA = 2; //see p271 in CGM10	
 	
 	/** the actual list of trees */
 	protected CGMBARTTreeNode[][] gibbs_samples_of_cgm_trees;
@@ -57,25 +55,6 @@ public abstract class CGMBART_01_base extends Classifier implements Serializable
 	
 	public void setPrintOutEveryNIter(int print_out_every){
 		PrintOutEvery = print_out_every;
-	}
-	
-	
-	public void setAlpha(double alpha){
-//		System.out.println("set alpha = " + alpha);
-		ALPHA = alpha;
-	}
-	
-	public void setBeta(double beta){
-//		System.out.println("set beta = " + beta);
-		BETA = beta;
-	}	
-	
-	public double getAlpha(){
-		return ALPHA;
-	}
-	
-	public double getBeta(){
-		return BETA;
 	}
 
 	@Override

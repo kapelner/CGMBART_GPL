@@ -189,9 +189,9 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 		double p_adj = pAdj(grow_node);
 		int n_adj = grow_node.nAdj();
 //		System.out.println("calcLnTreeStructureRatioGrow d_eta: " + d_eta + " p_adj: " + p_adj + " n_adj: " + n_adj + " n_repeat: " + n_repeat + " ALPHA: " + ALPHA + " BETA: " + BETA);
-		return Math.log(ALPHA) 
-				+ 2 * Math.log(1 - ALPHA / Math.pow(2 + d_eta, BETA))
-				- Math.log(Math.pow(1 + d_eta, BETA) - ALPHA)
+		return Math.log(alpha) 
+				+ 2 * Math.log(1 - alpha / Math.pow(2 + d_eta, beta))
+				- Math.log(Math.pow(1 + d_eta, beta) - alpha)
 				- Math.log(p_adj) 
 				- Math.log(n_adj);
 	}	
@@ -358,19 +358,31 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 	}
 
 	//a hidden parameter in the BART model, P(PRUNE) = 1 - P(GROW) so only one needs to be defined here
-	protected static double PROB_GROW = 2.5 / 9.0;
-	protected static double PROB_PRUNE = 2.5 / 9.0;
-	protected static double PROB_CHANGE = 4 / 9.0;
+	protected double prob_grow = 2.5 / 9.0;
+	protected double prob_prune = 2.5 / 9.0;
+	protected double prob_change = 4 / 9.0;
 
 	protected Steps randomlyPickAmongTheProposalSteps(CGMBARTTreeNode T) {
 		double roll = StatToolbox.rand();
-		if (roll < PROB_GROW){
+		if (roll < prob_grow){
 			return Steps.GROW;
 		}			
-		if (roll < PROB_GROW + PROB_PRUNE){
+		if (roll < prob_grow + prob_prune){
 			return Steps.PRUNE;
 		}
 		return Steps.CHANGE;	
+	}
+
+	public void setProbGrow(double prob_grow) {
+		this.prob_grow = prob_grow;
+	}
+
+	public void setProbPrune(double prob_prune) {
+		this.prob_prune = prob_prune;
+	}
+
+	public void setProbChange(double prob_change) {
+		this.prob_change = prob_change;
 	}
 	
 	
