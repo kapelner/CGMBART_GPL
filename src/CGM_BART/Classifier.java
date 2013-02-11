@@ -216,7 +216,7 @@ public abstract class Classifier implements Serializable {
 	public abstract void Build();
 	
 	public static void fixRandSeed(){
-		StatToolbox.R.setSeed(1984);
+		StatToolbox.setSeed(1984);
 	}
 	
 	/**

@@ -17,6 +17,19 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 	private static final long serialVersionUID = -4537075714317768756L;
 	
 	private static final int DEFAULT_NUM_CORES = 1;//Runtime.getRuntime().availableProcessors() - 1;
+		
+	protected static final int NUM_TREES_DEFAULT = 20;
+	protected static final int NUM_GIBBS_BURN_IN_DEFAULT = 1000;
+	protected static final int NUM_GIBBS_TOTAL_ITERATIONS_DEFAULT = 2000; //this must be larger than the number of burn in!!!
+
+	protected static double HYPER_ALPHA_DEFAULT = 0.95;
+	protected static double HYPER_BETA_DEFUALT = 2; //see p271 in CGM10	
+	protected static double HYPER_K_DEFAULT = 2.0; //StatToolbox.inv_norm_dist(1 - (1 - CGMShared.MostOfTheDistribution) / 2.0);	
+	protected static double HYPER_Q_DEFAULT = 0.9;
+	protected static double HYPER_NU_DEFAULT = 3.0;
+	protected static double PROB_GROW_DEFAULT = 2.5 / 9.0;
+	protected static double PROB_PRUNE_DEFAULT = 2.5 / 9.0;
+	protected static double PROB_CHANGE_DEFAULT = 4 / 9.0;	
 	
 	private int num_cores;
 	private int num_trees;
@@ -39,20 +52,26 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 	private Double prob_grow;
 	private Double prob_prune;
 	private Double prob_change;
-	
 
 	private transient boolean use_heteroskedasticity;
 
-	
 	
 	public CGMBARTRegressionMultThread(){
 //		System.out.print("new CGMBARTRegressionMultThread()");		
 		//we need to set defaults here		
 		num_cores = DEFAULT_NUM_CORES;
-		num_trees = CGMBART_01_base.DEFAULT_NUM_TREES;
-		num_gibbs_burn_in = CGMBART_01_base.DEFAULT_NUM_GIBBS_BURN_IN;
-		num_gibbs_total_iterations = CGMBART_01_base.DEFAULT_NUM_GIBBS_TOTAL_ITERATIONS;
-		setNumGibbsTotalIterations(num_gibbs_total_iterations);			
+		num_trees = NUM_TREES_DEFAULT;
+		num_gibbs_burn_in = NUM_GIBBS_BURN_IN_DEFAULT;
+		num_gibbs_total_iterations = NUM_GIBBS_TOTAL_ITERATIONS_DEFAULT;
+		alpha = HYPER_ALPHA_DEFAULT;
+		beta = HYPER_BETA_DEFUALT;
+		hyper_k = HYPER_K_DEFAULT;
+		hyper_q = HYPER_Q_DEFAULT;
+		hyper_nu = HYPER_NU_DEFAULT;
+		prob_grow = PROB_GROW_DEFAULT;
+		prob_prune = PROB_PRUNE_DEFAULT;
+		prob_change = PROB_CHANGE_DEFAULT;		
+		setNumGibbsTotalIterations(num_gibbs_total_iterations);
 	}
 	
 	private void SetupBARTModels() {

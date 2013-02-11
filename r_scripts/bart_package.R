@@ -32,6 +32,14 @@ set_bart_machine_num_cores = function(num_cores){
 	assign("BART_NUM_CORES", num_cores, ".GlobalEnv")
 }
 
+init_java_for_bart = function(){
+	jinit_params = paste("-Xmx", BART_MAX_MEM_MB, "m", sep = "")
+	.jinit(parameters = jinit_params)
+	for (dependency in JAR_DEPENDENCIES){
+		.jaddClassPath(dependency)
+	}	
+}
+
 build_bart_machine = function(X, y, 
 		num_trees = 200, 
 		num_burn_in = 250, 
@@ -54,8 +62,7 @@ build_bart_machine = function(X, y,
 	
 	t0 = Sys.time()
 	#immediately initialize Java
-	jinit_params = paste("-Xmx", BART_MAX_MEM_MB, "m", sep = "")
-	.jinit(parameters = jinit_params)
+	init_java_for_bart()
 	
 	num_gibbs = num_burn_in + num_iterations_after_burn_in
 	#check for errors in data
@@ -64,10 +71,6 @@ build_bart_machine = function(X, y,
 	}
 	model_matrix_training_data = cbind(pre_process_training_data(X), y)
 	
-	#initialize the JVM
-	for (dependency in JAR_DEPENDENCIES){
-		.jaddClassPath(dependency)
-	}
 	java_bart_machine = .jnew("CGM_BART.CGMBARTRegressionMultThread")
 	
 	#first set the name
@@ -225,7 +228,17 @@ destroy_bart_machine = function(bart_machine){
 	.jcall(bart_machine$java_bart_machine, "V", "destroy")
 	bart_machine$bart_destroyed = TRUE
 	#explicitly ask the JVM to give use the RAM back right now
-	.jcall("java/lang/System", , "gc")
+	.jcall("java/lang/System", "V", "gc")
+}
+
+size_of_bart_chisq_cache_inquire = function(){
+	init_java_for_bart()
+	cat(paste(round(.jcall("CGM_BART.StatToolbox", "I", "numBytesForInvChisqCache") / 1000000, 2), "MB\n"))
+}
+
+delete_bart_chisq_cache = function(){
+	init_java_for_bart()
+	.jcall("CGM_BART.StatToolbox", "V", "clearInvChisqHash")
 }
 
 check_bart_error_assumptions = function(bart_machine, alpha_normal_test = 0.05, alpha_hetero_test = 0.05){

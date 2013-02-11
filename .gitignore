@@ -74,5 +74,6 @@ r_log/*.txt
 .RData
 .Rhistory
 bin/*
+randsamps/chisq*
 
 datasets/r_zach.csv

@@ -38,7 +38,7 @@ public abstract class CGMBART_02_hyperparams extends CGMBART_01_base implements 
 //		for (int i = 0; i < n; i++){
 //			System.out.println("i: " + i + " ROW: " + Tools.StringJoin(X_y.get(i), "\t"));
 //		}
-		StatToolbox.cacheInvGammas(n, hyper_nu, this);
+		StatToolbox.cacheInvGammas(hyper_nu, n, this);
 	}		
 	
 	// hist(1 / rgamma(5000, 1.5, 1.5 * 153.65), br=100)

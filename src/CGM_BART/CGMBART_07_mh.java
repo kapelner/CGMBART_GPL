@@ -8,6 +8,9 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 	private static final long serialVersionUID = 1825856510284398699L;
 	private static final boolean DEBUG_MH = false;
 
+	protected double prob_grow;
+	protected double prob_prune;
+	protected double prob_change;
 
 	//this enum has to include all potential types of steps, even if they aren't used in this class's implementation
 	public enum Steps {GROW, PRUNE, CHANGE};
@@ -356,11 +359,6 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 			return 0.5 * a + 1 / (2 * sigsq) * b;
 		}
 	}
-
-	//a hidden parameter in the BART model, P(PRUNE) = 1 - P(GROW) so only one needs to be defined here
-	protected double prob_grow = 2.5 / 9.0;
-	protected double prob_prune = 2.5 / 9.0;
-	protected double prob_change = 4 / 9.0;
 
 	protected Steps randomlyPickAmongTheProposalSteps(CGMBARTTreeNode T) {
 		double roll = StatToolbox.rand();

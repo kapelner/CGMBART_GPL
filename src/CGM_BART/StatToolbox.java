@@ -28,9 +28,13 @@ import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.list.array.TIntArrayList;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.Random;
 
@@ -45,29 +49,124 @@ import org.apache.commons.math.special.Gamma;
  */
 public class StatToolbox {
 	
-	public static final Random R = new Random();
-	
-	public static double rand(){
-		return R.nextDouble();
-	}
+	private static final Random R = new Random();
 
-	/**
-	 * Wikipedia parameterization
-	 */
 	public static final double ILLEGAL_FLAG = -999999999;
-	
 	
 	private static final int NUM_CHI_SQ_SAMPS = 10000;
 
-	public static void cacheInvGammas(int n, double hyper_nu, CGMBART_02_hyperparams bart) {
-		if (bart.samps_chi_sq_df_eq_nu_plus_n == null){
-			double nu_plus_hyper_nu = n + hyper_nu;
-			bart.samps_chi_sq_df_eq_nu_plus_n = new double[NUM_CHI_SQ_SAMPS];
-			for (int i = 0; i < NUM_CHI_SQ_SAMPS; i++){
-				bart.samps_chi_sq_df_eq_nu_plus_n[i] = sample_from_gamma(nu_plus_hyper_nu / 2, 2);
+	private static final String cacheDirectory = "randsamps";
+	
+	private static final String norm_samps_file = "rnorm.csv";
+	private static double[] NORM_SAMPS;
+	private static int NUM_NORM_SAMPS;	
+	static {
+		BufferedReader in;
+		try {
+			in = new BufferedReader(new FileReader(cacheDirectory + "/" + norm_samps_file));
+			try {
+				String raw = in.readLine();
+				String[] random_samps = raw.split(",");
+				NUM_NORM_SAMPS = random_samps.length;
+				NORM_SAMPS = new double[NUM_NORM_SAMPS];
+//				START_POS = (int)Math.floor(rand() * NUM_NORM_SAMPS);
+				for (int i = 0; i < NUM_NORM_SAMPS; i++){
+					NORM_SAMPS[i] = Double.parseDouble(random_samps[i]);
+				}	
+//				System.out.println("NUM_NORM_SAMPS: " + NUM_NORM_SAMPS);
+//				System.out.println("START_POS: " + START_POS);
+//				System.out.println("NORM_SAMPS: " + Tools.StringJoin(NORM_SAMPS));
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}			
+		} catch (FileNotFoundException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}					
+	}
+	
+	private static final String chisq_df_samps_file_prefix = cacheDirectory + "/chisq_nu_n_";
+	public static void cacheInvGammas(double hyper_nu, int n, CGMBART_02_hyperparams bart) {
+		//check if cache file exists, if it does, load it up
+		File cache_file = new File(chisq_df_samps_file_prefix + hyper_nu + "_" + n + ".csv");
+		System.out.println("looking for file: " + chisq_df_samps_file_prefix + hyper_nu + "_" + n + ".csv  exists? " + cache_file.exists());
+		if (cache_file.exists()){
+			System.out.print("load inv cache from file...");
+			bart.samps_chi_sq_df_eq_nu_plus_n = loadInvGammaCacheFromFile(cache_file);
+			System.out.println("done");
+		}
+		//otherwise compute the cache and save for future runs
+		else {
+			System.out.print("compute inv cache...");
+			bart.samps_chi_sq_df_eq_nu_plus_n = computeInvGammaCache(hyper_nu, n);
+			System.out.print("saving for future runs...");
+			saveInvGammaCacheToFile(hyper_nu, n, bart.samps_chi_sq_df_eq_nu_plus_n, cache_file);
+			System.out.println("done");
+		}
+	}
+	
+	public static int numBytesForInvChisqCache(){
+		int bytes = 0;
+		for (File file : new File(cacheDirectory).listFiles()){
+			if (!file.getName().equals(norm_samps_file)){
+				bytes += file.length();
 			}
 		}
-	}		
+		return bytes;
+	}
+	
+	public static void clearInvChisqHash(){
+		for (File file : new File(cacheDirectory).listFiles()){
+			if (!file.getName().equals(norm_samps_file)){
+				file.delete();
+			}
+		}		
+	}
+	
+	private static double[] loadInvGammaCacheFromFile(File cache_file) {
+		double[] samps_chi_sq_df_eq_nu_plus_n = new double[NUM_CHI_SQ_SAMPS];
+		int i = 0;
+		try {
+			BufferedReader in = new BufferedReader(new FileReader(cache_file));
+			while (true){
+				String chisq_draw = in.readLine();
+				if (chisq_draw == null){
+					break;
+				}
+				samps_chi_sq_df_eq_nu_plus_n[i] = Double.parseDouble(chisq_draw);
+				i++;
+			}
+			in.close();
+		} catch (Exception e1) {
+			System.err.println("CANNOT LOAD INV GAMMA CACHE");
+			System.exit(0);
+		}
+		return samps_chi_sq_df_eq_nu_plus_n;
+	}
+
+	private static void saveInvGammaCacheToFile(double hyper_nu, int n, double[] samps_chi_sq_df_eq_nu_plus_n, File cache_file) {
+		PrintWriter out = null;
+		try {
+			out = new PrintWriter(new BufferedWriter(new FileWriter(cache_file)));
+		} catch (IOException e) {
+			System.err.println("CANNOT SAVE INV GAMMA CACHE");
+			System.exit(0);
+		}
+		for (double chisq_draw : samps_chi_sq_df_eq_nu_plus_n){
+			out.print(chisq_draw + "\n");
+		}
+		out.close();
+	}
+
+	private static double[] computeInvGammaCache(double hyper_nu, int n){
+		double nu_plus_hyper_nu = n + hyper_nu;
+		double[] samps_chi_sq_df_eq_nu_plus_n = new double[NUM_CHI_SQ_SAMPS];
+		for (int i = 0; i < NUM_CHI_SQ_SAMPS; i++){
+			samps_chi_sq_df_eq_nu_plus_n[i] = sample_from_gamma(nu_plus_hyper_nu / 2, 2);
+		}
+		return samps_chi_sq_df_eq_nu_plus_n;
+	}
 
 	public static double sample_from_inv_gamma(double k, double theta, CGMBART_02_hyperparams bart){
 //		System.out.println("sample_from_inv_gamma k = " + k + " theta = " + theta);
@@ -95,39 +194,7 @@ public class StatToolbox {
 		return ILLEGAL_FLAG;
 	}
 	
-	private static double[] NORM_SAMPS;
-	private static int NUM_NORM_SAMPS;
-	
-//	private static int START_POS;
-	private static final String norm_samps_file = "randsamps/rnorm.csv";
-	static {
-		BufferedReader in;
-		try {
-			in = new BufferedReader(new FileReader(norm_samps_file));
-			try {
-				String raw = in.readLine();
-				String[] random_samps = raw.split(",");
-				NUM_NORM_SAMPS = random_samps.length;
-				NORM_SAMPS = new double[NUM_NORM_SAMPS];
-//				START_POS = (int)Math.floor(rand() * NUM_NORM_SAMPS);
-				for (int i = 0; i < NUM_NORM_SAMPS; i++){
-					NORM_SAMPS[i] = Double.parseDouble(random_samps[i]);
-				}	
-//				System.out.println("NUM_NORM_SAMPS: " + NUM_NORM_SAMPS);
-//				System.out.println("START_POS: " + START_POS);
-//				System.out.println("NORM_SAMPS: " + Tools.StringJoin(NORM_SAMPS));
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}			
-		} catch (FileNotFoundException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-					
-	}
 
-	
 	public static double sample_from_norm_dist(double mu, double sigsq){
 		double std_norm_realization = NORM_SAMPS[(int)Math.floor(rand() * NUM_NORM_SAMPS)];
 //		System.out.println("sample_from_norm_dist S = " + START_POS + " P = " + START_POS % NUM_NORM_SAMPS + "real = " + std_norm_realization);
@@ -311,5 +378,12 @@ public class StatToolbox {
 			index++;
 		}
 	}
+
+	public static void setSeed(long seed) {
+		R.setSeed(seed);
+	}
 	
+	public static double rand(){
+		return R.nextDouble();
+	}	
 }
