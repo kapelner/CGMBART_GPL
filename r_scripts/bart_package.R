@@ -208,8 +208,20 @@ build_bart_machine = function(X, y,
 	bart_machine
 }
 
-bart_machine_duplicate = function(bart_machine, ...){
-	build_bart_machine(bart_machine$X, bart_machine$y,
+bart_machine_duplicate = function(bart_machine, X = NULL, y = NULL, cov_prior_vec = NULL, ...){
+	if (bart_machine$bart_destroyed){
+		stop("This BART machine has been destroyed. Please recreate.")
+	}	
+	if (is.null(X)){
+		X = bart_machine$X
+	}
+	if (is.null(y)){
+		y = bart_machine$y
+	}
+	if (is.null(cov_prior_vec)){
+		cov_prior_vec = bart_machine$cov_prior_vec
+	}
+	build_bart_machine(X, y,
 		num_trees = bart_machine$num_trees,
 		num_burn_in = bart_machine$num_burn_in, 
 		num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in, 
@@ -218,8 +230,9 @@ bart_machine_duplicate = function(bart_machine, ...){
 		debug_log = FALSE,
 		s_sq_y = bart_machine$s_sq_y,
 		num_cores = bart_machine$num_cores,
-		cov_prior_vec = bart_machine$cov_prior_vec,
+		cov_prior_vec = cov_prior_vec,
 		print_tree_illustrations = FALSE,
+		run_in_sample = FALSE,
 		verbose = FALSE, 
 		...)
 }
@@ -233,7 +246,9 @@ destroy_bart_machine = function(bart_machine){
 
 size_of_bart_chisq_cache_inquire = function(){
 	init_java_for_bart()
-	cat(paste(round(.jcall("CGM_BART.StatToolbox", "I", "numBytesForInvChisqCache") / 1000000, 2), "MB\n"))
+	num_bytes = .jcall("CGM_BART.StatToolbox", "I", "numBytesForInvChisqCache")
+	cat(paste(round(num_bytes / 1000000, 2), "MB\n"))
+	invisible(num_bytes)
 }
 
 delete_bart_chisq_cache = function(){
@@ -270,14 +285,14 @@ check_bart_error_assumptions = function(bart_machine, alpha_normal_test = 0.05, 
 }
 
 
-get_var_counts_over_chain = function(bart_machine){
-	C = t(sapply(.jcall(bart_machine$java_bart_machine, "[[I", "getCountsForAllAttribute", as.integer(BART_NUM_CORES)), .jevalArray))
+get_var_counts_over_chain = function(bart_machine, type = "splits"){
+	C = t(sapply(.jcall(bart_machine$java_bart_machine, "[[I", "getCountsForAllAttribute", as.integer(BART_NUM_CORES), type), .jevalArray))
 	colnames(C) = colnames(bart_machine$model_matrix_training_data)[1 : bart_machine$p]
 	C
 }
 
-get_var_props_over_chain = function(bart_machine){
-	C = get_var_counts_over_chain(bart_machine)
+get_var_props_over_chain = function(bart_machine, type = "splits"){
+	C = get_var_counts_over_chain(bart_machine)	
 	Ctot = apply(C, 2, sum)
 	Ctot / sum(Ctot)
 }
@@ -285,6 +300,9 @@ get_var_props_over_chain = function(bart_machine){
 
 
 bart_predict_for_test_data = function(bart_machine, X, y){
+	if (bart_machine$bart_destroyed){
+		stop("This BART machine has been destroyed. Please recreate.")
+	}	
 	y_hat = predict(bart_machine, X)
 	n = nrow(X)
 	L2_err = sum((y - y_hat)^2)
@@ -304,6 +322,9 @@ bart_predict_for_test_data = function(bart_machine, X, y){
 #
 
 bart_machine_predict = function(bart_machine, X){
+	if (bart_machine$bart_destroyed){
+		stop("This BART machine has been destroyed. Please recreate.")
+	}	
 	#pull out data objects for convenience
 	java_bart_machine = bart_machine$java_bart_machine
 	num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in

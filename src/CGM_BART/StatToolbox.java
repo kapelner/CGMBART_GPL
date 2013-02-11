@@ -90,7 +90,6 @@ public class StatToolbox {
 	public static void cacheInvGammas(double hyper_nu, int n, CGMBART_02_hyperparams bart) {
 		//check if cache file exists, if it does, load it up
 		File cache_file = new File(chisq_df_samps_file_prefix + hyper_nu + "_" + n + ".csv");
-		System.out.println("looking for file: " + chisq_df_samps_file_prefix + hyper_nu + "_" + n + ".csv  exists? " + cache_file.exists());
 		if (cache_file.exists()){
 			System.out.print("load inv cache from file...");
 			bart.samps_chi_sq_df_eq_nu_plus_n = loadInvGammaCacheFromFile(cache_file);

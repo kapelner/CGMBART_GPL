@@ -54,6 +54,7 @@ mean(rob$sigma)
 
 interaction_investigator(bart_machine, num_replicates_for_avg = 5, num_var_plot = 20, num_trees_bottleneck = 200)
 investigate_var_importance(bart_machine)
+investigate_var_importance(bart_machine, type = "trees")
 
 plot_y_vs_yhat(bart_machine, ppis=T)
 
@@ -111,6 +112,8 @@ bart_machine = build_bart_machine(X, y,
 	num_iterations_after_burn_in = 1000)
 
 summary(bart_machine)
+var_importance_by_shuffling(bart_machine, num_var_plot = 20)
+var_importance_by_dropping_variable(bart_machine, num_var_plot = 20)
 hist_sigsqs(bart_machine)
 windows()
 plot_sigsqs_convergence_diagnostics(bart_machine)
@@ -119,7 +122,7 @@ windows()
 plot_y_vs_yhat(bart_machine, ppis = T)
 
 windows()
-investigate_var_importance(bart_machine, num_replicates_for_avg = 5,num_var_plot = 15)
+investigate_var_importance(bart_machine, num_replicates_for_avg = 5,num_var_plot = 15, type = "trees")
 windows()
 interaction_investigator(bart_machine, num_replicates_for_avg = 5, num_var_plot = 15)
 

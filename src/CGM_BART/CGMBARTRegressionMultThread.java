@@ -19,8 +19,8 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 	private static final int DEFAULT_NUM_CORES = 1;//Runtime.getRuntime().availableProcessors() - 1;
 		
 	protected static final int NUM_TREES_DEFAULT = 20;
-	protected static final int NUM_GIBBS_BURN_IN_DEFAULT = 1000;
-	protected static final int NUM_GIBBS_TOTAL_ITERATIONS_DEFAULT = 2000; //this must be larger than the number of burn in!!!
+	protected static final int NUM_GIBBS_BURN_IN_DEFAULT = 2000;
+	protected static final int NUM_GIBBS_TOTAL_ITERATIONS_DEFAULT = 4000; //this must be larger than the number of burn in!!!
 
 	protected static double HYPER_ALPHA_DEFAULT = 0.95;
 	protected static double HYPER_BETA_DEFUALT = 2; //see p271 in CGM10	
@@ -389,7 +389,7 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 //		return var_count_matrix;
 //	}	
 
-	public int[][] getCountsForAllAttribute(int num_cores) {
+	public int[][] getCountsForAllAttribute(int num_cores, final String type) {
 		final int[][] counts = new int[num_gibbs_total_iterations - num_gibbs_burn_in][p];		
 		
 		ExecutorService get_count_for_attribute_pool = Executors.newFixedThreadPool(num_cores);
@@ -402,7 +402,12 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 					for (int j = 0; j < p; j++){
 						int tot_for_attr_j = 0;
 						for (CGMBARTTreeNode root_node : cgm_trees){
-							tot_for_attr_j += root_node.numTimesAttrUsed(j);
+							if (type.equals("splits")){
+								tot_for_attr_j += root_node.numTimesAttrUsed(j);
+							} else if (type.equals("trees")){
+								tot_for_attr_j += (root_node.attrUsed(j) ? 1 : 0);
+							}
+							
 						}		
 						counts[final_g][j] = tot_for_attr_j;	
 					}
