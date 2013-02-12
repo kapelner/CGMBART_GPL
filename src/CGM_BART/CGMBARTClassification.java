@@ -104,4 +104,9 @@ public final class CGMBARTClassification extends CGMBARTRegression {
 	protected void transformResponseVariable() {
 		y_trans = new double[y_orig.length];		
 	}	
+	
+	//do nothing
+	public double un_transform_y(double yt_i){
+		return yt_i;
+	}	
 }

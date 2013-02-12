@@ -18,9 +18,9 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 	
 	private static final int DEFAULT_NUM_CORES = 1;//Runtime.getRuntime().availableProcessors() - 1;
 		
-	protected static final int NUM_TREES_DEFAULT = 1;
-	protected static final int NUM_GIBBS_BURN_IN_DEFAULT = 100;
-	protected static final int NUM_GIBBS_TOTAL_ITERATIONS_DEFAULT = 200; //this must be larger than the number of burn in!!!
+	protected static final int NUM_TREES_DEFAULT = 200;
+	protected static final int NUM_GIBBS_BURN_IN_DEFAULT = 1000;
+	protected static final int NUM_GIBBS_TOTAL_ITERATIONS_DEFAULT = 2000; //this must be larger than the number of burn in!!!
 
 	protected static double HYPER_ALPHA_DEFAULT = 0.95;
 	protected static double HYPER_BETA_DEFUALT = 2; //see p271 in CGM10	
@@ -276,7 +276,7 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 		
 		final int n = data.length;
 		final double[][] y_hat = new double[n][data[0].length];
-		System.out.println("getGibbsSamplesForPrediction n: " + n);
+//		System.out.println("getGibbsSamplesForPrediction n: " + n);
 		
 		if (num_cores == 1){
 			for (int i = 0; i < n; i++){
@@ -289,7 +289,7 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 					}
 					//just make sure we switch it back to really what y is for the user
 					y_gibbs_samples[g] = first_bart.un_transform_y(yt_i);
-					System.out.println("y_gibbs_samples[g]: " + y_gibbs_samples[g]);
+//					System.out.println("y_gibbs_samples[g]: " + y_gibbs_samples[g]);
 				}
 				y_hat[i] = y_gibbs_samples;
 			}			

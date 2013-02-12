@@ -22,7 +22,7 @@ public class CGMBARTClassificationMultThread extends CGMBARTRegressionMultThread
 	}
 	
 	public double Evaluate(double[] record, int num_cores_evaluate) { //posterior sample median (it's what Rob uses)		
-		System.out.println("Evaluate CGMBARTClassificationMultThread");
+//		System.out.println("Evaluate CGMBARTClassificationMultThread");
 		return EvaluateViaSampAvg(record, num_cores_evaluate) > classification_rule ? 1 : 0;
 	}	
 	
@@ -34,7 +34,7 @@ public class CGMBARTClassificationMultThread extends CGMBARTRegressionMultThread
 				y_gibbs_samples_probs[g][i] = StatToolbox.InverseProbit(y_gibbs_samples[g][i]);
 			}			
 		}
-		System.out.println("y_gibbs_samples_probs: " + Tools.StringJoin(y_gibbs_samples_probs[0]));
+//		System.out.println("y_gibbs_samples_probs: " + Tools.StringJoin(y_gibbs_samples_probs[0]));
 		return y_gibbs_samples_probs;
 	}	
 	
