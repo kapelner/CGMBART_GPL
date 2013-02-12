@@ -31,10 +31,10 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 	protected static double PROB_PRUNE_DEFAULT = 2.5 / 9.0;
 	protected static double PROB_CHANGE_DEFAULT = 4 / 9.0;	
 	
-	private int num_cores;
-	private int num_trees;
+	protected int num_cores;
+	protected int num_trees;
 	
-	private transient CGMBARTRegression[] bart_gibbs_chain_threads;
+	protected transient CGMBARTRegression[] bart_gibbs_chain_threads;
 	protected CGMBARTTreeNode[][] gibbs_samples_of_cgm_trees_after_burn_in;
 	
 	private Double sample_var_y;
@@ -74,38 +74,42 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 		setNumGibbsTotalIterations(num_gibbs_total_iterations);
 	}
 	
-	private void SetupBARTModels() {
+	protected void SetupBARTModels() {
 //		System.out.print("begin SetupBARTModels()");
 		bart_gibbs_chain_threads = new CGMBARTRegression[num_cores];
 		for (int t = 0; t < num_cores; t++){
 			CGMBARTRegression bart = new CGMBARTRegression();
-			//now set specs on each of the bart models
-			bart.num_trees = num_trees;
-			bart.num_gibbs_total_iterations = total_iterations_multithreaded;
-			bart.num_gibbs_burn_in = num_gibbs_burn_in;
-			bart.sample_var_y = sample_var_y;
-			//now some hyperparams
-			bart.setAlpha(alpha);
-			bart.setBeta(beta);
-			bart.setNu(hyper_nu);
-			bart.setK(hyper_k);
-			bart.setQ(hyper_q);
-			bart.setProbGrow(prob_grow);
-			bart.setProbPrune(prob_prune);
-			bart.setProbChange(prob_change);		
-			//set thread num and data
-			bart.setThreadNum(t);
-			bart.setData(X_y);
-			//set features
-			if (cov_split_prior != null){
-				bart.setCovSplitPrior(cov_split_prior);
-			}
-			if (use_heteroskedasticity){
-				bart.useHeteroskedasticity();
-			}
-			bart_gibbs_chain_threads[t] = bart;
+			SetupBartModel(bart, t);
 		}	
 //		System.out.print("end SetupBARTModels()");
+	}
+
+	protected void SetupBartModel(CGMBARTRegression bart, int t) {
+		//now set specs on each of the bart models
+		bart.num_trees = num_trees;
+		bart.num_gibbs_total_iterations = total_iterations_multithreaded;
+		bart.num_gibbs_burn_in = num_gibbs_burn_in;
+		bart.sample_var_y = sample_var_y;
+		//now some hyperparams
+		bart.setAlpha(alpha);
+		bart.setBeta(beta);
+		bart.setNu(hyper_nu);
+		bart.setK(hyper_k);
+		bart.setQ(hyper_q);
+		bart.setProbGrow(prob_grow);
+		bart.setProbPrune(prob_prune);
+		bart.setProbChange(prob_change);		
+		//set thread num and data
+		bart.setThreadNum(t);
+		bart.setData(X_y);
+		//set features
+		if (cov_split_prior != null){
+			bart.setCovSplitPrior(cov_split_prior);
+		}
+		if (use_heteroskedasticity){
+			bart.useHeteroskedasticity();
+		}
+		bart_gibbs_chain_threads[t] = bart;
 	}
 
 	@Override

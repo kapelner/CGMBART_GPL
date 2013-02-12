@@ -64,14 +64,28 @@ build_bart_machine = function(X, y,
 	#immediately initialize Java
 	init_java_for_bart()
 	
+	#now take care of classification or regression
+	y_levels = levels(y)
+	if (class(y) == "numeric"){ #if y is numeric, then it's a regression problem
+		java_bart_machine = .jnew("CGM_BART.CGMBARTRegressionMultThread")
+		y_numeric = y
+		pred_type = "regression"
+	} else if (class(y) == "factor" & length(y_levels) == 2){ #if y is a factor and binary
+		java_bart_machine = .jnew("CGM_BART.CGMBARTClassificationMultThread")
+		y_numeric = ifelse(y == y_levels[1], 0, 1)
+		pred_type = "classification"
+	} else { #otherwise throw an error
+		stop("Your response must be either numeric or a factor with two levels.\n")
+	}	
+	
 	num_gibbs = num_burn_in + num_iterations_after_burn_in
 	#check for errors in data
 	if (check_for_errors_in_training_data(X)){
 		return;
 	}
-	model_matrix_training_data = cbind(pre_process_training_data(X), y)
 	
-	java_bart_machine = .jnew("CGM_BART.CGMBARTRegressionMultThread")
+	model_matrix_training_data = cbind(pre_process_training_data(X), y_numeric)
+	
 	
 	#first set the name
 	.jcall(java_bart_machine, "V", "setUniqueName", unique_name)
@@ -99,21 +113,24 @@ build_bart_machine = function(X, y,
 
 	}
 	
-	y_range = max(y) - min(y)
-	y_trans = (y - min(y)) / y_range - 0.5
-	if (s_sq_y == "mse"){
-		mod = lm(y_trans ~ ., as.data.frame(model_matrix_training_data)[1 : (ncol(model_matrix_training_data) - 1)])
-		mse = var(mod$residuals)
-		sig_sq_est = as.numeric(mse)
-		.jcall(java_bart_machine, "V", "setSampleVarY", sig_sq_est)
-	} else if (s_sq_y == "var"){
-		sig_sq_est = as.numeric(var(y_trans))
-		.jcall(java_bart_machine, "V", "setSampleVarY", sig_sq_est)
-	} else {
-		stop("s_sq_y must be \"rmse\" or \"sd\"", call. = FALSE)
-		return(TRUE)
+	if (pred_type == "regression"){
+		y_range = max(y) - min(y)
+		y_trans = (y - min(y)) / y_range - 0.5
+		if (s_sq_y == "mse"){
+			mod = lm(y_trans ~ ., as.data.frame(model_matrix_training_data)[1 : (ncol(model_matrix_training_data) - 1)])
+			mse = var(mod$residuals)
+			sig_sq_est = as.numeric(mse)
+			.jcall(java_bart_machine, "V", "setSampleVarY", sig_sq_est)
+		} else if (s_sq_y == "var"){
+			sig_sq_est = as.numeric(var(y_trans))
+			.jcall(java_bart_machine, "V", "setSampleVarY", sig_sq_est)
+		} else {
+			stop("s_sq_y must be \"rmse\" or \"sd\"", call. = FALSE)
+			return(TRUE)
+		}
+		sig_sq_est = sig_sq_est * y_range^2		
 	}
-	sig_sq_est = sig_sq_est * y_range^2
+
 	
 	#make bart to spec with what the user wants
 	.jcall(java_bart_machine, "V", "setNumCores", as.integer(ifelse(is.null(num_cores), BART_NUM_CORES, num_cores))) #this must be set FIRST!!!
@@ -158,6 +175,8 @@ build_bart_machine = function(X, y,
 		training_data_features = colnames(model_matrix_training_data)[1 : p],
 		X = X,
 		y = y,
+		y_levels = y_levels,
+		pred_type = pred_type,
 		model_matrix_training_data = model_matrix_training_data,
 		n = nrow(model_matrix_training_data),
 		p = p,

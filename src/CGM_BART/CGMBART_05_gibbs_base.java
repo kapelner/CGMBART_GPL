@@ -72,8 +72,6 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 		final CGMBARTTreeNode[] cgm_trees = new CGMBARTTreeNode[num_trees];				
 		final TreeArrayIllustration tree_array_illustration = new TreeArrayIllustration(gibbs_sample_num, unique_name);
 
-		///////////////NO NEED FOR THIS HACK ANYMORE
-		//		gibbs_samples_of_cgm_trees.add(null); //so I can set explicitly
 		//we cycle over each tree and update it according to formulas 15, 16 on p274
 		double[] R_j = new double[n];
 		for (int t = 0; t < num_trees; t++){
@@ -94,7 +92,7 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 		DebugSample(gibbs_sample_num, tree_array_illustration);
 	}
 
-	private void SampleMusWrapper(int sample_num, int t) {
+	protected void SampleMusWrapper(int sample_num, int t) {
 		CGMBARTTreeNode previous_tree = gibbs_samples_of_cgm_trees[sample_num - 1][t];
 		//subtract out previous tree's yhats
 //		System.out.println("  previous yhats = " + Tools.StringJoin(previous_tree.yhats));

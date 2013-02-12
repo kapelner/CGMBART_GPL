@@ -42,12 +42,12 @@ public class DataAnalysis {
 //	private static final String DataSetFilename = "r_friedman_hd";	
 //	private static final String DataSetFilename = "r_univariatelinear";
 //	private static final String DataSetFilename = "r_bivariatelinear";
-	private static final String DataSetFilename = "r_boston";
+//	private static final String DataSetFilename = "r_boston";
 //	private static final String DataSetFilename = "r_boston_half";	
 //	private static final String DataSetFilename = "r_zach";
 //	private static final String DataSetFilename = "r_forestfires";
 //	private static final String DataSetFilename = "r_concretedata";
-//	private static final String DataSetFilename = "bart_data";
+	private static final String DataSetFilename = "c_iris";
 
 	public static void main(String[] args) throws IOException{
 		System.out.println("java ver: " + System.getProperty("java.version"));
@@ -56,6 +56,18 @@ public class DataAnalysis {
 		Classifier machine = null; //we're going to use some machine to do it... 
 
 		//if the filename begins with a "c" => classification task, if it begins with an "r" => regression task
+		if (DataSetFilename.charAt(0) == 'c'){ //classification problem
+//			CGMClassificationTree tree = new CGMClassificationTree(data, new JProgressBarAndLabel(0, 0, null), data.getK());
+			machine = new CGMBARTClassificationMultThread();
+			machine.setData(data.getX_y());
+			machine.Build();
+			System.out.println("errors: " + 
+					(int)machine.calculateInSampleLoss(Classifier.ErrorTypes.MISCLASSIFICATION, 4) + 
+					"/" + 
+					machine.getN() + 
+					"  (" + machine.calculateMisclassificationRate(4) + "%)");
+		}
+		else {
 		//regression problem
 //			machine = new RandomForest(data, new JProgressBarAndLabel(0, 0, null));
 //			for (int num_times = 0; num_times < 100; num_times++){
@@ -69,5 +81,6 @@ public class DataAnalysis {
 			System.out.println("(in sample) L1 error: " + 
 				Math.round(machine.calculateInSampleLoss(Classifier.ErrorTypes.L1, 4)) +
 				" L2 error: " + L2 + " rmse: " + Math.sqrt(L2 / (double)machine.getN()));
+		}
 	}
 }
