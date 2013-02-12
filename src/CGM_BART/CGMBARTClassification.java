@@ -24,17 +24,11 @@
 
 package CGM_BART;
 
-import java.util.ArrayList;
-
-import org.apache.commons.math.MathException;
-import org.apache.commons.math.distribution.ChiSquaredDistributionImpl;
-
 public final class CGMBARTClassification extends CGMBARTRegression {
 	private static final long serialVersionUID = -9061432248755912576L;
 	private static final double SIGSQ_FOR_PROBIT = 1;
-	
-	private double[] current_zs;
-	
+
+
 	/**
 	 * Constructs the BART classifier for classification. We rely on the SetupClassification class to set the raw data
 	 * 
@@ -42,30 +36,12 @@ public final class CGMBARTClassification extends CGMBARTRegression {
 	 * @param buildProgress
 	 */
 	public CGMBARTClassification() {
-		super();
-		
+		super();		
 	}	
-	
-	@Override
-	public double Evaluate(double[] record) {
-		return InverseProbit(super.Evaluate(record));
-	}	
-	
-	public void setData(ArrayList<double[]> X_y){
-		super.setData(X_y);
-		current_zs = new double[n];
-	}
-	
-	
-	private double InverseProbit(double y_star) {
-		// TODO Auto-generated method stub
-		return y_star;
-	}
-		
 
 	@Override
 	protected void DoOneGibbsSample(){
-//		tree_liks.print(gibb_sample_num + ",");
+//		System.out.println("DoOneGibbsSample CGMBARTClassification");
 		//this array is the array of trees for this given sample
 		final CGMBARTTreeNode[] cgm_trees = new CGMBARTTreeNode[num_trees];				
 		final TreeArrayIllustration tree_array_illustration = new TreeArrayIllustration(gibbs_sample_num, unique_name);
@@ -73,11 +49,14 @@ public final class CGMBARTClassification extends CGMBARTRegression {
 		//we cycle over each tree and update it according to formulas 15, 16 on p274
 		for (int i = 0; i < n; i++){
 			double g_x_i = 0;
+			CGMBARTTreeNode[] trees = gibbs_samples_of_cgm_trees[gibbs_sample_num - 1];
 			for (int t = 0; t < num_trees; t++){
-				g_x_i += gibbs_samples_of_cgm_trees[gibbs_sample_num - 1][t].Evaluate(X_y.get(i));
+				g_x_i += trees[t].Evaluate(X_y.get(i));
 			}
-			current_zs[i] = SampleZi(g_x_i, y_orig[i]);
+			//y_trans is the Z's from the paper
+			y_trans[i] = SampleZi(g_x_i, y_orig[i]);
 		}
+//		System.out.println("SampleZis: " + Tools.StringJoin(y_trans));
 		for (int t = 0; t < num_trees; t++){
 			if (t == 0 && gibbs_sample_num % 100 == 0){
 				//debug memory messages
@@ -93,32 +72,36 @@ public final class CGMBARTClassification extends CGMBARTRegression {
 		}
 	}
 	
-	private double SampleZi(double g_x_i, double d) {
-		// TODO Auto-generated method stub
-		return 0;
+	private double SampleZi(double g_x_i, double y_i) {
+		if (y_i == 1){
+			return Math.max(StatToolbox.sample_from_norm_dist(g_x_i, SIGSQ_FOR_PROBIT), 0);
+		} 
+		else if (y_i == 0){
+			return Math.min(StatToolbox.sample_from_norm_dist(g_x_i, SIGSQ_FOR_PROBIT), 0);
+		}
+		System.err.println("SampleZi RESPONSE NOT ZERO / ONE");
+		System.exit(0);
+		return -1;
 	}
 
 	protected void SetupGibbsSampling(){
 		super.SetupGibbsSampling();
-		//we no longer care about sigsq's so let's do defaults:
+		//all sigsqs are now 1 all the time
 		for (int g = 0; g < num_gibbs_total_iterations; g++){
 			gibbs_samples_of_sigsq[g] = SIGSQ_FOR_PROBIT;
 		}
 	}
 
+	//all we need is the new sigsq_mu hyperparam
 	protected void calculateHyperparameters() {
-//		System.out.println("calculateHyperparameters in BART\n\n");
+//		System.out.println("calculateHyperparameters in CGMBARTClassification\n\n");
 		hyper_mu_mu = 0;
-		hyper_sigsq_mu = Math.pow(3 / (hyper_k * Math.sqrt(num_trees)), 2);
-	
+		hyper_sigsq_mu = Math.pow(3 / (hyper_k * Math.sqrt(num_trees)), 2);	
 	}
 	
 	
+	//do nothing
 	protected void transformResponseVariable() {
-		y_trans = new double[y_orig.length];
-		//default is to do nothing... ie just copy the y's into y_trans's
-		for (int i = 0; i < n; i++){
-			y_trans[i] = y_orig[i];
-		}		
+		y_trans = new double[y_orig.length];		
 	}	
 }

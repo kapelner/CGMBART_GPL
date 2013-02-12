@@ -31,9 +31,6 @@ public class CGMBARTRegression extends CGMBART_F2_heteroskedasticity {
 	
 	/**
 	 * Constructs the BART classifier for regression.
-	 * 
-	 * @param datumSetupForEntireRun
-	 * @param buildProgress
 	 */
 	public CGMBARTRegression() {		
 		super();

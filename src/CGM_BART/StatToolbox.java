@@ -199,6 +199,16 @@ public class StatToolbox {
 //		System.out.println("sample_from_norm_dist S = " + START_POS + " P = " + START_POS % NUM_NORM_SAMPS + "real = " + std_norm_realization);
 //		START_POS++;
 		return mu + Math.sqrt(sigsq) * std_norm_realization;
+	}
+	
+	public static double InverseProbit(double x) {
+		try {
+			return new NormalDistributionImpl(0, 1).cumulativeProbability(x);
+		} catch (MathException e) {
+			e.printStackTrace();
+			System.exit(0);
+			return 0;
+		}
 	}	
 	
 //	public static double sample_from_norm_dist(double mu, double sigsq){

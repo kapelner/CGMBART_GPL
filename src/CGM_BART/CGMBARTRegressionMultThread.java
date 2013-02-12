@@ -18,13 +18,13 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 	
 	private static final int DEFAULT_NUM_CORES = 1;//Runtime.getRuntime().availableProcessors() - 1;
 		
-	protected static final int NUM_TREES_DEFAULT = 20;
-	protected static final int NUM_GIBBS_BURN_IN_DEFAULT = 2000;
-	protected static final int NUM_GIBBS_TOTAL_ITERATIONS_DEFAULT = 4000; //this must be larger than the number of burn in!!!
+	protected static final int NUM_TREES_DEFAULT = 1;
+	protected static final int NUM_GIBBS_BURN_IN_DEFAULT = 100;
+	protected static final int NUM_GIBBS_TOTAL_ITERATIONS_DEFAULT = 200; //this must be larger than the number of burn in!!!
 
 	protected static double HYPER_ALPHA_DEFAULT = 0.95;
 	protected static double HYPER_BETA_DEFUALT = 2; //see p271 in CGM10	
-	protected static double HYPER_K_DEFAULT = 2.0; //StatToolbox.inv_norm_dist(1 - (1 - CGMShared.MostOfTheDistribution) / 2.0);	
+	protected static double HYPER_K_DEFAULT = 2.0;	
 	protected static double HYPER_Q_DEFAULT = 0.9;
 	protected static double HYPER_NU_DEFAULT = 3.0;
 	protected static double PROB_GROW_DEFAULT = 2.5 / 9.0;
@@ -38,22 +38,22 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 	protected CGMBARTTreeNode[][] gibbs_samples_of_cgm_trees_after_burn_in;
 	
 	private Double sample_var_y;
-	private int num_gibbs_burn_in;
-	private int num_gibbs_total_iterations;
-	private int total_iterations_multithreaded;
+	protected int num_gibbs_burn_in;
+	protected int num_gibbs_total_iterations;
+	protected int total_iterations_multithreaded;
 
 	//set all hyperparameters here
-	private double[] cov_split_prior;
-	private Double alpha;
-	private Double beta;
-	private Double hyper_k;
-	private Double hyper_q;
-	private Double hyper_nu;
-	private Double prob_grow;
-	private Double prob_prune;
-	private Double prob_change;
+	protected double[] cov_split_prior;
+	protected Double alpha;
+	protected Double beta;
+	protected Double hyper_k;
+	protected Double hyper_q;
+	protected Double hyper_nu;
+	protected Double prob_grow;
+	protected Double prob_prune;
+	protected Double prob_change;
 
-	private transient boolean use_heteroskedasticity;
+	protected transient boolean use_heteroskedasticity;
 
 	
 	public CGMBARTRegressionMultThread(){
@@ -93,9 +93,7 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 		//now some hyperparams
 		bart.setAlpha(alpha);
 		bart.setBeta(beta);
-		bart.setNu(hyper_nu);
 		bart.setK(hyper_k);
-		bart.setQ(hyper_q);
 		bart.setProbGrow(prob_grow);
 		bart.setProbPrune(prob_prune);
 		bart.setProbChange(prob_change);		
@@ -108,6 +106,11 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 		}
 		if (use_heteroskedasticity){
 			bart.useHeteroskedasticity();
+		}
+		//do special stuff for regression model
+		if (!(bart instanceof CGMBARTClassification)){
+			bart.setNu(hyper_nu);		
+			bart.setQ(hyper_q);
 		}
 		bart_gibbs_chain_threads[t] = bart;
 	}
@@ -273,6 +276,7 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 		
 		final int n = data.length;
 		final double[][] y_hat = new double[n][data[0].length];
+		System.out.println("getGibbsSamplesForPrediction n: " + n);
 		
 		if (num_cores == 1){
 			for (int i = 0; i < n; i++){
@@ -285,11 +289,12 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 					}
 					//just make sure we switch it back to really what y is for the user
 					y_gibbs_samples[g] = first_bart.un_transform_y(yt_i);
+					System.out.println("y_gibbs_samples[g]: " + y_gibbs_samples[g]);
 				}
 				y_hat[i] = y_gibbs_samples;
 			}			
 		}
-		else {
+		else { //probably should put back executor service here for cleanliness
 			Thread[] fixed_thread_pool = new Thread[num_cores];
 			for (int t = 0; t < num_cores; t++){
 				final int final_t = t;

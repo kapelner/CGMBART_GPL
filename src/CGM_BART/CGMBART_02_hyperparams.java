@@ -43,7 +43,7 @@ public abstract class CGMBART_02_hyperparams extends CGMBART_01_base implements 
 	
 	// hist(1 / rgamma(5000, 1.5, 1.5 * 153.65), br=100)
 	protected void calculateHyperparameters() {
-//		System.out.println("calculateHyperparameters in BART\n\n");
+		System.out.println("calculateHyperparameters in BART\n\n");
 		hyper_mu_mu = 0;
 		hyper_sigsq_mu = Math.pow(YminAndYmaxHalfDiff / (hyper_k * Math.sqrt(num_trees)), 2);
 //		System.out.println("hyper_sigsq_mu: " + hyper_sigsq_mu);

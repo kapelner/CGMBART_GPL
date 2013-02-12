@@ -322,6 +322,7 @@ public abstract class Classifier implements Serializable {
 			double[] record = X_y.get(i);
 			double y = getResponseFromRecord(record);
 			double yhat = Evaluate(record, num_cores_evaluate);
+//			System.out.println("y: " + y + " yhat: " + yhat);
 			in_sample_residuals[i] = y - yhat;
 		}
 		long t1 = System.currentTimeMillis();
@@ -349,6 +350,7 @@ public abstract class Classifier implements Serializable {
 			}
 		}
 		System.out.print("done\n");
+//		System.out.println("in_sample_residuals: " + Tools.StringJoin(in_sample_residuals));
 		return loss;
 	}
 	
