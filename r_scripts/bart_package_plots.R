@@ -608,3 +608,43 @@ var_importance_by_shuffling = function(bart_machine, list_of_vars = NULL, holdou
 	invisible(rmse_pct_change)
 }
 
+rmse_by_num_trees = function(bart_machine, tree_list = c(1, seq(5, 50, 5), 100, 150, 200, 300, 400), plot = TRUE, holdout_pctg = 0.3, num_replicates = 4){
+	X = bart_machine$X
+	y = bart_machine$y
+	n = bart_machine$n
+	
+	rmses = array(NA, c(num_replicates, length(tree_list)))
+	cat("num_trees = ")
+	for (t in 1 : length(tree_list)){
+		for (r in 1 : num_replicates){
+			holdout_indicies = sample(1 : n, holdout_pctg * n)
+			Xtrain = X[setdiff(1 : n, holdout_indicies), ]
+			ytrain = y[setdiff(1 : n, holdout_indicies)]
+			Xtest = X[holdout_indicies, ]
+			ytest = y[holdout_indicies]
+			
+			bart_machine_dup = bart_machine_duplicate(bart_machine, Xtrain, ytrain, num_trees = tree_list[t])
+			predict_obj = bart_predict_for_test_data(bart_machine_dup, Xtest, ytest)
+			rmses[r, t] = predict_obj$rmse
+			destroy_bart_machine(bart_machine_dup)
+			cat("..")
+			cat(tree_list[t])			
+		}
+	}
+	cat("\n")
+	
+	rmse_means = colMeans(rmses)
+
+	if (plot){
+		rmse_sds = apply(rmses, 2, sd)
+		y_mins = rmse_means - 2 * rmse_sds
+		y_maxs = rmse_means + 2 * rmse_sds
+		plot(tree_list, rmse_means, type = "o", xlab = "Number of Trees", ylab = "Out-Of-Sample RMSE", main = "Fit by Number of Trees", ylim = c(min(y_mins), max(y_maxs)))
+		if (num_replicates > 1){
+			for (t in 1 : length(tree_list)){
+				segments(tree_list[t], rmse_means[t] - 1.96 * rmse_sds[t], tree_list[t], rmse_means[t] + 1.96 * rmse_sds[t], col = "grey", lwd = 0.1)
+			}
+		}
+	}
+	invisible(rmse_means)
+}

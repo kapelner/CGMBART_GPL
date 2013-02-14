@@ -24,6 +24,7 @@ public abstract class CGMBART_01_base extends Classifier implements Serializable
 	protected boolean stop_bit;
 
 	protected int threadNum;
+	protected int num_cores;
 	
 	protected static Integer PrintOutEvery = null;
 	
@@ -64,4 +65,10 @@ public abstract class CGMBART_01_base extends Classifier implements Serializable
 	public void setThreadNum(int threadNum) {
 		this.threadNum = threadNum;
 	}
+	
+
+
+	public void setTotalNumThreads(int num_cores) {
+		this.num_cores = num_cores;
+	}	
 }

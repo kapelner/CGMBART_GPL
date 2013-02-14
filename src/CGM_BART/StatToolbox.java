@@ -201,7 +201,7 @@ public class StatToolbox {
 		return mu + Math.sqrt(sigsq) * std_norm_realization;
 	}
 	
-	public static double InverseProbit(double x) {
+	public static double normal_cdf(double x) {
 		try {
 			return new NormalDistributionImpl(0, 1).cumulativeProbability(x);
 		} catch (MathException e) {

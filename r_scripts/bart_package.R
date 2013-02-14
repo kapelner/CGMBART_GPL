@@ -227,7 +227,7 @@ build_bart_machine = function(X, y,
 	bart_machine
 }
 
-bart_machine_duplicate = function(bart_machine, X = NULL, y = NULL, cov_prior_vec = NULL, ...){
+bart_machine_duplicate = function(bart_machine, X = NULL, y = NULL, cov_prior_vec = NULL, num_trees = NULL, run_in_sample = NULL, ...){
 	if (bart_machine$bart_destroyed){
 		stop("This BART machine has been destroyed. Please recreate.")
 	}	
@@ -240,8 +240,14 @@ bart_machine_duplicate = function(bart_machine, X = NULL, y = NULL, cov_prior_ve
 	if (is.null(cov_prior_vec)){
 		cov_prior_vec = bart_machine$cov_prior_vec
 	}
+	if (is.null(num_trees)){
+		num_trees = bart_machine$num_trees
+	}	
+	if (is.null(run_in_sample)){
+		run_in_sample = FALSE
+	}
 	build_bart_machine(X, y,
-		num_trees = bart_machine$num_trees,
+		num_trees = num_trees,
 		num_burn_in = bart_machine$num_burn_in, 
 		num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in, 
 		alpha = bart_machine$alpha,
@@ -251,7 +257,7 @@ bart_machine_duplicate = function(bart_machine, X = NULL, y = NULL, cov_prior_ve
 		num_cores = bart_machine$num_cores,
 		cov_prior_vec = cov_prior_vec,
 		print_tree_illustrations = FALSE,
-		run_in_sample = FALSE,
+		run_in_sample = run_in_sample,
 		verbose = FALSE, 
 		...)
 }
@@ -379,13 +385,28 @@ summary.bart_machine = function(bart_machine, show_details_for_trees = FALSE){
 	} else {
 		cat(paste("built in", round(ttb, 1), "secs on", bart_machine$num_cores, "cores,", bart_machine$num_trees, "trees,", bart_machine$num_burn_in, "burn in and", bart_machine$num_iterations_after_burn_in, "posterior samples\n"))
 	}
+	
+	
+	sigsqs = .jcall(bart_machine$java_bart_machine, "[D", "getGibbsSamplesSigsqs")	
+	sigsqs_after_burnin = sigsqs[(length(sigsqs) - bart_machine$num_iterations_after_burn_in) : length(sigsqs)]
+	
+	cat(paste("\nsigsq est for y beforehand:", round(bart_machine$sig_sq_est, 3), "\n"))
+	cat(paste("avg sigsq estimate after burn-in:", round(mean(sigsqs_after_burnin), 5), "\n"))
+	
 	if (bart_machine$run_in_sample){
 		cat("\nin-sample statistics:\n")
 		cat(paste("  L1 = ", round(bart_machine$L1_err_train, 2), 
 					"L2 = ", round(bart_machine$L2_err_train, 2),
 					"rmse =", round(bart_machine$rmse_train, 2), "\n"))
+	
+		es = bart_machine$residuals
+		normal_p_val = shapiro.test(es)$p.value
+		cat("\np-val for shapiro-wilk test of normality of residuals:", round(normal_p_val, 5), "\n")
+		
+		centered_p_val = t.test(es)$p.value
+		cat("p-val for zero-mean noise:", round(centered_p_val, 5), "\n")	
 	} else {
-		cat("no in-sample information available (use option run_in_sample = TRUE next time)\n")
+		cat("\nno in-sample information available (use option run_in_sample = TRUE next time)\n")
 	}
 	
 	if (show_details_for_trees){
@@ -399,21 +420,7 @@ summary.bart_machine = function(bart_machine, show_details_for_trees = FALSE){
 		tree_splits = rnorm(1000)
 		print(round(summary(tree_splits), 2))		
 	}
-	
-	es = bart_machine$residuals
-	normal_p_val = shapiro.test(es)$p.value
-	cat("\np-val for shapiro-wilk test of normality of residuals:", round(normal_p_val, 5), "\n")
-
-	centered_p_val = t.test(es)$p.value
-	cat("p-val for zero-mean noise:", round(centered_p_val, 5), "\n")
-	
-	sigsqs = .jcall(bart_machine$java_bart_machine, "[D", "getGibbsSamplesSigsqs")	
-	sigsqs_after_burnin = sigsqs[(length(sigsqs) - bart_machine$num_iterations_after_burn_in) : length(sigsqs)]
-	
-	cat(paste("\nsigsq est for y beforehand:", round(bart_machine$sig_sq_est, 3), "\n"))
-	cat(paste("avg sigsq estimate after burn-in:", round(mean(sigsqs_after_burnin), 5), "\n\n"))
-#	cat(paste())
-#	cat(paste())
+	cat("\n")
 }
 
 plot.bart_machine = function(bart_machine, plot_list = c("a", "b", "c", "d", "e")){

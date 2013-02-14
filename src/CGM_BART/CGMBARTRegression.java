@@ -37,5 +37,4 @@ public class CGMBARTRegression extends CGMBART_F2_heteroskedasticity {
 //		System.out.println("CGMBARTRegression init\n");
 	}
 
-
 }

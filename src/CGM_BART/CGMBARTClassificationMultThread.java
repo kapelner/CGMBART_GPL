@@ -31,7 +31,7 @@ public class CGMBARTClassificationMultThread extends CGMBARTRegressionMultThread
 		double[][] y_gibbs_samples_probs = new double[y_gibbs_samples.length][y_gibbs_samples[0].length];
 		for (int g = 0; g < y_gibbs_samples.length; g++){
 			for (int i = 0; i < y_gibbs_samples[0].length; i++){
-				y_gibbs_samples_probs[g][i] = StatToolbox.InverseProbit(y_gibbs_samples[g][i]);
+				y_gibbs_samples_probs[g][i] = StatToolbox.normal_cdf(y_gibbs_samples[g][i]);
 			}			
 		}
 //		System.out.println("y_gibbs_samples_probs: " + Tools.StringJoin(y_gibbs_samples_probs[0]));

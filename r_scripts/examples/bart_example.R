@@ -52,7 +52,7 @@ sqrt(sum((rob$yhat.test.mean - ytest)^2) / length(ytest))
 mean(rob$sigma)
 
 
-interaction_investigator(bart_machine, num_replicates_for_avg = 5, num_var_plot = 20, num_trees_bottleneck = 200)
+interaction_investigator(bart_machine, num_replicates_for_avg = 50, num_var_plot = 20, num_trees_bottleneck = 200)
 investigate_var_importance(bart_machine)
 investigate_var_importance(bart_machine, type = "trees")
 
@@ -120,6 +120,7 @@ plot_sigsqs_convergence_diagnostics(bart_machine)
 check_bart_error_assumptions(bart_machine)
 windows()
 plot_y_vs_yhat(bart_machine, ppis = T)
+rmse_by_num_trees(bart_machine)
 
 windows()
 investigate_var_importance(bart_machine, num_replicates_for_avg = 5,num_var_plot = 15, type = "trees")
@@ -178,6 +179,13 @@ bart_machine = build_bart_machine(Xy[, 1 : (ncol(Xy) - 1)], Xy$y,
 summary(bart_machine)
 hist_sigsqs(bart_machine)
 plot_sigsqs_convergence_diagnostics(bart_machine)
+rmse_by_num_trees(bart_machine)
+
+bart_machine = build_bart_machine(Xy[, 1 : (ncol(Xy) - 1)], rnorm(nrow(Xy)),
+		num_trees = 200,
+		num_burn_in = 1000, 
+		num_iterations_after_burn_in = 500,
+		s_sq_y = "mse")
 
 library(BayesTree)
 rob = bart(x.train = Xy[, 1:100], y.train = Xy[ , 101], ndpost = 500, nskip = 1000, ntree = 20, sigest = sd(Xy[,101]))

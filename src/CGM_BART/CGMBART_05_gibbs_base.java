@@ -75,21 +75,26 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 		//we cycle over each tree and update it according to formulas 15, 16 on p274
 		double[] R_j = new double[n];
 		for (int t = 0; t < num_trees; t++){
-			if (t == 0 && gibbs_sample_num % 100 == 0){
-				//debug memory messages
-				long mem_used = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
-				long max_mem = Runtime.getRuntime().maxMemory();
-				System.out.println("Sampling M_" + (t + 1) + "/" + num_trees + " iter " + 
-						gibbs_sample_num + "/" + num_gibbs_total_iterations + "  thread: " + (threadNum + 1) +
-						"  mem: " + TreeIllustration.one_digit_format.format(mem_used / 1000000.0) + "/" + 
-						TreeIllustration.one_digit_format.format(max_mem / 1000000.0) + "MB");
-			}
+			GibbsSampleDebugMessage(t);
 			R_j = SampleTree(gibbs_sample_num, t, cgm_trees, tree_array_illustration);
 			SampleMusWrapper(gibbs_sample_num, t);				
 		}
 		//now we have the last residual vector which we pass on to sample sigsq
 		SampleSigsq(gibbs_sample_num, getResidualsFromFullSumModel(gibbs_sample_num, R_j));
 		DebugSample(gibbs_sample_num, tree_array_illustration);
+	}
+
+	protected void GibbsSampleDebugMessage(int t) {
+		if (t == 0 && gibbs_sample_num % 100 == 0){
+			String message = "Sampling M_" + (t + 1) + "/" + num_trees + " iter " + gibbs_sample_num + "/" + num_gibbs_total_iterations;
+			if (num_cores > 1){
+				message += "  thread: " + (threadNum + 1);
+			}
+			long mem_used = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+			long max_mem = Runtime.getRuntime().maxMemory();
+			message += "  mem: " + TreeIllustration.one_digit_format.format(mem_used / 1000000.0) + "/" + TreeIllustration.one_digit_format.format(max_mem / 1000000.0) + "MB";
+			System.out.println(message);
+		}
 	}
 
 	protected void SampleMusWrapper(int sample_num, int t) {
