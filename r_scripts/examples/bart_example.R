@@ -41,6 +41,9 @@ set_bart_machine_num_cores(4)
 summary(bart_machine)
 bart_machine$training_data_features
 
+plot_y_vs_yhat(bart_machine, ppis=T)
+plot_y_vs_yhat(bart_machine, X = Xtest, y = ytest, ppis = TRUE)
+
 #convenience to predict on the test data automatically computing SSE, etc
 predict_obj = bart_predict_for_test_data(bart_machine, Xtest, ytest)
 predict_obj$rmse
@@ -103,13 +106,18 @@ ppi_obj = calc_ppis_from_prediction(bart_machine, Xtest)
 #Xy = data.frame(X, y)
 #summary(lm(y ~ ., Xy))
 Xy = read.csv("datasets/r_friedman_hd.csv")
-X = Xy[, 1 : 100]
-y = Xy[, 101]
+Xtrain = Xy[1 : 80, 1 : 100]
+ytrain = Xy[1 : 80, 101]
+Xtest = Xy[81 : 100, 1 : 100]
+ytest = Xy[81 : 100, 101]
 
-bart_machine = build_bart_machine(X, y,
-	num_trees = 200,
-	num_burn_in = 5000, 
-	num_iterations_after_burn_in = 1000)
+bart_machine = build_bart_machine(Xtrain, ytrain,
+	num_trees = 50,
+	num_burn_in = 250, 
+	num_iterations_after_burn_in = 2000)
+
+plot_y_vs_yhat(bart_machine, ppis=T)
+plot_y_vs_yhat(bart_machine, X = Xtest, y = ytest, ppis = TRUE)
 
 summary(bart_machine)
 var_importance_by_shuffling(bart_machine, num_var_plot = 20)

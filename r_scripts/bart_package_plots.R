@@ -152,23 +152,31 @@ get_mh_acceptance_reject = function(bart_machine){
 	)
 }
 
-plot_y_vs_yhat = function(bart_machine, ppis = FALSE, ppi_conf = 0.95){
+plot_y_vs_yhat = function(bart_machine, X = NULL, y = NULL, ppis = FALSE, ppi_conf = 0.95){
 	if (bart_machine$bart_destroyed){
 		stop("This BART machine has been destroyed. Please recreate.")
 	}	
-	y_hat = bart_machine$y_hat_train
-	y = bart_machine$y
-
+	
+	if (is.null(X) & is.null(y)){
+		X = bart_machine$X
+		y = bart_machine$y
+		y_hat = bart_machine$y_hat_train
+		in_sample = TRUE
+	} else {
+		predict_obj = bart_predict_for_test_data(bart_machine, X, y)
+		y_hat = predict_obj$y_hat
+		in_sample = FALSE
+	}
 	
 	if (ppis){
-		ppis = calc_ppis_from_prediction(bart_machine, bart_machine$X, ppi_conf)
+		ppis = calc_ppis_from_prediction(bart_machine, X, ppi_conf)
 		ppi_a = ppis[, 1]
 		ppi_b = ppis[, 2]
 		y_in_ppi = y >= ppi_a & y <= ppi_b
 		prop_ys_in_ppi = sum(y_in_ppi) / length(y_in_ppi)
 		
 		plot(y, y_hat, 
-			main = paste("Fitted vs. Actual Values with ", round(ppi_conf * 100), "% PPIs (", round(prop_ys_in_ppi * 100, 2), "% coverage)", sep = ""), 
+			main = paste(ifelse(in_sample, "In-Sample", "Out-of-Sample"), " Fitted vs. Actual Values with ", round(ppi_conf * 100), "% PPIs (", round(prop_ys_in_ppi * 100, 2), "% coverage)", sep = ""), 
 			xlab = paste("Actual Values", sep = ""), 
 			ylab = "Fitted Values", 
 			xlim = c(min(min(y), min(y_hat)), max(max(y), max(y_hat))),

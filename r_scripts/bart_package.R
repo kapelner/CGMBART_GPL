@@ -459,7 +459,7 @@ calc_ppis_from_prediction = function(bart_machine, new_data, ppi_conf = 0.95){
 	#to get y_hat.. just take straight mean of posterior samples, alternatively, we can let java do it if we want more bells and whistles
 	y_hat = rowMeans(y_hat_posterior_samples)
 	
-	for (i in 1 : bart_machine$n){		
+	for (i in 1 : n_test){		
 		ppi_lower_bd[i] = quantile(sort(y_hat_posterior_samples[i, ]), (1 - ppi_conf) / 2)
 		ppi_upper_bd[i] = quantile(sort(y_hat_posterior_samples[i, ]), (1 + ppi_conf) / 2)
 	}
