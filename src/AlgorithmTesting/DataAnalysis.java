@@ -47,7 +47,7 @@ public class DataAnalysis {
 //	private static final String DataSetFilename = "r_zach";
 //	private static final String DataSetFilename = "r_forestfires";
 //	private static final String DataSetFilename = "r_concretedata";
-	private static final String DataSetFilename = "c_ionosphere";
+	private static final String DataSetFilename = "c_breastcancer";
 
 	public static void main(String[] args) throws IOException{
 		System.out.println("java ver: " + System.getProperty("java.version"));

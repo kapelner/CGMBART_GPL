@@ -220,7 +220,7 @@ public class StatToolbox {
 //		}
 		    // constants
 
-
+		//from http://www.johndcook.com/cpp_phi.html
 	    // Save the sign of x
 	    int sign = 1;
 	    if (x < 0){

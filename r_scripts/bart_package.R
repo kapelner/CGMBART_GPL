@@ -21,6 +21,7 @@ DEFAULT_K = 2
 DEFAULT_Q = 0.9
 DEFAULT_NU = 3.0
 DEFAULT_PROB_STEPS = c(2.5, 2.5, 4) / 9
+DEFAULT_PROB_RULE_CLASS = 0.5
 COLORS = array(NA, 500)
 for (i in 1 : 500){
 	COLORS[i] = rgb(runif(1, 0, 0.7), runif(1, 0, 0.7), runif(1, 0, 0.7))
@@ -49,6 +50,7 @@ build_bart_machine = function(X, y,
 		k = DEFAULT_K,
 		q = DEFAULT_Q,
 		nu = DEFAULT_NU,
+		prob_rule_class = DEFAULT_PROB_RULE_CLASS,
 		mh_prob_steps = DEFAULT_PROB_STEPS,
 		debug_log = FALSE,
 		fix_seed = FALSE,
@@ -113,6 +115,7 @@ build_bart_machine = function(X, y,
 
 	}
 	
+	sig_sq_est = NULL
 	if (pred_type == "regression"){
 		y_range = max(y) - min(y)
 		y_trans = (y - min(y)) / y_range - 0.5
@@ -190,6 +193,7 @@ build_bart_machine = function(X, y,
 		k = k,
 		q = q,
 		nu = nu,
+		prob_rule_class = prob_rule_class,
 		mh_prob_steps = mh_prob_steps,
 		s_sq_y = s_sq_y,
 		run_in_sample = run_in_sample,
@@ -205,18 +209,45 @@ build_bart_machine = function(X, y,
 		if (verbose){
 			cat("evaluating in sample data...")
 		}
-		y_hat_posterior_samples = 
-			t(sapply(.jcall(bart_machine$java_bart_machine, "[[D", "getGibbsSamplesForPrediction", .jarray(model_matrix_training_data, dispatch = TRUE), as.integer(BART_NUM_CORES)), .jevalArray))
-		
-		#to get y_hat.. just take straight mean of posterior samples
-		y_hat_train = rowMeans(y_hat_posterior_samples)
-		#return a bunch more stuff
-		bart_machine$y_hat_train = y_hat_train
-		bart_machine$residuals = y - bart_machine$y_hat_train
-		bart_machine$L1_err_train = sum(abs(bart_machine$residuals))
-		bart_machine$L2_err_train = sum(bart_machine$residuals^2)
-		bart_machine$Rsq = 1 - bart_machine$L2_err_train / sum((y - mean(y))^2) #1 - SSE / SST
-		bart_machine$rmse_train = sqrt(bart_machine$L2_err_train / bart_machine$n)
+		if (pred_type == "regression"){
+			y_hat_posterior_samples = 
+				t(sapply(.jcall(bart_machine$java_bart_machine, "[[D", "getGibbsSamplesForPrediction", .jarray(model_matrix_training_data, dispatch = TRUE), as.integer(BART_NUM_CORES)), .jevalArray))
+			
+			#to get y_hat.. just take straight mean of posterior samples
+			y_hat_train = rowMeans(y_hat_posterior_samples)
+			#return a bunch more stuff
+			bart_machine$y_hat_train = y_hat_train
+			bart_machine$residuals = y - bart_machine$y_hat_train
+			bart_machine$L1_err_train = sum(abs(bart_machine$residuals))
+			bart_machine$L2_err_train = sum(bart_machine$residuals^2)
+			bart_machine$Rsq = 1 - bart_machine$L2_err_train / sum((y - mean(y))^2) #1 - SSE / SST
+			bart_machine$rmse_train = sqrt(bart_machine$L2_err_train / bart_machine$n)
+		} else if (pred_type == "classification"){
+			p_hat_posterior_samples = 
+					t(sapply(.jcall(bart_machine$java_bart_machine, "[[D", "getGibbsSamplesForPrediction", .jarray(model_matrix_training_data, dispatch = TRUE), as.integer(BART_NUM_CORES)), .jevalArray))
+			
+			#to get y_hat.. just take straight mean of posterior samples
+			p_hat_train = rowMeans(p_hat_posterior_samples)
+			y_hat_train = ifelse(p_hat_train > prob_rule_class, y_levels[2], y_levels[1])
+			#return a bunch more stuff
+			bart_machine$p_hat_train = p_hat_train
+			bart_machine$y_hat_train = y_hat_train
+			
+			#calculate confusion matrix
+			confusion_matrix = as.data.frame(matrix(NA, nrow = 3, ncol = 3))
+			rownames(confusion_matrix) = c(y_levels, "use errors")
+			colnames(confusion_matrix) = c(y_levels, "model errors")
+			
+			confusion_matrix[1 : 2, 1 : 2] = as.integer(table(y, y_hat_train)) 
+			confusion_matrix[3, 1] = round(confusion_matrix[1, 2] / (confusion_matrix[1, 1] + confusion_matrix[2, 1]), 3)
+			confusion_matrix[3, 2] = round(confusion_matrix[2, 1] / (confusion_matrix[1, 2] + confusion_matrix[2, 2]), 3)
+			confusion_matrix[1, 3] = round(confusion_matrix[1, 2] / (confusion_matrix[1, 1] + confusion_matrix[1, 2]), 3)
+			confusion_matrix[2, 3] = round(confusion_matrix[2, 1] / (confusion_matrix[2, 1] + confusion_matrix[2, 2]), 3)
+			confusion_matrix[3, 3] = round((confusion_matrix[1, 2] + confusion_matrix[2, 1]) / sum(confusion_matrix[1 : 2, 1 : 2]), 3)
+					
+			bart_machine$confusion_matrix = confusion_matrix
+			bart_machine$misclassification_error = confusion_matrix[3, 3]
+		}
 		if (verbose){
 			cat("done\n")
 		}
@@ -281,35 +312,6 @@ delete_bart_chisq_cache = function(){
 	.jcall("CGM_BART.StatToolbox", "V", "clearInvChisqHash")
 }
 
-check_bart_error_assumptions = function(bart_machine, alpha_normal_test = 0.05, alpha_hetero_test = 0.05){
-	graphics.off()
-	par(mfrow = c(1, 2))
-	es = bart_machine$residuals
-	y_hat = bart_machine$y_hat
-
-	#test for normality
-	normal_p_val = shapiro.test(es)$p.value
-	qqnorm(es, col = "blue",
-		main = paste("Assessment of Normality\n", "p-val for shapiro-wilk test of normality of residuals:", round(normal_p_val, 3)),
-		xlab = "Normal Q-Q plot for in-sample residuals\n(Theoretical Quantiles)")
-	qqline(bart_machine$residuals)	
-
-	#test for heteroskedasticity
-	plot(y_hat, es, main = paste("Assessment of Heteroskedasticity\nFitted vs residuals"), xlab = "Fitted Values", ylab = "Residuals", col = "blue")
-	abline(h = 0, col = "black")
-#	cat("p-val for shapiro-wilk test of normality of residuals:", normal_p_val, ifelse(normal_p_val > alpha_normal_test, "(ppis believable)", "(exercise caution when using ppis!)"), "\n")
-	par(mfrow = c(1, 1))
-	#TODO --- iterate over all x's and sort them
-	#see p225 in purple book for Szroeter's test
-#	n = length(es)
-#	h = sum(seq(1 : n) * es^2) / sum(es^2)
-#	Q = sqrt(6 * n / (n^2 - 1)) * (h - (n + 1) / 2)
-#	hetero_pval = 1 - pnorm(Q, 0, 1)
-#	cat("p-val for szroeter's test of homoskedasticity of residuals (assuming inputted observation order):", hetero_pval, ifelse(hetero_pval > alpha_hetero_test, "(ppis believable)", "(exercise caution when using ppis!)"), "\n")		
-
-}
-
-
 get_var_counts_over_chain = function(bart_machine, type = "splits"){
 	C = t(sapply(.jcall(bart_machine$java_bart_machine, "[[I", "getCountsForAllAttribute", as.integer(BART_NUM_CORES), type), .jevalArray))
 	colnames(C) = colnames(bart_machine$model_matrix_training_data)[1 : bart_machine$p]
@@ -321,8 +323,6 @@ get_var_props_over_chain = function(bart_machine, type = "splits"){
 	Ctot = apply(C, 2, sum)
 	Ctot / sum(Ctot)
 }
-
-
 
 bart_predict_for_test_data = function(bart_machine, X, y){
 	if (bart_machine$bart_destroyed){
@@ -374,7 +374,7 @@ predict.bart_machine = function(bart_machine, new_data){
 }
 
 summary.bart_machine = function(bart_machine, show_details_for_trees = FALSE){
-	cat(paste("Bart Machine v", VERSION, "\n\n", sep = ""))
+	cat(paste("Bart Machine v", VERSION, ifelse(bart_machine$pred_type == "regression", " for regression", " for classification"), "\n\n", sep = ""))
 	#first print out characteristics of the training data
 	cat(paste("training data n =", bart_machine$n, " p =", bart_machine$p, "\n"))
 	
@@ -386,28 +386,37 @@ summary.bart_machine = function(bart_machine, show_details_for_trees = FALSE){
 		cat(paste("built in", round(ttb, 1), "secs on", bart_machine$num_cores, "cores,", bart_machine$num_trees, "trees,", bart_machine$num_burn_in, "burn in and", bart_machine$num_iterations_after_burn_in, "posterior samples\n"))
 	}
 	
-	
-	sigsqs = .jcall(bart_machine$java_bart_machine, "[D", "getGibbsSamplesSigsqs")	
-	sigsqs_after_burnin = sigsqs[(length(sigsqs) - bart_machine$num_iterations_after_burn_in) : length(sigsqs)]
-	
-	cat(paste("\nsigsq est for y beforehand:", round(bart_machine$sig_sq_est, 3), "\n"))
-	cat(paste("avg sigsq estimate after burn-in:", round(mean(sigsqs_after_burnin), 5), "\n"))
-	
-	if (bart_machine$run_in_sample){
-		cat("\nin-sample statistics:\n")
-		cat(paste("  L1 = ", round(bart_machine$L1_err_train, 2), 
-					"L2 = ", round(bart_machine$L2_err_train, 2),
-					"rmse =", round(bart_machine$rmse_train, 2), "\n"))
-	
-		es = bart_machine$residuals
-		normal_p_val = shapiro.test(es)$p.value
-		cat("\np-val for shapiro-wilk test of normality of residuals:", round(normal_p_val, 5), "\n")
+	if (bart_machine$pred_type == "regression"){
+		sigsqs = .jcall(bart_machine$java_bart_machine, "[D", "getGibbsSamplesSigsqs")	
+		sigsqs_after_burnin = sigsqs[(length(sigsqs) - bart_machine$num_iterations_after_burn_in) : length(sigsqs)]
 		
-		centered_p_val = t.test(es)$p.value
-		cat("p-val for zero-mean noise:", round(centered_p_val, 5), "\n")	
-	} else {
-		cat("\nno in-sample information available (use option run_in_sample = TRUE next time)\n")
+		cat(paste("\nsigsq est for y beforehand:", round(bart_machine$sig_sq_est, 3), "\n"))
+		cat(paste("avg sigsq estimate after burn-in:", round(mean(sigsqs_after_burnin), 5), "\n"))
+		
+		if (bart_machine$run_in_sample){
+			cat("\nin-sample statistics:\n")
+			cat(paste("  L1 = ", round(bart_machine$L1_err_train, 2), 
+							"L2 = ", round(bart_machine$L2_err_train, 2),
+							"rmse =", round(bart_machine$rmse_train, 2), "\n"))
+			
+			es = bart_machine$residuals
+			normal_p_val = shapiro.test(es)$p.value
+			cat("\np-val for shapiro-wilk test of normality of residuals:", round(normal_p_val, 5), "\n")
+			
+			centered_p_val = t.test(es)$p.value
+			cat("p-val for zero-mean noise:", round(centered_p_val, 5), "\n")	
+		} else {
+			cat("\nno in-sample information available (use option run_in_sample = TRUE next time)\n")
+		}		
+	} else if (bart_machine$pred_type == "classification"){
+		if (bart_machine$run_in_sample){
+			cat("\nconfusion matrix:\n\n")
+			print(bart_machine$confusion_matrix)
+		} else {
+			cat("\nno in-sample information available (use option run_in_sample = TRUE next time)\n")
+		}		
 	}
+
 	
 	if (show_details_for_trees){
 		cat("\nproportion M-H steps accepted:\n")	

@@ -1,4 +1,35 @@
 
+check_bart_error_assumptions = function(bart_machine, alpha_normal_test = 0.05, alpha_hetero_test = 0.05){
+	if (bart_machine$pred_type == "classification"){
+		stop("There are no convergence diagnostics for classification.")
+	}	
+	graphics.off()
+	par(mfrow = c(1, 2))
+	es = bart_machine$residuals
+	y_hat = bart_machine$y_hat
+	
+	#test for normality
+	normal_p_val = shapiro.test(es)$p.value
+	qqnorm(es, col = "blue",
+			main = paste("Assessment of Normality\n", "p-val for shapiro-wilk test of normality of residuals:", round(normal_p_val, 3)),
+			xlab = "Normal Q-Q plot for in-sample residuals\n(Theoretical Quantiles)")
+	qqline(bart_machine$residuals)	
+	
+	#test for heteroskedasticity
+	plot(y_hat, es, main = paste("Assessment of Heteroskedasticity\nFitted vs residuals"), xlab = "Fitted Values", ylab = "Residuals", col = "blue")
+	abline(h = 0, col = "black")
+#	cat("p-val for shapiro-wilk test of normality of residuals:", normal_p_val, ifelse(normal_p_val > alpha_normal_test, "(ppis believable)", "(exercise caution when using ppis!)"), "\n")
+	par(mfrow = c(1, 1))
+	#TODO --- iterate over all x's and sort them
+	#see p225 in purple book for Szroeter's test
+#	n = length(es)
+#	h = sum(seq(1 : n) * es^2) / sum(es^2)
+#	Q = sqrt(6 * n / (n^2 - 1)) * (h - (n + 1) / 2)
+#	hetero_pval = 1 - pnorm(Q, 0, 1)
+#	cat("p-val for szroeter's test of homoskedasticity of residuals (assuming inputted observation order):", hetero_pval, ifelse(hetero_pval > alpha_hetero_test, "(ppis believable)", "(exercise caution when using ppis!)"), "\n")		
+	
+}
+
 plot_tree_depths = function(bart_machine){
 	if (bart_machine$bart_destroyed){
 		stop("This BART machine has been destroyed. Please recreate.")
@@ -169,6 +200,10 @@ hist_sigsqs = function(bart_machine, extra_text = NULL, data_title = "data_model
 	if (bart_machine$bart_destroyed){
 		stop("This BART machine has been destroyed. Please recreate.")
 	}	
+	if (bart_machine$pred_type == "classification"){
+		stop("There are no convergence diagnostics for classification.")
+	}
+	
 	sigsqs = .jcall(bart_machine$java_bart_machine, "[D", "getGibbsSamplesSigsqs")
 	
 	num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in
@@ -204,48 +239,6 @@ hist_sigsqs = function(bart_machine, extra_text = NULL, data_title = "data_model
 	invisible(sigsqs_after_burnin)
 }
 
-hist_mu_values_by_tree_and_leaf_after_burn_in = function(bart_machine, extra_text = NULL, data_title = "data_model", save_plot = FALSE, tree_num, leaf_num){
-	get_mu_values_for_all_trees(bart_machine)
-	num_burn_in = bart_machine$num_burn_in
-	num_gibbs = bart_machine$num_gibbs	
-	
-	all_mu_vals_for_tree_and_leaf = all_mu_vals_for_all_trees[leaf_num, , tree_num]
-	#only after num_burn_in
-	all_mu_vals_for_tree_and_leaf = all_mu_vals_for_tree_and_leaf[(num_burn_in + 1) : num_gibbs]
-	
-	num_not_nas = length(all_mu_vals_for_tree_and_leaf) - sum(is.na(all_mu_vals_for_tree_and_leaf))
-	
-	if (num_not_nas == 0){
-#		cat("WARNING: This node was never a leaf\n")
-		return()
-	}
-	
-	if (save_plot){
-		save_plot_function(bart_machine, paste("mu_vals_t_", tree_num, "_b_", leaf_num, sep = ""), data_title)
-	}	
-	else {
-		dev.new()
-	}
-	avg_mu_for_leaf = mean(all_mu_vals_for_tree_and_leaf)
-	ppi_a = quantile(all_mu_vals_for_tree_and_leaf, 0.025, na.rm = TRUE)
-	ppi_b = quantile(all_mu_vals_for_tree_and_leaf, 0.975, na.rm = TRUE)
-	
-	hist(all_mu_vals_for_tree_and_leaf,
-			br = 100, 
-			main = paste("Mu Values for tree ", tree_num, " leaf ", leaf_num, " for the ", num_not_nas, " mu's after burn in (when a leaf)", ifelse(is.null(extra_text), "", paste("\n", extra_text)), sep = ""), 
-			xlab = paste("Mu values avg = ", round(avg_mu_for_leaf, 2), ",  95% PPI = [", round(ppi_a, 2), ",", round(ppi_b, 2), "]", sep = ""), 
-			ylab = "value",
-			col = COLORS[leaf_num],
-			border = NA)
-	abline(v = avg_mu_for_leaf, col = "blue", lwd = 4)
-	abline(v = ppi_a, col = "yellow", lwd = 3)
-	abline(v = ppi_b, col = "yellow", lwd = 3)
-	
-	if (save_plot){
-		dev.off()
-	}
-}
-
 get_sigsqs = function(bart_machine, after_burn_in = TRUE){
 	if (bart_machine$bart_destroyed){
 		stop("This BART machine has been destroyed. Please recreate.")
@@ -268,6 +261,9 @@ get_sigsqs = function(bart_machine, after_burn_in = TRUE){
 plot_sigsqs_convergence_diagnostics = function(bart_machine){
 	if (bart_machine$bart_destroyed){
 		stop("This BART machine has been destroyed. Please recreate.")
+	}	
+	if (bart_machine$pred_type == "classification"){
+		stop("There are no convergence diagnostics for classification.")
 	}	
 	
 	sigsqs = get_sigsqs(bart_machine, after_burn_in = FALSE)
@@ -365,7 +361,9 @@ investigate_var_importance = function(bart_machine, type = "splits", plot = TRUE
 
 plot_convergence_diagnostics = function(bart_machine){
 	par(mfrow = c(2, 2))
-	plot_sigsqs_convergence_diagnostics(bart_machine)
+	if (bart_machine$pred_type == "regression"){
+		plot_sigsqs_convergence_diagnostics(bart_machine)
+	}	
 	plot_mh_acceptance_reject(bart_machine)
 	plot_tree_num_nodes(bart_machine)
 	plot_tree_depths(bart_machine)	
@@ -609,6 +607,12 @@ var_importance_by_shuffling = function(bart_machine, list_of_vars = NULL, holdou
 }
 
 rmse_by_num_trees = function(bart_machine, tree_list = c(1, seq(5, 50, 5), 100, 150, 200, 300), in_sample = FALSE, plot = TRUE, holdout_pctg = 0.3, num_replicates = 4){
+	if (bart_machine$bart_destroyed){
+		stop("This BART machine has been destroyed. Please recreate.")
+	}
+	if (bart_machine$pred_type == "classification"){
+		stop("This function does not work for classification. Please use ")
+	}		
 	X = bart_machine$X
 	y = bart_machine$y
 	n = bart_machine$n

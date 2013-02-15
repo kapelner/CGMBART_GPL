@@ -52,7 +52,7 @@ sqrt(sum((rob$yhat.test.mean - ytest)^2) / length(ytest))
 mean(rob$sigma)
 
 
-interaction_investigator(bart_machine, num_replicates_for_avg = 50, num_var_plot = 20, num_trees_bottleneck = 200)
+interaction_investigator(bart_machine, num_replicates_for_avg = 5, num_var_plot = 20, num_trees_bottleneck = 20)
 investigate_var_importance(bart_machine)
 investigate_var_importance(bart_machine, type = "trees")
 
@@ -197,3 +197,18 @@ sort_props
 barplot(sort_props)
 rob$sigest
 mean(rob$sigma)
+
+
+
+
+#PROBIT BART
+Xy = read.csv("datasets/c_breastcancer.csv", header = FALSE)
+X = Xy[, 1 : (ncol(Xy) - 1)]
+y = as.factor(Xy[, ncol(Xy)])
+
+set_bart_machine_num_cores(4)
+bart_machine = build_bart_machine(X, y,
+		num_trees = 200,
+		num_burn_in = 1000, 
+		num_iterations_after_burn_in = 500)
+bart_machine
