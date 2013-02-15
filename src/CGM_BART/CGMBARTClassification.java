@@ -24,6 +24,8 @@
 
 package CGM_BART;
 
+import OpenSourceExtensions.StatUtil;
+
 public final class CGMBARTClassification extends CGMBARTRegression {
 	private static final long serialVersionUID = -9061432248755912576L;
 	private static final double SIGSQ_FOR_PROBIT = 1;
@@ -73,12 +75,20 @@ public final class CGMBARTClassification extends CGMBARTRegression {
 
 	//TODO
 	private double SampleZi(double g_x_i, double y_i) {
-		if (y_i == 1){
-			return Math.max(StatToolbox.sample_from_norm_dist(g_x_i, SIGSQ_FOR_PROBIT), 0);
+		double u = StatToolbox.rand();
+		if (y_i == 1){ 
+			return g_x_i + StatUtil.getInvCDF((1 - u) * StatToolbox.normal_cdf(-g_x_i) + u, false);
 		} 
 		else if (y_i == 0){
-			return Math.min(StatToolbox.sample_from_norm_dist(g_x_i, SIGSQ_FOR_PROBIT), 0);
+			return g_x_i - StatUtil.getInvCDF((1 - u) * StatToolbox.normal_cdf(g_x_i) + u, false);
 		}
+		
+//	    if(YDat[i][1] > 0) {
+//	       Z = qnorm((1.0-u)*pnorm(-mtotalfit[i]-binary_offset,0.0,1.0,1,0) + u,0.0,1.0,1,0);
+//	    } else {
+//	       Z = -qnorm((1.0-u)*pnorm(mtotalfit[i]+binary_offset,0.0,1.0,1,0) + u,0.0,1.0,1,0);
+//	    }
+		
 		System.err.println("SampleZi RESPONSE NOT ZERO / ONE");
 		System.exit(0);
 		return -1;

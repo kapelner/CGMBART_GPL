@@ -121,6 +121,7 @@ check_bart_error_assumptions(bart_machine)
 windows()
 plot_y_vs_yhat(bart_machine, ppis = T)
 rmse_by_num_trees(bart_machine)
+rmse_by_num_trees(bart_machine, in_sample = TRUE)
 
 windows()
 investigate_var_importance(bart_machine, num_replicates_for_avg = 5,num_var_plot = 15, type = "trees")

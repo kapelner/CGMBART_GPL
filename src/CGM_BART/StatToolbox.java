@@ -182,6 +182,16 @@ public class StatToolbox {
 		}
 		return ILLEGAL_FLAG;
 	}
+
+	
+
+	public static double sample_from_norm_dist(double mu, double sigsq){
+		double std_norm_realization = NORM_SAMPS[(int)Math.floor(rand() * NUM_NORM_SAMPS)];
+//		System.out.println("sample_from_norm_dist S = " + START_POS + " P = " + START_POS % NUM_NORM_SAMPS + "real = " + std_norm_realization);
+//		START_POS++;
+		return mu + Math.sqrt(sigsq) * std_norm_realization;
+	}
+
 	
 	public static double inv_norm_dist(double p){
 		//System.out.println("inv_norm_dist p=" + p);
@@ -193,23 +203,39 @@ public class StatToolbox {
 		return ILLEGAL_FLAG;
 	}
 	
-
-	public static double sample_from_norm_dist(double mu, double sigsq){
-		double std_norm_realization = NORM_SAMPS[(int)Math.floor(rand() * NUM_NORM_SAMPS)];
-//		System.out.println("sample_from_norm_dist S = " + START_POS + " P = " + START_POS % NUM_NORM_SAMPS + "real = " + std_norm_realization);
-//		START_POS++;
-		return mu + Math.sqrt(sigsq) * std_norm_realization;
-	}
+    private static double NORM_CDF_a1 =  0.254829592;
+    private static double NORM_CDF_a2 = -0.284496736;
+    private static double NORM_CDF_a3 =  1.421413741;
+    private static double NORM_CDF_a4 = -1.453152027;
+    private static double NORM_CDF_a5 =  1.061405429;
+    private static double NORM_CDF_p  =  0.3275911;	
 	
 	public static double normal_cdf(double x) {
-		try {
-			return new NormalDistributionImpl(0, 1).cumulativeProbability(x);
-		} catch (MathException e) {
-			e.printStackTrace();
-			System.exit(0);
-			return 0;
-		}
+//		try {
+//			return new NormalDistributionImpl(0, 1).cumulativeProbability(x);
+//		} catch (MathException e) {
+//			e.printStackTrace();
+//			System.exit(0);
+//			return 0;
+//		}
+		    // constants
+
+
+	    // Save the sign of x
+	    int sign = 1;
+	    if (x < 0){
+	        sign = -1;
+	    }
+	    x = Math.abs(x) / Math.sqrt(2.0);
+
+	    // A&S formula 7.1.26
+	    double t = 1.0 / (1.0 + NORM_CDF_p*x);
+	    double y = 1.0 - (((((NORM_CDF_a5*t + NORM_CDF_a4)*t) + NORM_CDF_a3)*t + NORM_CDF_a2)*t + NORM_CDF_a1)*t*Math.exp(-x*x);
+
+	    return 0.5*(1.0 + sign*y);
 	}	
+	
+	
 	
 //	public static double sample_from_norm_dist(double mu, double sigsq){
 ////		System.out.println("sample_from_norm_dist mu=" + mu + " sigsq=" + sigsq);
