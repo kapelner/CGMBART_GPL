@@ -1,5 +1,5 @@
 
-bart_machine_cv = function(X, y,
+build_bart_machine_cv = function(X, y,
 		num_burn_in = 250, 
 		num_iterations_after_burn_in = 1000,
 		cov_prior_vec = NULL,
@@ -16,7 +16,7 @@ bart_machine_cv = function(X, y,
 	for (k in k_cvs){
 		for (nu_q in nu_q_cvs){
 			for (num_trees in num_tree_cvs){
-				cat(paste("  BART CV: k", k, "nu_q", paste(as.numeric(nu_q), collapse = ", "), "m", num_trees, "\n"))
+				cat(paste("  BART CV try: k", k, "nu_q", paste(as.numeric(nu_q), collapse = ", "), "m", num_trees, "\n"))
 				rmse = k_fold_cv(X, y, 
 						k_folds = k_folds,
 						num_burn_in = num_burn_in,
@@ -38,10 +38,10 @@ bart_machine_cv = function(X, y,
 		}
 	}
 	
-	cat(paste("BART CV params: k =", min_rmse_k, "nu, q =", paste(as.numeric(min_rmse_nu_q), collapse = ", "), "m =", min_rmse_num_tree, "\n"))
+	cat(paste("  BART CV win: k", min_rmse_k, "nu_q", paste(as.numeric(min_rmse_nu_q), collapse = ", "), "m", min_rmse_num_tree, "\n"))
 	
 	#now that we've found the best settings, return that bart machine
-	build_bart_machine(training_data,
+	build_bart_machine(X, y,
 		num_burn_in = num_burn_in,
 		num_iterations_after_burn_in = num_iterations_after_burn_in,
 		cov_prior_vec = cov_prior_vec,

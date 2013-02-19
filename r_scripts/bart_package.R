@@ -27,10 +27,18 @@ for (i in 1 : 500){
 	COLORS[i] = rgb(runif(1, 0, 0.7), runif(1, 0, 0.7), runif(1, 0, 0.7))
 }
 
+set_bart_machine_max_mem = function(max_mem_mbs){
+	assign("BART_MAX_MEM_MB", max_mem_mbs, ".GlobalEnv")
+}
+
 BART_NUM_CORES = 1
 
 set_bart_machine_num_cores = function(num_cores){
 	assign("BART_NUM_CORES", num_cores, ".GlobalEnv")
+}
+
+bart_machine_num_cores = function(){
+	BART_NUM_CORES
 }
 
 init_java_for_bart = function(){

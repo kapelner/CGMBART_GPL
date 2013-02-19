@@ -9,6 +9,7 @@ source("r_scripts/bart_package.R")
 source("r_scripts/bart_package_plots.R")
 source("r_scripts/bart_package_validation.R")
 
+#other stuff we need for the bakeoff
 source("r_scripts/bakeoff/create_simulated_models.R")
 source("r_scripts/bakeoff/bart_bakeoff_regression_params.R")
 
@@ -20,7 +21,6 @@ NOT_ON_GRID = length(grep("wharton.upenn.edu", Sys.getenv(c("HOSTNAME")))) == 0
 if (NOT_ON_GRID){
 	setwd(paste("C:/Users/", LAST_NAME, "/workspace/CGMBART_GPL", sep = ""))
 	set_bart_machine_num_cores(4) #good for testing on the current machine
-	iter_num = 1
 } else {
 	setwd("../CGMBART_GPL")
 	set_bart_machine_num_cores(2) #most common use case for people in the real world
@@ -37,11 +37,9 @@ if (length(args) > 0){
 }
 
 all_possible_runs = c(
-	rep(real_regression_data_sets, each = run_model_N_times), 
+	rep(real_classification_data_sets, each = run_model_N_times), 
 	rep(simulated_data_sets, each = run_model_N_times)
 )
-#this is the last task needed in the SGE script
-length(all_possible_runs)
 
 run_bart_bakeoff_iter_num = function(iter_num){
 

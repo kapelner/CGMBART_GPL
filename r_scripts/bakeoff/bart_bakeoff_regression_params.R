@@ -1,6 +1,4 @@
-
-set_bart_machine_num_cores(1) #we're going to keep this one thread for the bakeoff since we'll be parallelizing over sim params
-
+#algorithm defaults
 num_trees = 200
 num_burn_in = 500
 num_iterations_after_burn_in = 1000
@@ -41,38 +39,35 @@ simulated_data_sets = c(
 simulation_results_cols = c(
 	"model", 
 	"A_BART_rmse",
-	"R_BART_rmse",
-	"RF_CV_rmse",
 	"A_BART_CV_rmse",
-	"Lasso_CV_rmse",
-	"Ridge_CV_rmse",
+	"R_BART_rmse",
 	"DynaTree_rmse",
+	"RF_CV_rmse",	
 	"Boosting_CV_rmse",
 	"OLS_rmse",
-	"A_BART_L1", 
-	"R_BART_L1",
-	"RF_CV_L1",
+	"Lasso_CV_rmse",
+	"Ridge_CV_rmse",	
+	"A_BART_L1",
 	"A_BART_CV_L1",
-	"Lasso_CV_L1",
-	"Ridge_CV_L1",
+	"R_BART_L1",
 	"DynaTree_L1",
+	"RF_CV_L1",
 	"Boosting_CV_L1",
+	"Lasso_CV_L1",
 	"OLS_L1",
+	"Ridge_CV_L1",	
 	"A_BART_rmse_train",
-	"R_BART_rmse_train",
-	"RF_CV_rmse_train",
 	"A_BART_CV_rmse_train",
-	"Lasso_CV_rmse_train",
-	"Ridge_CV_rmse_train",
+	"R_BART_rmse_train",
 	"DynaTree_rmse_train",
+	"RF_CV_rmse_train",
 	"Boosting_CV_rmse_train",
 	"OLS_rmse_train",
+	"Lasso_CV_rmse_train",
+	"Ridge_CV_rmse_train",
 	"A_BART_tot_var_count",
 	"R_BART_tot_var_count",		
 	"A_sigsq_post_mean",
-	"R_sigsq_post_mean",		
-	"A_BART_runtime",
-	"R_BART_runtime",
-	"RF_runtime"
+	"R_sigsq_post_mean"
 )
 
