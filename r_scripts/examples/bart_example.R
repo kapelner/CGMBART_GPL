@@ -96,25 +96,32 @@ ppi_obj = calc_ppis_from_prediction(bart_machine, Xtest)
 
 #now test the variable importance
 ##generate the Friedman data
-#n = 100
-#p = 100
-#X = matrix(runif(n * p, 0 , 1), ncol = p)
-#error = rnorm(n, 0, 1)
-#
-#y = 10 * sin(pi * X[, 1] * X[, 2]) + 20 * (X[, 3] - 0.5)^2 + 10 * X[, 4] + 5 * X[, 5] + error
+n = 2000
+p = 100
+X = as.data.frame(matrix(runif(n * p, 0 , 1), ncol = p))
+error = rnorm(n, 0, 1)
+
+y = 10 * sin(pi * X[, 1] * X[, 2]) + 20 * (X[, 3] - 0.5)^2 + 10 * X[, 4] + 5 * X[, 5] + error
 #
 #Xy = data.frame(X, y)
 #summary(lm(y ~ ., Xy))
-Xy = read.csv("datasets/r_friedman_hd.csv")
-Xtrain = Xy[1 : 80, 1 : 100]
-ytrain = Xy[1 : 80, 101]
-Xtest = Xy[81 : 100, 1 : 100]
-ytest = Xy[81 : 100, 101]
+#Xy = read.csv("datasets/r_friedman_hd.csv")
+#Xtrain = Xy[1 : 80, 1 : 100]
+#ytrain = Xy[1 : 80, 101]
+#Xtest = Xy[81 : 100, 1 : 100]
+#ytest = Xy[81 : 100, 101]
 
+Xtrain = X[1 : 1000,]
+ytrain = y[1 : 1000]
+Xtest = X[1001 : 2000, ]
+ytest = y[1001 : 2000]
+
+set_bart_machine_num_cores(1)
 bart_machine = build_bart_machine(Xtrain, ytrain,
-	num_trees = 50,
-	num_burn_in = 250, 
-	num_iterations_after_burn_in = 2000)
+	num_trees = 200,
+	num_burn_in = 600, 
+	num_iterations_after_burn_in = 2000,
+	debug_log = T)
 
 plot_y_vs_yhat(bart_machine, ppis=T)
 plot_y_vs_yhat(bart_machine, X = Xtest, y = ytest, ppis = TRUE)

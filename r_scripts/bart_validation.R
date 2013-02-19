@@ -8,7 +8,6 @@ bart_machine_cv = function(X, y,
 		nu_q_cvs = list(c(3, 0.9), c(3, 0.99), c(10, 0.75)),
 		k_folds = 5){
 	
-	
 	min_rmse_num_tree = NULL
 	min_rmse_k = NULL
 	min_rmse_nu_q = NULL
@@ -17,7 +16,7 @@ bart_machine_cv = function(X, y,
 	for (k in k_cvs){
 		for (nu_q in nu_q_cvs){
 			for (num_trees in num_tree_cvs){
-#				print(paste("k", k, "nu_q", paste(as.numeric(nu_q), collapse = ", "), "m", num_trees))
+				cat(paste("  BART CV: k", k, "nu_q", paste(as.numeric(nu_q), collapse = ", "), "m", num_trees, "\n"))
 				rmse = k_fold_cv(X, y, 
 						k_folds = k_folds,
 						num_burn_in = num_burn_in,
@@ -54,8 +53,10 @@ bart_machine_cv = function(X, y,
 
 
 k_fold_cv = function(X, y, k_folds = 5, ...){
+	
 	n = nrow(X)
 	Xpreprocess = pre_process_training_data(X)
+	
 	p = ncol(Xpreprocess)
 	
 	if (k_folds <= 1 || k_folds > n){
@@ -73,18 +74,17 @@ k_fold_cv = function(X, y, k_folds = 5, ...){
 	L1_err = 0
 	L2_err = 0
 	
-	Xy = cbind(Xpreprocess, y)
+	Xy = as.data.frame(cbind(Xpreprocess, y))
 	
 	for (k in 1 : k_folds){
 		holdout_index_i = split_points[k]
 		holdout_index_f = ifelse(k == k_folds, n, split_points[k + 1] - 1)
-#		print(paste("i:", holdout_index_i, "f:", holdout_index_f))
 		
 		test_data_k = Xy[holdout_index_i : holdout_index_f, ]
 		training_data_k = Xy[-c(holdout_index_i : holdout_index_f), ]
 		
 		bart_machine_cv = build_bart_machine(training_data_k[, 1 : p], training_data_k[, (p + 1)], run_in_sample = FALSE, ...)
-		predict_obj = bart_predict_for_test_data(bart_machine_cv, test_data_k)
+		predict_obj = bart_predict_for_test_data(bart_machine_cv, test_data_k[, 1 : p], test_data_k[, (p + 1)])
 		destroy_bart_machine(bart_machine_cv)
 		
 		#tabulate errors

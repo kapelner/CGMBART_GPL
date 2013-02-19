@@ -1,0 +1,11 @@
+File,Source,N,p (not including y),Y variable name,Task,Note
+abalone.csv,UCI,4177,8,Rings,Predict the age of the abalone from physical measurements (age=number of Rings),
+cpu.csv,UCI,209,8,ERP,Predict the estimated relative performance (ERP) of CPUs using some stats on the physical cpu. Apparently the ERP is not a definted function of the stats – it was somehow assigned by people.,"There is 1 column for each CPU model, so I elimnated the model name from the csv."
+wine_red.csv,UCI,1599,11,Score,"Predict red wine quality score (integer 0-10) from measurements such as pH, citric acid, etc.",
+wine_white.csv,UCI,4898,11,Score,"Predict white wine quality score (integer 0-10) from measurements such as pH, citric acid, etc.",
+ozone.csv,"Breiman & Friedman 1985, gclus R package",330,8,ozone,Predict level of ground-level ozoen in LA from the explanatory variables. ,"They are ordered by day-of-year.  330 consecutive days. I got rid of the column 1,2,...,330"
+pole.csv,"Weiss & Indurkyha, http://sci2s.ugr.es/keel/dataset.php?cod=92#sub1",5000,26,Output,predict Output.  ,The dataset is available from a few websites but none have any description of the problem or the variables. Literally zero.  I cleaned a downloaded version to match the url's description.  Also it is sparse. Enjoy.
+triazine.csv,Torgo (1999)  http://funapp.cs.bilkent.edu.tr/DataSets/,186,60,activity,"Predict the activity of some chemical compound using a bunch of features, or some such. Why are you asking me? I'm not a chemist.",
+ankara.csv,http://funapp.cs.bilkent.edu.tr/DataSets/,1609,9,meantemp,Predict the mean temperature in ankara from the features. Very exciting.,
+baseballsalary.csv,"http://sci2s.ugr.es/keel/dataset.php?cod=76, http://funapp.cs.bilkent.edu.tr/DataSets/",337,16,salary.thou,Predict yearly player salary in thousands from baseball stats (1992).,
+compactiv.csv,http://www.cs.toronto.edu/~delve/data/comp-activ/desc.html.,8192,21,usr,Predict the portion of the time that cpus run in user mode. Features are a bunch of “computer systems activity measures.”,

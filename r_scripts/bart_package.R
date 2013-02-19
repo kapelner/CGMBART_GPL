@@ -12,7 +12,7 @@ tryCatch(library(rJava), error = function(e){install.packages("rJava")}, finally
 
 #constants
 VERSION = "1.0b"
-BART_MAX_MEM_MB = 2000
+BART_MAX_MEM_MB = 4000
 PLOTS_DIR = "output_plots"
 JAR_DEPENDENCIES = c("bart_java.jar", "commons-math-2.1.jar", "jai_codec.jar", "jai_core.jar", "trove-3.0.3.jar")
 DEFAULT_ALPHA = 0.95
@@ -373,7 +373,16 @@ predict.bart_machine = function(bart_machine, new_data){
 	bart_machine_predict(bart_machine, new_data)$y_hat
 }
 
+sigsq_est = function(bart_machine){
+	sigsqs = .jcall(bart_machine$java_bart_machine, "[D", "getGibbsSamplesSigsqs")	
+	sigsqs_after_burnin = sigsqs[(length(sigsqs) - bart_machine$num_iterations_after_burn_in) : length(sigsqs)]	
+	mean(sigsqs_after_burnin)
+}
+
 summary.bart_machine = function(bart_machine, show_details_for_trees = FALSE){
+	if (bart_machine$bart_destroyed){
+		stop("This BART machine has been destroyed. Please recreate.")
+	}	
 	cat(paste("Bart Machine v", VERSION, ifelse(bart_machine$pred_type == "regression", " for regression", " for classification"), "\n\n", sep = ""))
 	#first print out characteristics of the training data
 	cat(paste("training data n =", bart_machine$n, " p =", bart_machine$p, "\n"))
@@ -387,11 +396,9 @@ summary.bart_machine = function(bart_machine, show_details_for_trees = FALSE){
 	}
 	
 	if (bart_machine$pred_type == "regression"){
-		sigsqs = .jcall(bart_machine$java_bart_machine, "[D", "getGibbsSamplesSigsqs")	
-		sigsqs_after_burnin = sigsqs[(length(sigsqs) - bart_machine$num_iterations_after_burn_in) : length(sigsqs)]
-		
+		sigsq_est = sigsq_est(bart_machine)
 		cat(paste("\nsigsq est for y beforehand:", round(bart_machine$sig_sq_est, 3), "\n"))
-		cat(paste("avg sigsq estimate after burn-in:", round(mean(sigsqs_after_burnin), 5), "\n"))
+		cat(paste("avg sigsq estimate after burn-in:", round(sigsq_est, 5), "\n"))
 		
 		if (bart_machine$run_in_sample){
 			cat("\nin-sample statistics:\n")
@@ -473,7 +480,7 @@ check_for_errors_in_training_data = function(data){
 		return(TRUE)
 	}
 	if (class(data) != "data.frame"){
-		stop("training data must be a data frame", call. = FALSE)
+		stop(paste("training data must be a data frame. It is currently a", class(data)), call. = FALSE)
 		return(TRUE)		
 	}
 	FALSE
