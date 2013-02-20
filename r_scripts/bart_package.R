@@ -91,8 +91,8 @@ build_bart_machine = function(X, y,
 	num_gibbs = num_burn_in + num_iterations_after_burn_in
 	
 	#if no column names, make up names
-	if (is.null(colnames(data))){
-		colnames(data) = seq(from = 1, to = ncol(data), by = 1)
+	if (is.null(colnames(X))){
+		colnames(X) = seq(from = 1, to = ncol(X), by = 1)
 	}
 	
 	#check for errors in data
