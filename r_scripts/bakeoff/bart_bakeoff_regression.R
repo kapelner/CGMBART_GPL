@@ -4,13 +4,6 @@ tryCatch(library(dynaTree), error = function(e){install.packages("dynaTree")}, f
 tryCatch(library(glmnet), error = function(e){install.packages("glmnet")}, finally = library(glmnet))
 tryCatch(library(gbm), error = function(e){install.packages("gbm")}, finally = library(gbm))
 
-#the following three are soon to be library(BartMachine)
-source("r_scripts/bart_package.R")
-source("r_scripts/bart_package_plots.R")
-source("r_scripts/bart_package_validation.R")
-
-source("r_scripts/bakeoff/create_simulated_models.R")
-source("r_scripts/bakeoff/bart_bakeoff_regression_params.R")
 
 LAST_NAME = "kapelner"
 NOT_ON_GRID = length(grep("wharton.upenn.edu", Sys.getenv(c("HOSTNAME")))) == 0
@@ -19,11 +12,24 @@ NOT_ON_GRID = length(grep("wharton.upenn.edu", Sys.getenv(c("HOSTNAME")))) == 0
 ##Loads
 if (NOT_ON_GRID){
 	setwd(paste("C:/Users/", LAST_NAME, "/workspace/CGMBART_GPL", sep = ""))
-	set_bart_machine_num_cores(4) #good for testing on the current machine
 	iter_num = 1
 } else {
 	setwd("../CGMBART_GPL")
-	set_bart_machine_num_cores(2) #most common use case for people in the real world
+}
+
+
+#the following three are soon to be library(BartMachine)
+source("r_scripts/bart_package.R")
+source("r_scripts/bart_package_plots.R")
+source("r_scripts/bart_package_validation.R")
+
+source("r_scripts/bakeoff/create_simulated_models.R")
+source("r_scripts/bakeoff/bart_bakeoff_regression_params.R")
+
+if (NOT_ON_GRID){
+	set_bart_machine_num_cores(4) #good for testing on the current machine
+} else {
+	set_bart_machine_num_cores(2) #most common use case for people in the real world so we want it simulated this way even if we'll lose some speed
 }
 
 #read in arguments supplied by qsub - this will tell use which gene to process
