@@ -14,7 +14,7 @@ if (NOT_ON_GRID){
 	setwd(paste("C:/Users/", LAST_NAME, "/workspace/CGMBART_GPL", sep = ""))
 	iter_num = 1
 } else {
-	setwd("../CGMBART_GPL")
+	#no directory setting - you should already be in the correct directory!
 }
 
 

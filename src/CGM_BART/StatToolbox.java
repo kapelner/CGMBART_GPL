@@ -138,7 +138,8 @@ public class StatToolbox {
 			}
 			in.close();
 		} catch (Exception e1) {
-			System.err.println("CANNOT LOAD INV GAMMA CACHE");
+			System.err.println("CANNOT LOAD INV GAMMA CACHE\n\n");
+			e1.printStackTrace();
 			System.exit(0);
 		}
 		return samps_chi_sq_df_eq_nu_plus_n;
