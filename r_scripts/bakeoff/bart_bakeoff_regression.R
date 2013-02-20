@@ -86,11 +86,11 @@ run_models_and_save_results = function(training_data, test_data, model){
 	p = ncol(training_data) - 1
 	n_train = nrow(training_data)
 	n_test = nrow(test_data)
-	#split it up correctly
+	#split it up correctly... and since this is regression, cast to numeric
 	Xtrain = training_data[, 1 : p]
-	ytrain = training_data[, p + 1]
+	ytrain = as.numeric(training_data[, p + 1])
 	Xtest = test_data[, 1 : p]
-	ytest = test_data[, p + 1]
+	ytest = as.numeric(test_data[, p + 1])
 	
 	##############
 	# Bart Machine

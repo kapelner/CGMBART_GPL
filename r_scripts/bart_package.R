@@ -89,6 +89,12 @@ build_bart_machine = function(X, y,
 	}	
 	
 	num_gibbs = num_burn_in + num_iterations_after_burn_in
+	
+	#if no column names, make up names
+	if (is.null(colnames(data))){
+		colnames(data) = seq(from = 1, to = ncol(data), by = 1)
+	}
+	
 	#check for errors in data
 	if (check_for_errors_in_training_data(X)){
 		return;
@@ -483,10 +489,6 @@ calc_ppis_from_prediction = function(bart_machine, new_data, ppi_conf = 0.95){
 }
 
 check_for_errors_in_training_data = function(data){
-	if (is.null(colnames(data))){
-		stop("no colnames in data matrix", call. = FALSE)
-		return(TRUE)
-	}
 	if (class(data) != "data.frame"){
 		stop(paste("training data must be a data frame. It is currently a", class(data)), call. = FALSE)
 		return(TRUE)		
