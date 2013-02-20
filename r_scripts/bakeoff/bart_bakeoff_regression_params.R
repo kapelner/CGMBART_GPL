@@ -7,7 +7,7 @@ beta = 2
 
 pct_train = 5 / 6 #same as BART paper
 
-run_model_N_times = 30
+run_model_N_times = 1
 
 real_regression_data_sets = c(
 	"r_boston",

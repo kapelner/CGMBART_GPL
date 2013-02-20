@@ -2,7 +2,7 @@
 
 #$ -j y
 #$ -N bart_bakeoff_regression
-#$ -t 1-100
+#$ -t 1-22
 
 echo "starting R bart_bakeoff for iteration number # $SGE_TASK_ID"
 export _JAVA_OPTIONS="-Xms128m -Xmx5300m"
