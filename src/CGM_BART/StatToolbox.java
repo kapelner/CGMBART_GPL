@@ -130,7 +130,7 @@ public class StatToolbox {
 			BufferedReader in = new BufferedReader(new FileReader(cache_file));
 			while (true){
 				String chisq_draw = in.readLine();
-				if (chisq_draw == null){
+				if (chisq_draw == null || i == NUM_CHI_SQ_SAMPS){
 					break;
 				}
 				samps_chi_sq_df_eq_nu_plus_n[i] = Double.parseDouble(chisq_draw);
@@ -153,8 +153,8 @@ public class StatToolbox {
 			System.err.println("CANNOT SAVE INV GAMMA CACHE");
 			System.exit(0);
 		}
-		for (double chisq_draw : samps_chi_sq_df_eq_nu_plus_n){
-			out.print(chisq_draw + "\n");
+		for (int i = 0; i < NUM_CHI_SQ_SAMPS; i++){
+			out.print(samps_chi_sq_df_eq_nu_plus_n[i] + "\n");
 		}
 		out.close();
 	}
