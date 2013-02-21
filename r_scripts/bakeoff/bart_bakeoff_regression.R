@@ -210,10 +210,10 @@ run_models_and_save_results = function(training_data, test_data, model){
 	print(paste("Lasso run time:", time_finished - time_started))	
 	
 	##############
-	# Boosting
-	#############	
+	# Boosting CV
+	##############	
 	time_started = Sys.time()
-	gbm_mod = gbm.fit(Xtrain, ytrain, distribution = "gaussian", interaction.depth = 4, shrinkage = 0.25)
+	gbm_mod = boosting_cv(Xtrain, ytrain)
 	y_hat_train = predict(gbm_mod, Xtrain, n.tree = 100)
 	results$Boosting_CV_rmse_train = sqrt(sum((ytrain - y_hat_train)^2 / n_train))
 	
@@ -293,6 +293,58 @@ k_fold_rf_cv = function(X, y, k_folds = 5, num_trees, mtry){
 		
 		rf = randomForest(x = Xk_training, y = yk_training, ntree = num_trees, mtry = mtry)
 		yk_test_hat = predict(rf, Xk_test)
+		
+		#tabulate errors
+		L2_err = L2_err + sum((yk_test_hat - yk_test)^2)
+	}
+	
+	L2_err	
+}
+
+boosting_cv = function(X, y, k_folds = 5, num_trees_cv = c(50, 100, 200), shrinkage_cv = c(0.01, 0.05, 0.1, 0.25), depth_cv = c(1, 2, 3, 4)){
+	
+	
+	min_num_trees = NULL
+	min_shrinkage = NULL
+	min_depth = NULL
+	min_oos_L2 = Inf
+	
+	for (num_trees in num_trees_cv){
+		for (shrinkage in shrinkage_cv){
+			for (depth in depth_cv){
+				oos_L2 = k_fold_boosting_cv(X, y, k_folds, num_trees, shrinkage, depth)
+				if (oos_L2 < min_oos_L2){
+					min_oos_L2 = oos_L2	
+					min_num_trees = num_trees
+					min_shrinkage = shrinkage
+					min_depth = depth
+				}
+			}
+		}
+	}
+	#return best one
+	gbm.fit(Xtrain, ytrain, distribution = "gaussian", interaction.depth = min_depth, shrinkage = min_shrinkage, n.trees = min_num_trees)
+}
+
+k_fold_boosting_cv = function(X, y, k_folds = 5, num_trees, shrinkage, depth){
+	n = nrow(X)	
+	
+	holdout_size = round(n / k_folds)
+	split_points = seq(from = 1, to = n, by = holdout_size)[1 : k_folds]
+	
+	L2_err = 0
+	
+	for (k in 1 : k_folds){
+		holdout_index_i = split_points[k]
+		holdout_index_f = ifelse(k == k_folds, n, split_points[k + 1] - 1)
+		
+		Xk_test = X[holdout_index_i : holdout_index_f, ]
+		yk_test = y[holdout_index_i : holdout_index_f] 
+		Xk_training = X[-c(holdout_index_i : holdout_index_f), ]
+		yk_training = y[-c(holdout_index_i : holdout_index_f)]
+		
+		boost_mod = gbm.fit(Xtrain, ytrain, distribution = "gaussian", interaction.depth = depth, shrinkage = shrinkage, n.trees = num_trees)
+		yk_test_hat = predict(boost_mod, Xk_test, n.trees = num_trees)
 		
 		#tabulate errors
 		L2_err = L2_err + sum((yk_test_hat - yk_test)^2)
