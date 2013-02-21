@@ -165,19 +165,22 @@ run_models_and_save_results = function(training_data, test_data, model){
 	##############
 	# OLS
 	#############
-	time_started = Sys.time()
-	lm_mod = lm(ytrain ~ ., Xtrain)
-	results$OLS_rmse_train = sqrt(sum((ytrain - predict(lm_mod, training_data))^2 / n_train))
-	
-	y_hat_test = predict(lm_mod, Xtest)
-	
-	
-	results$OLS_rmse = sqrt(sum((ytest - y_hat_test)^2 / n_test))
-	results$OLS_L1 = sum(abs(y_hat_test - ytest))
-	
-	time_finished = Sys.time()
-	print(paste("OLS run time:", time_finished - time_started))	
-	
+	if (ncol(Xtrain) < nrow(Xtrain)){
+		time_started = Sys.time()
+		lm_mod = lm(ytrain ~ ., Xtrain)
+		results$OLS_rmse_train = sqrt(sum((ytrain - predict(lm_mod, training_data))^2 / n_train))
+		
+		y_hat_test = predict(lm_mod, Xtest)
+		
+		
+		results$OLS_rmse = sqrt(sum((ytest - y_hat_test)^2 / n_test))
+		results$OLS_L1 = sum(abs(y_hat_test - ytest))
+		
+		time_finished = Sys.time()
+		print(paste("OLS run time:", time_finished - time_started))	
+	} else {
+		print("OLS did not run because p > n")
+	}
 	##############
 	# Ridge Regression
 	#############
@@ -343,7 +346,7 @@ k_fold_boosting_cv = function(X, y, k_folds = 5, num_trees, shrinkage, depth){
 		Xk_training = X[-c(holdout_index_i : holdout_index_f), ]
 		yk_training = y[-c(holdout_index_i : holdout_index_f)]
 		
-		boost_mod = gbm.fit(Xtrain, ytrain, distribution = "gaussian", interaction.depth = depth, shrinkage = shrinkage, n.trees = num_trees)
+		boost_mod = gbm.fit(Xk_training, yk_training, distribution = "gaussian", interaction.depth = depth, shrinkage = shrinkage, n.trees = num_trees)
 		yk_test_hat = predict(boost_mod, Xk_test, n.trees = num_trees)
 		
 		#tabulate errors
