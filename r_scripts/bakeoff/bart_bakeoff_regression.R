@@ -326,7 +326,7 @@ boosting_cv = function(X, y, k_folds = 5, num_trees_cv = c(50, 100, 200), shrink
 		}
 	}
 	#return best one
-	gbm.fit(Xtrain, ytrain, distribution = "gaussian", interaction.depth = min_depth, shrinkage = min_shrinkage, n.trees = min_num_trees)
+	gbm.fit(X, y, distribution = "gaussian", interaction.depth = min_depth, shrinkage = min_shrinkage, n.trees = min_num_trees)
 }
 
 k_fold_boosting_cv = function(X, y, k_folds = 5, num_trees, shrinkage, depth){
