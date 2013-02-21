@@ -149,10 +149,10 @@ run_models_and_save_results = function(training_data, test_data, model){
 	print(paste("R BART run time:", time_finished - time_started))	
 
 	##############
-	# Random Forests
+	# Random Forests CV
 	#############		
 	time_started = Sys.time()
-	rf_mod = randomForest(ytrain ~ ., Xtrain)
+	rf_mod = rf_cv(Xtrain, ytrain)
 	y_hat_test = predict(rf_mod, Xtest)
 	
 	results$RF_CV_rmse_train = sqrt(sum((ytrain - predict(rf_mod, training_data))^2 / n_train))
@@ -253,7 +253,53 @@ run_models_and_save_results = function(training_data, test_data, model){
 	results
 }
 
+rf_cv = function(X, y, k_folds = 5, num_trees_cv = c(200, 500), pct_num_pct_var_cv = c(0.1, 1/3, 0.5, 1)){
+	
+	
+	min_num_trees = NULL
+	min_mtry = NULL
+	min_oos_L2 = Inf
+	
+	for (num_trees in num_trees_cv){
+		for (mtry in ceiling(pct_num_pct_var_cv * ncol(X))){
+			oos_L2 = k_fold_rf_cv(X, y, k_folds, num_trees, mtry)
+			if (oos_L2 < min_oos_L2){
+				min_oos_L2 = oos_L2	
+				min_mtry = mtry
+				min_num_trees = num_trees
+			}
+		}
+	}
+	#return best one
+	randomForest(X, y, ntree = min_num_trees, mtry = min_mtry)
+}
 
+k_fold_rf_cv = function(X, y, k_folds = 5, num_trees, mtry){
+	n = nrow(X)	
+	
+	holdout_size = round(n / k_folds)
+	split_points = seq(from = 1, to = n, by = holdout_size)[1 : k_folds]
+	
+	L2_err = 0
+	
+	for (k in 1 : k_folds){
+		holdout_index_i = split_points[k]
+		holdout_index_f = ifelse(k == k_folds, n, split_points[k + 1] - 1)
+		
+		Xk_test = X[holdout_index_i : holdout_index_f, ]
+		yk_test = y[holdout_index_i : holdout_index_f] 
+		Xk_training = X[-c(holdout_index_i : holdout_index_f), ]
+		yk_training = y[-c(holdout_index_i : holdout_index_f)]
+		
+		rf = randomForest(x = Xk_training, y = yk_training, ntree = num_trees, mtry = mtry)
+		yk_test_hat = predict(rf, Xk_test)
+		
+		#tabulate errors
+		L2_err = L2_err + sum((yk_test_hat - yk_test)^2)
+	}
+	
+	L2_err	
+}
 
 
 
