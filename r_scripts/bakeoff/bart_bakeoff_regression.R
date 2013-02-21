@@ -55,7 +55,7 @@ run_bart_bakeoff_iter_num = function(iter_num){
 		
 	#now switch between real data sets and simulated data sets
 	if (substr(current_run, 1, 2) == "r_"){
-		raw_data = read.csv(paste("datasets//", current_run, ".csv", sep = ""))				
+		raw_data = read.csv(paste("datasets//", current_run, ".csv", sep = ""))
 		
 	} else {
 		raw_data = simulate_data_from_simulation_name(current_run)
@@ -183,9 +183,9 @@ run_models_and_save_results = function(training_data, test_data, model){
 	#############
 	time_started = Sys.time()
 	ridge_cv_mod = cv.glmnet(data.matrix(Xtrain), ytrain, alpha = 0 , nfolds = 5, type.measure = "mse")
-	results$Ridge_CV_rmse_train = sqrt(sum((ytrain - predict(ridge_cv_mod, newx = as.matrix(Xtrain)))^2 / n_train))
+	results$Ridge_CV_rmse_train = sqrt(sum((ytrain - predict(ridge_cv_mod, newx = data.matrix(Xtrain)))^2 / n_train))
 	
-	y_hat_test = predict(ridge_cv_mod, newx = as.matrix(Xtest))
+	y_hat_test = predict(ridge_cv_mod, newx = data.matrix(Xtest))
 		
 	results$Ridge_CV_rmse = sqrt(sum((ytest - y_hat_test)^2 / n_test))
 	results$Ridge_CV_L1 = sum(abs(y_hat_test - ytest))
@@ -199,9 +199,9 @@ run_models_and_save_results = function(training_data, test_data, model){
 	#############
 	time_started = Sys.time()
 	lasso_cv_mod = cv.glmnet(data.matrix(Xtrain), ytrain, alpha = 1 , nfolds = 5, type.measure = "mse")
-	results$Lasso_CV_rmse_train = sqrt(sum((ytrain - predict(lasso_cv_mod, newx = as.matrix(Xtrain)))^2 / n_train))
+	results$Lasso_CV_rmse_train = sqrt(sum((ytrain - predict(lasso_cv_mod, newx = data.matrix(Xtrain)))^2 / n_train))
 	
-	y_hat_test = predict(lasso_cv_mod, newx = as.matrix(Xtest))
+	y_hat_test = predict(lasso_cv_mod, newx = data.matrix(Xtest))
 	
 	results$Lasso_CV_rmse = sqrt(sum((ytest - y_hat_test)^2 / n_test))
 	results$Lasso_CV_L1 = sum(abs(y_hat_test - ytest))
