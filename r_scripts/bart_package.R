@@ -164,7 +164,6 @@ build_bart_machine = function(X, y,
 	.jcall(java_bart_machine, "V", "setK", k)
 	.jcall(java_bart_machine, "V", "setQ", q)
 	.jcall(java_bart_machine, "V", "setNU", nu)
-	print(paste("nu", nu, "k", k, "q", q))
 	mh_prob_steps = mh_prob_steps / sum(mh_prob_steps) #make sure it's a prob vec
 	.jcall(java_bart_machine, "V", "setProbGrow", mh_prob_steps[1])
 	.jcall(java_bart_machine, "V", "setProbPrune", mh_prob_steps[2])
@@ -240,7 +239,7 @@ build_bart_machine = function(X, y,
 			bart_machine$residuals = y - bart_machine$y_hat_train
 			bart_machine$L1_err_train = sum(abs(bart_machine$residuals))
 			bart_machine$L2_err_train = sum(bart_machine$residuals^2)
-			bart_machine$PseudoRsq = 1 - (bart_machine$L2_err_train / n) / var(y) #pseudo R^2
+			bart_machine$PseudoRsq = 1 - (bart_machine$L2_err_train / bart_machine$n) / var(y) #pseudo R^2
 			bart_machine$rmse_train = sqrt(bart_machine$L2_err_train / bart_machine$n)
 		} else if (pred_type == "classification"){
 			p_hat_posterior_samples = 
