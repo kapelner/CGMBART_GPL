@@ -31,10 +31,15 @@ ytest = y[(nrow(X) / 2 + 1) : nrow(X)]
 
 set_bart_machine_num_cores(4)
 
+bart_machine = build_bart_machine_cv(Xtrain, ytrain,
+		num_burn_in = 300,
+		num_iterations_after_burn_in = 2000,
+		debug_log = TRUE)
+
 	bart_machine = build_bart_machine(Xtrain, ytrain,
 		num_trees = 200,
 		num_burn_in = 300,
-		num_iterations_after_burn_in = 2000)
+		num_iterations_after_burn_in = 2000, nu =3.4, debug_log=TRUE)
 	
 	cat(paste("built bart machine #", i, "\n"))
 #}

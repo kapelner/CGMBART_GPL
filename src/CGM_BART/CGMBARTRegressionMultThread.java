@@ -100,7 +100,7 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 		//set thread num and data
 		bart.setThreadNum(t);
 		bart.setTotalNumThreads(num_cores);
-		bart.setData(X_y);
+		
 		//set features
 		if (cov_split_prior != null){
 			bart.setCovSplitPrior(cov_split_prior);
@@ -113,6 +113,8 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 			bart.setNu(hyper_nu);		
 			bart.setQ(hyper_q);
 		}
+		//once the params are set, now you can set the data
+		bart.setData(X_y);
 		bart_gibbs_chain_threads[t] = bart;
 	}
 

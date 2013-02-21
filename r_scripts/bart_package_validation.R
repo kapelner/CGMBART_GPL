@@ -6,7 +6,7 @@ build_bart_machine_cv = function(X, y,
 		num_tree_cvs = c(200),
 		k_cvs = c(2, 3, 5),
 		nu_q_cvs = list(c(3, 0.9), c(3, 0.99), c(10, 0.75)),
-		k_folds = 5){
+		k_folds = 5, ...){
 	
 	min_rmse_num_tree = NULL
 	min_rmse_k = NULL
@@ -25,7 +25,7 @@ build_bart_machine_cv = function(X, y,
 						num_trees = num_trees,
 						k = k,
 						nu = nu_q[1],
-						q = nu_q[2])$rmse
+						q = nu_q[2], ...)$rmse
 #				print(paste("rmse:", rmse))
 				if (rmse < min_oos_rmse){
 #					print(paste("new winner!"))

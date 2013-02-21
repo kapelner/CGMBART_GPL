@@ -164,6 +164,7 @@ build_bart_machine = function(X, y,
 	.jcall(java_bart_machine, "V", "setK", k)
 	.jcall(java_bart_machine, "V", "setQ", q)
 	.jcall(java_bart_machine, "V", "setNU", nu)
+	print(paste("nu", nu, "k", k, "q", q))
 	mh_prob_steps = mh_prob_steps / sum(mh_prob_steps) #make sure it's a prob vec
 	.jcall(java_bart_machine, "V", "setProbGrow", mh_prob_steps[1])
 	.jcall(java_bart_machine, "V", "setProbPrune", mh_prob_steps[2])
