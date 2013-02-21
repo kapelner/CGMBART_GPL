@@ -90,6 +90,11 @@ build_bart_machine = function(X, y,
 	
 	num_gibbs = num_burn_in + num_iterations_after_burn_in
 	
+	#R loves to convert 1-column matrices into vectors, so just convert it on back
+	if (class(X) == "numeric"){
+		X = as.data.frame(as.matrix(X))
+	}
+	
 	#if no column names, make up names
 	if (is.null(colnames(X))){
 		colnames(X) = seq(from = 1, to = ncol(X), by = 1)
@@ -549,8 +554,10 @@ pre_process_new_data = function(new_data, training_data_features){
 			new_data_features = colnames(new_data)
 		}
 	}
-	#coerce to numeric
-	data.matrix(new_data)
+	#coerce to a numeric matrix
+	new_data = data.matrix(new_data)
+	mode(new_data) = "numeric"
+	new_data
 }
 
 #believe it or not... there's no standard R function for this, isn't that pathetic?

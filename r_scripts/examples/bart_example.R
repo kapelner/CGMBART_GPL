@@ -33,7 +33,7 @@ set_bart_machine_num_cores(4)
 
 	bart_machine = build_bart_machine(Xtrain, ytrain,
 		num_trees = 200,
-		num_burn_in = 500,
+		num_burn_in = 300,
 		num_iterations_after_burn_in = 2000)
 	
 	cat(paste("built bart machine #", i, "\n"))
