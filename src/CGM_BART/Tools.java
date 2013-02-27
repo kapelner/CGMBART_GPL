@@ -124,7 +124,7 @@ public class Tools {
 	}	
 	
     public static double max(double[] values) {
-    	double max = Double.MIN_VALUE;
+    	double max = Double.NEGATIVE_INFINITY;
         for (double value : values) {
         	if (value > max){
         		max = value;

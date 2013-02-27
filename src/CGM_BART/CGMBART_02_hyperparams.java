@@ -14,33 +14,37 @@ public abstract class CGMBART_02_hyperparams extends CGMBART_01_base implements 
 	
 	protected static final double YminAndYmaxHalfDiff = 0.5;
 	
-	protected static double hyper_k = 2.0; //StatToolbox.inv_norm_dist(1 - (1 - CGMShared.MostOfTheDistribution) / 2.0);	
-	protected static double hyper_q = 0.9;
-	protected static double hyper_nu = 3.0;
-	
 	/** all the hyperparameters */
 	protected double hyper_mu_mu;
 	protected double hyper_sigsq_mu;
 	protected double hyper_lambda;
+	protected double hyper_k = 2.0; //StatToolbox.inv_norm_dist(1 - (1 - CGMShared.MostOfTheDistribution) / 2.0);	
+	protected double hyper_q = 0.9;
+	protected double hyper_nu = 3.0;	
+	protected double alpha = 0.95;
+	protected double beta = 2; //see p271 in CGM10	
 	/** information about the response variable */
 	protected double y_min;
 	protected double y_max;
 	protected double y_range_sq;	
 	protected Double sample_var_y;
 	
+	protected transient double[] samps_chi_sq_df_eq_nu_plus_n;	
+	
 	
 	public void setData(ArrayList<double[]> X_y){
 		super.setData(X_y);
 		calculateHyperparameters();	
-//		for (int i = 0; i < n; i++){
-//			System.out.println("i: " + i + " ROW: " + Tools.StringJoin(X_y.get(i), "\t"));
-//		}
-		StatToolbox.cacheInvGammas(n, hyper_nu);
+		tabulateSimulationDistributions();
 	}		
 	
+	protected void tabulateSimulationDistributions() {
+		StatToolbox.cacheInvGammas(hyper_nu, n, this);
+	}
+
 	// hist(1 / rgamma(5000, 1.5, 1.5 * 153.65), br=100)
 	protected void calculateHyperparameters() {
-		System.out.println("calculateHyperparameters in BART\n\n");
+//		System.out.println("calculateHyperparameters in BART\n\n");
 		hyper_mu_mu = 0;
 		hyper_sigsq_mu = Math.pow(YminAndYmaxHalfDiff / (hyper_k * Math.sqrt(num_trees)), 2);
 //		System.out.println("hyper_sigsq_mu: " + hyper_sigsq_mu);
@@ -59,7 +63,7 @@ public abstract class CGMBART_02_hyperparams extends CGMBART_01_base implements 
 		try {
 			ten_pctile_chisq_df_hyper_nu = chi_sq_dist.inverseCumulativeProbability(1 - hyper_q);
 		} catch (MathException e) {
-			System.err.println("Could not calculate inverse cum prob density for chi sq df = " + hyper_nu);
+			System.err.println("Could not calculate inverse cum prob density for chi sq df = " + hyper_nu + " with q = " + hyper_q);
 			System.exit(0);
 		}
 
@@ -78,30 +82,37 @@ public abstract class CGMBART_02_hyperparams extends CGMBART_01_base implements 
 //		}
 //		System.out.println("hyper_lambda via grid: " + hyper_lambda);
 //		System.out.println("y_min = " + y_min + " y_max = " + y_max + " R_y = " + Math.sqrt(y_range_sq));
-		System.out.println("hyperparams:  k = " + hyper_k + " hyper_mu_mu = " + hyper_mu_mu + " sigsq_mu = " + hyper_sigsq_mu + " hyper_lambda = " + hyper_lambda + " hyper_nu = " + hyper_nu + " hyper_q = " + hyper_q + " s_y_trans^2 = " + sample_var_y + " R_y = " + Math.sqrt(y_range_sq) + "\n\n");
+//		System.out.println("hyperparams:  k = " + hyper_k + " hyper_mu_mu = " + hyper_mu_mu + " sigsq_mu = " + hyper_sigsq_mu + " hyper_lambda = " + hyper_lambda + " hyper_nu = " + hyper_nu + " hyper_q = " + hyper_q + " s_y_trans^2 = " + sample_var_y + " R_y = " + Math.sqrt(y_range_sq) + "\n\n");
 	}	
 	
-	public static void setK(double hyper_k) {
-		CGMBART_02_hyperparams.hyper_k = hyper_k;
+	public void setK(double hyper_k) {
+		this.hyper_k = hyper_k;
 	}
 
-	public static void setQ(double hyper_q) {
-		CGMBART_02_hyperparams.hyper_q = hyper_q;
+	public void setQ(double hyper_q) {
+		this.hyper_q = hyper_q;
 	}
 
-	public static void setNU(double hyper_nu) {
-		CGMBART_02_hyperparams.hyper_nu = hyper_nu;
+	public void setNu(double hyper_nu) {
+		this.hyper_nu = hyper_nu;
 	}
+		
+	public void setAlpha(double alpha){
+		this.alpha = alpha;
+	}
+	
+	public void setBeta(double beta){
+		this.beta = beta;
+	}		
 
 	protected void transformResponseVariable() {
-		System.out.println("CGMBART transformResponseVariable");
+//		System.out.println("CGMBART transformResponseVariable");
 		//make sure to initialize the y_trans to be y first
 		super.transformResponseVariable();
 		//make data we need later
 		y_min = StatToolbox.sample_minimum(y_orig);
 		y_max = StatToolbox.sample_maximum(y_orig);
 		y_range_sq = Math.pow(y_max - y_min, 2);
-		System.out.println("y_range_sq: " + y_range_sq);
 	
 		for (int i = 0; i < n; i++){
 			y_trans[i] = transform_y(y_orig[i]);

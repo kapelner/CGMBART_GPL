@@ -5,7 +5,7 @@ import java.io.Serializable;
 public abstract class CGMBART_03_debug extends CGMBART_02_hyperparams implements Serializable {
 	private static final long serialVersionUID = -5808113783423229776L;
 	
-	protected static boolean TREE_ILLUST = false;
+	protected boolean tree_illust = false;
 	
 	public static final String DEBUG_DIR = "debug_output";
 
@@ -16,7 +16,7 @@ public abstract class CGMBART_03_debug extends CGMBART_02_hyperparams implements
 	protected void DebugInitialization() {
 		CGMBARTTreeNode[] initial_trees = gibbs_samples_of_cgm_trees[0];
 			
-		if (TREE_ILLUST){
+		if (tree_illust){
 			TreeArrayIllustration tree_array_illustration = new TreeArrayIllustration(0, unique_name);
 			for (CGMBARTTreeNode tree : initial_trees){
 				tree_array_illustration.AddTree(tree);
@@ -27,11 +27,11 @@ public abstract class CGMBART_03_debug extends CGMBART_02_hyperparams implements
 	}
 	
 	public void printTreeIllustations(){
-		TREE_ILLUST = true;
+		tree_illust = true;
 	}		
 
 	protected void DebugSample(int gibbs_sample_num, TreeArrayIllustration tree_array_illustration) {
-		if (TREE_ILLUST){ //
+		if (tree_illust){ //
 			tree_array_illustration.CreateIllustrationAndSaveImage();
 		}
 	}

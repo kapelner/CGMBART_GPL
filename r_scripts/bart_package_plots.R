@@ -1,4 +1,35 @@
 
+check_bart_error_assumptions = function(bart_machine, alpha_normal_test = 0.05, alpha_hetero_test = 0.05){
+	if (bart_machine$pred_type == "classification"){
+		stop("There are no convergence diagnostics for classification.")
+	}	
+	graphics.off()
+	par(mfrow = c(1, 2))
+	es = bart_machine$residuals
+	y_hat = bart_machine$y_hat
+	
+	#test for normality
+	normal_p_val = shapiro.test(es)$p.value
+	qqnorm(es, col = "blue",
+			main = paste("Assessment of Normality\n", "p-val for shapiro-wilk test of normality of residuals:", round(normal_p_val, 3)),
+			xlab = "Normal Q-Q plot for in-sample residuals\n(Theoretical Quantiles)")
+	qqline(bart_machine$residuals)	
+	
+	#test for heteroskedasticity
+	plot(y_hat, es, main = paste("Assessment of Heteroskedasticity\nFitted vs residuals"), xlab = "Fitted Values", ylab = "Residuals", col = "blue")
+	abline(h = 0, col = "black")
+#	cat("p-val for shapiro-wilk test of normality of residuals:", normal_p_val, ifelse(normal_p_val > alpha_normal_test, "(ppis believable)", "(exercise caution when using ppis!)"), "\n")
+	par(mfrow = c(1, 1))
+	#TODO --- iterate over all x's and sort them
+	#see p225 in purple book for Szroeter's test
+#	n = length(es)
+#	h = sum(seq(1 : n) * es^2) / sum(es^2)
+#	Q = sqrt(6 * n / (n^2 - 1)) * (h - (n + 1) / 2)
+#	hetero_pval = 1 - pnorm(Q, 0, 1)
+#	cat("p-val for szroeter's test of homoskedasticity of residuals (assuming inputted observation order):", hetero_pval, ifelse(hetero_pval > alpha_hetero_test, "(ppis believable)", "(exercise caution when using ppis!)"), "\n")		
+	
+}
+
 plot_tree_depths = function(bart_machine){
 	if (bart_machine$bart_destroyed){
 		stop("This BART machine has been destroyed. Please recreate.")
@@ -97,11 +128,11 @@ plot_mh_acceptance_reject = function(bart_machine){
 	abline(v = bart_machine$num_burn_in, col = "grey")
 	#plot burn in
 	points(1 : bart_machine$num_burn_in, a_r_before_burn_in_avg_over_trees, col = "grey")
-	lines(loess.smooth(1 : bart_machine$num_burn_in, a_r_before_burn_in_avg_over_trees), col = "black", lwd = 4)
+	tryCatch(lines(loess.smooth(1 : bart_machine$num_burn_in, a_r_before_burn_in_avg_over_trees), col = "black", lwd = 4), error = function(e){e})
 	
 	for (c in 1 : bart_machine$num_cores){
 		points((bart_machine$num_burn_in + 1) : num_gibbs_per_core, a_r_after_burn_in_avgs_over_trees[[c]], col = COLORS[c])
-		lines(loess.smooth((bart_machine$num_burn_in + 1) : num_gibbs_per_core, a_r_after_burn_in_avgs_over_trees[[c]]), col = COLORS[c], lwd = 4)
+		tryCatch(lines(loess.smooth((bart_machine$num_burn_in + 1) : num_gibbs_per_core, a_r_after_burn_in_avgs_over_trees[[c]]), col = COLORS[c], lwd = 4), error = function(e){e})
 	}	
 	
 }
@@ -121,23 +152,31 @@ get_mh_acceptance_reject = function(bart_machine){
 	)
 }
 
-plot_y_vs_yhat = function(bart_machine, ppis = FALSE, ppi_conf = 0.95){
+plot_y_vs_yhat = function(bart_machine, X = NULL, y = NULL, ppis = FALSE, ppi_conf = 0.95){
 	if (bart_machine$bart_destroyed){
 		stop("This BART machine has been destroyed. Please recreate.")
 	}	
-	y_hat = bart_machine$y_hat_train
-	y = bart_machine$y_train
-
+	
+	if (is.null(X) & is.null(y)){
+		X = bart_machine$X
+		y = bart_machine$y
+		y_hat = bart_machine$y_hat_train
+		in_sample = TRUE
+	} else {
+		predict_obj = bart_predict_for_test_data(bart_machine, X, y)
+		y_hat = predict_obj$y_hat
+		in_sample = FALSE
+	}
 	
 	if (ppis){
-		ppis = calc_ppis_from_prediction(bart_machine, bart_machine$training_data, ppi_conf)
+		ppis = calc_ppis_from_prediction(bart_machine, X, ppi_conf)
 		ppi_a = ppis[, 1]
 		ppi_b = ppis[, 2]
 		y_in_ppi = y >= ppi_a & y <= ppi_b
 		prop_ys_in_ppi = sum(y_in_ppi) / length(y_in_ppi)
 		
 		plot(y, y_hat, 
-			main = paste("Fitted vs. Actual Values with ", round(ppi_conf * 100), "% PPIs (", round(prop_ys_in_ppi * 100, 2), "% coverage)", sep = ""), 
+			main = paste(ifelse(in_sample, "In-Sample", "Out-of-Sample"), " Fitted vs. Actual Values with ", round(ppi_conf * 100), "% PPIs (", round(prop_ys_in_ppi * 100, 2), "% coverage)", sep = ""), 
 			xlab = paste("Actual Values", sep = ""), 
 			ylab = "Fitted Values", 
 			xlim = c(min(min(y), min(y_hat)), max(max(y), max(y_hat))),
@@ -169,6 +208,10 @@ hist_sigsqs = function(bart_machine, extra_text = NULL, data_title = "data_model
 	if (bart_machine$bart_destroyed){
 		stop("This BART machine has been destroyed. Please recreate.")
 	}	
+	if (bart_machine$pred_type == "classification"){
+		stop("There are no convergence diagnostics for classification.")
+	}
+	
 	sigsqs = .jcall(bart_machine$java_bart_machine, "[D", "getGibbsSamplesSigsqs")
 	
 	num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in
@@ -204,48 +247,6 @@ hist_sigsqs = function(bart_machine, extra_text = NULL, data_title = "data_model
 	invisible(sigsqs_after_burnin)
 }
 
-hist_mu_values_by_tree_and_leaf_after_burn_in = function(bart_machine, extra_text = NULL, data_title = "data_model", save_plot = FALSE, tree_num, leaf_num){
-	get_mu_values_for_all_trees(bart_machine)
-	num_burn_in = bart_machine$num_burn_in
-	num_gibbs = bart_machine$num_gibbs	
-	
-	all_mu_vals_for_tree_and_leaf = all_mu_vals_for_all_trees[leaf_num, , tree_num]
-	#only after num_burn_in
-	all_mu_vals_for_tree_and_leaf = all_mu_vals_for_tree_and_leaf[(num_burn_in + 1) : num_gibbs]
-	
-	num_not_nas = length(all_mu_vals_for_tree_and_leaf) - sum(is.na(all_mu_vals_for_tree_and_leaf))
-	
-	if (num_not_nas == 0){
-#		cat("WARNING: This node was never a leaf\n")
-		return()
-	}
-	
-	if (save_plot){
-		save_plot_function(bart_machine, paste("mu_vals_t_", tree_num, "_b_", leaf_num, sep = ""), data_title)
-	}	
-	else {
-		dev.new()
-	}
-	avg_mu_for_leaf = mean(all_mu_vals_for_tree_and_leaf)
-	ppi_a = quantile(all_mu_vals_for_tree_and_leaf, 0.025, na.rm = TRUE)
-	ppi_b = quantile(all_mu_vals_for_tree_and_leaf, 0.975, na.rm = TRUE)
-	
-	hist(all_mu_vals_for_tree_and_leaf,
-			br = 100, 
-			main = paste("Mu Values for tree ", tree_num, " leaf ", leaf_num, " for the ", num_not_nas, " mu's after burn in (when a leaf)", ifelse(is.null(extra_text), "", paste("\n", extra_text)), sep = ""), 
-			xlab = paste("Mu values avg = ", round(avg_mu_for_leaf, 2), ",  95% PPI = [", round(ppi_a, 2), ",", round(ppi_b, 2), "]", sep = ""), 
-			ylab = "value",
-			col = COLORS[leaf_num],
-			border = NA)
-	abline(v = avg_mu_for_leaf, col = "blue", lwd = 4)
-	abline(v = ppi_a, col = "yellow", lwd = 3)
-	abline(v = ppi_b, col = "yellow", lwd = 3)
-	
-	if (save_plot){
-		dev.off()
-	}
-}
-
 get_sigsqs = function(bart_machine, after_burn_in = TRUE){
 	if (bart_machine$bart_destroyed){
 		stop("This BART machine has been destroyed. Please recreate.")
@@ -268,6 +269,9 @@ get_sigsqs = function(bart_machine, after_burn_in = TRUE){
 plot_sigsqs_convergence_diagnostics = function(bart_machine){
 	if (bart_machine$bart_destroyed){
 		stop("This BART machine has been destroyed. Please recreate.")
+	}	
+	if (bart_machine$pred_type == "classification"){
+		stop("There are no convergence diagnostics for classification.")
 	}	
 	
 	sigsqs = get_sigsqs(bart_machine, after_burn_in = FALSE)
@@ -303,7 +307,7 @@ plot_sigsqs_convergence_diagnostics = function(bart_machine){
 
 }
 
-investigate_var_importance = function(bart_machine, plot = TRUE, num_replicates_for_avg = 5, num_trees_bottleneck = 20, num_var_plot = Inf){
+investigate_var_importance = function(bart_machine, type = "splits", plot = TRUE, num_replicates_for_avg = 5, num_trees_bottleneck = 20, num_var_plot = Inf){
 	if (bart_machine$bart_destroyed){
 		stop("This BART machine has been destroyed. Please recreate.")
 	}	
@@ -311,16 +315,16 @@ investigate_var_importance = function(bart_machine, plot = TRUE, num_replicates_
 	var_props = array(0, c(num_replicates_for_avg, bart_machine$p))
 	for (i in 1 : num_replicates_for_avg){
 		if (i == 1 & num_trees_bottleneck == bart_machine$num_trees){
-			var_props[i, ] = get_var_props_over_chain(bart_machine)
+			var_props[i, ] = get_var_props_over_chain(bart_machine, type)
 		} else {
-			bart_machine_dup = build_bart_machine(bart_machine$training_data, 
+			bart_machine_dup = build_bart_machine(bart_machine$X, bart_machine$y, 
 				num_trees = num_trees_bottleneck, 
 				num_burn_in = bart_machine$num_burn_in, 
 				num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in, 
 				cov_prior_vec = bart_machine$cov_prior_vec,
 				run_in_sample = FALSE,
 				verbose = FALSE)			
-			var_props[i, ] = get_var_props_over_chain(bart_machine_dup)
+			var_props[i, ] = get_var_props_over_chain(bart_machine_dup, type)
 			destroy_bart_machine(bart_machine_dup)						
 		}
 		cat(".")
@@ -342,25 +346,32 @@ investigate_var_importance = function(bart_machine, plot = TRUE, num_replicates_
 	
 	if (plot){
 		par(mar = c(5, 6, 3, 0))
+		if (is.na(sd_var_props[1])){
+			moe = 0
+		} else {
+			moe = 1.96 * sd_var_props / sqrt(num_replicates_for_avg)
+		}
 		bars = barplot(avg_var_props, 
 				names.arg = names(avg_var_props), 
 				las = 2, 
 				ylab = "Inclusion Proportion", 
 				col = "gray",#rgb(0.39, 0.39, 0.59),
-				#ylim = c(0, max(avg_var_props + 1.96 * sd_var_props / sqrt(num_replicates_for_avg))),
-				main = paste("Important Variables Averaged over", num_replicates_for_avg, "Replicates"))
+				ylim = c(0, max(avg_var_props + moe)),
+				main = paste("Important Variables Averaged over", num_replicates_for_avg, "Replicates by", ifelse(type == "splits", "Number of Variable Splits", "Number of Trees")))
 		conf_upper = avg_var_props + 1.96 * sd_var_props / sqrt(num_replicates_for_avg)
 		conf_lower = avg_var_props - 1.96 * sd_var_props / sqrt(num_replicates_for_avg)
 		segments(bars, avg_var_props, bars, conf_upper, col = rgb(0.59, 0.39, 0.39), lwd = 3) # Draw error bars
 		segments(bars, avg_var_props, bars, conf_lower, col = rgb(0.59, 0.39, 0.39), lwd = 3)		
 	}
 	
-	list(avg_var_props = avg_var_props, sd_var_props = sd_var_props)
+	invisible(list(avg_var_props = avg_var_props, sd_var_props = sd_var_props))	
 }
 
 plot_convergence_diagnostics = function(bart_machine){
 	par(mfrow = c(2, 2))
-	plot_sigsqs_convergence_diagnostics(bart_machine)
+	if (bart_machine$pred_type == "regression"){
+		plot_sigsqs_convergence_diagnostics(bart_machine)
+	}	
 	plot_mh_acceptance_reject(bart_machine)
 	plot_tree_num_nodes(bart_machine)
 	plot_tree_depths(bart_machine)	
@@ -371,19 +382,21 @@ shapiro_wilk_p_val = function(vec){
 	tryCatch(shapiro.test(vec)$p.value, error = function(e){})
 }
 
-interaction_investigator = function(bart_machine, plot = TRUE, num_replicates_for_avg = 5, num_var_plot = Inf){
+interaction_investigator = function(bart_machine, plot = TRUE, num_replicates_for_avg = 5, num_trees_bottleneck = 20, num_var_plot = Inf){
 	
 	interaction_counts = array(NA, c(bart_machine$p, bart_machine$p, num_replicates_for_avg))
-	interaction_counts[, , 1] = sapply(.jcall(bart_machine$java_bart_machine, "[[I", "getInteractionCounts", as.integer(BART_NUM_CORES)), .jevalArray)
-	cat(".")
 	
-	for (r in 2 : num_replicates_for_avg){
-		bart_machine_dup = bart_machine_duplicate(bart_machine, run_in_sample = FALSE)
-		interaction_counts[, , r] = sapply(.jcall(bart_machine_dup$java_bart_machine, "[[I", "getInteractionCounts", as.integer(BART_NUM_CORES)), .jevalArray)
-		destroy_bart_machine(bart_machine_dup)
-		cat(".")
-		if (r %% 40 == 0){
-			cat("\n")
+	for (r in 1 : num_replicates_for_avg){
+		if (r == 1 & num_trees_bottleneck == bart_machine$num_trees){
+			interaction_counts[, , r] = sapply(.jcall(bart_machine$java_bart_machine, "[[I", "getInteractionCounts", as.integer(BART_NUM_CORES)), .jevalArray)
+		} else {
+			bart_machine_dup = bart_machine_duplicate(bart_machine)			
+			interaction_counts[, , r] = sapply(.jcall(bart_machine_dup$java_bart_machine, "[[I", "getInteractionCounts", as.integer(BART_NUM_CORES)), .jevalArray)
+			destroy_bart_machine(bart_machine_dup)
+			cat(".")
+			if (r %% 40 == 0){
+				cat("\n")
+			}					
 		}
 	}
 	cat("\n")
@@ -419,17 +432,24 @@ interaction_investigator = function(bart_machine, plot = TRUE, num_replicates_fo
 	if (plot){
 		#now create the bar plot
 		par(mar = c(10, 6, 3, 0))
+		if (is.na(sd_counts[1])){
+			moe = 0
+		} else {
+			moe = 1.96 * sd_counts / sqrt(num_replicates_for_avg)
+		}
 		bars = barplot(avg_counts, 
 			names.arg = names(avg_counts), 
 			las = 2, 
 			ylab = "Relative Importance", 
 			col = "gray",#rgb(0.39, 0.39, 0.59),
-			ylim = c(0, max(avg_counts + 1.96 * sd_counts / sqrt(num_replicates_for_avg))),
+			ylim = c(0, max(avg_counts + moe)),
 			main = paste("Interactions in BART Model Averaged over", num_replicates_for_avg, "Replicates"))
-		conf_upper = avg_counts + 1.96 * sd_counts / sqrt(num_replicates_for_avg)
-		conf_lower = avg_counts - 1.96 * sd_counts / sqrt(num_replicates_for_avg)
-		segments(bars, avg_counts, bars, conf_upper, col = rgb(0.59, 0.39, 0.39), lwd = 3) # Draw error bars
-		segments(bars, avg_counts, bars, conf_lower, col = rgb(0.59, 0.39, 0.39), lwd = 3)		
+		if (!is.na(sd_counts[1])){
+			conf_upper = avg_counts + 1.96 * sd_counts / sqrt(num_replicates_for_avg)
+			conf_lower = avg_counts - 1.96 * sd_counts / sqrt(num_replicates_for_avg)
+			segments(bars, avg_counts, bars, conf_upper, col = rgb(0.59, 0.39, 0.39), lwd = 3) # Draw error bars
+			segments(bars, avg_counts, bars, conf_lower, col = rgb(0.59, 0.39, 0.39), lwd = 3)			
+		}		
 	}
 	
 	invisible(list(
@@ -447,7 +467,7 @@ pd_plot = function(bart_machine, j, levs = c(0.05, seq(from = 0.10, to = 0.90, b
 		stop(paste("You must set j to a number between 1 and p =", bart_machine$p))
 	}
 	
-	x_j = bart_machine$training_data[, j]
+	x_j = bart_machine$X[, j]
 	x_j_quants = quantile(x_j, levs)
 	bart_predictions_by_quantile = array(NA, c(length(levs), bart_machine$n, bart_machine$num_iterations_after_burn_in))
 	
@@ -455,7 +475,7 @@ pd_plot = function(bart_machine, j, levs = c(0.05, seq(from = 0.10, to = 0.90, b
 		x_j_quant = x_j_quants[q]
 		
 		#now create test data matrix
-		test_data = bart_machine$training_data
+		test_data = bart_machine$X
 		test_data[, j] = rep(x_j_quant, bart_machine$n)
 		
 		bart_predictions_by_quantile[q, , ] = bart_machine_predict(bart_machine, test_data)$y_hat_posterior_samples
@@ -485,6 +505,64 @@ pd_plot = function(bart_machine, j, levs = c(0.05, seq(from = 0.10, to = 0.90, b
 	lines(x_j_quants, bart_avg_predictions_upper, type = "o", col = "blue")
 	
 	invisible(list(x_j_quants = x_j_quants, bart_avg_predictions_by_quantile = bart_avg_predictions_by_quantile))
-#	rob = bart(x.train = bart_machine$training_data[, 1:13], y.train = bart_machine$training_data[, 14], ndpost = 100, nskip = 500, keepevery = 10)
-#	pdbart(x.train = bart_machine$training_data[, 1:13], y.train = bart_machine$training_data[, 14], xind = 6, ndpost = 200, nskip = 500)
+#	rob = bart(x.train = bart_machine$X, y.train = bart_machine$y, ndpost = 100, nskip = 500, keepevery = 10)
+#	pdbart(x.train = bart_machine$X, y.train = bart_machine$y, xind = 6, ndpost = 200, nskip = 500)
 }
+
+rmse_by_num_trees = function(bart_machine, tree_list = c(1, seq(5, 50, 5), 100, 150, 200, 300), in_sample = FALSE, plot = TRUE, holdout_pctg = 0.3, num_replicates = 4){
+	if (bart_machine$bart_destroyed){
+		stop("This BART machine has been destroyed. Please recreate.")
+	}
+	if (bart_machine$pred_type == "classification"){
+		stop("This function does not work for classification. Please use ")
+	}		
+	X = bart_machine$X
+	y = bart_machine$y
+	n = bart_machine$n
+	
+	rmses = array(NA, c(num_replicates, length(tree_list)))
+	cat("num_trees = ")
+	for (t in 1 : length(tree_list)){
+		for (r in 1 : num_replicates){
+			if (in_sample){
+				bart_machine_dup = bart_machine_duplicate(bart_machine, num_trees = tree_list[t], run_in_sample = TRUE)
+				rmses[r, t] = bart_machine_dup$rmse_train				
+			} else {
+				holdout_indicies = sample(1 : n, holdout_pctg * n)
+				Xtrain = X[setdiff(1 : n, holdout_indicies), ]
+				ytrain = y[setdiff(1 : n, holdout_indicies)]
+				Xtest = X[holdout_indicies, ]
+				ytest = y[holdout_indicies]
+				
+				bart_machine_dup = bart_machine_duplicate(bart_machine, Xtrain, ytrain, num_trees = tree_list[t])
+				predict_obj = bart_predict_for_test_data(bart_machine_dup, Xtest, ytest)
+				rmses[r, t] = predict_obj$rmse				
+			}
+			destroy_bart_machine(bart_machine_dup)
+			cat("..")
+			cat(tree_list[t])			
+		}
+	}
+	cat("\n")
+	
+	rmse_means = colMeans(rmses)
+
+	if (plot){
+		rmse_sds = apply(rmses, 2, sd)
+		y_mins = rmse_means - 2 * rmse_sds
+		y_maxs = rmse_means + 2 * rmse_sds
+		plot(tree_list, rmse_means, 
+			type = "o", 
+			xlab = "Number of Trees", 
+			ylab = paste(ifelse(in_sample, "In-Sample", "Out-Of-Sample"), "RMSE"), 
+			main = paste("Fit by Number of Trees", ifelse(in_sample, "In-Sample", "Out-Of-Sample")), 
+			ylim = c(min(y_mins), max(y_maxs)))
+		if (num_replicates > 1){
+			for (t in 1 : length(tree_list)){
+				segments(tree_list[t], rmse_means[t] - 1.96 * rmse_sds[t], tree_list[t], rmse_means[t] + 1.96 * rmse_sds[t], col = "grey", lwd = 0.1)
+			}
+		}
+	}
+	invisible(rmse_means)
+}
+

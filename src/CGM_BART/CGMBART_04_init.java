@@ -32,6 +32,7 @@ public abstract class CGMBART_04_init extends CGMBART_03_debug implements Serial
 		gibbs_samples_of_sigsq_after_burn_in = new double[num_gibbs_total_iterations - num_gibbs_burn_in];
 		
 		accept_reject_mh = new boolean[num_gibbs_total_iterations + 1][num_trees];	
+		accept_reject_mh_steps = new char[num_gibbs_total_iterations + 1][num_trees];
 	}
 	
 	
@@ -68,7 +69,7 @@ public abstract class CGMBART_04_init extends CGMBART_03_debug implements Serial
 	protected double sampleInitialSigsqByDrawingFromThePrior() {
 		//we're sampling from sigsq ~ InvGamma(nu / 2, nu * lambda / 2)
 		//which is equivalent to sampling (1 / sigsq) ~ Gamma(nu / 2, 2 / (nu * lambda))
-		return StatToolbox.sample_from_inv_gamma(hyper_nu / 2, 2 / (hyper_nu * hyper_lambda)); 
+		return StatToolbox.sample_from_inv_gamma(hyper_nu / 2, 2 / (hyper_nu * hyper_lambda), this); 
 	}	
 
 	public void setNumGibbsBurnIn(int num_gibbs_burn_in){

@@ -373,3 +373,46 @@ hist_all_mu_values_for_tree = function(bart_machine, extra_text = NULL, data_tit
 		dev.off()
 	}
 }
+
+
+hist_mu_values_by_tree_and_leaf_after_burn_in = function(bart_machine, extra_text = NULL, data_title = "data_model", save_plot = FALSE, tree_num, leaf_num){
+	get_mu_values_for_all_trees(bart_machine)
+	num_burn_in = bart_machine$num_burn_in
+	num_gibbs = bart_machine$num_gibbs	
+	
+	all_mu_vals_for_tree_and_leaf = all_mu_vals_for_all_trees[leaf_num, , tree_num]
+	#only after num_burn_in
+	all_mu_vals_for_tree_and_leaf = all_mu_vals_for_tree_and_leaf[(num_burn_in + 1) : num_gibbs]
+	
+	num_not_nas = length(all_mu_vals_for_tree_and_leaf) - sum(is.na(all_mu_vals_for_tree_and_leaf))
+	
+	if (num_not_nas == 0){
+#		cat("WARNING: This node was never a leaf\n")
+		return()
+	}
+	
+	if (save_plot){
+		save_plot_function(bart_machine, paste("mu_vals_t_", tree_num, "_b_", leaf_num, sep = ""), data_title)
+	}	
+	else {
+		dev.new()
+	}
+	avg_mu_for_leaf = mean(all_mu_vals_for_tree_and_leaf)
+	ppi_a = quantile(all_mu_vals_for_tree_and_leaf, 0.025, na.rm = TRUE)
+	ppi_b = quantile(all_mu_vals_for_tree_and_leaf, 0.975, na.rm = TRUE)
+	
+	hist(all_mu_vals_for_tree_and_leaf,
+			br = 100, 
+			main = paste("Mu Values for tree ", tree_num, " leaf ", leaf_num, " for the ", num_not_nas, " mu's after burn in (when a leaf)", ifelse(is.null(extra_text), "", paste("\n", extra_text)), sep = ""), 
+			xlab = paste("Mu values avg = ", round(avg_mu_for_leaf, 2), ",  95% PPI = [", round(ppi_a, 2), ",", round(ppi_b, 2), "]", sep = ""), 
+			ylab = "value",
+			col = COLORS[leaf_num],
+			border = NA)
+	abline(v = avg_mu_for_leaf, col = "blue", lwd = 4)
+	abline(v = ppi_a, col = "yellow", lwd = 3)
+	abline(v = ppi_b, col = "yellow", lwd = 3)
+	
+	if (save_plot){
+		dev.off()
+	}
+}

@@ -10,7 +10,7 @@ simulate_data_from_simulation_name = function(simulated_data_model_name){
 	simulated_data_model_function()
 }
 
-DEFAULT_N = 1000
+DEFAULT_N = 500
 DEFAULT_SIGMA = 1
 
 
@@ -136,6 +136,14 @@ simu_data_mod__friedman = function(N = DEFAULT_N, p = 10, sigma = DEFAULT_SIGMA)
 	Xy = cbind(X, y)
 	colnames(Xy) = c(paste("x_", 1 : p, sep = ""), "y")
 	Xy
+}
+
+simu_data_mod__friedman_p_100 = function(N = DEFAULT_N, sigma = DEFAULT_SIGMA){	
+	simu_data_mod__friedman(N, 100, sigma)
+}
+
+simu_data_mod__friedman_p_1000 = function(N = DEFAULT_N, sigma = DEFAULT_SIGMA){	
+	simu_data_mod__friedman(N, 1000, sigma)
 }
 
 ###### to create data files just uncomment these and run

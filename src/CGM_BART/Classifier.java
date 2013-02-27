@@ -36,10 +36,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.FileHandler;
-import java.util.logging.Handler;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
 import java.util.logging.StreamHandler;
 
 import AlgorithmTesting.DataSetupForCSVFile;
@@ -218,7 +216,7 @@ public abstract class Classifier implements Serializable {
 	public abstract void Build();
 	
 	public static void fixRandSeed(){
-		StatToolbox.R.setSeed(1984);
+		StatToolbox.setSeed(1984);
 	}
 	
 	/**
@@ -324,6 +322,7 @@ public abstract class Classifier implements Serializable {
 			double[] record = X_y.get(i);
 			double y = getResponseFromRecord(record);
 			double yhat = Evaluate(record, num_cores_evaluate);
+//			System.out.println("y: " + y + " yhat: " + yhat);
 			in_sample_residuals[i] = y - yhat;
 		}
 		long t1 = System.currentTimeMillis();
@@ -351,6 +350,7 @@ public abstract class Classifier implements Serializable {
 			}
 		}
 		System.out.print("done\n");
+//		System.out.println("in_sample_residuals: " + Tools.StringJoin(in_sample_residuals));
 		return loss;
 	}
 	

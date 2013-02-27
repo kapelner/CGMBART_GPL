@@ -24,37 +24,99 @@
 
 package CGM_BART;
 
-public final class CGMBARTClassification extends CGMBART_F1_prior_cov_spec {
+import OpenSourceExtensions.StatUtil;
+
+public final class CGMBARTClassification extends CGMBARTRegression {
 	private static final long serialVersionUID = -9061432248755912576L;
-	
-	/** the number of classes */
-//	private Integer K;
+	private static final double SIGSQ_FOR_PROBIT = 1;
+
+
 	/**
 	 * Constructs the BART classifier for classification. We rely on the SetupClassification class to set the raw data
 	 * 
 	 * @param datumSetup
 	 * @param buildProgress
 	 */
-	public CGMBARTClassification(int K) {
-		super();
-//		this.K = K;
+	public CGMBARTClassification() {
+		super();		
 	}	
 	
-	@Override
-	public double Evaluate(double[] record) {
-		return InverseProbit(super.Evaluate(record));
-	}	
-	
+	//nothing to cache since we don't have sigsq ~ inv gamma in the gibbs sampler
+	protected void tabulateSimulationDistributions(){}	
 
-	private double InverseProbit(double y_star) {
-		// TODO Auto-generated method stub
-		return y_star;
+	@Override
+	protected void DoOneGibbsSample(){
+//		System.out.println("DoOneGibbsSample CGMBARTClassification");
+		//this array is the array of trees for this given sample
+		final CGMBARTTreeNode[] cgm_trees = new CGMBARTTreeNode[num_trees];				
+		final TreeArrayIllustration tree_array_illustration = new TreeArrayIllustration(gibbs_sample_num, unique_name);
+
+		//get Z's
+		SampleZs();
+//		System.out.println("SampleZis: " + Tools.StringJoin(y_trans));
+		for (int t = 0; t < num_trees; t++){
+			GibbsSampleDebugMessage(t);
+			SampleTree(gibbs_sample_num, t, cgm_trees, tree_array_illustration);
+			SampleMusWrapper(gibbs_sample_num, t);				
+		}
 	}
 	
+	private void SampleZs() {
+		for (int i = 0; i < n; i++){
+			double g_x_i = 0;
+			CGMBARTTreeNode[] trees = gibbs_samples_of_cgm_trees[gibbs_sample_num - 1];
+			for (int t = 0; t < num_trees; t++){
+				g_x_i += trees[t].Evaluate(X_y.get(i));
+			}
+			//y_trans is the Z's from the paper
+			y_trans[i] = SampleZi(g_x_i, y_orig[i]);
+		}
+	}
 
-	@Override
-	protected void DoGibbsSampling() {
-		// TODO Auto-generated method stub
+	//TODO
+	private double SampleZi(double g_x_i, double y_i) {
+		double u = StatToolbox.rand();
+		if (y_i == 1){ 
+			return g_x_i + StatUtil.getInvCDF((1 - u) * StatToolbox.normal_cdf(-g_x_i) + u, false);
+		} 
+		else if (y_i == 0){
+			return g_x_i - StatUtil.getInvCDF((1 - u) * StatToolbox.normal_cdf(g_x_i) + u, false);
+		}
 		
+//	    if(YDat[i][1] > 0) {
+//	       Z = qnorm((1.0-u)*pnorm(-mtotalfit[i]-binary_offset,0.0,1.0,1,0) + u,0.0,1.0,1,0);
+//	    } else {
+//	       Z = -qnorm((1.0-u)*pnorm(mtotalfit[i]+binary_offset,0.0,1.0,1,0) + u,0.0,1.0,1,0);
+//	    }
+		
+		System.err.println("SampleZi RESPONSE NOT ZERO / ONE");
+		System.exit(0);
+		return -1;
 	}
+
+	protected void SetupGibbsSampling(){
+		super.SetupGibbsSampling();
+		//all sigsqs are now 1 all the time
+		for (int g = 0; g < num_gibbs_total_iterations; g++){
+			gibbs_samples_of_sigsq[g] = SIGSQ_FOR_PROBIT;
+		}
+	}
+
+	//all we need is the new sigsq_mu hyperparam
+	protected void calculateHyperparameters() {
+//		System.out.println("calculateHyperparameters in CGMBARTClassification\n\n");
+		hyper_mu_mu = 0;
+		hyper_sigsq_mu = Math.pow(3 / (hyper_k * Math.sqrt(num_trees)), 2);	
+	}
+	
+	
+	//do nothing
+	protected void transformResponseVariable() {
+		y_trans = new double[y_orig.length];		
+	}	
+	
+	//do nothing
+	public double un_transform_y(double yt_i){
+		return yt_i;
+	}	
 }

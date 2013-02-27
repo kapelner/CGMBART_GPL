@@ -158,21 +158,6 @@ return new TDoubleHashIterator( this );
 
 
 /** {@inheritDoc} */
-public double[] toArray() {
-double[] result = new double[ size() ];
-double[] set = _set;
-byte[] states = _states;
-
-for ( int i = states.length, j = 0; i-- > 0; ) {
-if ( states[i] == FULL ) {
-result[j++] = set[i];
-}
-}
-return result;
-}
-
-
-/** {@inheritDoc} */
 public double[] toArray( double[] dest ) {
 double[] set = _set;
 byte[] states = _states;
@@ -192,18 +177,23 @@ return dest;
 
 /** {@inheritDoc} */
 public boolean add( double val ) {
-int index = insertKey(val);
-
-if ( index < 0 ) {
-return false;       // already present in set, nothing to add
+	int index = insertKey(val);
+	
+	if ( index < 0 ) {
+	return false;       // already present in set, nothing to add
+	}
+	
+	//now we know that this value got added, so we can put it in our arraylist
+	array.add(val);
+	
+	postInsertHook( consumeFreeSlot );
+	
+	return true;            // yes, we added something
 }
 
-//now we know that this value got added, so we can put it in our arraylist
-array.add(val);
 
-postInsertHook( consumeFreeSlot );
-
-return true;            // yes, we added something
+public double[] toArray() {
+	return array.toArray();
 }
 
 public double getAtIndex(int index){
@@ -322,7 +312,6 @@ return changed;
 
 
 /** {@inheritDoc} */
-@SuppressWarnings({"SuspiciousMethodCalls"})
 public boolean retainAll( Collection<?> collection ) {
 boolean modified = false;
 TDoubleIterator iter = iterator();

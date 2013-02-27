@@ -8,6 +8,9 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 	private static final long serialVersionUID = 1825856510284398699L;
 	private static final boolean DEBUG_MH = false;
 
+	protected double prob_grow;
+	protected double prob_prune;
+	protected double prob_change;
 
 	//this enum has to include all potential types of steps, even if they aren't used in this class's implementation
 	public enum Steps {GROW, PRUNE, CHANGE};
@@ -19,8 +22,7 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 	 * @param iteration_name	we just use this when naming the image file of this illustration
 	 * @return 					the next tree (T_{i+1}) via one iteration of M-H
 	 */
-	@SuppressWarnings("incomplete-switch") //not all steps are used in this class's implementation
-	protected CGMBARTTreeNode metroHastingsPosteriorTreeSpaceIteration(CGMBARTTreeNode T_i) {
+	protected CGMBARTTreeNode metroHastingsPosteriorTreeSpaceIteration(CGMBARTTreeNode T_i, int tree_num, boolean[][] accept_reject_mh, char[][] accept_reject_mh_steps) {
 //		System.out.println("iterateMHPosteriorTreeSpaceSearch");
 		final CGMBARTTreeNode T_star = T_i.clone();
 //		System.out.println("SampleTree T_i \n responses: " + 
@@ -32,15 +34,18 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 		//each proposal will calculate its own value, but this has to be initialized atop		
 		double log_r = 0;
 		
-		//if it's a stump force a GROW change, otherwise pick randomly according to the "hidden parameters"
+		//if it's a stump force a GROW change, otherwise pick randomly from the steps according to the "hidden parameters"
 		switch (T_i.isStump() ? Steps.GROW : randomlyPickAmongTheProposalSteps(T_i)){
 			case GROW:
+				accept_reject_mh_steps[gibbs_sample_num][tree_num] = 'G';
 				log_r = doMHGrowAndCalcLnR(T_i, T_star);
 				break;
 			case PRUNE:
+				accept_reject_mh_steps[gibbs_sample_num][tree_num] = 'P';
 				log_r = doMHPruneAndCalcLnR(T_i, T_star);
 				break;
 			case CHANGE:
+				accept_reject_mh_steps[gibbs_sample_num][tree_num] = 'C';
 				log_r = doMHChangeAndCalcLnR(T_i, T_star);
 				break;				
 		}		
@@ -63,12 +68,15 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 			if (DEBUG_MH){
 				System.out.println("proposal ACCEPTED\n\n");
 			}
+			//mark it was accepted
+			accept_reject_mh[gibbs_sample_num][tree_num] = true;
 			return T_star;
 		}		
 		//reject proposal
 		if (DEBUG_MH){
 			System.out.println("proposal REJECTED\n\n");
 		}
+		accept_reject_mh[gibbs_sample_num][tree_num] = false;
 		return T_i;
 	}
 
@@ -88,17 +96,18 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 //		System.out.print("split_value = " + split_value);
 		//inform the user if things go awry
 		if (grow_node.splitValue == CGMBARTTreeNode.BAD_FLAG_double){
-			System.out.print("ERROR!!! GROW <<" + grow_node.stringLocation(true) + ">> ---- X_" + (grow_node.splitAttributeM + 1) + "  proposal ln(r) = -oo DUE TO NO SPLIT VALUES\n\n");
+			System.err.println("ERROR!!! GROW <<" + grow_node.stringLocation(true) + ">> ---- X_" + (grow_node.splitAttributeM) + "  proposal ln(r) = -oo DUE TO NO SPLIT VALUES");
+			grow_node.printNodeDebugInfo("ERROR GROW");
 			return Double.NEGATIVE_INFINITY;					
 		}			
 		grow_node.isLeaf = false;
 		grow_node.left = new CGMBARTTreeNode(grow_node);
-		grow_node.right = new CGMBARTTreeNode(grow_node);	
+		grow_node.right = new CGMBARTTreeNode(grow_node);
 		grow_node.propagateDataByChangedRule();
 
 		if (grow_node.left.n_eta <= N_RULE || grow_node.right.n_eta <= N_RULE){
 			if (DEBUG_MH){
-				System.out.println("ERR: cannot split a node where daughter only has NO data points   proposal ln(r) = -oo DUE TO CANNOT GROW\n\n");
+				System.err.println("ERROR GROW <<" + grow_node.stringLocation(true) + ">> cannot split a node where daughter only has NO data points   proposal ln(r) = -oo DUE TO CANNOT GROW");
 			}
 			return Double.NEGATIVE_INFINITY;
 		}
@@ -110,7 +119,7 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 		double ln_tree_structure_ratio_grow = calcLnTreeStructureRatioGrow(grow_node);
 		
 		if (DEBUG_MH){
-			System.out.println("GROW  <<" + grow_node.stringLocation(true) + ">> ---- X_" + (grow_node.splitAttributeM + 1) + 
+			System.out.println(gibbs_sample_num + " GROW  <<" + grow_node.stringLocation(true) + ">> ---- X_" + (grow_node.splitAttributeM) + 
 				" < " + TreeIllustration.two_digit_format.format(grow_node.splitValue) + 
 				"\n  ln trans ratio: " + ln_transition_ratio_grow + " ln lik ratio: " + ln_likelihood_ratio_grow + " ln structure ratio: " + ln_tree_structure_ratio_grow +			
 				"\n  trans ratio: " + 
@@ -124,10 +133,10 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 	}
 	
 	protected double doMHPruneAndCalcLnR(CGMBARTTreeNode T_i, CGMBARTTreeNode T_star) {
-		CGMBARTTreeNode prune_node = pickPruneNode(T_star);
+		CGMBARTTreeNode prune_node = pickPruneNodeOrChangeNode(T_star, "prune");
 		//if we can't grow, reject offhand
 		if (prune_node == null){
-			System.err.println("proposal ln(r) = -oo DUE TO CANNOT PRUNE\n\n");
+			System.err.println("proposal ln(r) = -oo DUE TO CANNOT PRUNE");
 			return Double.NEGATIVE_INFINITY;
 		}				
 		double ln_transition_ratio_prune = calcLnTransRatioPrune(T_i, T_star, prune_node);
@@ -135,7 +144,7 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 		double ln_tree_structure_ratio_prune = -calcLnTreeStructureRatioGrow(prune_node);
 		
 		if (DEBUG_MH){
-			System.out.println("PRUNE <<" + prune_node.stringLocation(true) + 
+			System.out.println(gibbs_sample_num + " PRUNE <<" + prune_node.stringLocation(true) + 
 					">> ---- X_" + (prune_node.splitAttributeM == CGMBARTTreeNode.BAD_FLAG_int ? "null" : (prune_node.splitAttributeM + 1)) + " < " + TreeIllustration.two_digit_format.format(prune_node.splitValue == CGMBARTTreeNode.BAD_FLAG_double ? Double.NaN : prune_node.splitValue) + 
 				"\n  ln trans ratio: " + ln_transition_ratio_prune + " ln lik ratio: " + ln_likelihood_ratio_prune + " ln structure ratio: " + ln_tree_structure_ratio_prune +
 				"\n  trans ratio: " + 
@@ -149,25 +158,25 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 		return ln_transition_ratio_prune + ln_likelihood_ratio_prune + ln_tree_structure_ratio_prune;
 	}	
 	
-	protected CGMBARTTreeNode pickPruneNode(CGMBARTTreeNode T) {
+	protected CGMBARTTreeNode pickPruneNodeOrChangeNode(CGMBARTTreeNode T, String change_or_prune) {
 		
 		//2 checks
 		//a) If this is the root, we can't prune so return null
 		//b) If there are no prunable nodes (not sure how that could happen), return null as well
 		
 		if (T.isStump()){
-			System.err.println("cannot prune a stump!");
+			System.err.println("ERROR!!! cannot " + change_or_prune + " a stump!");
 			return null;			
 		}
 		
-		ArrayList<CGMBARTTreeNode> prunable_nodes = T.getPrunableAndChangeableNodes();
-		if (prunable_nodes.size() == 0){
-			System.err.println("no prune nodes in PRUNE step!  T parent: " + T.parent + " T left: " + T.left + " T right: " + T.right);
+		ArrayList<CGMBARTTreeNode> prunable_and_changeable_nodes = T.getPrunableAndChangeableNodes();
+		if (prunable_and_changeable_nodes.size() == 0){
+			System.err.println("ERROR!!! no prune nodes in " + change_or_prune + " step!  T parent: " + T.parent + " T left: " + T.left + " T right: " + T.right);
 			return null;
 		}		
 		
 		//now we pick one of these nodes randomly
-		return prunable_nodes.get((int)Math.floor(StatToolbox.rand() * prunable_nodes.size()));
+		return prunable_and_changeable_nodes.get((int)Math.floor(StatToolbox.rand() * prunable_and_changeable_nodes.size()));
 	}
 	
 	protected double calcLnTransRatioPrune(CGMBARTTreeNode T_i, CGMBARTTreeNode T_star, CGMBARTTreeNode prune_node) {
@@ -183,9 +192,9 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 		double p_adj = pAdj(grow_node);
 		int n_adj = grow_node.nAdj();
 //		System.out.println("calcLnTreeStructureRatioGrow d_eta: " + d_eta + " p_adj: " + p_adj + " n_adj: " + n_adj + " n_repeat: " + n_repeat + " ALPHA: " + ALPHA + " BETA: " + BETA);
-		return Math.log(ALPHA) 
-				+ 2 * Math.log(1 - ALPHA / Math.pow(2 + d_eta, BETA))
-				- Math.log(Math.pow(1 + d_eta, BETA) - ALPHA)
+		return Math.log(alpha) 
+				+ 2 * Math.log(1 - alpha / Math.pow(2 + d_eta, beta))
+				- Math.log(Math.pow(1 + d_eta, beta) - alpha)
 				- Math.log(p_adj) 
 				- Math.log(n_adj);
 	}	
@@ -241,7 +250,7 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 		
 		//do check a
 		if (growth_nodes.size() == 0){
-			System.err.println("no growth nodes in GROW step!");
+			System.err.println("ERROR!!! no growth nodes in GROW step!");
 			return null;
 		}		
 		
@@ -250,7 +259,7 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 
 		//do check b
 		if (pAdj(growth_node) == 0){
-			System.err.println("no attributes available in GROW step!");
+			System.err.println("ERROR!!! no attributes available in GROW step!");
 			return null;			
 		}
 		//if we passed, we can use this node
@@ -258,19 +267,120 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 	}
 
 
-	protected double doMHChangeAndCalcLnR(CGMBARTTreeNode t_i, CGMBARTTreeNode t_star) {
-		// TODO Auto-generated method stub
-		return 0;
+	protected double doMHChangeAndCalcLnR(CGMBARTTreeNode T_i, CGMBARTTreeNode T_star) {
+		CGMBARTTreeNode eta_star = pickPruneNodeOrChangeNode(T_star, "change");		
+		CGMBARTTreeNode eta_just_for_calculation = eta_star.clone();
+		
+		//now start the growth process
+		//first pick the attribute and then the split
+		
+		eta_star.splitAttributeM = pickRandomPredictorThatCanBeAssigned(eta_star);
+		eta_star.splitValue = eta_star.pickRandomSplitValue();
+//		System.out.print("split_value = " + split_value);
+		//inform the user if things go awry
+		if (eta_star.splitValue == CGMBARTTreeNode.BAD_FLAG_double){
+			System.err.println("ERROR!!! CHANGE <<" + eta_star.stringLocation(true) + ">> ---- X_" + (eta_star.splitAttributeM + 1) + "  proposal ln(r) = -oo DUE TO NO SPLIT VALUES");
+			eta_star.printNodeDebugInfo("ERROR");
+			return Double.NEGATIVE_INFINITY;					
+		}
+		
+		eta_star.propagateDataByChangedRule();
+		//the children no longer have the right data!
+		eta_star.left.clearRulesAndSplitCache();
+		eta_star.right.clearRulesAndSplitCache();
+		
+		double ln_tree_structure_ratio_change = calcLnLikRatioChange(eta_just_for_calculation, eta_star);
+		if (DEBUG_MH){
+			System.out.println(gibbs_sample_num + " CHANGE  <<" + eta_star.stringLocation(true) + ">> ---- X_" + (eta_star.splitAttributeM + 1) + 
+				" < " + TreeIllustration.two_digit_format.format(eta_star.splitValue) + " from " + 
+				"X_" + (eta_just_for_calculation.splitAttributeM + 1) + 
+				" < " + TreeIllustration.two_digit_format.format(eta_just_for_calculation.splitValue) + 	
+				"\n  ln lik ratio: " + ln_tree_structure_ratio_change  +			
+				"  lik ratio: " + 
+				(Math.exp(ln_tree_structure_ratio_change) < 0.00001 ? "damn small" : Math.exp(ln_tree_structure_ratio_change)));
+		}		
+		return ln_tree_structure_ratio_change; //the transition ratio cancels out the tree structure ratio
 	}
 	
 	
-	//a hidden parameter in the BART model, P(PRUNE) = 1 - P(GROW) so only one needs to be defined here
-	protected final static double PROB_GROW = 0.5;
+	private double calcLnLikRatioChange(CGMBARTTreeNode eta, CGMBARTTreeNode eta_star) {
+		int n_1_star = eta_star.left.n_eta;
+		int n_2_star = eta_star.right.n_eta;
+		int n_1 = eta.left.n_eta;
+		int n_2 = eta.right.n_eta;
+		
+		double sigsq = gibbs_samples_of_sigsq[gibbs_sample_num - 1];
+		double ratio_sigsqs = sigsq / hyper_sigsq_mu;
+		double n_1_plus_ratio_sigsqs = n_1 + ratio_sigsqs;
+		double n_2_plus_ratio_sigsqs = n_2 + ratio_sigsqs;
+		
+		//NOTE: this can be sped up by just taking the diffs
+		double sum_sq_1_star = eta_star.left.sumResponsesQuantitySqd(); 
+		double sum_sq_2_star = eta_star.right.sumResponsesQuantitySqd(); 
+		double sum_sq_1 = eta.left.sumResponsesQuantitySqd();
+		double sum_sq_2 = eta.right.sumResponsesQuantitySqd();
+		
+		//couple checks
+		if (n_1_star == 0 || n_2_star == 0){
+			System.err.println("ERROR!!! CHANGE picked an invalid split rule and we ended up with a blank node  proposal ln(r) = -oo DUE TO NO SPLIT VALUES");
+			eta.printNodeDebugInfo("PARENT BEFORE");
+			eta_star.printNodeDebugInfo("PARENT AFTER");
+//			eta.left.printNodeDebugInfo("LEFT BEFORE");
+//			eta.right.printNodeDebugInfo("RIGHT BEFORE");
+			eta_star.left.printNodeDebugInfo("LEFT AFTER");
+			eta_star.right.printNodeDebugInfo("RIGHT AFTER");
+					System.exit(0);
+			return Double.NEGATIVE_INFINITY;			
+		}
+
+		//do simplified calculation if the n's remain the same
+		if (n_1_star == n_1){
+			return 1 / (2 * sigsq) * (
+					(sum_sq_1_star - sum_sq_1) / n_1_plus_ratio_sigsqs + 
+					(sum_sq_2_star - sum_sq_2) / n_2_plus_ratio_sigsqs
+				);
+		}
+		//otherwise do the lengthy calculation
+		else {
+			double n_1_star_plus_ratio_sigsqs = n_1_star + ratio_sigsqs;
+			double n_2_star_plus_ratio_sigsqs = n_2_star + ratio_sigsqs;
+			
+			double a = Math.log(n_1_plus_ratio_sigsqs) + 
+						Math.log(n_2_plus_ratio_sigsqs) - 
+						Math.log(n_1_star_plus_ratio_sigsqs) - 
+						Math.log(n_2_star_plus_ratio_sigsqs);
+			double b = (
+					sum_sq_1_star / n_1_star_plus_ratio_sigsqs + 
+					sum_sq_2_star / n_2_star_plus_ratio_sigsqs -
+					sum_sq_1 / n_1_plus_ratio_sigsqs - 
+					sum_sq_2 / n_2_plus_ratio_sigsqs 					
+				);
+			
+			return 0.5 * a + 1 / (2 * sigsq) * b;
+		}
+	}
+
 	protected Steps randomlyPickAmongTheProposalSteps(CGMBARTTreeNode T) {
 		double roll = StatToolbox.rand();
-		if (roll < PROB_GROW)
+		if (roll < prob_grow){
 			return Steps.GROW;
-		return Steps.PRUNE;	
+		}			
+		if (roll < prob_grow + prob_prune){
+			return Steps.PRUNE;
+		}
+		return Steps.CHANGE;	
+	}
+
+	public void setProbGrow(double prob_grow) {
+		this.prob_grow = prob_grow;
+	}
+
+	public void setProbPrune(double prob_prune) {
+		this.prob_prune = prob_prune;
+	}
+
+	public void setProbChange(double prob_change) {
+		this.prob_change = prob_change;
 	}
 	
 	
