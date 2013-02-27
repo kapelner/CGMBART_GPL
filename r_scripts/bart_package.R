@@ -192,7 +192,7 @@ build_bart_machine = function(X, y,
 	.jcall(java_bart_machine, "V", "Build")
 	
 	#now once it's done, let's extract things that are related to diagnosing the build of the BART model
-	p = ncol(model_matrix_training_data) - 1
+	p = ncol(model_matrix_training_data) - 1 # we subtract one because we tacked on the response as the last column
 	bart_machine = list(java_bart_machine = java_bart_machine,
 		training_data_features = colnames(model_matrix_training_data)[1 : p],
 		X = X,

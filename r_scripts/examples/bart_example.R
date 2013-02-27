@@ -33,7 +33,9 @@ set_bart_machine_num_cores(4)
 bart_machine = build_bart_machine(Xtrain, ytrain,
 		num_trees = 200,
 		num_burn_in = 300,
-		num_iterations_after_burn_in = 2000, nu =3.4, debug_log=TRUE)
+		num_iterations_after_burn_in = 1000)
+
+var_selection_by_permute_response(bart_machine, num_permute_samples = 10)
 
 
 bart_machine = build_bart_machine_cv(Xtrain, ytrain,
@@ -103,7 +105,7 @@ ppi_obj = calc_ppis_from_prediction(bart_machine, Xtest)
 
 #now test the variable importance
 ##generate the Friedman data
-n = 2000
+n = 100
 p = 100
 X = as.data.frame(matrix(runif(n * p, 0 , 1), ncol = p))
 error = rnorm(n, 0, 1)
@@ -118,17 +120,18 @@ y = 10 * sin(pi * X[, 1] * X[, 2]) + 20 * (X[, 3] - 0.5)^2 + 10 * X[, 4] + 5 * X
 #Xtest = Xy[81 : 100, 1 : 100]
 #ytest = Xy[81 : 100, 101]
 
-Xtrain = X[1 : 1000,]
-ytrain = y[1 : 1000]
-Xtest = X[1001 : 2000, ]
-ytest = y[1001 : 2000]
+Xtrain = X[1 : 100,]
+ytrain = y[1 : 100]
+#Xtest = X[1001 : 2000, ]
+#ytest = y[1001 : 2000]
 
-set_bart_machine_num_cores(1)
+set_bart_machine_num_cores(4)
 bart_machine = build_bart_machine(Xtrain, ytrain,
 	num_trees = 200,
 	num_burn_in = 600, 
-	num_iterations_after_burn_in = 2000,
-	debug_log = T)
+	num_iterations_after_burn_in = 2000)
+
+var_selection_by_permute_response(bart_machine, num_permute_samples = 100, num_var_plot = 20)
 
 plot_y_vs_yhat(bart_machine, ppis=T)
 plot_y_vs_yhat(bart_machine, X = Xtest, y = ytest, ppis = TRUE)
