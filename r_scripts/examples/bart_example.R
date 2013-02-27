@@ -10,6 +10,7 @@ setwd(directory_where_code_is)
 
 source("r_scripts/bart_package.R")
 source("r_scripts/bart_package_plots.R")
+source("r_scripts/bart_package_variable_selection.R")
 
 #get some data
 library(MASS)
@@ -135,6 +136,12 @@ bart_machine = build_bart_machine(Xtrain, ytrain,
 
 var_selection_by_permute_response(bart_machine, num_permute_samples = 100, num_var_plot = 20)
 
+
+for (i in 1 : 10000){
+	a=t(sapply(.jcall(bart_machine$java_bart_machine, "[[I", "getCountsForAllAttribute", as.integer(BART_NUM_CORES), "splits"), .jevalArray))
+#	sapply(.jcall(bart_machine$java_bart_machine, "[[I", "getInteractionCounts", as.integer(BART_NUM_CORES)), .jevalArray)
+	cat(".")
+}
 plot_y_vs_yhat(bart_machine, ppis=T)
 plot_y_vs_yhat(bart_machine, X = Xtest, y = ytest, ppis = TRUE)
 

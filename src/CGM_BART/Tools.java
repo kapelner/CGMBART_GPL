@@ -180,6 +180,15 @@ public class Tools {
 		}
 		return sum;
 	}
+	
+	public static int[] add_arrays(int[] arr1, int[] arr2) {
+		int n = arr1.length;
+		int[] sum = new int[n];
+		for (int i = 0; i < n; i++){
+			sum[i] = arr1[i] + arr2[i];
+		}
+		return sum;
+	}	
 
 	public static void print_unordered_pair_set(HashSet<UnorderedPair<Integer>> pairs) {
 		for (UnorderedPair<Integer> pair : pairs){
