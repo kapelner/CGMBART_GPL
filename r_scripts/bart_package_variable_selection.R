@@ -24,15 +24,15 @@ var_selection_by_permute_response = function(bart_machine, num_reps_for_avg = 5,
 	permute_mat = permute_mat[, names(var_true_props_avg)]
 	
 	pointwise_cutoffs = apply(permute_mat, 2, quantile, probs = 1 - alpha)
-	important_vars_pointwise = var_true_props_avg[var_true_props_avg > pointwise_cutoffs]		
+	important_vars_pointwise = names(var_true_props_avg[var_true_props_avg > pointwise_cutoffs])		
 
 	max_cut = quantile(apply(permute_mat, 1 ,max), 1 - alpha)
-	important_vars_simul_max = var_true_props_avg[var_true_props_avg >= max_cut]		
+	important_vars_simul_max = names(var_true_props_avg[var_true_props_avg >= max_cut])		
 
 	perm_se = apply(permute_mat, 2, sd)
 	perm_mean = apply(permute_mat, 2, mean)
 	cover_constant = bisectK(tol = .01 , coverage = 1 - alpha, permute_mat = permute_mat, x_left = 1, x_right = 20, countLimit = 100, perm_mean = perm_mean, perm_se = perm_se)
-	important_vars_simul_se = var_true_props_avg[which(var_true_props_avg >= perm_mean + cover_constant * perm_se)]	
+	important_vars_simul_se = names(var_true_props_avg[which(var_true_props_avg >= perm_mean + cover_constant * perm_se)])	
 	
 	
 
@@ -40,13 +40,13 @@ var_selection_by_permute_response = function(bart_machine, num_reps_for_avg = 5,
 		#sort attributes by most important
 		
 		
-		if (num_var_plot == Inf){
+		if (num_var_plot == Inf | num_var_plot > bart_machine$p){
 			num_var_plot = bart_machine$p
 		}
 		
 		par(mfrow = c(2, 1))
 		##pointwise plot
-		plot(1 : num_var_plot, var_true_props_avg[1 : num_var_plot], type = "n", xlab = NA, xaxt = "n", 
+		plot(1 : num_var_plot, var_true_props_avg[1 : num_var_plot], type = "n", xlab = NA, xaxt = "n", ylim = c(0, max(max(var_true_props_avg), max_cut * 1.1)),
 				main = "Variable Selection by Pointwise Method", ylab = "proportion included")
 		axis(1, at = 1 : num_var_plot, labels = names(var_true_props_avg[1 : num_var_plot]), las = 2)
 		for (j in 1 : num_var_plot){
@@ -56,7 +56,7 @@ var_selection_by_permute_response = function(bart_machine, num_reps_for_avg = 5,
 		sapply(1 : num_var_plot, function(s){segments(s, 0, x1 = s, quantile(permute_mat[, s], 1 - alpha), col = "forestgreen")})
 		
 		##simul plots
-		plot(1 : num_var_plot, var_true_props_avg[1 : num_var_plot], type = "n", xlab = NA, xaxt = "n", 
+		plot(1 : num_var_plot, var_true_props_avg[1 : num_var_plot], type = "n", xlab = NA, xaxt = "n", ylim = c(0, max(max(var_true_props_avg), max_cut * 1.1)), 
 				main = "Variable Selection by Simultaneous Max and SE Methods", ylab = "proportion included")
 		axis(1, at = 1 : num_var_plot, labels = names(var_true_props_avg[1 : num_var_plot]), las = 2)
 		
