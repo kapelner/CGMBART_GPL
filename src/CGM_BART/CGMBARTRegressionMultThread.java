@@ -401,31 +401,36 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 //		return var_count_matrix;
 //	}	
 
-	public int[][] getCountsForAllAttribute(int num_cores, final String type) {
+	public int[][] getCountsForAllAttribute(final int num_cores, final String type) {
 		final int[][] counts = new int[num_gibbs_total_iterations - num_gibbs_burn_in][p];		
 		
 		ExecutorService get_count_for_attribute_pool = Executors.newFixedThreadPool(num_cores);
 		
-			for (int g = 0; g < num_gibbs_total_iterations - num_gibbs_burn_in; g++){
-				final CGMBARTTreeNode[] trees = gibbs_samples_of_cgm_trees_after_burn_in[g];
-				final int final_g = g;
-				get_count_for_attribute_pool.execute(new Runnable(){
-					public void run() {
-						int[] total_for_trees = new int[p]; //each entry in this array is the number of times attr j was used for all m trees in this gibbs sample
-						for (CGMBARTTreeNode tree : trees){	
-							if (type.equals("splits")){
-								tree.numTimesAttrUsed(total_for_trees);
+		for (int c = 0; c < num_cores; c++){
+			final int cf = c;
+			get_count_for_attribute_pool.execute(new Runnable(){
+				public void run() {
+					for (int g = 0; g < num_gibbs_total_iterations - num_gibbs_burn_in; g++){
+						if (g % num_cores == cf){
+							final CGMBARTTreeNode[] trees = gibbs_samples_of_cgm_trees_after_burn_in[g];			
+							
+							int[] total_for_trees = new int[p]; //each entry in this array is the number of times attr j was used for all m trees in this gibbs sample
+							for (CGMBARTTreeNode tree : trees){	
+								if (type.equals("splits")){
+									tree.numTimesAttrUsed(total_for_trees);
+								}
+								else if (type.equals("trees")){
+									int[] total_for_trees_temp = new int[p];
+									tree.attrUsed(total_for_trees_temp);
+									total_for_trees = Tools.add_arrays(total_for_trees_temp, total_for_trees);
+								}
 							}
-							else if (type.equals("trees")){
-								int[] total_for_trees_temp = new int[p];
-								tree.attrUsed(total_for_trees_temp);
-								total_for_trees = Tools.add_arrays(total_for_trees_temp, total_for_trees);
-							}
+							counts[g] = total_for_trees;
 						}
-						counts[final_g] = total_for_trees;
-					}
-				});
-			}		
+					}					
+				}
+			});
+		}
 		
 		//now join em up and ship out the result
 		get_count_for_attribute_pool.shutdown();
