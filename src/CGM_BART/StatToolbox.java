@@ -92,7 +92,12 @@ public class StatToolbox {
 		File cache_file = new File(chisq_df_samps_file_prefix + hyper_nu + "_" + n + ".csv");
 		if (cache_file.exists()){
 			System.out.print("load inv cache from file...");
-			bart.samps_chi_sq_df_eq_nu_plus_n = loadInvGammaCacheFromFile(cache_file);
+			try {
+				bart.samps_chi_sq_df_eq_nu_plus_n = loadInvGammaCacheFromFile(cache_file);
+			} catch (Exception e) {
+				System.err.println("CANNOT LOAD INV GAMMA CACHE! Now computing...\n\n");
+				bart.samps_chi_sq_df_eq_nu_plus_n = computeInvGammaCache(hyper_nu, n);
+			}
 			System.out.println("done");
 		}
 		//otherwise compute the cache and save for future runs
@@ -123,25 +128,19 @@ public class StatToolbox {
 		}		
 	}
 	
-	private static double[] loadInvGammaCacheFromFile(File cache_file) {
+	private static double[] loadInvGammaCacheFromFile(File cache_file) throws Exception {
 		double[] samps_chi_sq_df_eq_nu_plus_n = new double[NUM_CHI_SQ_SAMPS];
 		int i = 0;
-		try {
-			BufferedReader in = new BufferedReader(new FileReader(cache_file));
-			while (true){
-				String chisq_draw = in.readLine();
-				if (chisq_draw == null || i == NUM_CHI_SQ_SAMPS){
-					break;
-				}
-				samps_chi_sq_df_eq_nu_plus_n[i] = Double.parseDouble(chisq_draw);
-				i++;
+		BufferedReader in = new BufferedReader(new FileReader(cache_file));
+		while (true){
+			String chisq_draw = in.readLine();
+			if (chisq_draw == null || i == NUM_CHI_SQ_SAMPS){
+				break;
 			}
-			in.close();
-		} catch (Exception e1) {
-			System.err.println("CANNOT LOAD INV GAMMA CACHE\n\n");
-			e1.printStackTrace();
-			System.exit(0);
+			samps_chi_sq_df_eq_nu_plus_n[i] = Double.parseDouble(chisq_draw);
+			i++;
 		}
+		in.close();
 		return samps_chi_sq_df_eq_nu_plus_n;
 	}
 

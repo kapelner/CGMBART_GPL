@@ -132,13 +132,13 @@ set_bart_machine_num_cores(4)
 bart_machine = build_bart_machine(Xtrain, ytrain,
 	num_trees = 200,
 	num_burn_in = 600, 
-	num_iterations_after_burn_in = 2000)
+	num_iterations_after_burn_in = 1000)
 
 var_selection_by_permute_response(bart_machine, num_permute_samples = 100, num_var_plot = 20)
 
 
-for (i in 1 : 10000){
-	a=t(sapply(.jcall(bart_machine$java_bart_machine, "[[I", "getCountsForAllAttribute", as.integer(BART_NUM_CORES), "splits"), .jevalArray))
+for (i in 1 : 50){
+	t(sapply(.jcall(bart_machine$java_bart_machine, "[[I", "getCountsForAllAttribute", as.integer(BART_NUM_CORES), "splits"), .jevalArray))
 #	sapply(.jcall(bart_machine$java_bart_machine, "[[I", "getInteractionCounts", as.integer(BART_NUM_CORES)), .jevalArray)
 	cat(".")
 }

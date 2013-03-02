@@ -338,9 +338,9 @@ get_var_counts_over_chain = function(bart_machine, type = "splits"){
 }
 
 get_var_props_over_chain = function(bart_machine, type = "splits"){
-	C = get_var_counts_over_chain(bart_machine)	
-	Ctot = apply(C, 2, sum)
-	Ctot / sum(Ctot)
+	attribute_props = .jcall(bart_machine$java_bart_machine, "[D", "getAttributeProps", as.integer(BART_NUM_CORES), type)
+	names(attribute_props) = colnames(bart_machine$model_matrix_training_data)[1 : bart_machine$p]
+	attribute_props
 }
 
 bart_predict_for_test_data = function(bart_machine, X, y){
