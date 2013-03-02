@@ -92,6 +92,7 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 		//now start the growth process
 		//first pick the attribute and then the split
 		grow_node.splitAttributeM = pickRandomPredictorThatCanBeAssigned(grow_node);
+		T_star.increment_variable_count(grow_node.splitAttributeM);
 		grow_node.splitValue = grow_node.pickRandomSplitValue();
 //		System.out.print("split_value = " + split_value);
 		//inform the user if things go awry
@@ -138,7 +139,8 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 		if (prune_node == null){
 			System.err.println("proposal ln(r) = -oo DUE TO CANNOT PRUNE");
 			return Double.NEGATIVE_INFINITY;
-		}				
+		}		
+		T_star.decrement_variable_count(prune_node.splitAttributeM);
 		double ln_transition_ratio_prune = calcLnTransRatioPrune(T_i, T_star, prune_node);
 		double ln_likelihood_ratio_prune = -calcLnLikRatioGrow(prune_node); //inverse of before (will speed up later)
 		double ln_tree_structure_ratio_prune = -calcLnTreeStructureRatioGrow(prune_node);
@@ -288,6 +290,9 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 		//the children no longer have the right data!
 		eta_star.left.clearRulesAndSplitCache();
 		eta_star.right.clearRulesAndSplitCache();
+		
+		T_star.decrement_variable_count(eta_just_for_calculation.splitAttributeM);
+		T_star.increment_variable_count(eta_star.splitAttributeM);
 		
 		double ln_tree_structure_ratio_change = calcLnLikRatioChange(eta_just_for_calculation, eta_star);
 		if (DEBUG_MH){
