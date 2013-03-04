@@ -27,10 +27,16 @@ package CGM_BART;
 import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.list.array.TIntArrayList;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -79,7 +85,7 @@ public class StatToolbox {
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-			}			
+			}
 		} catch (FileNotFoundException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -89,24 +95,34 @@ public class StatToolbox {
 	private static final String chisq_df_samps_file_prefix = cacheDirectory + "/chisq_nu_n_";
 	public static void cacheInvGammas(double hyper_nu, int n, CGMBART_02_hyperparams bart) {
 		//check if cache file exists, if it does, load it up
-		File cache_file = new File(chisq_df_samps_file_prefix + hyper_nu + "_" + n + ".csv");
+		File cache_file = new File(chisq_df_samps_file_prefix + hyper_nu + "_" + n + ".bin");
 		if (cache_file.exists()){
-			System.out.print("load inv cache from file...");
+			if (bart.verbose){
+				System.out.print("load inv cache from file...");
+			}
 			try {
 				bart.samps_chi_sq_df_eq_nu_plus_n = loadInvGammaCacheFromFile(cache_file);
 			} catch (Exception e) {
 				System.err.println("CANNOT LOAD INV GAMMA CACHE! Now computing...\n\n");
 				bart.samps_chi_sq_df_eq_nu_plus_n = computeInvGammaCache(hyper_nu, n);
 			}
-			System.out.println("done");
+			if (bart.verbose){
+				System.out.println("done");
+			}
 		}
 		//otherwise compute the cache and save for future runs
 		else {
-			System.out.print("compute inv cache...");
+			if (bart.verbose){
+				System.out.print("compute inv cache...");
+			}
 			bart.samps_chi_sq_df_eq_nu_plus_n = computeInvGammaCache(hyper_nu, n);
-			System.out.print("saving for future runs...");
+			if (bart.verbose){
+				System.out.print("saving for future runs...");
+			}
 			saveInvGammaCacheToFile(hyper_nu, n, bart.samps_chi_sq_df_eq_nu_plus_n, cache_file);
-			System.out.println("done");
+			if (bart.verbose){
+				System.out.println("done");
+			}
 		}
 	}
 	
@@ -130,32 +146,30 @@ public class StatToolbox {
 	
 	private static double[] loadInvGammaCacheFromFile(File cache_file) throws Exception {
 		double[] samps_chi_sq_df_eq_nu_plus_n = new double[NUM_CHI_SQ_SAMPS];
-		int i = 0;
-		BufferedReader in = new BufferedReader(new FileReader(cache_file));
-		while (true){
-			String chisq_draw = in.readLine();
-			if (chisq_draw == null || i == NUM_CHI_SQ_SAMPS){
-				break;
+		try {
+			DataInputStream in_file = new DataInputStream(new BufferedInputStream(new FileInputStream(cache_file)));
+			for (int i = 0; i < NUM_CHI_SQ_SAMPS; i++){
+				samps_chi_sq_df_eq_nu_plus_n[i] = in_file.readDouble();
 			}
-			samps_chi_sq_df_eq_nu_plus_n[i] = Double.parseDouble(chisq_draw);
-			i++;
+			in_file.close();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
 		}
-		in.close();
 		return samps_chi_sq_df_eq_nu_plus_n;
 	}
 
 	private static void saveInvGammaCacheToFile(double hyper_nu, int n, double[] samps_chi_sq_df_eq_nu_plus_n, File cache_file) {
-		PrintWriter out = null;
+		DataOutputStream out = null;
 		try {
-			out = new PrintWriter(new BufferedWriter(new FileWriter(cache_file)));
+			out = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(cache_file)));
+			for (int i = 0; i < NUM_CHI_SQ_SAMPS; i++){
+				out.writeDouble(samps_chi_sq_df_eq_nu_plus_n[i]);
+			}
+			out.close();
 		} catch (IOException e) {
 			System.err.println("CANNOT SAVE INV GAMMA CACHE");
 			System.exit(0);
 		}
-		for (int i = 0; i < NUM_CHI_SQ_SAMPS; i++){
-			out.print(samps_chi_sq_df_eq_nu_plus_n[i] + "\n");
-		}
-		out.close();
 	}
 
 	private static double[] computeInvGammaCache(double hyper_nu, int n){

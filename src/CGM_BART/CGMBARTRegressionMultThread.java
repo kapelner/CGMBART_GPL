@@ -52,8 +52,11 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 	protected Double prob_grow;
 	protected Double prob_prune;
 	protected Double prob_change;
+	protected boolean verbose;
 
 	protected transient boolean use_heteroskedasticity;
+
+	
 
 	
 	public CGMBARTRegressionMultThread(){
@@ -85,11 +88,12 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 	}
 
 	protected void SetupBartModel(CGMBARTRegression bart, int t) {
+		bart.setVerbose(verbose);
 		//now set specs on each of the bart models
 		bart.num_trees = num_trees;
 		bart.num_gibbs_total_iterations = total_iterations_multithreaded;
 		bart.num_gibbs_burn_in = num_gibbs_burn_in;
-		bart.sample_var_y = sample_var_y;
+		bart.sample_var_y = sample_var_y;		
 		//now some hyperparams
 		bart.setAlpha(alpha);
 		bart.setBeta(beta);
@@ -131,7 +135,9 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 	protected void ConstructBurnedChainForTreesAndOtherInformation() {
 		gibbs_samples_of_cgm_trees_after_burn_in = new CGMBARTTreeNode[numSamplesAfterBurning()][num_trees];
 
-		System.out.print("burning and aggregating chains from all threads... ");
+		if (verbose){
+			System.out.print("burning and aggregating chains from all threads... ");
+		}
 		//go through each thread and get the tail and put them together
 		for (int t = 0; t < num_cores; t++){
 			CGMBARTRegression bart_model = bart_gibbs_chain_threads[t];
@@ -144,8 +150,10 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 				}
 				gibbs_samples_of_cgm_trees_after_burn_in[g] = bart_model.gibbs_samples_of_cgm_trees[i];
 			}			
-		}				
-		System.out.print("done\n");
+		}
+		if (verbose){
+			System.out.print("done\n");
+		}
 	}
 
 	private void BuildOnAllThreads(){
@@ -225,6 +233,10 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 
 	public void setProbChange(double prob_change) {
 		this.prob_change = prob_change;
+	}
+	
+	public void setVerbose(boolean verbose){
+		this.verbose = verbose;
 	}
 	
 	public void setNumCores(int num_cores){

@@ -167,6 +167,7 @@ build_bart_machine = function(X, y,
 	mh_prob_steps = mh_prob_steps / sum(mh_prob_steps) #make sure it's a prob vec
 	.jcall(java_bart_machine, "V", "setProbGrow", mh_prob_steps[1])
 	.jcall(java_bart_machine, "V", "setProbPrune", mh_prob_steps[2])
+	.jcall(java_bart_machine, "V", "setVerbose", verbose)
 	
 	
 	if (length(cov_prior_vec) != 0){
