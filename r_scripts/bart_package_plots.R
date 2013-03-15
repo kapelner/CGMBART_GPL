@@ -1,5 +1,5 @@
 
-check_bart_error_assumptions = function(bart_machine, alpha_normal_test = 0.05, alpha_hetero_test = 0.05){
+check_bart_error_assumptions = function(bart_machine, alpha_normal_test = 0.05, alpha_hetero_test = 0.05, hetero_plot = "yhats"){
 	if (bart_machine$pred_type == "classification"){
 		stop("There are no convergence diagnostics for classification.")
 	}	
@@ -16,7 +16,12 @@ check_bart_error_assumptions = function(bart_machine, alpha_normal_test = 0.05, 
 	qqline(bart_machine$residuals)	
 	
 	#test for heteroskedasticity
-	plot(y_hat, es, main = paste("Assessment of Heteroskedasticity\nFitted vs residuals"), xlab = "Fitted Values", ylab = "Residuals", col = "blue")
+	if (hetero_plot == "yhats"){
+		plot(y_hat, es, main = paste("Assessment of Heteroskedasticity\nFitted vs residuals"), xlab = "Fitted Values", ylab = "Residuals", col = "blue")
+	} else {
+		plot(bart_machine$y, es, main = paste("Assessment of Heteroskedasticity\nFitted vs residuals"), xlab = "Actual Values", ylab = "Residuals", col = "blue")
+	}
+	
 	abline(h = 0, col = "black")
 #	cat("p-val for shapiro-wilk test of normality of residuals:", normal_p_val, ifelse(normal_p_val > alpha_normal_test, "(ppis believable)", "(exercise caution when using ppis!)"), "\n")
 	par(mfrow = c(1, 1))

@@ -1,6 +1,6 @@
 
 #methods: pointwise
-var_selection_by_permute_response = function(bart_machine, num_reps_for_avg = 5, num_permute_samples = 100, num_trees_for_permute = 20, alpha = 0.05, plot = TRUE, num_var_plot = Inf){
+var_selection_by_permute_response_three_methods = function(bart_machine, num_reps_for_avg = 5, num_permute_samples = 100, num_trees_for_permute = 20, alpha = 0.05, plot = TRUE, num_var_plot = Inf){
 	if (bart_machine$bart_destroyed){
 		stop("This BART machine has been destroyed. Please recreate.")
 	}	
@@ -69,9 +69,9 @@ var_selection_by_permute_response = function(bart_machine, num_reps_for_avg = 5,
 	}
 	
 	invisible(list(
-		important_vars_pointwise = important_vars_pointwise,
-		important_vars_simul_max = important_vars_simul_max,
-		important_vars_simul_se = important_vars_simul_se,
+		important_vars_pointwise = as.numeric(important_vars_pointwise),
+		important_vars_simul_max = as.numeric(important_vars_simul_max),
+		important_vars_simul_se = as.numeric(important_vars_simul_se),
 		var_true_props_avg = var_true_props_avg,
 		permute_mat = permute_mat
 	))
@@ -129,7 +129,7 @@ bisectK = function(tol, coverage, permute_mat, x_left, x_right, countLimit, perm
 }
 
 
-
+#not theoretically sound; not recommended
 var_importance_by_dropping_variable = function(bart_machine, list_of_vars = NULL, holdout_pctg = 0.2, plot = TRUE, num_var_plot = Inf){
 	if (bart_machine$bart_destroyed){
 		stop("This BART machine has been destroyed. Please recreate.")
@@ -181,6 +181,7 @@ var_importance_by_dropping_variable = function(bart_machine, list_of_vars = NULL
 	invisible(rmse_pct_change)
 }
 
+#not theoretically sounds; not recommended
 var_importance_by_shuffling = function(bart_machine, list_of_vars = NULL, holdout_pctg = 0.2, plot = TRUE, num_var_plot = Inf){
 	if (bart_machine$bart_destroyed){
 		stop("This BART machine has been destroyed. Please recreate.")
@@ -232,4 +233,88 @@ var_importance_by_shuffling = function(bart_machine, list_of_vars = NULL, holdou
 	}
 	
 	invisible(rmse_pct_change)
+}
+
+
+
+var_selection_by_permute_response_cv = function(bart_machine, k_folds = 5, num_reps_for_avg = 5, num_permute_samples = 100, num_trees_for_permute = 20, alpha = 0.05, num_trees_pred_cv = 200){
+		
+	if (k_folds <= 1 || k_folds > bart_machine$n){
+		stop("The number of folds must be at least 2 and less than or equal to n, use \"Inf\" for leave one out")
+	}
+	
+	
+	if (k_folds == Inf){ #leave-one-out
+		k_folds = bart_machine$n
+	}	
+	
+	holdout_size = round(bart_machine$n / k_folds)
+	split_points = seq(from = 1, to = n, by = holdout_size)[1 : k_folds]
+	
+	L2_err_mat = matrix(NA, nrow = k_folds, ncol = 3)
+	colnames(L2_err_mat) = c("important_vars_pointwise", "important_vars_simul_max", "important_vars_simul_se")
+	
+	for (k in 1 : k_folds){
+		cat("cv #", k, "\n", sep = "")
+		#find out the indices of the holdout sample
+		holdout_index_i = split_points[k]
+		holdout_index_f = ifelse(k == k_folds, bart_machine$n, split_points[k + 1] - 1)
+		
+		#pull out training data
+		training_X_k = bart_machine$X[-c(holdout_index_i : holdout_index_f), ]
+		training_y_k = y[-c(holdout_index_i : holdout_index_f)]		
+		
+		#make a temporary bart machine just so we can run the var selection for all three methods
+		bart_machine_temp = build_bart_machine(as.data.frame(training_X_k), training_y_k, 				 
+				num_trees = bart_machine$num_trees, 
+				num_burn_in = bart_machine$num_burn_in,
+				run_in_sample = FALSE,
+				verbose = FALSE)
+		bart_variables_select_obj_k = var_selection_by_permute_response_three_methods(bart_machine_temp, 
+				num_permute_samples = num_permute_samples, 
+				num_trees_for_permute = num_trees_for_permute, 
+				alpha = alpha, 
+				plot = FALSE)		
+		destroy_bart_machine(bart_machine_temp)
+		
+		#pull out test data
+		test_X_k = bart_machine$X[holdout_index_i : holdout_index_f, ]
+		text_y_k = y[holdout_index_i : holdout_index_f]
+		
+		cat("method")
+		for (method in colnames(L2_err_mat)){
+			cat(".")
+			#pull out the appropriate vars
+			training_X_k_red_by_vars_picked_by_method = as.data.frame(training_X_k[, bart_variables_select_obj_k[[method]]])
+			#now build the bart machine based on reduced model
+			bart_machine_temp = build_bart_machine(training_X_k_red_by_vars_picked_by_method, training_y_k,
+					num_burn_in = bart_machine$num_burn_in,
+					num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in,
+					cov_prior_vec = bart_machine$cov_prior_vec,
+					num_trees = num_trees_pred_cv,
+					run_in_sample = FALSE,
+					verbose = FALSE)
+			#and calculate oos-L2 and cleanup
+			test_X_k_red_by_vars_picked_by_method = as.data.frame(test_X_k[, bart_variables_select_obj_k[[method]]])
+			predict_obj = bart_predict_for_test_data(bart_machine_temp, test_X_k_red_by_vars_picked_by_method, text_y_k)
+			destroy_bart_machine(bart_machine_temp)
+			#now record it
+			L2_err_mat[k, method] = predict_obj$L2_err			
+		}
+		cat("\n")
+	}
+	
+	#now extract the lowest oos-L2 to find the "best" method for variable selection
+	L2_err_by_method = colSums(L2_err_mat)
+	min_var_selection_method = colnames(L2_err_mat)[which(L2_err_by_method == min(L2_err_by_method))]
+
+	#now (finally) do var selection on the entire data and then return the vars from the best method found via cross-validation
+	cat("final")
+	bart_variables_select_obj = var_selection_by_permute_response_three_methods(bart_machine, 
+			num_permute_samples = num_permute_samples, 
+			num_trees_for_permute = num_trees_for_permute, 
+			alpha = alpha, 
+			plot = FALSE)
+	
+	list(best_method = min_var_selection_method, important_vars_cv = sort(bart_variables_select_obj[[min_var_selection_method]]))
 }

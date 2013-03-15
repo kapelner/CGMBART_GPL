@@ -239,7 +239,7 @@ build_bart_machine = function(X, y,
 			bart_machine$residuals = y - bart_machine$y_hat_train
 			bart_machine$L1_err_train = sum(abs(bart_machine$residuals))
 			bart_machine$L2_err_train = sum(bart_machine$residuals^2)
-			bart_machine$PseudoRsq = 1 - (bart_machine$L2_err_train / bart_machine$n) / var(y) #pseudo R^2
+			bart_machine$PseudoRsq = 1 - bart_machine$L2_err_train / sum((y - mean(y))^2) #pseudo R^2 acc'd to our dicussion with Ed and Shane
 			bart_machine$rmse_train = sqrt(bart_machine$L2_err_train / bart_machine$n)
 		} else if (pred_type == "classification"){
 			p_hat_posterior_samples = 
@@ -421,10 +421,10 @@ summary.bart_machine = function(bart_machine, show_details_for_trees = FALSE){
 		
 		if (bart_machine$run_in_sample){
 			cat("\nin-sample statistics:\n")
-			cat(paste("  L1 = ", round(bart_machine$L1_err_train, 2), 
-						"L2 = ", round(bart_machine$L2_err_train, 2),
-						"Pseudo-Rsq = ", round(bart_machine$PseudoRsq, 2),
-						"rmse =", round(bart_machine$rmse_train, 2), "\n"))
+			cat(paste("  L1 =", round(bart_machine$L1_err_train, 2), "\n",
+						"L2 =", round(bart_machine$L2_err_train, 2), "\n",
+						"rmse =", round(bart_machine$rmse_train, 2), "\n"),
+						"Pseudo-Rsq =", round(bart_machine$PseudoRsq, 4))
 			
 			es = bart_machine$residuals
 			normal_p_val = shapiro.test(es)$p.value

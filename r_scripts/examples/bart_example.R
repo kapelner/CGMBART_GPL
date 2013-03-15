@@ -36,7 +36,7 @@ bart_machine = build_bart_machine(Xtrain, ytrain,
 		num_burn_in = 300,
 		num_iterations_after_burn_in = 1000)
 
-var_selection_by_permute_response(bart_machine, num_permute_samples = 10)
+var_selection_by_permute_response_three_methods(bart_machine, num_permute_samples = 10)
 
 
 bart_machine = build_bart_machine_cv(Xtrain, ytrain,
@@ -132,7 +132,7 @@ bart_machine = build_bart_machine(Xtrain, ytrain,
 	num_burn_in = 600, 
 	num_iterations_after_burn_in = 1000)
 
-var_selection_by_permute_response(bart_machine, num_permute_samples = 100, num_var_plot = 20)
+var_selection_by_permute_response_three_methods(bart_machine, num_permute_samples = 100, num_var_plot = 20)
 
 
 for (i in 1 : 50){
