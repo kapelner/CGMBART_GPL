@@ -52,8 +52,11 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 	protected Double prob_grow;
 	protected Double prob_prune;
 	protected Double prob_change;
+	protected boolean verbose;
 
 	protected transient boolean use_heteroskedasticity;
+
+	
 
 	
 	public CGMBARTRegressionMultThread(){
@@ -85,11 +88,12 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 	}
 
 	protected void SetupBartModel(CGMBARTRegression bart, int t) {
+		bart.setVerbose(verbose);
 		//now set specs on each of the bart models
 		bart.num_trees = num_trees;
 		bart.num_gibbs_total_iterations = total_iterations_multithreaded;
 		bart.num_gibbs_burn_in = num_gibbs_burn_in;
-		bart.sample_var_y = sample_var_y;
+		bart.sample_var_y = sample_var_y;		
 		//now some hyperparams
 		bart.setAlpha(alpha);
 		bart.setBeta(beta);
@@ -131,7 +135,9 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 	protected void ConstructBurnedChainForTreesAndOtherInformation() {
 		gibbs_samples_of_cgm_trees_after_burn_in = new CGMBARTTreeNode[numSamplesAfterBurning()][num_trees];
 
-		System.out.print("burning and aggregating chains from all threads... ");
+		if (verbose){
+			System.out.print("burning and aggregating chains from all threads... ");
+		}
 		//go through each thread and get the tail and put them together
 		for (int t = 0; t < num_cores; t++){
 			CGMBARTRegression bart_model = bart_gibbs_chain_threads[t];
@@ -144,8 +150,10 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 				}
 				gibbs_samples_of_cgm_trees_after_burn_in[g] = bart_model.gibbs_samples_of_cgm_trees[i];
 			}			
-		}				
-		System.out.print("done\n");
+		}
+		if (verbose){
+			System.out.print("done\n");
+		}
 	}
 
 	private void BuildOnAllThreads(){
@@ -225,6 +233,10 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 
 	public void setProbChange(double prob_change) {
 		this.prob_change = prob_change;
+	}
+	
+	public void setVerbose(boolean verbose){
+		this.verbose = verbose;
 	}
 	
 	public void setNumCores(int num_cores){
@@ -400,45 +412,70 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 //		}
 //		return var_count_matrix;
 //	}	
-
-	public int[][] getCountsForAllAttribute(final int num_cores, final String type) {
-		final int[][] counts = new int[num_gibbs_total_iterations - num_gibbs_burn_in][p];		
-		
-		ExecutorService get_count_for_attribute_pool = Executors.newFixedThreadPool(num_cores);
-		
-		for (int c = 0; c < num_cores; c++){
-			final int cf = c;
-			get_count_for_attribute_pool.execute(new Runnable(){
-				public void run() {
-					for (int g = 0; g < num_gibbs_total_iterations - num_gibbs_burn_in; g++){
-						if (g % num_cores == cf){
-							final CGMBARTTreeNode[] trees = gibbs_samples_of_cgm_trees_after_burn_in[g];			
-							
-							int[] total_for_trees = new int[p]; //each entry in this array is the number of times attr j was used for all m trees in this gibbs sample
-							for (CGMBARTTreeNode tree : trees){	
-								if (type.equals("splits")){
-									tree.numTimesAttrUsed(total_for_trees);
-								}
-								else if (type.equals("trees")){
-									int[] total_for_trees_temp = new int[p];
-									tree.attrUsed(total_for_trees_temp);
-									total_for_trees = Tools.add_arrays(total_for_trees_temp, total_for_trees);
-								}
-							}
-							counts[g] = total_for_trees;
-						}
-					}					
-				}
-			});
+	
+	public double[] getAttributeProps(final int num_cores, final String type) {
+		int[][] variable_counts_all_gibbs = getCountsForAllAttribute(num_cores, type);
+		double[] attribute_proportions = new double[p];
+		for (int g = 0; g < num_gibbs_total_iterations - num_gibbs_burn_in; g++){
+			attribute_proportions = Tools.add_arrays(attribute_proportions, variable_counts_all_gibbs[g]);
 		}
 		
-		//now join em up and ship out the result
-		get_count_for_attribute_pool.shutdown();
-		try {	         
-			get_count_for_attribute_pool.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS); //effectively infinity
-	    } catch (InterruptedException ignored){}	
+		return Tools.scale_array(attribute_proportions);
+	}
+
+	public int[][] getCountsForAllAttribute(final int num_cores, final String type) {
+		final int[][] variable_counts_all_gibbs = new int[num_gibbs_total_iterations - num_gibbs_burn_in][p];		
 		
-		return counts;
+		for (int g = 0; g < num_gibbs_total_iterations - num_gibbs_burn_in; g++){
+			final CGMBARTTreeNode[] trees = gibbs_samples_of_cgm_trees_after_burn_in[g];
+			int[] variable_counts_one_gibbs = new int[p];
+			for (CGMBARTTreeNode tree : trees){	
+				if (type.equals("splits")){
+					variable_counts_one_gibbs = Tools.add_arrays(variable_counts_one_gibbs, tree.attribute_split_counts);
+				}
+				else if (type.equals("trees")){
+					variable_counts_one_gibbs = Tools.binary_add_arrays(variable_counts_one_gibbs, tree.attribute_split_counts);
+				}				
+				
+			}
+			variable_counts_all_gibbs[g] = variable_counts_one_gibbs;
+		}
+		
+//		ExecutorService get_count_for_attribute_pool = Executors.newFixedThreadPool(num_cores);
+//		
+//		for (int c = 0; c < num_cores; c++){
+//			final int cf = c;
+//			get_count_for_attribute_pool.execute(new Runnable(){
+//				public void run() {
+//					for (int g = 0; g < num_gibbs_total_iterations - num_gibbs_burn_in; g++){
+//						if (g % num_cores == cf){
+//							final CGMBARTTreeNode[] trees = gibbs_samples_of_cgm_trees_after_burn_in[g];			
+//							
+//							int[] total_for_trees = new int[p]; //each entry in this array is the number of times attr j was used for all m trees in this gibbs sample
+//							for (CGMBARTTreeNode tree : trees){	
+//								if (type.equals("splits")){
+//									tree.numTimesAttrUsed(total_for_trees);
+//								}
+//								else if (type.equals("trees")){
+//									int[] total_for_trees_temp = new int[p];
+//									tree.attrUsed(total_for_trees_temp);
+//									total_for_trees = Tools.add_arrays(total_for_trees_temp, total_for_trees);
+//								}
+//							}
+//							counts[g] = total_for_trees;
+//						}
+//					}					
+//				}
+//			});
+//		}
+//		
+//		//now join em up and ship out the result
+//		get_count_for_attribute_pool.shutdown();
+//		try {	         
+//			get_count_for_attribute_pool.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS); //effectively infinity
+//	    } catch (InterruptedException ignored){}	
+		
+		return variable_counts_all_gibbs;
 	}
 
 	@Override

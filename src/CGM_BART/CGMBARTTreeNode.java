@@ -71,8 +71,7 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 	protected static final double BAD_FLAG_double = -Double.MAX_VALUE;
 	protected static final int BAD_FLAG_int = -Integer.MAX_VALUE;
 	public double y_pred = BAD_FLAG_double;
-	/** the remaining data records at this point in the tree construction cols: x_1, ..., x_p, y, index */
-//	public transient List<double[]> data;
+	
 	/** the number of data points */
 	public transient int n_eta;
 	/** these are the yhats in the correct order */
@@ -94,11 +93,14 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 	/** this caches the number of possible split variables */
 	protected transient Integer padj;	
 	
+	protected int[] attribute_split_counts;
+	
 	public CGMBARTTreeNode(){}	
 
 	public CGMBARTTreeNode(CGMBARTTreeNode parent, CGMBART_02_hyperparams cgmbart){
 		this.parent = parent;
 		this.yhats = parent.yhats;
+		this.attribute_split_counts = parent.attribute_split_counts;
 		this.cgmbart = cgmbart;
 		
 		if (parent != null){
@@ -141,6 +143,7 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		copy.indicies = indicies;
 		copy.n_eta = n_eta;
 		copy.yhats = yhats;
+		copy.attribute_split_counts = attribute_split_counts.clone();
 		
 		if (left != null){ //we need to clone the child and mark parent correctly
 			copy.left = left.clone();
@@ -525,6 +528,9 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 
 		//initialize the yhats
 		yhats = new double[n_eta];
+		//intialize the var counts
+		attribute_split_counts = new int[p];
+		
 		if (DEBUG_NODES){printNodeDebugInfo("setStumpData");}
 	}
 
@@ -654,6 +660,15 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 	public void clearRulesAndSplitCache() {
 		possible_rule_variables = null;
 		possible_split_vals_by_attr = null;
+	}
+
+	public void decrement_variable_count(int j) {
+		attribute_split_counts[j]--;
+	}
+
+	public void increment_variable_count(int j) {
+		attribute_split_counts[j]++;
+		
 	}
 
 }

@@ -129,8 +129,8 @@ ytrain = y[1 : 100]
 set_bart_machine_num_cores(4)
 bart_machine = build_bart_machine(Xtrain, ytrain,
 	num_trees = 200,
-	num_burn_in = 600, 
-	num_iterations_after_burn_in = 1000)
+	num_burn_in = 250, 
+	num_iterations_after_burn_in = 300)
 
 var_selection_by_permute_response_three_methods(bart_machine, num_permute_samples = 100, num_var_plot = 20)
 

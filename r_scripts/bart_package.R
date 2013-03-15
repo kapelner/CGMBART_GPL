@@ -167,6 +167,7 @@ build_bart_machine = function(X, y,
 	mh_prob_steps = mh_prob_steps / sum(mh_prob_steps) #make sure it's a prob vec
 	.jcall(java_bart_machine, "V", "setProbGrow", mh_prob_steps[1])
 	.jcall(java_bart_machine, "V", "setProbPrune", mh_prob_steps[2])
+	.jcall(java_bart_machine, "V", "setVerbose", verbose)
 	
 	
 	if (length(cov_prior_vec) != 0){
@@ -338,9 +339,9 @@ get_var_counts_over_chain = function(bart_machine, type = "splits"){
 }
 
 get_var_props_over_chain = function(bart_machine, type = "splits"){
-	C = get_var_counts_over_chain(bart_machine)	
-	Ctot = apply(C, 2, sum)
-	Ctot / sum(Ctot)
+	attribute_props = .jcall(bart_machine$java_bart_machine, "[D", "getAttributeProps", as.integer(BART_NUM_CORES), type)
+	names(attribute_props) = colnames(bart_machine$model_matrix_training_data)[1 : bart_machine$p]
+	attribute_props
 }
 
 bart_predict_for_test_data = function(bart_machine, X, y){

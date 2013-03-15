@@ -26,6 +26,9 @@ public abstract class CGMBART_01_base extends Classifier implements Serializable
 	protected int threadNum;
 	protected int num_cores;
 	
+	/** should we print stuff out to screen? */
+	protected boolean verbose;
+	
 	protected static Integer PrintOutEvery = null;
 	
 
@@ -64,6 +67,10 @@ public abstract class CGMBART_01_base extends Classifier implements Serializable
 
 	public void setThreadNum(int threadNum) {
 		this.threadNum = threadNum;
+	}
+	
+	public void setVerbose(boolean verbose){
+		this.verbose = verbose;
 	}
 	
 

@@ -181,6 +181,23 @@ public class Tools {
 		return sum;
 	}
 	
+	public static double[] add_arrays(double[] arr1, int[] arr2) {
+		int n = arr1.length;
+		double[] sum = new double[n];
+		for (int i = 0; i < n; i++){
+			sum[i] = arr1[i] + arr2[i];
+		}
+		return sum;
+	}	
+	
+	public static double[] scale_array(double[] arr) {
+		double sum = sum_array(arr);
+		for (int i = 0; i < arr.length; i++){
+			arr[i] = arr[i] /sum;
+		}
+		return arr;
+	}
+	
 	public static int[] add_arrays(int[] arr1, int[] arr2) {
 		int n = arr1.length;
 		int[] sum = new int[n];
@@ -195,6 +212,15 @@ public class Tools {
 			System.out.print("<" + pair.getFirst() + ", " + pair.getSecond() + ">, ");
 		}
 		System.out.print("\n");
+	}
+
+	public static int[] binary_add_arrays(int[] arr1, int[] arr2) {
+		int n = arr1.length;
+		int[] sum = new int[n];
+		for (int i = 0; i < n; i++){
+			sum[i] = (arr1[i] >= 1 ? 1 : 0) + (arr2[i] >= 1 ? 1 : 0);
+		}
+		return sum;
 	}
 
 }
