@@ -138,7 +138,7 @@ public class StatToolbox {
 	
 	public static void clearInvChisqHash(){
 		for (File file : new File(cacheDirectory).listFiles()){
-			if (!file.getName().equals(norm_samps_file)){
+			if (!file.getName().equals(norm_samps_file)){ /////////////WRONG
 				file.delete();
 			}
 		}		

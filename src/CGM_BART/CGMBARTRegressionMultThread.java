@@ -415,12 +415,12 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 	
 	public double[] getAttributeProps(final int num_cores, final String type) {
 		int[][] variable_counts_all_gibbs = getCountsForAllAttribute(num_cores, type);
-		double[] attribute_proportions = new double[p];
+		double[] attribute_counts = new double[p];
 		for (int g = 0; g < num_gibbs_total_iterations - num_gibbs_burn_in; g++){
-			attribute_proportions = Tools.add_arrays(attribute_proportions, variable_counts_all_gibbs[g]);
+			attribute_counts = Tools.add_arrays(attribute_counts, variable_counts_all_gibbs[g]);
 		}
 		
-		return Tools.scale_array(attribute_proportions);
+		return Tools.scale_array(attribute_counts); //will turn it into proportions
 	}
 
 	public int[][] getCountsForAllAttribute(final int num_cores, final String type) {

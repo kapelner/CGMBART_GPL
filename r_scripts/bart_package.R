@@ -95,6 +95,16 @@ build_bart_machine = function(X, y,
 		X = as.data.frame(as.matrix(X))
 	}
 	
+	if (ncol(X) == 0){
+		stop("Your data matrix must have at least one attribute.")
+	}
+	if (nrow(X) == 0){
+		stop("Your data matrix must have at least one observation.")
+	}
+	if (length(y) != nrow(X)){
+		stop("The number of responses must be equal to the number of observations in the training data.")
+	}
+	
 	#if no column names, make up names
 	if (is.null(colnames(X))){
 		colnames(X) = seq(from = 1, to = ncol(X), by = 1)

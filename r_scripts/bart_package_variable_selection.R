@@ -1,5 +1,10 @@
 
-#methods: pointwise
+#var_selection_by_permute_response_three_methods = function(X, y, num_reps_for_avg = 5, num_permute_samples = 100, num_trees_for_permute = 20, alpha = 0.05, plot = TRUE, num_var_plot = Inf){
+#	bart_machine_temp = 
+#	var_selection_by_permute_response_three_methods(bart_machine_temp, num_reps_for_avg, num_permute_samples, num_trees_for_permute, alpha, plot, num_var_plot)
+#	destroy_bart_machine(bart_machine_temp)
+#}	
+
 var_selection_by_permute_response_three_methods = function(bart_machine, num_reps_for_avg = 5, num_permute_samples = 100, num_trees_for_permute = 20, alpha = 0.05, plot = TRUE, num_var_plot = Inf){
 	if (bart_machine$bart_destroyed){
 		stop("This BART machine has been destroyed. Please recreate.")
@@ -285,21 +290,29 @@ var_selection_by_permute_response_cv = function(bart_machine, k_folds = 5, num_r
 		for (method in colnames(L2_err_mat)){
 			cat(".")
 			#pull out the appropriate vars
-			training_X_k_red_by_vars_picked_by_method = as.data.frame(training_X_k[, bart_variables_select_obj_k[[method]]])
-			#now build the bart machine based on reduced model
-			bart_machine_temp = build_bart_machine(training_X_k_red_by_vars_picked_by_method, training_y_k,
-					num_burn_in = bart_machine$num_burn_in,
-					num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in,
-					cov_prior_vec = bart_machine$cov_prior_vec,
-					num_trees = num_trees_pred_cv,
-					run_in_sample = FALSE,
-					verbose = FALSE)
-			#and calculate oos-L2 and cleanup
-			test_X_k_red_by_vars_picked_by_method = as.data.frame(test_X_k[, bart_variables_select_obj_k[[method]]])
-			predict_obj = bart_predict_for_test_data(bart_machine_temp, test_X_k_red_by_vars_picked_by_method, text_y_k)
-			destroy_bart_machine(bart_machine_temp)
-			#now record it
-			L2_err_mat[k, method] = predict_obj$L2_err			
+			vars_selected_by_method = bart_variables_select_obj_k[[method]]
+			if (length(vars_selected_by_method) == 0){
+				#we just predict ybar
+				ybar_est = mean(training_y_k)
+				#and we take L2 error against ybar
+				L2_err_mat[k, method] = sum((text_y_k - ybar_est)^2)
+			} else {
+				training_X_k_red_by_vars_picked_by_method = as.data.frame(training_X_k[, vars_selected_by_method])
+				#now build the bart machine based on reduced model
+				bart_machine_temp = build_bart_machine(training_X_k_red_by_vars_picked_by_method, training_y_k,
+						num_burn_in = bart_machine$num_burn_in,
+						num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in,
+						cov_prior_vec = bart_machine$cov_prior_vec,
+						num_trees = num_trees_pred_cv,
+						run_in_sample = FALSE,
+						verbose = FALSE)
+				#and calculate oos-L2 and cleanup
+				test_X_k_red_by_vars_picked_by_method = as.data.frame(test_X_k[, bart_variables_select_obj_k[[method]]])
+				predict_obj = bart_predict_for_test_data(bart_machine_temp, test_X_k_red_by_vars_picked_by_method, text_y_k)
+				destroy_bart_machine(bart_machine_temp)
+				#now record it
+				L2_err_mat[k, method] = predict_obj$L2_err
+			}
 		}
 		cat("\n")
 	}
@@ -309,7 +322,7 @@ var_selection_by_permute_response_cv = function(bart_machine, k_folds = 5, num_r
 	min_var_selection_method = colnames(L2_err_mat)[which(L2_err_by_method == min(L2_err_by_method))]
 
 	#now (finally) do var selection on the entire data and then return the vars from the best method found via cross-validation
-	cat("final")
+	cat("final", "\n")
 	bart_variables_select_obj = var_selection_by_permute_response_three_methods(bart_machine, 
 			num_permute_samples = num_permute_samples, 
 			num_trees_for_permute = num_trees_for_permute, 
