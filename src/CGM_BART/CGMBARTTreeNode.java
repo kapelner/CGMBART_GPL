@@ -50,6 +50,7 @@ import OpenSourceExtensions.UnorderedPair;
 public class CGMBARTTreeNode implements Cloneable, Serializable {
 	private static final long serialVersionUID = -5584590448078741112L;
 	
+	private static final int N_CUTOFF_CACHE = 2000;
 
 	/** a link back to the overall bart model */
 	private CGMBART_02_hyperparams cgmbart;	
@@ -413,6 +414,7 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		return possibleSplitValuesGivenAttribute().size();
 	}	
 	
+	
 	protected TDoubleHashSetAndArray possibleSplitValuesGivenAttribute() {
 		if (possible_split_vals_by_attr == null){
 			possible_split_vals_by_attr = new HashMap<Integer, TDoubleHashSetAndArray>();
@@ -428,7 +430,13 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 			TDoubleHashSetAndArray unique_x_dot_j_node = new TDoubleHashSetAndArray(x_dot_j_node);
 			double max = Tools.max(x_dot_j_node);
 			unique_x_dot_j_node.remove(max);
-			possible_split_vals_by_attr.put(splitAttributeM, unique_x_dot_j_node);
+			/////MEM vs CPU tradeoff
+			if (yhats.length < N_CUTOFF_CACHE){
+				possible_split_vals_by_attr.put(splitAttributeM, unique_x_dot_j_node);
+			}
+			else {
+				return unique_x_dot_j_node;
+			}
 		}
 		return possible_split_vals_by_attr.get(splitAttributeM);
 	}
@@ -670,5 +678,16 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		attribute_split_counts[j]++;
 		
 	}
+	
+//	public int sizeOfSplitVals(){
+//		if (this.isLeaf){
+//			return 0;
+//		}
+//		int sum = 0;
+//		for (Integer key : possible_split_vals_by_attr.keySet()){
+//			sum += possible_split_vals_by_attr.get(key).size();
+//		}
+//		return sum + this.left.sizeOfSplitVals() + this.right.sizeOfSplitVals();
+//	}
 
 }

@@ -254,7 +254,7 @@ var_selection_by_permute_response_cv = function(bart_machine, k_folds = 5, num_r
 	}	
 	
 	holdout_size = round(bart_machine$n / k_folds)
-	split_points = seq(from = 1, to = n, by = holdout_size)[1 : k_folds]
+	split_points = seq(from = 1, to = bart_machine$n, by = holdout_size)[1 : k_folds]
 	
 	L2_err_mat = matrix(NA, nrow = k_folds, ncol = 3)
 	colnames(L2_err_mat) = c("important_vars_pointwise", "important_vars_simul_max", "important_vars_simul_se")
@@ -273,6 +273,7 @@ var_selection_by_permute_response_cv = function(bart_machine, k_folds = 5, num_r
 		bart_machine_temp = build_bart_machine(as.data.frame(training_X_k), training_y_k, 				 
 				num_trees = bart_machine$num_trees, 
 				num_burn_in = bart_machine$num_burn_in,
+				cov_prior_vec = bart_machine$cov_prior_vec,
 				run_in_sample = FALSE,
 				verbose = FALSE)
 		bart_variables_select_obj_k = var_selection_by_permute_response_three_methods(bart_machine_temp, 
@@ -302,7 +303,6 @@ var_selection_by_permute_response_cv = function(bart_machine, k_folds = 5, num_r
 				bart_machine_temp = build_bart_machine(training_X_k_red_by_vars_picked_by_method, training_y_k,
 						num_burn_in = bart_machine$num_burn_in,
 						num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in,
-						cov_prior_vec = bart_machine$cov_prior_vec,
 						num_trees = num_trees_pred_cv,
 						run_in_sample = FALSE,
 						verbose = FALSE)

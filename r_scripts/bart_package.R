@@ -12,7 +12,7 @@ tryCatch(library(rJava), error = function(e){install.packages("rJava")}, finally
 
 #constants
 VERSION = "1.0b"
-BART_MAX_MEM_MB = 4000
+BART_MAX_MEM_MB = 8000
 PLOTS_DIR = "output_plots"
 JAR_DEPENDENCIES = c("bart_java.jar", "commons-math-2.1.jar", "jai_codec.jar", "jai_core.jar", "trove-3.0.3.jar")
 DEFAULT_ALPHA = 0.95
@@ -87,6 +87,7 @@ build_bart_machine = function(X, y,
 	} else { #otherwise throw an error
 		stop("Your response must be either numeric or a factor with two levels.\n")
 	}	
+	cat("Building BART for", pred_type, "...\n")
 	
 	num_gibbs = num_burn_in + num_iterations_after_burn_in
 	

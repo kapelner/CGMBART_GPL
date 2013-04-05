@@ -27,7 +27,7 @@ public abstract class CGMBART_01_base extends Classifier implements Serializable
 	protected int num_cores;
 	
 	/** should we print stuff out to screen? */
-	protected boolean verbose;
+	protected boolean verbose = true;
 	
 	protected static Integer PrintOutEvery = null;
 	
@@ -51,7 +51,7 @@ public abstract class CGMBART_01_base extends Classifier implements Serializable
 
 	protected void FlushDataForSample(CGMBARTTreeNode[] cgm_trees) {
 		for (CGMBARTTreeNode tree : cgm_trees){
-			tree.flushNodeData();	
+			tree.flushNodeData();
 		}
 	}	
 
