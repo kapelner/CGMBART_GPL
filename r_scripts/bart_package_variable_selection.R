@@ -320,6 +320,7 @@ var_selection_by_permute_response_cv = function(bart_machine, k_folds = 5, num_r
 	#now extract the lowest oos-L2 to find the "best" method for variable selection
 	L2_err_by_method = colSums(L2_err_mat)
 	min_var_selection_method = colnames(L2_err_mat)[which(L2_err_by_method == min(L2_err_by_method))]
+	min_var_selection_method = min_var_selection_method[1]
 
 	#now (finally) do var selection on the entire data and then return the vars from the best method found via cross-validation
 	cat("final", "\n")
