@@ -87,7 +87,10 @@ build_bart_machine = function(X, y,
 	} else { #otherwise throw an error
 		stop("Your response must be either numeric or a factor with two levels.\n")
 	}	
-	cat("Building BART for", pred_type, "...\n")
+	#let the user know what type of BART this is
+	if (verbose){
+		cat("Building BART for", pred_type, "...\n")
+	}
 	
 	num_gibbs = num_burn_in + num_iterations_after_burn_in
 	
