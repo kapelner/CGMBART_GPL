@@ -487,7 +487,6 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 	
 	public void setCovSplitPrior(double[] cov_split_prior){
 		this.cov_split_prior = cov_split_prior;
-		System.out.println("using BART with covariate importance prior");		
 	}
 	
 	public void useHeteroskedasticity(){

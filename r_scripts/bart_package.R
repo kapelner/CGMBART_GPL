@@ -195,6 +195,9 @@ build_bart_machine = function(X, y,
 			return(TRUE)
 		}
 		.jcall(java_bart_machine, "V", "setCovSplitPrior", as.numeric(cov_prior_vec))
+		if (verbose){
+			cat("(with covariate importance prior)\n")
+		}
 	}
 	
 	#now load the training data into BART
