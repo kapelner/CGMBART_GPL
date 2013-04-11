@@ -14,6 +14,7 @@ source("r_scripts/bart_package_variable_selection.R")
 library(MASS)
 data(Boston)
 X = Boston
+X = cbind(X, rnorm(nrow(X)))
 y = X$medv
 X$medv = NULL
 #X$chas = as.character(X$chas)
@@ -51,8 +52,15 @@ bart_machine = build_bart_machine_cv(Xtrain, ytrain,
 summary(bart_machine)
 bart_machine$training_data_features
 
-plot_y_vs_yhat(bart_machine, ppis=T)
+plot_y_vs_yhat(bart_machine)
+plot_y_vs_yhat(bart_machine, ppis = TRUE)
 plot_y_vs_yhat(bart_machine, X = Xtest, y = ytest, ppis = TRUE)
+partial_f_like_test(bart_machine, num_trees = 20, plot = TRUE)
+
+cov_importance_test(bart_machine, num_trees = 20, plot = TRUE)
+cov_importance_test(bart_machine, num_trees = 20, plot = TRUE, covariates = c(14))
+cov_importance_test(bart_machine, num_trees = 20, plot = TRUE, covariates = c(7))
+cov_importance_test(bart_machine, num_trees = 20, plot = TRUE, covariates = c(7, 14))
 
 #convenience to predict on the test data automatically computing SSE, etc
 predict_obj = bart_predict_for_test_data(bart_machine, Xtest, ytest)
