@@ -387,7 +387,7 @@ shapiro_wilk_p_val = function(vec){
 	tryCatch(shapiro.test(vec)$p.value, error = function(e){})
 }
 
-interaction_investigator = function(bart_machine, plot = TRUE, num_replicates_for_avg = 5, num_trees_bottleneck = 20, num_var_plot = Inf){
+interaction_investigator = function(bart_machine, plot = TRUE, num_replicates_for_avg = 5, num_trees_bottleneck = 20, num_var_plot = Inf, cut_bottom = NULL){
 	
 	interaction_counts = array(NA, c(bart_machine$p, bart_machine$p, num_replicates_for_avg))
 	
@@ -426,13 +426,20 @@ interaction_investigator = function(bart_machine, plot = TRUE, num_replicates_fo
 			}
 		}
 	}
-	if (num_var_plot == Inf){
-		num_var_plot = bart_machine$p * (bart_machine$p + 1) / 2
+	num_total_interactions = bart_machine$p * (bart_machine$p + 1) / 2
+	if (num_var_plot == Inf || num_var_plot > num_total_interactions){
+		num_var_plot = num_total_interactions
 	}
 	
 	avg_counts_sorted_indices = sort(avg_counts, decreasing = TRUE, index.return = TRUE)$ix
 	avg_counts = avg_counts[avg_counts_sorted_indices][1 : num_var_plot]
 	sd_counts = sd_counts[avg_counts_sorted_indices][1 : num_var_plot]
+	
+	if (is.null(cut_bottom)){
+		ylim_bottom = 0
+	} else {
+		ylim_bottom = cut_bottom * min(avg_counts)
+	}
 	
 	if (plot){
 		#now create the bar plot
@@ -447,7 +454,8 @@ interaction_investigator = function(bart_machine, plot = TRUE, num_replicates_fo
 			las = 2, 
 			ylab = "Relative Importance", 
 			col = "gray",#rgb(0.39, 0.39, 0.59),
-			ylim = c(0, max(avg_counts + moe)),
+			ylim = c(ylim_bottom, max(avg_counts + moe)),
+			xpd = FALSE, #clips the bars outside of the display region (why is this not a default setting?)
 			main = paste("Interactions in BART Model Averaged over", num_replicates_for_avg, "Replicates"))
 		if (!is.na(sd_counts[1])){
 			conf_upper = avg_counts + 1.96 * sd_counts / sqrt(num_replicates_for_avg)
