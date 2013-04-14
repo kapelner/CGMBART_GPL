@@ -1,4 +1,5 @@
 
+
 check_bart_error_assumptions = function(bart_machine, alpha_normal_test = 0.05, alpha_hetero_test = 0.05, hetero_plot = "yhats"){
 	if (bart_machine$pred_type == "classification"){
 		stop("There are no convergence diagnostics for classification.")
@@ -10,10 +11,9 @@ check_bart_error_assumptions = function(bart_machine, alpha_normal_test = 0.05, 
 	
 	#test for normality
 	normal_p_val = shapiro.test(es)$p.value
-	qqnorm(es, col = "blue",
+	qqp(es, col = "blue",
 			main = paste("Assessment of Normality\n", "p-val for shapiro-wilk test of normality of residuals:", round(normal_p_val, 3)),
-			xlab = "Normal Q-Q plot for in-sample residuals\n(Theoretical Quantiles)")
-	qqline(bart_machine$residuals)	
+			xlab = "Normal Q-Q plot for in-sample residuals\n(Theoretical Quantiles)")	
 	
 	#test for heteroskedasticity
 	if (hetero_plot == "yhats"){

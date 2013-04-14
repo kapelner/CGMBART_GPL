@@ -1,5 +1,6 @@
 #libraries and dependencies
 tryCatch(library(rJava), error = function(e){install.packages("rJava")}, finally = library(rJava))
+tryCatch(library(car), error = function(e){install.packages("car")}, finally = library(car))
 
 #
 #if (.Platform$OS.type == "windows"){

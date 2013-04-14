@@ -9,6 +9,7 @@ setwd(directory_where_code_is)
 source("r_scripts/bart_package.R")
 source("r_scripts/bart_package_plots.R")
 source("r_scripts/bart_package_variable_selection.R")
+source("r_scripts/bart_package_f_tests.R")
 
 #get some data
 library(MASS)
