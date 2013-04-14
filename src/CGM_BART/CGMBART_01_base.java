@@ -23,8 +23,10 @@ public abstract class CGMBART_01_base extends Classifier implements Serializable
 	/** if the user pressed stop, we can cancel the Gibbs Sampling to unlock the CPU */
 	protected boolean stop_bit;
 
+	/** stuff for multi-threading and memory caching */
 	protected int threadNum;
 	protected int num_cores;
+	protected boolean mem_cache_for_speed;
 	
 	/** should we print stuff out to screen? */
 	protected boolean verbose = true;
@@ -73,9 +75,11 @@ public abstract class CGMBART_01_base extends Classifier implements Serializable
 		this.verbose = verbose;
 	}
 	
-
-
 	public void setTotalNumThreads(int num_cores) {
 		this.num_cores = num_cores;
 	}	
+
+	public void setMemCacheForSpeed(boolean mem_cache_for_speed){
+		this.mem_cache_for_speed = mem_cache_for_speed;
+	}
 }

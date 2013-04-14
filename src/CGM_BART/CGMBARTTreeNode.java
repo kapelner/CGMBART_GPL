@@ -388,22 +388,32 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 	}	
 	
 	protected TIntArrayList predictorsThatCouldBeUsedToSplitAtNode() {
-		if (possible_rule_variables == null){
-			possible_rule_variables = new TIntArrayList();
+		if (cgmbart.mem_cache_for_speed){
+			if (possible_rule_variables == null){
+				possible_rule_variables = tabulatePredictorsThatCouldBeUsedToSplitAtNode();
+			}
+			return possible_rule_variables;			
+		}
+		else {
+			return tabulatePredictorsThatCouldBeUsedToSplitAtNode();
+		}
+	}
+	
+	private TIntArrayList tabulatePredictorsThatCouldBeUsedToSplitAtNode() {
+		TIntArrayList possible_rule_variables = new TIntArrayList();
+		
+		for (int j = 0; j < cgmbart.p; j++){
+			//if size of unique of x_i > 1
+			double[] x_dot_j = cgmbart.X_y_by_col.get(j);
 			
-			for (int j = 0; j < cgmbart.p; j++){
-				//if size of unique of x_i > 1
-				double[] x_dot_j = cgmbart.X_y_by_col.get(j);
-				
-				for (int i = 1; i < indicies.length; i++){
-					if (x_dot_j[indicies[i - 1]] != x_dot_j[indicies[i]]){
-						possible_rule_variables.add(j);
-						break;
-					}
+			for (int i = 1; i < indicies.length; i++){
+				if (x_dot_j[indicies[i - 1]] != x_dot_j[indicies[i]]){
+					possible_rule_variables.add(j);
+					break;
 				}
 			}
 		}
-		return possible_rule_variables;
+		return possible_rule_variables;	
 	}
 
 	/**
@@ -416,31 +426,32 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 	
 	
 	protected TDoubleHashSetAndArray possibleSplitValuesGivenAttribute() {
-		if (possible_split_vals_by_attr == null){
-			possible_split_vals_by_attr = new HashMap<Integer, TDoubleHashSetAndArray>();
+		if (cgmbart.mem_cache_for_speed){
+			if (possible_split_vals_by_attr == null){
+				possible_split_vals_by_attr = new HashMap<Integer, TDoubleHashSetAndArray>();
+			}
+			if (possible_split_vals_by_attr.get(splitAttributeM) == null){
+				possible_split_vals_by_attr.put(splitAttributeM, tabulatePossibleSplitValuesGivenAttribute());
+			}
+			return possible_split_vals_by_attr.get(splitAttributeM);
+		} 
+		else {
+			return tabulatePossibleSplitValuesGivenAttribute();
 		}
-		if (possible_split_vals_by_attr.get(splitAttributeM) == null){
-			//super inefficient
-			double[] x_dot_j = cgmbart.X_y_by_col.get(splitAttributeM);
-			double[] x_dot_j_node = new double[n_eta];
-			for (int i = 0; i < n_eta; i++){
-				x_dot_j_node[i] = x_dot_j[indicies[i]];
-			}
-			
-			TDoubleHashSetAndArray unique_x_dot_j_node = new TDoubleHashSetAndArray(x_dot_j_node);
-			double max = Tools.max(x_dot_j_node);
-			unique_x_dot_j_node.remove(max);
-			/////MEM vs CPU tradeoff
-			if (yhats.length < N_CUTOFF_CACHE){
-				possible_split_vals_by_attr.put(splitAttributeM, unique_x_dot_j_node);
-			}
-			else {
-				return unique_x_dot_j_node;
-			}
-		}
-		return possible_split_vals_by_attr.get(splitAttributeM);
 	}
-
+	
+	private TDoubleHashSetAndArray tabulatePossibleSplitValuesGivenAttribute() {
+		double[] x_dot_j = cgmbart.X_y_by_col.get(splitAttributeM);
+		double[] x_dot_j_node = new double[n_eta];
+		for (int i = 0; i < n_eta; i++){
+			x_dot_j_node[i] = x_dot_j[indicies[i]];
+		}
+		
+		TDoubleHashSetAndArray unique_x_dot_j_node = new TDoubleHashSetAndArray(x_dot_j_node);
+		double max = Tools.max(x_dot_j_node);
+		unique_x_dot_j_node.remove(max);
+		return unique_x_dot_j_node;
+	}
 
 	public double pickRandomSplitValue() {	
 		TDoubleHashSetAndArray split_values = possibleSplitValuesGivenAttribute();

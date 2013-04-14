@@ -69,6 +69,7 @@ build_bart_machine = function(X, y,
 		print_tree_illustrations = FALSE,
 		num_cores = NULL,
 		cov_prior_vec = NULL,
+		mem_cache_for_speed = TRUE,
 		verbose = TRUE){
 	
 	t0 = Sys.time()
@@ -183,6 +184,7 @@ build_bart_machine = function(X, y,
 	.jcall(java_bart_machine, "V", "setProbGrow", mh_prob_steps[1])
 	.jcall(java_bart_machine, "V", "setProbPrune", mh_prob_steps[2])
 	.jcall(java_bart_machine, "V", "setVerbose", verbose)
+	.jcall(java_bart_machine, "V", "setMemCacheForSpeed", mem_cache_for_speed)
 	
 	
 	if (length(cov_prior_vec) != 0){

@@ -18,9 +18,9 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 	
 	private static final int DEFAULT_NUM_CORES = 4;//Runtime.getRuntime().availableProcessors() - 1;
 		
-	protected static final int NUM_TREES_DEFAULT = 50;
-	protected static final int NUM_GIBBS_BURN_IN_DEFAULT = 250;
-	protected static final int NUM_GIBBS_TOTAL_ITERATIONS_DEFAULT = 1250; //this must be larger than the number of burn in!!!
+	protected static final int NUM_TREES_DEFAULT = 200;
+	protected static final int NUM_GIBBS_BURN_IN_DEFAULT = 1000;
+	protected static final int NUM_GIBBS_TOTAL_ITERATIONS_DEFAULT = 2000; //this must be larger than the number of burn in!!!
 
 	protected static double HYPER_ALPHA_DEFAULT = 0.95;
 	protected static double HYPER_BETA_DEFUALT = 2; //see p271 in CGM10	
@@ -52,7 +52,8 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 	protected Double prob_grow;
 	protected Double prob_prune;
 	protected Double prob_change;
-	protected boolean verbose;
+	protected boolean verbose = true;
+	protected boolean mem_cache_for_speed = true;
 
 	protected transient boolean use_heteroskedasticity;
 
@@ -104,6 +105,7 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 		//set thread num and data
 		bart.setThreadNum(t);
 		bart.setTotalNumThreads(num_cores);
+		bart.setMemCacheForSpeed(mem_cache_for_speed);
 		
 		//set features
 		if (cov_split_prior != null){
@@ -127,7 +129,15 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 //		System.out.println("Build()");
 		SetupBARTModels();
 		//run a build on all threads
+		long t0 = System.currentTimeMillis();
+		if (verbose){
+			System.out.println("building BART " + (mem_cache_for_speed ? "with" : "without") + " mem-cache speedup");
+		}
 		BuildOnAllThreads();
+		long t1 = System.currentTimeMillis();
+		if (verbose){
+			System.out.println("done building BART in " + ((t1 - t0) / 1000.0) + " sec \n");
+		}
 		//once it's done, now put together the chains
 		ConstructBurnedChainForTreesAndOtherInformation();
 	}	
@@ -237,6 +247,10 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 	
 	public void setVerbose(boolean verbose){
 		this.verbose = verbose;
+	}
+	
+	public void setMemCacheForSpeed(boolean mem_cache_for_speed){
+		this.mem_cache_for_speed = mem_cache_for_speed;
 	}
 	
 	public void setNumCores(int num_cores){

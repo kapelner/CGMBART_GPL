@@ -30,7 +30,6 @@ import gnu.trove.list.array.TIntArrayList;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -38,9 +37,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.Random;
 
@@ -57,13 +54,11 @@ public class StatToolbox {
 	
 	private static final Random R = new Random();
 
-	public static final double ILLEGAL_FLAG = -999999999;
-	
+	public static final double ILLEGAL_FLAG = -999999999;	
 	private static final int NUM_CHI_SQ_SAMPS = 10000;
-
-	private static final String cacheDirectory = "randsamps";
-	
+	private static final String cacheDirectory = "randsamps";	
 	private static final String norm_samps_file = "rnorm.csv";
+	
 	private static double[] NORM_SAMPS;
 	private static int NUM_NORM_SAMPS;	
 	static {

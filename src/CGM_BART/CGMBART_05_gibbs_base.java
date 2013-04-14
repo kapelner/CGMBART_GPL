@@ -51,7 +51,7 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 	}
 
 	protected void GibbsSampleDebugMessage(int t) {
-		if (t == 0 ){//&& gibbs_sample_num % 100 == 0
+		if (t == 0 && gibbs_sample_num % 100 == 0){//&& gibbs_sample_num % 100 == 0
 			String message = "Sampling M_" + (t + 1) + "/" + num_trees + " iter " + gibbs_sample_num + "/" + num_gibbs_total_iterations;
 			if (num_cores > 1){
 				message += "  thread: " + (threadNum + 1);

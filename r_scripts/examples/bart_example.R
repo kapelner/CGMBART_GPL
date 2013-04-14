@@ -37,6 +37,8 @@ bart_machine = build_bart_machine(Xtrain, ytrain,
 		num_trees = 200,
 		num_burn_in = 300,
 		num_iterations_after_burn_in = 1000)
+bart_machine
+
 
 var_selection_by_permute_response_three_methods(bart_machine, num_permute_samples = 10)
 
