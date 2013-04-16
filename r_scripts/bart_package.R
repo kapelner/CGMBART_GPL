@@ -50,7 +50,7 @@ init_java_for_bart = function(){
 	}	
 }
 
-build_bart_machine = function(X, y, 
+build_bart_machine = function(X = NULL, y = NULL, Xy = NULL, 
 		num_trees = 200, 
 		num_burn_in = 250, 
 		num_iterations_after_burn_in = 1000, 
@@ -75,6 +75,14 @@ build_bart_machine = function(X, y,
 	t0 = Sys.time()
 	#immediately initialize Java
 	init_java_for_bart()
+	
+	if ((is.null(X) && is.null(Xy)) || is.null(y) && is.null(Xy)){
+		stop("You need to give BART a training set either by specifying X and y or by specifying a matrix Xy which contains the response named \"y.\"\n")
+	} else if (is.null(X) && is.null(y)){ #they specified Xy, so now just pull out X,y
+		y = Xy$y
+		Xy$y = NULL
+		X = Xy
+	}
 	
 	#now take care of classification or regression
 	y_levels = levels(y)
