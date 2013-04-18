@@ -1,5 +1,5 @@
 
-build_bart_machine_cv = function(X, y,
+build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL, 
 		num_burn_in = 250, 
 		num_iterations_after_burn_in = 1000,
 		cov_prior_vec = NULL,
@@ -7,6 +7,14 @@ build_bart_machine_cv = function(X, y,
 		k_cvs = c(2, 3, 5),
 		nu_q_cvs = list(c(3, 0.9), c(3, 0.99), c(10, 0.75)),
 		k_folds = 5, ...){
+	
+	if ((is.null(X) && is.null(Xy)) || is.null(y) && is.null(Xy)){
+		stop("You need to give BART a training set either by specifying X and y or by specifying a matrix Xy which contains the response named \"y.\"\n")
+	} else if (is.null(X) && is.null(y)){ #they specified Xy, so now just pull out X,y
+		y = Xy$y
+		Xy$y = NULL
+		X = Xy
+	}	
 	
 	min_rmse_num_tree = NULL
 	min_rmse_k = NULL

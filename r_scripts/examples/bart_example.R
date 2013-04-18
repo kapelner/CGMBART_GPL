@@ -39,6 +39,17 @@ bart_machine = build_bart_machine(Xtrain, ytrain,
 		num_iterations_after_burn_in = 1000)
 bart_machine
 
+library(randomForest)
+rf = randomForest(x = Xtrain, y = ytrain)
+#find R^2
+yhat = predict(rf, Xtrain)
+plot(ytrain, yhat)
+abline(a = 0, b = 1)
+sse = sum((ytrain - yhat)^2)
+sst = sum((ytrain - mean(ytrain))^2)
+Pseudo_Rsq_rf = 1 - sse / sst
+Pseudo_Rsq_rf
+
 
 var_selection_by_permute_response_three_methods(bart_machine, num_permute_samples = 10)
 

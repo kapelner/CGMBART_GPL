@@ -40,7 +40,7 @@ cov_importance_test = function(bart_machine, covariates = NULL, num_permutations
 	}
 	cat("\n")
 	
-	pval = sum(pseudoRsq_obs > pseudoRsq_perm_samples) / num_permutations
+	pval = sum(pseudoRsq_obs < pseudoRsq_perm_samples) / num_permutations
 	
 	if (plot){
 		hist(pseudoRsq_perm_samples, 
