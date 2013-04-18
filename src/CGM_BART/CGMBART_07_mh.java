@@ -94,11 +94,13 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 		grow_node.splitAttributeM = pickRandomPredictorThatCanBeAssigned(grow_node);
 		T_star.increment_variable_count(grow_node.splitAttributeM);
 		grow_node.splitValue = grow_node.pickRandomSplitValue();
+		//now pick randomly which way the missing data goes - left (false) or right (true)
+		grow_node.sendMissingDataRight = StatToolbox.rand() < 0.5 ? false : true;
 //		System.out.print("split_value = " + split_value);
 		//inform the user if things go awry
 		if (grow_node.splitValue == CGMBARTTreeNode.BAD_FLAG_double){
 			System.err.println("ERROR!!! GROW <<" + grow_node.stringLocation(true) + ">> ---- X_" + (grow_node.splitAttributeM) + "  proposal ln(r) = -oo DUE TO NO SPLIT VALUES");
-			grow_node.printNodeDebugInfo("ERROR GROW");
+//			grow_node.printNodeDebugInfo("ERROR GROW");
 			return Double.NEGATIVE_INFINITY;					
 		}			
 		grow_node.isLeaf = false;
@@ -274,15 +276,15 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 		CGMBARTTreeNode eta_just_for_calculation = eta_star.clone();
 		
 		//now start the growth process
-		//first pick the attribute and then the split
-		
+		//first pick the attribute and then the split and then which way to send the missing data		
 		eta_star.splitAttributeM = pickRandomPredictorThatCanBeAssigned(eta_star);
 		eta_star.splitValue = eta_star.pickRandomSplitValue();
+		eta_star.sendMissingDataRight = StatToolbox.rand() < 0.5 ? false : true;
 //		System.out.print("split_value = " + split_value);
 		//inform the user if things go awry
 		if (eta_star.splitValue == CGMBARTTreeNode.BAD_FLAG_double){
 			System.err.println("ERROR!!! CHANGE <<" + eta_star.stringLocation(true) + ">> ---- X_" + (eta_star.splitAttributeM + 1) + "  proposal ln(r) = -oo DUE TO NO SPLIT VALUES");
-			eta_star.printNodeDebugInfo("ERROR");
+//			eta_star.printNodeDebugInfo("ERROR");
 			return Double.NEGATIVE_INFINITY;					
 		}
 		
@@ -328,12 +330,12 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 		//couple checks
 		if (n_1_star == 0 || n_2_star == 0){
 			System.err.println("ERROR!!! CHANGE picked an invalid split rule and we ended up with a blank node  proposal ln(r) = -oo DUE TO NO SPLIT VALUES");
-			eta.printNodeDebugInfo("PARENT BEFORE");
-			eta_star.printNodeDebugInfo("PARENT AFTER");
+//			eta.printNodeDebugInfo("PARENT BEFORE");
+//			eta_star.printNodeDebugInfo("PARENT AFTER");
 //			eta.left.printNodeDebugInfo("LEFT BEFORE");
 //			eta.right.printNodeDebugInfo("RIGHT BEFORE");
-			eta_star.left.printNodeDebugInfo("LEFT AFTER");
-			eta_star.right.printNodeDebugInfo("RIGHT AFTER");
+//			eta_star.left.printNodeDebugInfo("LEFT AFTER");
+//			eta_star.right.printNodeDebugInfo("RIGHT AFTER");
 					System.exit(0);
 			return Double.NEGATIVE_INFINITY;			
 		}

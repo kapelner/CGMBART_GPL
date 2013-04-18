@@ -15,7 +15,7 @@ source("r_scripts/bart_package_f_tests.R")
 library(MASS)
 data(Boston)
 X = Boston
-X = cbind(X, rnorm(nrow(X)))
+#X = cbind(X, rnorm(nrow(X)))
 y = X$medv
 X$medv = NULL
 #X$chas = as.character(X$chas)
@@ -32,12 +32,33 @@ ytest = y[(nrow(X) / 2 + 1) : nrow(X)]
 #graphics.off()
 #windows()
 
-set_bart_machine_num_cores(4)
+dim(Xtrain)
+head(Xtrain)
+Xtrain[3, 5] = NA
+
+#set_bart_machine_num_cores(4)
 bart_machine = build_bart_machine(Xtrain, ytrain,
 		num_trees = 200,
 		num_burn_in = 300,
-		num_iterations_after_burn_in = 1000)
+		num_iterations_after_burn_in = 1000,
+		use_missing_data = FALSE)
 bart_machine
+head(bart_machine$model_matrix_training_data)
+plot_y_vs_yhat(bart_machine)
+plot_y_vs_yhat(bart_machine, ppis = TRUE)
+plot_y_vs_yhat(bart_machine, X = Xtest, y = ytest, ppis = TRUE)
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 var_selection_by_permute_response_three_methods(bart_machine, num_permute_samples = 10)

@@ -1,6 +1,6 @@
 #libraries and dependencies
 tryCatch(library(rJava), error = function(e){install.packages("rJava")}, finally = library(rJava))
-tryCatch(library(car), error = function(e){install.packages("car")}, finally = library(car))
+
 
 #
 #if (.Platform$OS.type == "windows"){
@@ -61,7 +61,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		nu = DEFAULT_NU,
 		prob_rule_class = DEFAULT_PROB_RULE_CLASS,
 		mh_prob_steps = DEFAULT_PROB_STEPS,
-		debug_log = FALSE,
+		debug_log = TRUE,
 		fix_seed = FALSE,
 		run_in_sample = TRUE,
 		s_sq_y = "mse", # "mse" or "var"
@@ -69,6 +69,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		print_tree_illustrations = FALSE,
 		num_cores = NULL,
 		cov_prior_vec = NULL,
+		use_missing_data = TRUE,
 		mem_cache_for_speed = TRUE,
 		verbose = TRUE){
 	
@@ -97,10 +98,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	} else { #otherwise throw an error
 		stop("Your response must be either numeric or a factor with two levels.\n")
 	}	
-	#let the user know what type of BART this is
-	if (verbose){
-		cat("Building BART for", pred_type, "...\n")
-	}
+
 	
 	num_gibbs = num_burn_in + num_iterations_after_burn_in
 	
@@ -129,7 +127,24 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		return;
 	}
 	
-	model_matrix_training_data = cbind(pre_process_training_data(X), y_numeric)
+	if (length(na.omit(y_numeric)) != length(y_numeric)){
+		stop("You cannot have any missing data in your response vector.")
+	}
+	if (verbose){
+		cat("Missing data feature ON.\n")
+	}
+	
+	model_matrix_training_data = cbind(pre_process_training_data(X, use_missing_data, verbose), y_numeric)
+	
+	#if we're not using missing data, go on and nuke it
+	if (!use_missing_data){
+		rows_before = nrow(model_matrix_training_data)
+		data = na.omit(model_matrix_training_data)
+		rows_after = nrow(model_matrix_training_data)
+		if (verbose && rows_before - rows_after > 0){
+			cat("Deleted", rows_before - rows_after, "row(s) due to missing data. Try turning missing data feature on next time.\n")
+		}
+	}
 	
 	
 	#first set the name
@@ -217,7 +232,10 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	}
 	.jcall(java_bart_machine, "V", "finalizeTrainingData")
 	
-	#build the bart machine!
+	#build the bart machine and let the user know what type of BART this is
+	if (verbose){
+		cat("Building BART for", pred_type, "...\n")
+	}
 	.jcall(java_bart_machine, "V", "Build")
 	
 	#now once it's done, let's extract things that are related to diagnosing the build of the BART model
@@ -248,6 +266,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		cov_prior_vec = cov_prior_vec,
 		sig_sq_est = sig_sq_est,
 		time_to_build = Sys.time() - t0,
+		use_missing_data = use_missing_data,
 		verbose = verbose,
 		bart_destroyed = FALSE
 	)
@@ -406,8 +425,23 @@ bart_machine_predict = function(bart_machine, X){
 	#check for errors in data
 	#
 	#now process and make dummies if necessary
-	X = pre_process_new_data(X, bart_machine$training_data_features)	
+	X = pre_process_new_data(X, bart_machine$training_data_features, bart_machine$use_missing_data, bart_machine$verbose)	
 		
+	#check for missing data if this feature was not turned on
+	if (!bart_machine$use_missing_data){
+		M = matrix(0, nrow = nrow(X), ncol = ncol(X))
+		for (i in 1 : nrow(X)){
+			for (j in 1 : ncol(X)){
+				if (is.missing(X[i, j])){
+					M[i, j] = 1
+				}
+			}
+		}
+		if (sum(M) > 0){
+			cat("WARNING: missing data found in test data and BART was not build with missing data feature!\n")
+		}		
+	}
+	
 	y_hat_posterior_samples = 
 		t(sapply(.jcall(bart_machine$java_bart_machine, "[[D", "getGibbsSamplesForPrediction", .jarray(X, dispatch = TRUE), as.integer(BART_NUM_CORES)), .jevalArray))
 
@@ -432,8 +466,11 @@ summary.bart_machine = function(bart_machine, show_details_for_trees = FALSE){
 		stop("This BART machine has been destroyed. Please recreate.")
 	}	
 	cat(paste("Bart Machine v", VERSION, ifelse(bart_machine$pred_type == "regression", " for regression", " for classification"), "\n\n", sep = ""))
+	if (bart_machine$use_missing_data){
+		cat("Missing data feature ON\n")
+	}
 	#first print out characteristics of the training data
-	cat(paste("training data n =", bart_machine$n, " p =", bart_machine$p, "\n"))
+	cat(paste("training data n =", bart_machine$n, "and p =", bart_machine$p, "\n"))
 	
 	ttb = as.numeric(bart_machine$time_to_build, units = "secs")
 	if (ttb > 60){
@@ -503,7 +540,7 @@ print.bart_machine = function(bart_machine){
 
 calc_ppis_from_prediction = function(bart_machine, new_data, ppi_conf = 0.95){
 	#first convert the rows to the correct dummies etc
-	new_data = pre_process_new_data(new_data, bart_machine$training_data_features)
+	new_data = pre_process_new_data(new_data, bart_machine$training_data_features, bart_machine$use_missing_data, bart_machine$verbose)
 	n_test = nrow(new_data)
 	
 	ppi_lower_bd = array(NA, n_test)
@@ -531,9 +568,7 @@ check_for_errors_in_training_data = function(data){
 	FALSE
 }
 
-pre_process_training_data = function(data){
-	#delete missing data just in case
-	data = na.omit(data)
+pre_process_training_data = function(data, use_missing_data, verbose){
 	
 	#first convert characters to factors
 	character_vars = names(which(sapply(data, class) == "character"))
@@ -550,11 +585,31 @@ pre_process_training_data = function(data){
 		data[, fac] = NULL
 	}
 	
+	if (use_missing_data){		
+		#now take care of missing data
+		M = matrix(0, nrow = nrow(data), ncol = ncol(data))
+		for (i in 1 : nrow(data)){
+			for (j in 1 : ncol(data)){
+				if (is.missing(data[i, j])){
+					M[i, j] = 1
+				}
+			}
+		}
+		colnames(M) = paste(colnames(data), "_", "missing", sep = "")
+		#append the missing dummy columns to data as if they're real attributes themselves
+		data = cbind(data, M)
+	}
+	#make sure to cast it as a data matrix
 	data.matrix(data)
 }
 
-pre_process_new_data = function(new_data, training_data_features){
-	new_data = pre_process_training_data(new_data)
+is.missing = function(x){
+	is.na(x) || is.nan(x)
+}
+
+###TO-DO this has to updated for the M matrix
+pre_process_new_data = function(new_data, training_data_features, use_missing_data, verbose){
+	new_data = pre_process_training_data(new_data, use_missing_data, verbose)
 	n = nrow(new_data)
 	new_data_features = colnames(new_data)
 	

@@ -68,6 +68,8 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 	public int splitAttributeM;
 	/** the value this node makes a decision on */
 	public double splitValue;
+	/** send missing data to the right? */ 
+	public boolean sendMissingDataRight;
 	/** if this is a leaf node, then the result of the prediction for regression, otherwise null */
 	protected static final double BAD_FLAG_double = -Double.MAX_VALUE;
 	protected static final int BAD_FLAG_int = -Integer.MAX_VALUE;
@@ -95,6 +97,8 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 	protected transient Integer padj;	
 	
 	protected int[] attribute_split_counts;
+
+	
 	
 	public CGMBARTTreeNode(){}	
 
@@ -252,7 +256,11 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 			//all split rules are less than or equals (this is merely a convention)
 			//it's a convention that makes sense - if X_.j is binary, and the split values can only be 0/1
 			//then it MUST be <= so both values can be considered
-			if (xs[evalNode.splitAttributeM] <= evalNode.splitValue){
+			//handle missing data first
+			if (xs[evalNode.splitAttributeM] == Classifier.MISSING_VALUE){
+				evalNode = evalNode.sendMissingDataRight ? evalNode.right : evalNode.left;
+			}			
+			else if (xs[evalNode.splitAttributeM] <= evalNode.splitValue){
 				evalNode = evalNode.left;
 			}
 			else {
@@ -291,8 +299,18 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		
 		for (int i = 0; i < n_eta; i++){
 			double[] datum = cgmbart.X_y.get(indicies[i]);
-		
-			if (datum[splitAttributeM] <= splitValue){
+			//handle missing data first
+			if (datum[splitAttributeM] == Classifier.MISSING_VALUE){
+				if (sendMissingDataRight){
+					right_indices.add(indicies[i]);
+					right_responses.add(responses[i]);
+				} 
+				else {
+					left_indices.add(indicies[i]);
+					left_responses.add(responses[i]);					
+				}
+			}
+			else if (datum[splitAttributeM] <= splitValue){
 				left_indices.add(indicies[i]);
 				left_responses.add(responses[i]);
 			}
@@ -561,7 +579,7 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		System.out.println("cgmbart = " + cgmbart + " parent = " + parent + " left = " + left + " right = " + right);
 		
 		if (this.parent != null){
-			System.out.println("----- PARENT RULE:   X_" + parent.splitAttributeM + " <= " + parent.splitValue + " ------");
+			System.out.println("----- PARENT RULE:   X_" + parent.splitAttributeM + " <= " + parent.splitValue + " missing data: " + (parent.sendMissingDataRight ? "R" : "L") + " ------");
 			//get vals of this x currently here
 			double[] x_dot_j = cgmbart.X_y_by_col.get(parent.splitAttributeM);
 			double[] x_dot_j_node = new double[n_eta];
@@ -573,7 +591,7 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		}
 		
 		if (!isLeaf){
-			System.out.println("\n----- RULE:   X_" + splitAttributeM + " <= " + splitValue + " ------");
+			System.out.println("\n----- RULE:   X_" + splitAttributeM + " <= " + splitValue + " missing data: " + (parent.sendMissingDataRight ? "R" : "L") + " ------");
 			//get vals of this x currently here
 			double[] x_dot_j = cgmbart.X_y_by_col.get(splitAttributeM);
 			double[] x_dot_j_node = new double[n_eta];
