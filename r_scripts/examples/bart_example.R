@@ -34,9 +34,9 @@ ytest = y[(nrow(X) / 2 + 1) : nrow(X)]
 
 dim(Xtrain)
 head(Xtrain)
-Xtrain[3, 5] = NA
+#Xtrain[3, 5] = NA
 
-#set_bart_machine_num_cores(4)
+set_bart_machine_num_cores(4)
 bart_machine = build_bart_machine(Xtrain, ytrain,
 		num_trees = 200,
 		num_burn_in = 300,
