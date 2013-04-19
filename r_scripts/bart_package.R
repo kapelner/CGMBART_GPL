@@ -193,7 +193,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	}
 
 	
-	#make bart to spec with what the user wants
+	#build bart to spec with what the user wants
 	.jcall(java_bart_machine, "V", "setNumCores", as.integer(ifelse(is.null(num_cores), BART_NUM_CORES, num_cores))) #this must be set FIRST!!!
 	.jcall(java_bart_machine, "V", "setNumTrees", as.integer(num_trees))
 	.jcall(java_bart_machine, "V", "setNumGibbsBurnIn", as.integer(num_burn_in))
@@ -222,7 +222,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		}
 		.jcall(java_bart_machine, "V", "setCovSplitPrior", as.numeric(cov_prior_vec))
 		if (verbose){
-			cat("(with covariate importance prior)\n")
+			cat("Covariate importance prior ON\n")
 		}
 	}
 	
