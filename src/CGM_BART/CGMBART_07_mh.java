@@ -95,12 +95,14 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 		T_star.increment_variable_count(grow_node.splitAttributeM);
 		grow_node.splitValue = grow_node.pickRandomSplitValue();
 		//now pick randomly which way the missing data goes - left (false) or right (true)
-		grow_node.sendMissingDataRight = StatToolbox.rand() < 0.5 ? false : true;
+		grow_node.sendMissingDataRight = CGMBARTTreeNode.pickRandomDirectionForMissingData();
 //		System.out.print("split_value = " + split_value);
 		//inform the user if things go awry
 		if (grow_node.splitValue == CGMBARTTreeNode.BAD_FLAG_double){
-			System.err.println("ERROR!!! GROW <<" + grow_node.stringLocation(true) + ">> ---- X_" + (grow_node.splitAttributeM) + "  proposal ln(r) = -oo DUE TO NO SPLIT VALUES");
-//			grow_node.printNodeDebugInfo("ERROR GROW");
+//			System.err.println("ERROR!!! GROW <<" + grow_node.stringLocation(true) + ">> ---- X_" + (grow_node.splitAttributeM) + "  proposal ln(r) = -oo DUE TO NO SPLIT VALUES");
+//			if (CGMBARTTreeNode.DEBUG_NODES){
+//				grow_node.printNodeDebugInfo("ERROR GROW");
+//			}
 			return Double.NEGATIVE_INFINITY;					
 		}			
 		grow_node.isLeaf = false;
@@ -123,7 +125,7 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 		
 		if (DEBUG_MH){
 			System.out.println(gibbs_sample_num + " GROW  <<" + grow_node.stringLocation(true) + ">> ---- X_" + (grow_node.splitAttributeM) + 
-				" < " + TreeIllustration.two_digit_format.format(grow_node.splitValue) + 
+				" < " + TreeIllustration.two_digit_format.format(grow_node.splitValue) + " & " + (grow_node.sendMissingDataRight ? "M -> R" : "M -> L")+ 
 				"\n  ln trans ratio: " + ln_transition_ratio_grow + " ln lik ratio: " + ln_likelihood_ratio_grow + " ln structure ratio: " + ln_tree_structure_ratio_grow +			
 				"\n  trans ratio: " + 
 				(Math.exp(ln_transition_ratio_grow) < 0.00001 ? "damn small" : Math.exp(ln_transition_ratio_grow)) +
@@ -279,11 +281,12 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 		//first pick the attribute and then the split and then which way to send the missing data		
 		eta_star.splitAttributeM = pickRandomPredictorThatCanBeAssigned(eta_star);
 		eta_star.splitValue = eta_star.pickRandomSplitValue();
-		eta_star.sendMissingDataRight = StatToolbox.rand() < 0.5 ? false : true;
+//		System.out.println("PICKED SPLIT VALUE: " + eta_star.splitValue + " on attr: " + eta_star.splitAttributeM);
+		eta_star.sendMissingDataRight = CGMBARTTreeNode.pickRandomDirectionForMissingData();
 //		System.out.print("split_value = " + split_value);
 		//inform the user if things go awry
 		if (eta_star.splitValue == CGMBARTTreeNode.BAD_FLAG_double){
-			System.err.println("ERROR!!! CHANGE <<" + eta_star.stringLocation(true) + ">> ---- X_" + (eta_star.splitAttributeM + 1) + "  proposal ln(r) = -oo DUE TO NO SPLIT VALUES");
+//			System.err.println("ERROR!!! CHANGE <<" + eta_star.stringLocation(true) + ">> ---- X_" + (eta_star.splitAttributeM + 1) + "  proposal ln(r) = -oo DUE TO NO SPLIT VALUES");
 //			eta_star.printNodeDebugInfo("ERROR");
 			return Double.NEGATIVE_INFINITY;					
 		}
@@ -299,9 +302,9 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 		double ln_tree_structure_ratio_change = calcLnLikRatioChange(eta_just_for_calculation, eta_star);
 		if (DEBUG_MH){
 			System.out.println(gibbs_sample_num + " CHANGE  <<" + eta_star.stringLocation(true) + ">> ---- X_" + (eta_star.splitAttributeM + 1) + 
-				" < " + TreeIllustration.two_digit_format.format(eta_star.splitValue) + " from " + 
+				" < " + TreeIllustration.two_digit_format.format(eta_star.splitValue) + " & " + (eta_star.sendMissingDataRight ? "M -> R" : "M -> L") + " from " + 
 				"X_" + (eta_just_for_calculation.splitAttributeM + 1) + 
-				" < " + TreeIllustration.two_digit_format.format(eta_just_for_calculation.splitValue) + 	
+				" < " + TreeIllustration.two_digit_format.format(eta_just_for_calculation.splitValue) + " & " + (eta_just_for_calculation.sendMissingDataRight ? "M -> R" : "M -> L") + 	
 				"\n  ln lik ratio: " + ln_tree_structure_ratio_change  +			
 				"  lik ratio: " + 
 				(Math.exp(ln_tree_structure_ratio_change) < 0.00001 ? "damn small" : Math.exp(ln_tree_structure_ratio_change)));
@@ -330,13 +333,14 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 		//couple checks
 		if (n_1_star == 0 || n_2_star == 0){
 			System.err.println("ERROR!!! CHANGE picked an invalid split rule and we ended up with a blank node  proposal ln(r) = -oo DUE TO NO SPLIT VALUES");
-//			eta.printNodeDebugInfo("PARENT BEFORE");
-//			eta_star.printNodeDebugInfo("PARENT AFTER");
-//			eta.left.printNodeDebugInfo("LEFT BEFORE");
-//			eta.right.printNodeDebugInfo("RIGHT BEFORE");
-//			eta_star.left.printNodeDebugInfo("LEFT AFTER");
-//			eta_star.right.printNodeDebugInfo("RIGHT AFTER");
-					System.exit(0);
+
+			eta.printNodeDebugInfo("PARENT BEFORE");
+			eta_star.printNodeDebugInfo("PARENT AFTER");
+			eta.left.printNodeDebugInfo("LEFT BEFORE");
+			eta.right.printNodeDebugInfo("RIGHT BEFORE");
+			eta_star.left.printNodeDebugInfo("LEFT AFTER");
+			eta_star.right.printNodeDebugInfo("RIGHT AFTER");
+//			System.exit(0);
 			return Double.NEGATIVE_INFINITY;			
 		}
 

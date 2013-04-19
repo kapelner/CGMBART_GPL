@@ -31,6 +31,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 
+import CGM_BART.Classifier;
+
 public class DataSetupForCSVFile {
 
 	private final ArrayList<double[]> X_y;
@@ -89,7 +91,11 @@ public class DataSetupForCSVFile {
 			else {
 				final double[] record = new double[datums.length];
 				for (int i = 0; i < datums.length; i++){
-					record[i] = Double.parseDouble(datums[i]);
+					try {
+						record[i] = Double.parseDouble(datums[i]);
+					} catch(NumberFormatException e){
+						record[i] = Classifier.MISSING_VALUE;
+					}
 				}				
 				X_y.add(record);
 //				System.out.println("record: " + Tools.StringJoin(record, ", "));

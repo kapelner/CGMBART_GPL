@@ -53,6 +53,10 @@ public abstract class Classifier implements Serializable {
 	private static final long serialVersionUID = -2857913059676679308L;	
 
 	public static final double MISSING_VALUE = Double.NaN;
+	public static boolean isMissing(double x){
+		return Double.isNaN(x);
+	}
+	
 
 	/** the raw training data consisting of xi = [xi1,...,xiM, yi] that will be used to construct the classifier */
 	protected transient ArrayList<double[]> X_y;

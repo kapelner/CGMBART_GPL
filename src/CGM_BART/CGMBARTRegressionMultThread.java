@@ -18,8 +18,8 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 	
 	private static final int DEFAULT_NUM_CORES = 4;//Runtime.getRuntime().availableProcessors() - 1;
 		
-	protected static final int NUM_TREES_DEFAULT = 200;
-	protected static final int NUM_GIBBS_BURN_IN_DEFAULT = 1000;
+	protected static final int NUM_TREES_DEFAULT = 1;
+	protected static final int NUM_GIBBS_BURN_IN_DEFAULT = 250;
 	protected static final int NUM_GIBBS_TOTAL_ITERATIONS_DEFAULT = 2000; //this must be larger than the number of burn in!!!
 
 	protected static double HYPER_ALPHA_DEFAULT = 0.95;
@@ -53,7 +53,7 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 	protected Double prob_prune;
 	protected Double prob_change;
 	protected boolean verbose = true;
-	protected boolean mem_cache_for_speed = false;
+	protected boolean mem_cache_for_speed = true;
 
 	protected transient boolean use_heteroskedasticity;
 
