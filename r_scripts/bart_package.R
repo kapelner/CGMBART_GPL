@@ -61,7 +61,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		nu = DEFAULT_NU,
 		prob_rule_class = DEFAULT_PROB_RULE_CLASS,
 		mh_prob_steps = DEFAULT_PROB_STEPS,
-		debug_log = TRUE,
+		debug_log = FALSE,
 		fix_seed = FALSE,
 		run_in_sample = TRUE,
 		s_sq_y = "mse", # "mse" or "var"
@@ -70,6 +70,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		num_cores = NULL,
 		cov_prior_vec = NULL,
 		use_missing_data = TRUE,
+		replace_missing_data_with_x_j_bar_for_lm = TRUE,
 		mem_cache_for_speed = TRUE,
 		verbose = TRUE){
 	
@@ -80,9 +81,8 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	if ((is.null(X) && is.null(Xy)) || is.null(y) && is.null(Xy)){
 		stop("You need to give BART a training set either by specifying X and y or by specifying a matrix Xy which contains the response named \"y.\"\n")
 	} else if (is.null(X) && is.null(y)){ #they specified Xy, so now just pull out X,y
-		y = Xy$y
-		Xy$y = NULL
-		X = Xy
+		y = Xy[, ncol(Xy)]
+		X = as.data.frame(Xy[, 1 : (ncol(Xy) - 1)])
 	}
 	
 	#now take care of classification or regression
@@ -130,7 +130,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	if (length(na.omit(y_numeric)) != length(y_numeric)){
 		stop("You cannot have any missing data in your response vector.")
 	}
-	if (verbose){
+	if (verbose && use_missing_data){
 		cat("Missing data feature ON.\n")
 	}
 	
@@ -178,7 +178,17 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		y_range = max(y) - min(y)
 		y_trans = (y - min(y)) / y_range - 0.5
 		if (s_sq_y == "mse"){
-			mod = lm(y_trans ~ ., as.data.frame(model_matrix_training_data)[1 : (ncol(model_matrix_training_data) - 1)])
+			X_for_lm = as.data.frame(model_matrix_training_data)[1 : (ncol(model_matrix_training_data) - 1)]
+			if (replace_missing_data_with_x_j_bar_for_lm){
+				for (i in 1 : nrow(X_for_lm)){
+					for (j in 1 : ncol(X_for_lm)){
+						if (is.na(X_for_lm[i, j])){
+							X_for_lm[i, j] = mean(X_for_lm[, j], na.rm = TRUE)
+						}
+					}
+				}
+			}
+			mod = lm(y_trans ~ ., X_for_lm)
 			mse = var(mod$residuals)
 			sig_sq_est = as.numeric(mse)
 			.jcall(java_bart_machine, "V", "setSampleVarY", sig_sq_est)
@@ -417,6 +427,23 @@ bart_machine_predict = function(bart_machine, X){
 	if (bart_machine$bart_destroyed){
 		stop("This BART machine has been destroyed. Please recreate.")
 	}	
+	if (class(X) == "numeric"){
+		X = t(as.matrix(X))
+	}
+	if (sum(is.na(X)) == length(X)){
+		stop("Cannot predict on all missing data.\n")
+	}
+	if (!bart_machine$use_missing_data){
+		nrow_before = nrow(X)
+		X = na.omit(X)
+		if (nrow_before > nrow(X)){
+			cat(nrow_before - nrow(X), "rows omitted due to missing data\n")
+		}
+	}
+	
+	if (nrow(X) == 0){
+		stop("No rows to predict.\n")
+	}
 	#pull out data objects for convenience
 	java_bart_machine = bart_machine$java_bart_machine
 	num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in
@@ -568,7 +595,7 @@ check_for_errors_in_training_data = function(data){
 	FALSE
 }
 
-pre_process_training_data = function(data, use_missing_data, verbose){
+pre_process_training_data = function(data, use_missing_data = TRUE, verbose = FALSE){
 	
 	#first convert characters to factors
 	character_vars = names(which(sapply(data, class) == "character"))
@@ -608,7 +635,8 @@ is.missing = function(x){
 }
 
 ###TO-DO this has to updated for the M matrix
-pre_process_new_data = function(new_data, training_data_features, use_missing_data, verbose){
+pre_process_new_data = function(new_data, training_data_features, use_missing_data = TRUE, verbose = FALSE){
+	new_data = as.data.frame(new_data)
 	new_data = pre_process_training_data(new_data, use_missing_data, verbose)
 	n = nrow(new_data)
 	new_data_features = colnames(new_data)

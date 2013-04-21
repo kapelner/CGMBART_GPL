@@ -77,13 +77,14 @@ k_fold_cv = function(X, y, k_folds = 5, ...){
 	Xy = as.data.frame(cbind(Xpreprocess, y))
 	
 	for (k in 1 : k_folds){
+		cat(".")
 		holdout_index_i = split_points[k]
 		holdout_index_f = ifelse(k == k_folds, n, split_points[k + 1] - 1)
 		
 		test_data_k = Xy[holdout_index_i : holdout_index_f, ]
 		training_data_k = Xy[-c(holdout_index_i : holdout_index_f), ]
 		
-		bart_machine_cv = build_bart_machine(training_data_k[, 1 : p], training_data_k[, (p + 1)], run_in_sample = FALSE,...)
+		bart_machine_cv = build_bart_machine(training_data_k[, 1 : p], training_data_k[, (p + 1)], run_in_sample = FALSE, verbose = FALSE, ...)
 		predict_obj = bart_predict_for_test_data(bart_machine_cv, test_data_k[, 1 : p], test_data_k[, (p + 1)])
 		destroy_bart_machine(bart_machine_cv)
 		
@@ -91,6 +92,7 @@ k_fold_cv = function(X, y, k_folds = 5, ...){
 		L1_err = L1_err + predict_obj$L1_err
 		L2_err = L2_err + predict_obj$L2_err
 	}
+	cat("\n")
 	
 	list(L1_err = L1_err, L2_err = L2_err, rmse = sqrt(L2_err / n))
 }

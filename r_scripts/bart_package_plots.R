@@ -444,6 +444,8 @@ interaction_investigator = function(bart_machine, plot = TRUE, num_replicates_fo
 		ylim_bottom = cut_bottom * min(avg_counts)
 	}
 	
+	##TO-DO: kill zeroes from the plots
+	
 	if (plot){
 		#now create the bar plot
 		par(mar = c(10, 6, 3, 0))
