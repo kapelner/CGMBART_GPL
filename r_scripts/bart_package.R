@@ -423,7 +423,7 @@ bart_predict_for_test_data = function(bart_machine, X, y){
 #do all generic functions here
 #
 
-bart_machine_predict = function(bart_machine, X){
+bart_machine_predict = function(bart_machine, X, ppi = 0.95){
 	if (bart_machine$bart_destroyed){
 		stop("This BART machine has been destroyed. Please recreate.")
 	}	
@@ -475,7 +475,10 @@ bart_machine_predict = function(bart_machine, X){
 	#to get y_hat.. just take straight mean of posterior samples, alternatively, we can let java do it if we want more bells and whistles
 	y_hat = rowMeans(y_hat_posterior_samples)	
 	
-	list(y_hat = y_hat, X = X, y_hat_posterior_samples = y_hat_posterior_samples)
+	ppi_a = apply(y_hat_posterior_samples, 1, quantile, probs = (1 - ppi) / 2)
+	ppi_b = apply(y_hat_posterior_samples, 1, quantile, probs = ppi + (1 - ppi) / 2)
+	
+	list(y_hat = y_hat, X = X, y_hat_posterior_samples = y_hat_posterior_samples, ppi_a = ppi_a, ppi_b = ppi_b)
 }
 
 predict.bart_machine = function(bart_machine, new_data){

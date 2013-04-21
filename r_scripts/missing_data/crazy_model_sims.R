@@ -16,11 +16,12 @@ source("r_scripts/missing_data/sims_functions.R")
 n_crazy = 500
 p_crazy = 3
 prop_missing = 0.1
-offset_missing = 3
+offset_missing = 5
+sigma_e = 1
 
 graphics.off()
 
-Xy = generate_crazy_model(n_crazy, p_crazy, prop_missing, offset_missing)
+Xy = generate_crazy_model(n_crazy, p_crazy, prop_missing, offset_missing, sigma_e)
 hist(Xy[, 4], br = 50, main = "distribution of response")
 bart_machine = build_bart_machine(Xy = Xy, use_missing_data = TRUE, num_burn_in = 5000)
 plot_y_vs_yhat(bart_machine)
@@ -35,46 +36,36 @@ interaction_investigator(bart_machine, num_replicates_for_avg = 20)
 
 ###make sure it works...
 pred = bart_machine_predict(bart_machine, c(0, 0, 0)) #E[Y] = 0
-hist(pred$y_hat_posterior_samples, br = 50, main = paste("posterior of yhat, mean =", mean(pred$y_hat_posterior_samples)), xlab = "")
-abline(v = 0, col = "blue", lwd = 2)
+plot_hist_of_posterior(pred, 0)
 
 pred = bart_machine_predict(bart_machine, c(1, 0, 0)) #E[Y] = 0
-hist(pred$y_hat_posterior_samples, br = 50, main = paste("posterior of yhat, mean =", mean(pred$y_hat_posterior_samples)), xlab = "")
-abline(v = 1, col = "blue", lwd = 2)
+plot_hist_of_posterior(pred, 0)
 
 pred = bart_machine_predict(bart_machine, c(0, 1, 0)) #E[Y] = 0
-hist(pred$y_hat_posterior_samples, br = 50, main = paste("posterior of yhat, mean =", mean(pred$y_hat_posterior_samples)), xlab = "")
-abline(v = 1, col = "blue", lwd = 2)
+plot_hist_of_posterior(pred, 2)
 
 pred = bart_machine_predict(bart_machine, c(1, 1, 0)) #E[Y] = 0
-hist(pred$y_hat_posterior_samples, br = 50, main = paste("posterior of yhat, mean =", mean(pred$y_hat_posterior_samples)), xlab = "")
-abline(v = 3, col = "blue", lwd = 2)
+plot_hist_of_posterior(pred, 3)
 
 pred = bart_machine_predict(bart_machine, c(1, 0, 1)) #E[Y] = 0
-hist(pred$y_hat_posterior_samples, br = 50, main = paste("posterior of yhat, mean =", mean(pred$y_hat_posterior_samples)), xlab = "")
-abline(v = 2, col = "blue", lwd = 2)
+plot_hist_of_posterior(pred, 1)
 
 pred = bart_machine_predict(bart_machine, c(1, 1, 1)) #E[Y] = 0
-hist(pred$y_hat_posterior_samples, br = 50, main = paste("posterior of yhat, mean =", mean(pred$y_hat_posterior_samples)), xlab = "")
-abline(v = 4, col = "blue", lwd = 2)
-
+plot_hist_of_posterior(pred, 4)
 
 pred = bart_machine_predict(bart_machine, c(NA, 0, 0)) #E[Y] = 0
-hist(pred$y_hat_posterior_samples, br = 50, main = paste("posterior of yhat, mean =", mean(pred$y_hat_posterior_samples)), xlab = "")
-abline(v = 0, col = "blue", lwd = 2)
+plot_hist_of_posterior(pred, 0)
 
 pred = bart_machine_predict(bart_machine, c(0, NA, 0)) #E[Y] = 0
-hist(pred$y_hat_posterior_samples, br = 50, main = paste("posterior of yhat, mean =", mean(pred$y_hat_posterior_samples)), xlab = "")
-abline(v = 0, col = "blue", lwd = 2)
+plot_hist_of_posterior(pred, 0)
 
 pred = bart_machine_predict(bart_machine, c(0, 0, NA)) #E[Y] = 3
-hist(pred$y_hat_posterior_samples, br = 50, main = paste("posterior of yhat, mean =", mean(pred$y_hat_posterior_samples)), xlab = "")
-abline(v = 3, col = "blue", lwd = 2)
+plot_hist_of_posterior(pred, offset_missing)
 
 pred = bart_machine_predict(bart_machine, c(NA, NA, 0)) #E[Y] = 0
-hist(pred$y_hat_posterior_samples, br = 50, main = paste("posterior of yhat, mean =", mean(pred$y_hat_posterior_samples)), xlab = "")
-abline(v = 0, col = "blue", lwd = 2)
+plot_hist_of_posterior(pred, 0)
 
 pred = bart_machine_predict(bart_machine, matrix(c(NA, NA, NA, 0,0,0), ncol=3, byrow=T)) #E[Y] = 3
-hist(pred$y_hat_posterior_samples[1,], br = 50, main = paste("posterior of yhat, mean =", mean(pred$y_hat_posterior_samples[1, ])), xlab = "")
-abline(v = 3, col = "blue", lwd = 2)
+plot_hist_of_posterior(pred, offset_missing)
+
+setwd("C:/Users/Kapelner/Desktop/Dropbox/BSTA_799/final_presentation/images")

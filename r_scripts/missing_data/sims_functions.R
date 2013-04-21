@@ -43,9 +43,9 @@ knockout_nmar = function(X, prop){
 }
 
 
-generate_crazy_model = function(n_crazy, p_crazy, prop, offset){
+generate_crazy_model = function(n_crazy, p_crazy, prop, offset, sigma_e){
 	Xs_crazy = matrix(runif(n_crazy * p_crazy, -1, 1), ncol = p_crazy)
-	error_crazy = rnorm(n_crazy, 0, 0.1)
+	error_crazy = rnorm(n_crazy, 0, sigma_e)
 	X1 = Xs_crazy[, 1]
 	X2 = Xs_crazy[, 2]
 	X3 = Xs_crazy[, 3]
@@ -81,6 +81,17 @@ generate_crazy_model = function(n_crazy, p_crazy, prop, offset){
 	}	
 	
 	cbind(Xs_crazy, y_crazy)
+}
+
+plot_hist_of_posterior = function(pred, expectation){
+	hist(pred$y_hat_posterior_samples[1,], 
+			br = 50, 
+			main = paste("posterior of yhat, mean =", round(mean(pred$y_hat_posterior_samples[1,]), 3)), 
+			xlab = "")
+	abline(v = expectation, col = "blue", lwd = 2)
+	abline(v = pred$y_hat[1], col = "green", lwd = 0.5)
+	abline(v = pred$ppi_a[1], col = "orange", lwd = 3)
+	abline(v = pred$ppi_b[1], col = "orange", lwd = 3)
 }
 
 #k_fold_cv = function(Xmis, Xorig, y, k_folds = 5, ...){
