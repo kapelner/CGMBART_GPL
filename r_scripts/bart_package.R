@@ -465,7 +465,7 @@ bart_machine_predict = function(bart_machine, X){
 			}
 		}
 		if (sum(M) > 0){
-			cat("WARNING: missing data found in test data and BART was not build with missing data feature!\n")
+			cat("WARNING: missing data found in test data and BART was not built with missing data feature!\n")
 		}		
 	}
 	
@@ -607,7 +607,7 @@ pre_process_training_data = function(data, use_missing_data = TRUE, verbose = FA
 	
 	for (fac in factors){
 		dummied = do.call(cbind, lapply(levels(data[, fac]), function(lev){as.numeric(data[, fac] == lev)}))
-		colnames(dummied) <- paste(fac, levels(data[, fac]), sep = "_")		
+		colnames(dummied) = paste(fac, levels(data[, fac]), sep = "_")		
 		data = cbind(data, dummied)
 		data[, fac] = NULL
 	}
@@ -622,7 +622,7 @@ pre_process_training_data = function(data, use_missing_data = TRUE, verbose = FA
 				}
 			}
 		}
-		colnames(M) = paste(colnames(data), "_", "missing", sep = "")
+		colnames(M) = paste("M_", colnames(data), sep = "")
 		#append the missing dummy columns to data as if they're real attributes themselves
 		data = cbind(data, M)
 	}

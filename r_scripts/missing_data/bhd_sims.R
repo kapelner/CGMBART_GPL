@@ -21,7 +21,7 @@ y = X$medv
 X$medv = NULL
 
 #set simulation params
-Nsim = 10
+Nsim = 20
 K_FOLDS = 5
 KnockoutPROP = c(0.01, 0.05, 0.10, 0.2, 0.3, 0.4, 0.5, 0.9)
 set_bart_machine_num_cores(4)
@@ -49,7 +49,7 @@ cat("\n")
 
 oos_rmse_mcar = matrix(NA, nrow = length(KnockoutPROP), ncol = Nsim)
 
-for (i in 7 : length(KnockoutPROP)){
+for (i in 1 : length(KnockoutPROP)){
 	for (nsim in 1 : Nsim){	
 		test_indices = sample(1 : nrow(X), n_test)
 		Xtest = X[test_indices, ]
@@ -255,62 +255,6 @@ write.csv(nmar_results_cc, "nmar_results_cc.csv")
 
 
 
-
-########## CRAZY MODEL
-n_crazy = 500
-p_crazy = 3
-prop_missing = 0.0
-offset_missing = 3
-
-graphics.off()
-Xy = generate_crazy_model(n_crazy, p_crazy, prop_missing, offset_missing)
-hist(Xy[, 4], br = 50, main = "distribution of response")
-bart_machine = build_bart_machine_cv(X = X[, 1:3], y = Xy[, 4], use_missing_data = TRUE, num_burn_in = 1000)
-plot_y_vs_yhat(bart_machine)
-windows()
-plot_sigsqs_convergence_diagnostics(bart_machine)
-bart_machine
-check_bart_error_assumptions(bart_machine)
-investigate_var_importance(bart_machine)
-interaction_investigator(bart_machine, num_replicates_for_avg = 20)
-
-###now do some predictions
-pred = bart_machine_predict(bart_machine, c(0, 0, 0)) #E[Y] = 0
-hist(pred$y_hat_posterior_samples, br = 50, main = paste("posterior of yhat, mean =", mean(pred$y_hat_posterior_samples)))
-abline(v = 0, col = "blue", lwd = 2)
-
-pred = bart_machine_predict(bart_machine, c(1, 1, 1)) #E[Y] = 0
-hist(pred$y_hat_posterior_samples, br = 50, main = paste("posterior of yhat, mean =", mean(pred$y_hat_posterior_samples)))
-abline(v = 0, col = "blue", lwd = 2)
-
-
-pred = bart_machine_predict(bart_machine, c(NA, 0, 0)) #E[Y] = 0
-hist(pred$y_hat_posterior_samples, br = 50, main = paste("posterior of yhat, mean =", mean(pred$y_hat_posterior_samples)))
-abline(v = 0, col = "blue", lwd = 2)
-
-pred = bart_machine_predict(bart_machine, c(0, NA, 0)) #E[Y] = 0
-hist(pred$y_hat_posterior_samples, br = 50, main = paste("posterior of yhat, mean =", mean(pred$y_hat_posterior_samples)))
-abline(v = 0, col = "blue", lwd = 2)
-
-pred = bart_machine_predict(bart_machine, c(0, 0, NA)) #E[Y] = 3
-hist(pred$y_hat_posterior_samples, br = 50, main = paste("posterior of yhat, mean =", mean(pred$y_hat_posterior_samples)))
-abline(v = 3, col = "blue", lwd = 2)
-
-pred = bart_machine_predict(bart_machine, c(NA, NA, 0)) #E[Y] = 0
-hist(pred$y_hat_posterior_samples, br = 50, main = paste("posterior of yhat, mean =", mean(pred$y_hat_posterior_samples)))
-abline(v = 0, col = "blue", lwd = 2)
-
-pred = bart_machine_predict(bart_machine, c(NA, NA, NA)) #E[Y] = 3
-hist(pred$y_hat_posterior_samples, br = 50, main = paste("posterior of yhat, mean =", mean(pred$y_hat_posterior_samples)))
-abline(v = 3, col = "blue", lwd = 2)
-
-pred = bart_machine_predict(bart_machine, c(1, 0, 0)) #E[Y] = 0
-hist(pred$y_hat_posterior_samples, br = 50, main = paste("posterior of yhat, mean =", mean(pred$y_hat_posterior_samples)))
-abline(v = 1, col = "blue", lwd = 2)
-
-pred = bart_machine_predict(bart_machine, c(0, 1, 0)) #E[Y] = 1
-hist(pred$y_hat_posterior_samples, br = 50, main = paste("posterior of yhat, mean =", mean(pred$y_hat_posterior_samples)))
-abline(v = 1, col = "blue", lwd = 1)
 
 
 

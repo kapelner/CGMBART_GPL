@@ -1,0 +1,80 @@
+directory_where_code_is = getwd() #usually we're on a linux box and we'll just navigate manually to the directory
+#if we're on windows, then we're on the dev box, so use a prespecified directory
+if (.Platform$OS.type == "windows"){
+	directory_where_code_is = "C:\\Users\\kapelner\\workspace\\CGMBART_GPL"
+}
+setwd(directory_where_code_is)
+
+source("r_scripts/bart_package.R")
+source("r_scripts/bart_package_plots.R")
+source("r_scripts/bart_package_variable_selection.R")
+source("r_scripts/bart_package_f_tests.R")
+source("r_scripts/missing_data/sims_functions.R")
+
+
+########## CRAZY MODEL
+n_crazy = 500
+p_crazy = 3
+prop_missing = 0.1
+offset_missing = 3
+
+graphics.off()
+
+Xy = generate_crazy_model(n_crazy, p_crazy, prop_missing, offset_missing)
+hist(Xy[, 4], br = 50, main = "distribution of response")
+bart_machine = build_bart_machine(Xy = Xy, use_missing_data = TRUE, num_burn_in = 1000)
+plot_y_vs_yhat(bart_machine)
+windows()
+plot_sigsqs_convergence_diagnostics(bart_machine)
+bart_machine
+check_bart_error_assumptions(bart_machine)
+investigate_var_importance(bart_machine)
+interaction_investigator(bart_machine, num_replicates_for_avg = 20)
+
+###now do some predictions
+
+###make sure it works...
+pred = bart_machine_predict(bart_machine, c(0, 0, 0)) #E[Y] = 0
+hist(pred$y_hat_posterior_samples, br = 50, main = paste("posterior of yhat, mean =", mean(pred$y_hat_posterior_samples)), xlab = "")
+abline(v = 0, col = "blue", lwd = 2)
+
+pred = bart_machine_predict(bart_machine, c(1, 0, 0)) #E[Y] = 0
+hist(pred$y_hat_posterior_samples, br = 50, main = paste("posterior of yhat, mean =", mean(pred$y_hat_posterior_samples)), xlab = "")
+abline(v = 1, col = "blue", lwd = 2)
+
+pred = bart_machine_predict(bart_machine, c(0, 1, 0)) #E[Y] = 0
+hist(pred$y_hat_posterior_samples, br = 50, main = paste("posterior of yhat, mean =", mean(pred$y_hat_posterior_samples)), xlab = "")
+abline(v = 1, col = "blue", lwd = 2)
+
+pred = bart_machine_predict(bart_machine, c(1, 1, 0)) #E[Y] = 0
+hist(pred$y_hat_posterior_samples, br = 50, main = paste("posterior of yhat, mean =", mean(pred$y_hat_posterior_samples)), xlab = "")
+abline(v = 3, col = "blue", lwd = 2)
+
+pred = bart_machine_predict(bart_machine, c(1, 0, 1)) #E[Y] = 0
+hist(pred$y_hat_posterior_samples, br = 50, main = paste("posterior of yhat, mean =", mean(pred$y_hat_posterior_samples)), xlab = "")
+abline(v = 2, col = "blue", lwd = 2)
+
+pred = bart_machine_predict(bart_machine, c(1, 1, 1)) #E[Y] = 0
+hist(pred$y_hat_posterior_samples, br = 50, main = paste("posterior of yhat, mean =", mean(pred$y_hat_posterior_samples)), xlab = "")
+abline(v = 4, col = "blue", lwd = 2)
+
+
+pred = bart_machine_predict(bart_machine, c(NA, 0, 0)) #E[Y] = 0
+hist(pred$y_hat_posterior_samples, br = 50, main = paste("posterior of yhat, mean =", mean(pred$y_hat_posterior_samples)), xlab = "")
+abline(v = 0, col = "blue", lwd = 2)
+
+pred = bart_machine_predict(bart_machine, c(0, NA, 0)) #E[Y] = 0
+hist(pred$y_hat_posterior_samples, br = 50, main = paste("posterior of yhat, mean =", mean(pred$y_hat_posterior_samples)), xlab = "")
+abline(v = 0, col = "blue", lwd = 2)
+
+pred = bart_machine_predict(bart_machine, c(0, 0, NA)) #E[Y] = 3
+hist(pred$y_hat_posterior_samples, br = 50, main = paste("posterior of yhat, mean =", mean(pred$y_hat_posterior_samples)), xlab = "")
+abline(v = 3, col = "blue", lwd = 2)
+
+pred = bart_machine_predict(bart_machine, c(NA, NA, 0)) #E[Y] = 0
+hist(pred$y_hat_posterior_samples, br = 50, main = paste("posterior of yhat, mean =", mean(pred$y_hat_posterior_samples)), xlab = "")
+abline(v = 0, col = "blue", lwd = 2)
+
+pred = bart_machine_predict(bart_machine, matrix(c(NA, NA, NA, 0,0,0), ncol=3, byrow=T)) #E[Y] = 3
+hist(pred$y_hat_posterior_samples[1,], br = 50, main = paste("posterior of yhat, mean =", mean(pred$y_hat_posterior_samples)), xlab = "")
+abline(v = 0, col = "blue", lwd = 2)

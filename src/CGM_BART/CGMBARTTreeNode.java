@@ -138,6 +138,7 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 //			copy.possible_rule_variables = possible_rule_variables_clone;
 //		}
 		copy.possible_rule_variables = possible_rule_variables;
+		copy.sendMissingDataRight = sendMissingDataRight;
 		//deep copy
 		copy.possible_split_vals_by_attr = possible_split_vals_by_attr;
 		copy.depth = depth;
@@ -258,7 +259,7 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 			//then it MUST be <= so both values can be considered
 			//handle missing data first
 			if (Classifier.isMissing(xs[evalNode.splitAttributeM])){
-				evalNode = evalNode.sendMissingDataRight ? evalNode.right : evalNode.left;
+				evalNode = evalNode.sendMissingDataRight ? evalNode.left : evalNode.right;
 			}			
 			else if (xs[evalNode.splitAttributeM] <= evalNode.splitValue){
 				evalNode = evalNode.left;

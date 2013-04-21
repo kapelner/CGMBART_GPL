@@ -1,3 +1,5 @@
+set_bart_machine_num_cores(4)
+
 knockout_mcar = function(X, prop){
 	for (i in 1 : nrow(X)){
 		for (j in 1 : ncol(X)){
@@ -43,32 +45,33 @@ knockout_nmar = function(X, prop){
 
 generate_crazy_model = function(n_crazy, p_crazy, prop, offset){
 	Xs_crazy = matrix(runif(n_crazy * p_crazy, -1, 1), ncol = p_crazy)
-	error_crazy = rnorm(n_crazy, 0, 0.01)
+	error_crazy = rnorm(n_crazy, 0, 0.1)
 	X1 = Xs_crazy[, 1]
 	X2 = Xs_crazy[, 2]
 	X3 = Xs_crazy[, 3]
-	y_crazy = Xs_crazy[, 1] + Xs_crazy[, 2] + Xs_crazy[, 3] + Xs_crazy[, 1] * Xs_crazy[, 2] + error_crazy #- Xs_crazy[, 1]^2 + Xs_crazy[, 2]^2
+	y_crazy = Xs_crazy[, 1] + Xs_crazy[, 2] + Xs_crazy[, 3] - Xs_crazy[, 1]^2 + Xs_crazy[, 2]^2 + Xs_crazy[, 1] * Xs_crazy[, 2] + error_crazy #
+
 	
 	#X1 is MCAR at 5%
-#	for (i in 1 : n_crazy){
-#		if (runif(1) < prop){
-#			Xs_crazy[i, 1] = NA
-#		}
-#	}
-#	
-#	#X3 is MAR at 5% if X1 > 0
-#	for (i in 1 : n_crazy){
-#		if (runif(1) < prop && X1[i] > 0){
-#			Xs_crazy[i, 3] = NA
-#		}
-#	}
-#	
-#	#X2 is NMAR at 5% if X2 > 0
-#	for (i in 1 : n_crazy){
-#		if (runif(1) < prop && X2[i] > 0){
-#			Xs_crazy[i, 2] = NA
-#		}
-#	}
+	for (i in 1 : n_crazy){
+		if (runif(1) < prop){
+			Xs_crazy[i, 1] = NA
+		}
+	}
+	
+	#X3 is MAR at 5% if X1 > 0
+	for (i in 1 : n_crazy){
+		if (runif(1) < prop && X1[i] > 0){
+			Xs_crazy[i, 3] = NA
+		}
+	}
+	
+	#X2 is NMAR at 5% if X2 > 0
+	for (i in 1 : n_crazy){
+		if (runif(1) < prop && X2[i] > 0){
+			Xs_crazy[i, 2] = NA
+		}
+	}
 	
 	#if X3 is missing, y bumps up by 3
 	for (i in 1 : n_crazy){
