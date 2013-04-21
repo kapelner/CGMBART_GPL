@@ -21,8 +21,7 @@ y = X$medv
 X$medv = NULL
 
 #set simulation params
-Nsim = 20
-K_FOLDS = 5
+Nsim = 100
 KnockoutPROP = c(0.01, 0.05, 0.10, 0.2, 0.3, 0.4, 0.5, 0.9)
 set_bart_machine_num_cores(4)
 pct_test_data = 0.2
@@ -104,13 +103,13 @@ mcar_results_cc = rbind(oos_rmse_vanilla, oos_rmse_mcar_cc)
 rownames(mcar_results_cc) = c(0, KnockoutPROP)
 mcar_results_cc = cbind(mcar_results_cc, apply(mcar_results_cc, 1, mean))
 
-plot(rownames(mcar_results_cc), mcar_results_cc[, 4] / mcar_results_cc[1, 4], 
+plot(rownames(mcar_results_cc), mcar_results_cc[, Nsim + 1] / mcar_results_cc[1, Nsim + 1], 
 		type = "b", 
 		main = "MCAR error multiples", 
 		xlab = "Proportion Data MCAR", 
-		ylab = "Multiple of Error", 
+		ylab = "Multiple of Error", ylim = c(1,2.5),
 		col = "red")
-points(rownames(mcar_results), mcar_results[, 4] / mcar_results[1, 4], col = "green", type = "b")
+points(rownames(mcar_results), mcar_results[, Nsim + 1] / mcar_results[1, Nsim + 1], col = "green", type = "b")
 write.csv(mcar_results_cc, "mcar_results_cc.csv")
 
 
@@ -137,7 +136,7 @@ for (i in 1 : length(KnockoutPROP)){
 
 mar_results = rbind(oos_rmse_vanilla, oos_rmse_mar)
 rownames(mar_results) = c(0, KnockoutPROP)
-mcr_results = cbind(mar_results, apply(mar_results, 1, mean))
+mar_results = cbind(mar_results, apply(mar_results, 1, mean))
 plot(rownames(mar_results), mar_results[, 4] / mar_results[1, 4], 
 		type = "b", 
 		main = "MAR error multiples", 
@@ -172,14 +171,15 @@ for (i in 1 : length(KnockoutPROP)){
 
 mar_results_cc = rbind(oos_rmse_vanilla, oos_rmse_mar_cc)
 rownames(mar_results_cc) = c(0, KnockoutPROP)
-mcr_results = cbind(mar_results_cc, apply(mar_results_cc, 1, mean))
-plot(rownames(mar_results_cc), mar_results_cc[, 4] / mar_results_cc[1, 4], 
+mar_results_cc = cbind(mar_results_cc, apply(mar_results_cc, 1, mean))
+windows()
+plot(rownames(mar_results_cc), mar_results_cc[, Nsim + 1] / mar_results_cc[1, Nsim + 1], 
 		type = "b", 
 		main = "MAR error multiples", 
 		xlab = "Proportion Data MAR", 
 		ylab = "Multiple of Error", 
 		col = "red")
-points(rownames(mar_results), mar_results[, 4] / mar_results[1, 4], col = "green", type = "b")
+points(rownames(mar_results), mar_results[, Nsim + 1] / mar_results[1, Nsim + 1], col = "green", type = "b")
 write.csv(mar_results_cc, "mar_results_cc.csv")
 
 
@@ -206,7 +206,7 @@ for (i in 1 : length(KnockoutPROP)){
 
 nmar_results = rbind(oos_rmse_vanilla, oos_rmse_nmar)
 rownames(nmar_results) = c(0, KnockoutPROP)
-mcr_results = cbind(nmar_results, apply(nmar_results, 1, mean))
+nmar_results = cbind(nmar_results, apply(nmar_results, 1, mean))
 plot(rownames(nmar_results), nmar_results[, 4] / nmar_results[1, 4], 
 		type = "b", 
 		main = "NMAR error multiples", 
@@ -241,114 +241,16 @@ for (i in 1 : length(KnockoutPROP)){
 
 nmar_results_cc = rbind(oos_rmse_vanilla, oos_rmse_nmar_cc)
 rownames(nmar_results_cc) = c(0, KnockoutPROP)
-mcr_results = cbind(nmar_results_cc, apply(nmar_results_cc, 1, mean))
-plot(rownames(nmar_results_cc), nmar_results_cc[, 4] / nmar_results_cc[1, 4], 
+nmar_results_cc = cbind(nmar_results_cc, apply(nmar_results_cc, 1, mean))
+windows()
+plot(rownames(nmar_results_cc), nmar_results_cc[, Nsim + 1] / nmar_results_cc[1, Nsim + 1], 
 		type = "b", 
 		main = "NMAR error multiples", 
 		xlab = "Proportion Data NMAR", 
 		ylab = "Multiple of Error", 
 		col = "red")
-points(rownames(nmar_results), nmar_results[, 4] / nmar_results[1, 4], col = "green", type = "b")
+points(rownames(nmar_results), nmar_results[, Nsim + 1] / nmar_results[1, Nsim + 1], col = "green", type = "b")
 write.csv(nmar_results_cc, "nmar_results_cc.csv")
 
 
-
-
-
-
-
-
-
-
-
-
-#get oos-rmse
-#oos_rmse_vanilla = array(NA, Nsim)
-#for (nsim in 1 : Nsim){
-#	error_obj = k_fold_cv(X, X, y, k_folds = K_FOLDS, verbose = FALSE)
-#	oos_rmse_vanilla[nsim] = error_obj$rmse
-#}
-#
-##### DO MCAR
-#
-#
-#
-#oos_rmse_mcar = matrix(NA, nrow = length(KnockoutPROP), ncol = Nsim)
-#
-#for (i in 1 : length(KnockoutPROP)){
-#	for (nsim in 1 : Nsim){	
-#		Xmis = knockout_mcar(X, KnockoutPROP[i])
-#		error_obj = k_fold_cv(Xmis, X, y, k_folds = K_FOLDS, verbose = FALSE)
-#		oos_rmse_mcar[i, nsim] = error_obj$rmse
-#		print(oos_rmse_mcar)
-#	}
-#}
-#
-#mcar_results = rbind(oos_rmse_vanilla, oos_rmse_mcar)
-#rownames(mcar_results) = c(0, KnockoutPROP)
-#mcar_results = cbind(mcar_results, apply(mcar_results, 1, mean))
-#
-##plot(rownames(mcar_results), mcar_results[, 1])
-##points(rownames(mcar_results), mcar_results[, 2])
-##points(rownames(mcar_results), mcar_results[, 3])
-##plot(rownames(mcar_results), mcar_results[, 4])
-#plot(rownames(mcar_results), mcar_results[, 4] / mcar_results[1, 4], type = "b", main = "MCAR error multiples", xlab = "Proportion Data MCAR", ylab = "Multiple Error")
-#
-#
-#oos_rmse_mcar_cc = matrix(NA, nrow = length(KnockoutPROP), ncol = Nsim)
-#
-#for (i in 1 : length(KnockoutPROP)){
-#	for (nsim in 1 : Nsim){	
-#		Xmis = knockout_mcar(X, KnockoutPROP[i])
-#		Xmisccy = na.omit(cbind(Xmis, y))
-#		cat(nrow(Xmisccy), "rows of", nrow(X), "on prop", KnockoutPROP[i], "\n")
-#		if (nrow(Xmisccy) == 0){
-#			next
-#		}
-#		error_obj = k_fold_cv(Xmisccy[, 1 : ncol(X)], Xmisccy[, 1 : ncol(X)], Xmisccy[, (ncol(X) + 1)], k_folds = K_FOLDS, use_missing_data = FALSE)
-#		oos_rmse_mcar_cc[i, nsim] = error_obj$rmse
-#		print(oos_rmse_mcar_cc)
-#	}
-#}
-#
-#mcar_results_cc = rbind(oos_rmse_vanilla, oos_rmse_mcar_cc)
-#rownames(mcar_results_cc) = c(0, KnockoutPROP)
-#mcar_results_cc = cbind(mcar_results_cc, apply(mcar_results_cc, 1, mean))
-#
-#plot(rownames(mcar_results_cc), mcar_results_cc[, 4] / mcar_results_cc[1, 4], type = "b", main = "MCAR cc error multiples", xlab = "Proportion Data MCAR", ylab = "Multiple of Error", col = "red")
-#points(rownames(mcar_results), mcar_results[, 4] / mcar_results[1, 4], col = "green", type = "b")
-#
-##plot(rownames(mcar_results), mcar_results[, 4] / mcar_results[1, 4], type = "b", main = "MCAR error multiples", xlab = "Proportion Data MCAR", ylab = "Multiple Error")
-##
-##lm_data = as.data.frame(cbind(as.numeric(rownames(mcar_results)), mcar_results[, 4]))
-##
-##mod = lm(lm_data[,2] ~ lm_data[,1]) #poly(as.numeric(rownames(mcar_results)), 3)
-##summary(mod)
-##abline(mod)
-##predict.lm(mod, data.frame(c(0.02, 0.04))) #seq(0,1,0.01)
-#
-#par(mfrow = c(4,4))
-#for (j in 1 : ncol(X)){
-#	hist(X[, j], br = 50, main = colnames(X)[j], xlab = "")
-#}
-#
-##build MAR model
-#
-#
-#
-#oos_rmse_mar = matrix(NA, nrow = length(KnockoutPROP), ncol = Nsim)
-#
-#for (i in 1 : length(KnockoutPROP)){
-#	for (nsim in 1 : Nsim){	
-#		Xmis = knockout_mar(X, KnockoutPROP[i])
-#		error_obj = k_fold_cv(Xmis, X, y, k_folds = K_FOLDS)
-#		oos_rmse_mar[i, nsim] = error_obj$rmse
-#		print(oos_rmse_mar)
-#	}
-#}
-#
-#
-#mar_results = rbind(oos_rmse_vanilla, oos_rmse_mar)
-#rownames(mar_results) = c(0, KnockoutPROP)
-#mar_results = cbind(mar_results, apply(mar_results, 1, mean))
 

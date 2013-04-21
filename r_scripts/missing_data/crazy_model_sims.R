@@ -22,7 +22,7 @@ graphics.off()
 
 Xy = generate_crazy_model(n_crazy, p_crazy, prop_missing, offset_missing)
 hist(Xy[, 4], br = 50, main = "distribution of response")
-bart_machine = build_bart_machine(Xy = Xy, use_missing_data = TRUE, num_burn_in = 1000)
+bart_machine = build_bart_machine(Xy = Xy, use_missing_data = TRUE, num_burn_in = 5000)
 plot_y_vs_yhat(bart_machine)
 windows()
 plot_sigsqs_convergence_diagnostics(bart_machine)
@@ -76,5 +76,5 @@ hist(pred$y_hat_posterior_samples, br = 50, main = paste("posterior of yhat, mea
 abline(v = 0, col = "blue", lwd = 2)
 
 pred = bart_machine_predict(bart_machine, matrix(c(NA, NA, NA, 0,0,0), ncol=3, byrow=T)) #E[Y] = 3
-hist(pred$y_hat_posterior_samples[1,], br = 50, main = paste("posterior of yhat, mean =", mean(pred$y_hat_posterior_samples)), xlab = "")
-abline(v = 0, col = "blue", lwd = 2)
+hist(pred$y_hat_posterior_samples[1,], br = 50, main = paste("posterior of yhat, mean =", mean(pred$y_hat_posterior_samples[1, ])), xlab = "")
+abline(v = 3, col = "blue", lwd = 2)
