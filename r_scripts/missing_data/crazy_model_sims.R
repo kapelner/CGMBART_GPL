@@ -54,18 +54,18 @@ pred = bart_machine_predict(bart_machine, c(1, 1, 1)) #E[Y] = 0
 plot_hist_of_posterior(pred, 4)
 
 pred = bart_machine_predict(bart_machine, c(NA, 0, 0)) #E[Y] = 0
-plot_hist_of_posterior(pred, 0)
+plot_hist_of_posterior(pred, -0.333)
 
 pred = bart_machine_predict(bart_machine, c(0, NA, 0)) #E[Y] = 0
-plot_hist_of_posterior(pred, 0)
+plot_hist_of_posterior(pred, 0.8333)
 
 pred = bart_machine_predict(bart_machine, c(0, 0, NA)) #E[Y] = 3
-plot_hist_of_posterior(pred, offset_missing)
+plot_hist_of_posterior(pred, offset_missing + 0.5)
 
 pred = bart_machine_predict(bart_machine, c(NA, NA, 0)) #E[Y] = 0
 plot_hist_of_posterior(pred, 0)
 
-pred = bart_machine_predict(bart_machine, matrix(c(NA, NA, NA, 0,0,0), ncol=3, byrow=T)) #E[Y] = 3
-plot_hist_of_posterior(pred, offset_missing)
+pred = bart_machine_predict(bart_machine, matrix(c(NA, NA, NA, 0,0,0), ncol = 3, byrow = T)) #E[Y] = 3
+plot_hist_of_posterior(pred, offset_missing + 1)
 
 setwd("C:/Users/Kapelner/Desktop/Dropbox/BSTA_799/final_presentation/images")

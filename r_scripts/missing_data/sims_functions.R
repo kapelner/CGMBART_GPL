@@ -86,7 +86,7 @@ generate_crazy_model = function(n_crazy, p_crazy, prop, offset, sigma_e){
 plot_hist_of_posterior = function(pred, expectation){
 	hist(pred$y_hat_posterior_samples[1,], 
 			br = 50, 
-			main = paste("posterior of yhat, mean =", round(mean(pred$y_hat_posterior_samples[1,]), 3)), 
+			main = paste("posterior of yhat, mean =", round(mean(pred$y_hat_posterior_samples[1,]), 2), "and se = ", round(sd(pred$y_hat_posterior_samples[1,]), 2)), 
 			xlab = "")
 	abline(v = expectation, col = "blue", lwd = 2)
 	abline(v = pred$y_hat[1], col = "green", lwd = 0.5)
