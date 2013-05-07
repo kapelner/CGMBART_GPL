@@ -69,7 +69,6 @@ bart_machine$training_data_features
 plot_y_vs_yhat(bart_machine)
 plot_y_vs_yhat(bart_machine, ppis = TRUE)
 plot_y_vs_yhat(bart_machine, X = Xtest, y = ytest, ppis = TRUE)
-partial_f_like_test(bart_machine, num_trees = 20, plot = TRUE)
 
 cov_importance_test(bart_machine, num_trees = 20, plot = TRUE)
 cov_importance_test(bart_machine, num_trees = 20, plot = TRUE, covariates = c(14))
