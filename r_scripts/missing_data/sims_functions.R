@@ -145,3 +145,15 @@ plot_hist_of_posterior = function(pred, expectation){
 #
 #
 #
+
+
+
+generate_simple_model_with_missingness = function(n, mu_1, mu_2, sigma_1 = 1, sigma_2 = 1, gamma = 0.1){
+	X_1 = rnorm(n, mu_1, sigma_1)
+	X_1 = ifelse(runif(n) < gamma, NA, X_1)
+	X_2 = rnorm(n, mu_2, sigma_2)
+	Y = ifelse(is.na(X_1), X_2, X_1)
+	cbind(X_1, Y)
+}
+
+
