@@ -53,7 +53,7 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 	protected Double prob_prune;
 	protected Double prob_change;
 	protected boolean verbose = true;
-	protected boolean mem_cache_for_speed = false;
+	protected boolean mem_cache_for_speed = true;
 
 	protected transient boolean use_heteroskedasticity;
 

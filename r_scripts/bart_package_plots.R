@@ -1,6 +1,9 @@
 
 
 check_bart_error_assumptions = function(bart_machine, alpha_normal_test = 0.05, alpha_hetero_test = 0.05, hetero_plot = "yhats"){
+	#load the library
+	tryCatch(library(car), error = function(e){install.packages("car")}, finally = library(car))
+	
 	if (bart_machine$pred_type == "classification"){
 		stop("There are no convergence diagnostics for classification.")
 	}	
@@ -337,9 +340,9 @@ investigate_var_importance = function(bart_machine, type = "splits", plot = TRUE
 	cat("\n")
 	
 	avg_var_props = colMeans(var_props)
-	names(avg_var_props) = bart_machine$training_data_features
+	names(avg_var_props) = bart_machine$training_data_features_with_missing_features
 	sd_var_props = apply(var_props, 2, sd)
-	names(sd_var_props) = bart_machine$training_data_features
+	names(sd_var_props) = bart_machine$training_data_features_with_missing_features
 	
 	if (num_var_plot == Inf){
 		num_var_plot = bart_machine$p
@@ -440,6 +443,8 @@ interaction_investigator = function(bart_machine, plot = TRUE, num_replicates_fo
 	} else {
 		ylim_bottom = cut_bottom * min(avg_counts)
 	}
+	
+	##TO-DO: kill zeroes from the plots
 	
 	if (plot){
 		#now create the bar plot
