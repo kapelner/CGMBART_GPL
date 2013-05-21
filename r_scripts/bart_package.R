@@ -82,7 +82,13 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		stop("You need to give BART a training set either by specifying X and y or by specifying a matrix Xy which contains the response named \"y.\"\n")
 	} else if (is.null(X) && is.null(y)){ #they specified Xy, so now just pull out X,y
 		y = Xy[, ncol(Xy)]
+		for (j in 1 : (ncol(Xy) - 1)){
+			if (colnames(Xy)[j] == ""){
+				colnames(Xy)[j] = paste("V", j, sep = "")
+			}
+		}
 		X = as.data.frame(Xy[, 1 : (ncol(Xy) - 1)])
+		colnames(X) = colnames(Xy)[1 : (ncol(Xy) - 1)]
 	}
 	
 	#now take care of classification or regression
@@ -119,7 +125,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	
 	#if no column names, make up names
 	if (is.null(colnames(X))){
-		colnames(X) = seq(from = 1, to = ncol(X), by = 1)
+		colnames(X) = paste("V", seq(from = 1, to = ncol(X), by = 1), sep = "")
 	}
 	
 	#check for errors in data
@@ -251,7 +257,8 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	#now once it's done, let's extract things that are related to diagnosing the build of the BART model
 	p = ncol(model_matrix_training_data) - 1 # we subtract one because we tacked on the response as the last column
 	bart_machine = list(java_bart_machine = java_bart_machine,
-		training_data_features = colnames(model_matrix_training_data)[1 : p],
+		training_data_features = colnames(model_matrix_training_data)[1 : ifelse(use_missing_data, (p / 2), p)],
+		training_data_features_with_missing_features = colnames(model_matrix_training_data)[1 : p],
 		X = X,
 		y = y,
 		y_levels = y_levels,
@@ -312,12 +319,12 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 			
 			#calculate confusion matrix
 			confusion_matrix = as.data.frame(matrix(NA, nrow = 3, ncol = 3))
-			rownames(confusion_matrix) = c(y_levels, "use errors")
-			colnames(confusion_matrix) = c(y_levels, "model errors")
+			rownames(confusion_matrix) = c(paste("actual", y_levels), "use errors")
+			colnames(confusion_matrix) = c(paste("predicted", y_levels), "model errors")
 			
 			confusion_matrix[1 : 2, 1 : 2] = as.integer(table(y, y_hat_train)) 
-			confusion_matrix[3, 1] = round(confusion_matrix[1, 2] / (confusion_matrix[1, 1] + confusion_matrix[2, 1]), 3)
-			confusion_matrix[3, 2] = round(confusion_matrix[2, 1] / (confusion_matrix[1, 2] + confusion_matrix[2, 2]), 3)
+			confusion_matrix[3, 1] = round(confusion_matrix[2, 1] / (confusion_matrix[1, 1] + confusion_matrix[2, 1]), 3)
+			confusion_matrix[3, 2] = round(confusion_matrix[1, 2] / (confusion_matrix[1, 2] + confusion_matrix[2, 2]), 3)
 			confusion_matrix[1, 3] = round(confusion_matrix[1, 2] / (confusion_matrix[1, 1] + confusion_matrix[1, 2]), 3)
 			confusion_matrix[2, 3] = round(confusion_matrix[2, 1] / (confusion_matrix[2, 1] + confusion_matrix[2, 2]), 3)
 			confusion_matrix[3, 3] = round((confusion_matrix[1, 2] + confusion_matrix[2, 1]) / sum(confusion_matrix[1 : 2, 1 : 2]), 3)
@@ -427,12 +434,12 @@ bart_machine_predict = function(bart_machine, X, ppi = 0.95){
 	if (bart_machine$bart_destroyed){
 		stop("This BART machine has been destroyed. Please recreate.")
 	}	
-	if (class(X) == "numeric"){
-		X = t(as.matrix(X))
+	if (class(X) != "matrix" && class(X) != "data.frame"){		
+		stop("X needs to be a matrix or data frame with the same column names as the training data.")
 	}
-	if (sum(is.na(X)) == length(X)){
-		stop("Cannot predict on all missing data.\n")
-	}
+#	if (sum(is.na(X)) == length(X)){
+#		stop("Cannot predict on all missing data.\n")
+#	}
 	if (!bart_machine$use_missing_data){
 		nrow_before = nrow(X)
 		X = na.omit(X)
@@ -517,10 +524,10 @@ summary.bart_machine = function(bart_machine, show_details_for_trees = FALSE){
 		
 		if (bart_machine$run_in_sample){
 			cat("\nin-sample statistics:\n")
-			cat(paste("  L1 =", round(bart_machine$L1_err_train, 2), "\n",
-						"L2 =", round(bart_machine$L2_err_train, 2), "\n",
-						"rmse =", round(bart_machine$rmse_train, 2), "\n"),
-						"Pseudo-Rsq =", round(bart_machine$PseudoRsq, 4))
+			cat(paste(" L1 =", round(bart_machine$L1_err_train, 2), "\n",
+					   "L2 =", round(bart_machine$L2_err_train, 2), "\n",
+					   "rmse =", round(bart_machine$rmse_train, 2), "\n"),
+					   "Pseudo-Rsq =", round(bart_machine$PseudoRsq, 4))
 			
 			es = bart_machine$residuals
 			normal_p_val = shapiro.test(es)$p.value

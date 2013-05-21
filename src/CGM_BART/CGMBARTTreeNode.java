@@ -259,7 +259,7 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 			//then it MUST be <= so both values can be considered
 			//handle missing data first
 			if (Classifier.isMissing(xs[evalNode.splitAttributeM])){
-				evalNode = evalNode.sendMissingDataRight ? evalNode.left : evalNode.right;
+				evalNode = evalNode.sendMissingDataRight ? evalNode.right : evalNode.left;
 			}			
 			else if (xs[evalNode.splitAttributeM] <= evalNode.splitValue){
 				evalNode = evalNode.left;

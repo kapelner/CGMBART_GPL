@@ -156,4 +156,20 @@ generate_simple_model_with_missingness = function(n, mu_1, mu_2, sigma_1 = 1, si
 	cbind(X_1, Y)
 }
 
+generate_simple_model_probit_with_missingness = function(n, mu_1 = -1, mu_2 = 1, sigma_1 = 0.2, sigma_2 = 0.2, gamma = 0.1){
+	X_1 = rnorm(n, mu_1, sigma_1)
+	X_1 = ifelse(runif(n) < gamma, NA, X_1)
+	X_2 = rnorm(n, mu_2, sigma_2)
+	Z = ifelse(is.na(X_1), X_2, X_1)
+	probs = pnorm(Z) #probit model
+	h1 = hist(probs[!is.na(X_1)], br = 50, main = "missing distribution in red, non-missing in blue", xlab = "P(Y=1)")
+	h2 = hist(probs[is.na(X_1)], br = 50, main = "missing distribution in red, non-missing in blue", xlab = "P(Y=1)")	
+	plot(h1, xlim = c(0, 1), col = rgb(0,0,1,1/4), main = "missing distribution in red, non-missing in blue", xlab = "P(Y=1)")
+	plot(h2, add = TRUE, col = rgb(1,0,0,1/4), main = "missing distribution in red, non-missing in blue", xlab = "P(Y=1)")
+	abline(v = mean(probs[!is.na(X_1)]), lwd = 3)
+	abline(v = mean(probs[is.na(X_1)]), lwd = 3)
+	Y = as.factor(rbinom(n, 1, probs))
+	list(Xy = data.frame(X_1, Y), probs = probs)
+}
+
 

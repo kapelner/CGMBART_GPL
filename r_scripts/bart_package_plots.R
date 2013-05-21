@@ -171,7 +171,6 @@ plot_y_vs_yhat = function(bart_machine, X = NULL, y = NULL, ppis = FALSE, ppi_co
 		y_hat = bart_machine$y_hat_train
 		in_sample = TRUE
 	} else {
-		X = as.matrix(X)
 		predict_obj = bart_predict_for_test_data(bart_machine, X, y)
 		y_hat = predict_obj$y_hat
 		in_sample = FALSE
@@ -341,9 +340,9 @@ investigate_var_importance = function(bart_machine, type = "splits", plot = TRUE
 	cat("\n")
 	
 	avg_var_props = colMeans(var_props)
-	names(avg_var_props) = bart_machine$training_data_features
+	names(avg_var_props) = bart_machine$training_data_features_with_missing_features
 	sd_var_props = apply(var_props, 2, sd)
-	names(sd_var_props) = bart_machine$training_data_features
+	names(sd_var_props) = bart_machine$training_data_features_with_missing_features
 	
 	if (num_var_plot == Inf){
 		num_var_plot = bart_machine$p

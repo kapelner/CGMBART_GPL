@@ -13,7 +13,7 @@ source("r_scripts/missing_data/sims_functions.R")
 
 
 ########## CRAZY MODEL
-n_crazy = 500
+n_crazy = 1000
 p_crazy = 3
 prop_missing = 0.1
 offset_missing = 5
@@ -35,37 +35,48 @@ interaction_investigator(bart_machine, num_replicates_for_avg = 20)
 ###now do some predictions
 
 ###make sure it works...
-pred = bart_machine_predict(bart_machine, c(0, 0, 0)) #E[Y] = 0
+xnew = as.data.frame(t(as.matrix(c(0, 0, 0))))
+pred = bart_machine_predict(bart_machine, xnew) #E[Y] = 0
 plot_hist_of_posterior(pred, 0)
 
-pred = bart_machine_predict(bart_machine, c(1, 0, 0)) #E[Y] = 0
+xnew = as.data.frame(t(as.matrix(c(1, 0, 0))))
+pred = bart_machine_predict(bart_machine, xnew) #E[Y] = 0
 plot_hist_of_posterior(pred, 0)
 
-pred = bart_machine_predict(bart_machine, c(0, 1, 0)) #E[Y] = 0
+xnew = as.data.frame(t(as.matrix(c(0, 1, 0))))
+pred = bart_machine_predict(bart_machine, xnew) #E[Y] = 0
 plot_hist_of_posterior(pred, 2)
 
-pred = bart_machine_predict(bart_machine, c(1, 1, 0)) #E[Y] = 0
-plot_hist_of_posterior(pred, 3)
+xnew = as.data.frame(t(as.matrix(c(0, 1, 0))))
+pred = bart_machine_predict(bart_machine, xnew) #E[Y] = 0
+plot_hist_of_posterior(pred, 2)
 
-pred = bart_machine_predict(bart_machine, c(1, 0, 1)) #E[Y] = 0
+xnew = as.data.frame(t(as.matrix(c(1,0,1))))
+pred = bart_machine_predict(bart_machine, xnew) #E[Y] = 0
 plot_hist_of_posterior(pred, 1)
 
-pred = bart_machine_predict(bart_machine, c(1, 1, 1)) #E[Y] = 0
+xnew = as.data.frame(t(as.matrix(c(1, 1, 1))))
+pred = bart_machine_predict(bart_machine, xnew) #E[Y] = 0
 plot_hist_of_posterior(pred, 4)
 
-pred = bart_machine_predict(bart_machine, c(NA, 0, 0)) #E[Y] = 0
+xnew = as.data.frame(t(as.matrix(c(NA, 0, 0))))
+pred = bart_machine_predict(bart_machine, xnew) #E[Y] = 0
 plot_hist_of_posterior(pred, -0.333)
 
-pred = bart_machine_predict(bart_machine, c(0, NA, 0)) #E[Y] = 0
+xnew = as.data.frame(t(as.matrix(c(0, NA, 0))))
+pred = bart_machine_predict(bart_machine, xnew) #E[Y] = 0
 plot_hist_of_posterior(pred, 0.8333)
 
-pred = bart_machine_predict(bart_machine, c(0, 0, NA)) #E[Y] = 3
+xnew = as.data.frame(t(as.matrix(c(0, 0, NA))))
+pred = bart_machine_predict(bart_machine, xnew) #E[Y] = 3
+plot_hist_of_posterior(pred, offset_missing)
+
+xnew = as.data.frame(t(as.matrix(c(NA, NA, 0))))
+pred = bart_machine_predict(bart_machine, xnew) #E[Y] = 0
+plot_hist_of_posterior(pred, 0.5)
+
+xnew = as.data.frame(t(as.matrix(c(NA, NA, NA))))
+pred = bart_machine_predict(bart_machine, xnew) #E[Y] = 3
 plot_hist_of_posterior(pred, offset_missing + 0.5)
-
-pred = bart_machine_predict(bart_machine, c(NA, NA, 0)) #E[Y] = 0
-plot_hist_of_posterior(pred, 0)
-
-pred = bart_machine_predict(bart_machine, matrix(c(NA, NA, NA, 0,0,0), ncol = 3, byrow = T)) #E[Y] = 3
-plot_hist_of_posterior(pred, offset_missing + 1)
 
 setwd("C:/Users/Kapelner/Desktop/Dropbox/BSTA_799/final_presentation/images")
