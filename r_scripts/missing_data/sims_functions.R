@@ -14,13 +14,13 @@ knockout_mcar = function(X, prop){
 
 knockout_mar = function(X, prop){
 	for (i in 1 : nrow(X)){
-		for (j in 1 : 12){
+		for (j in 7 : 12){ ###13th col is lstat
 			if (X$lstat[i] > 15){
 				if (runif(1) < prop){
 					X[i, j] = NA
 				}
 			}
-			if (X$lstat[i] < 5 && j == 6){
+			if (X$lstat[i] < 5 && j == 6){ ###6th col is rm
 				if (runif(1) < prop){
 					X[i, j] = NA
 				}				
@@ -43,7 +43,8 @@ knockout_nmar = function(X, prop){
 }
 
 
-generate_crazy_model = function(n_crazy, p_crazy, prop, offset, sigma_e){
+generate_crazy_model = function(n_crazy, prop, missing_offset, sigma_e){
+	p_crazy = 3
 	Xs_crazy = matrix(runif(n_crazy * p_crazy, -1, 1), ncol = p_crazy)
 	error_crazy = rnorm(n_crazy, 0, sigma_e)
 	X1 = Xs_crazy[, 1]
@@ -76,11 +77,11 @@ generate_crazy_model = function(n_crazy, p_crazy, prop, offset, sigma_e){
 	#if X3 is missing, y bumps up by 3
 	for (i in 1 : n_crazy){
 		if (is.na(Xs_crazy[i, 3])){
-			y_crazy[i] = y_crazy[i] + offset
+			y_crazy[i] = y_crazy[i] + missing_offset
 		}
 	}	
 	
-	cbind(Xs_crazy, y_crazy)
+	data.frame(Xs_crazy, y_crazy)
 }
 
 plot_hist_of_posterior = function(pred, expectation){

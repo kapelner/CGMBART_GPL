@@ -50,339 +50,6 @@ init_java_for_bart = function(){
 	}	
 }
 
-build_bart_machine = function(X = NULL, y = NULL, Xy = NULL, 
-		num_trees = 200, 
-		num_burn_in = 250, 
-		num_iterations_after_burn_in = 1000, 
-		alpha = DEFAULT_ALPHA,
-		beta = DEFAULT_BETA,
-		k = DEFAULT_K,
-		q = DEFAULT_Q,
-		nu = DEFAULT_NU,
-		prob_rule_class = DEFAULT_PROB_RULE_CLASS,
-		mh_prob_steps = DEFAULT_PROB_STEPS,
-		debug_log = FALSE,
-		fix_seed = FALSE,
-		run_in_sample = TRUE,
-		s_sq_y = "mse", # "mse" or "var"
-		unique_name = "unnamed",
-		print_tree_illustrations = FALSE,
-		num_cores = NULL,
-		cov_prior_vec = NULL,
-		use_missing_data = TRUE,
-		replace_missing_data_with_x_j_bar_for_lm = TRUE,
-		mem_cache_for_speed = TRUE,
-		verbose = TRUE){
-	
-	t0 = Sys.time()
-	#immediately initialize Java
-	init_java_for_bart()
-	
-	if ((is.null(X) && is.null(Xy)) || is.null(y) && is.null(Xy)){
-		stop("You need to give BART a training set either by specifying X and y or by specifying a matrix Xy which contains the response named \"y.\"\n")
-	} else if (is.null(X) && is.null(y)){ #they specified Xy, so now just pull out X,y
-		y = Xy[, ncol(Xy)]
-		for (j in 1 : (ncol(Xy) - 1)){
-			if (colnames(Xy)[j] == ""){
-				colnames(Xy)[j] = paste("V", j, sep = "")
-			}
-		}
-		X = as.data.frame(Xy[, 1 : (ncol(Xy) - 1)])
-		colnames(X) = colnames(Xy)[1 : (ncol(Xy) - 1)]
-	}
-	
-	#now take care of classification or regression
-	y_levels = levels(y)
-	if (class(y) == "numeric"){ #if y is numeric, then it's a regression problem
-		java_bart_machine = .jnew("CGM_BART.CGMBARTRegressionMultThread")
-		y_numeric = y
-		pred_type = "regression"
-	} else if (class(y) == "factor" & length(y_levels) == 2){ #if y is a factor and binary
-		java_bart_machine = .jnew("CGM_BART.CGMBARTClassificationMultThread")
-		y_numeric = ifelse(y == y_levels[1], 0, 1)
-		pred_type = "classification"
-	} else { #otherwise throw an error
-		stop("Your response must be either numeric or a factor with two levels.\n")
-	}	
-
-	
-	num_gibbs = num_burn_in + num_iterations_after_burn_in
-	
-	#R loves to convert 1-column matrices into vectors, so just convert it on back
-	if (class(X) == "numeric"){
-		X = as.data.frame(as.matrix(X))
-	}
-	
-	if (ncol(X) == 0){
-		stop("Your data matrix must have at least one attribute.")
-	}
-	if (nrow(X) == 0){
-		stop("Your data matrix must have at least one observation.")
-	}
-	if (length(y) != nrow(X)){
-		stop("The number of responses must be equal to the number of observations in the training data.")
-	}
-	
-	#if no column names, make up names
-	if (is.null(colnames(X))){
-		colnames(X) = paste("V", seq(from = 1, to = ncol(X), by = 1), sep = "")
-	}
-	
-	#check for errors in data
-	if (check_for_errors_in_training_data(X)){
-		return;
-	}
-	
-	if (length(na.omit(y_numeric)) != length(y_numeric)){
-		stop("You cannot have any missing data in your response vector.")
-	}
-	if (verbose && use_missing_data){
-		cat("Missing data feature ON.\n")
-	}
-	
-	model_matrix_training_data = cbind(pre_process_training_data(X, use_missing_data, verbose), y_numeric)
-	
-	#if we're not using missing data, go on and nuke it
-	if (!use_missing_data){
-		rows_before = nrow(model_matrix_training_data)
-		data = na.omit(model_matrix_training_data)
-		rows_after = nrow(model_matrix_training_data)
-		if (verbose && rows_before - rows_after > 0){
-			cat("Deleted", rows_before - rows_after, "row(s) due to missing data. Try turning missing data feature on next time.\n")
-		}
-	}
-	
-	
-	#first set the name
-	.jcall(java_bart_machine, "V", "setUniqueName", unique_name)
-	#now set whether we want the program to log to a file
-	if (debug_log & verbose){
-		cat("warning: printing out the log file will slow down the runtime significantly\n")
-		.jcall(java_bart_machine, "V", "writeStdOutToLogFile")
-	}
-	#fix seed if you want
-	if (fix_seed){
-		.jcall(java_bart_machine, "V", "fixRandSeed")		
-	}
-	#set whether we want there to be tree illustrations
-	if (print_tree_illustrations & verbose){
-		cat("warning: printing tree illustrations will slow down the runtime significantly\n")
-		.jcall(java_bart_machine, "V", "printTreeIllustations")
-	}
-	
-	#set the std deviation of y to use
-	if (ncol(model_matrix_training_data) - 1 >= nrow(model_matrix_training_data)){
-		if (verbose){
-			cat("warning: cannot use MSE of linear model for s_sq_y if p > n\n")
-		}
-		s_sq_y = "var"
-
-	}
-	
-	sig_sq_est = NULL
-	if (pred_type == "regression"){
-		y_range = max(y) - min(y)
-		y_trans = (y - min(y)) / y_range - 0.5
-		if (s_sq_y == "mse"){
-			X_for_lm = as.data.frame(model_matrix_training_data)[1 : (ncol(model_matrix_training_data) - 1)]
-			if (replace_missing_data_with_x_j_bar_for_lm){
-				for (i in 1 : nrow(X_for_lm)){
-					for (j in 1 : ncol(X_for_lm)){
-						if (is.na(X_for_lm[i, j])){
-							X_for_lm[i, j] = mean(X_for_lm[, j], na.rm = TRUE)
-						}
-					}
-				}
-			}
-			mod = lm(y_trans ~ ., X_for_lm)
-			mse = var(mod$residuals)
-			sig_sq_est = as.numeric(mse)
-			.jcall(java_bart_machine, "V", "setSampleVarY", sig_sq_est)
-		} else if (s_sq_y == "var"){
-			sig_sq_est = as.numeric(var(y_trans))
-			.jcall(java_bart_machine, "V", "setSampleVarY", sig_sq_est)
-		} else {
-			stop("s_sq_y must be \"rmse\" or \"sd\"", call. = FALSE)
-			return(TRUE)
-		}
-		sig_sq_est = sig_sq_est * y_range^2		
-	}
-
-	
-	#build bart to spec with what the user wants
-	.jcall(java_bart_machine, "V", "setNumCores", as.integer(ifelse(is.null(num_cores), BART_NUM_CORES, num_cores))) #this must be set FIRST!!!
-	.jcall(java_bart_machine, "V", "setNumTrees", as.integer(num_trees))
-	.jcall(java_bart_machine, "V", "setNumGibbsBurnIn", as.integer(num_burn_in))
-	.jcall(java_bart_machine, "V", "setNumGibbsTotalIterations", as.integer(num_gibbs))
-	.jcall(java_bart_machine, "V", "setAlpha", alpha)
-	.jcall(java_bart_machine, "V", "setBeta", beta)
-	.jcall(java_bart_machine, "V", "setK", k)
-	.jcall(java_bart_machine, "V", "setQ", q)
-	.jcall(java_bart_machine, "V", "setNU", nu)
-	mh_prob_steps = mh_prob_steps / sum(mh_prob_steps) #make sure it's a prob vec
-	.jcall(java_bart_machine, "V", "setProbGrow", mh_prob_steps[1])
-	.jcall(java_bart_machine, "V", "setProbPrune", mh_prob_steps[2])
-	.jcall(java_bart_machine, "V", "setVerbose", verbose)
-	.jcall(java_bart_machine, "V", "setMemCacheForSpeed", mem_cache_for_speed)
-	
-	
-	if (length(cov_prior_vec) != 0){
-		#put in checks here for user to make sure the covariate prior vec is the correct length
-		if (length(cov_prior_vec) != ncol(model_matrix_training_data) - 1){
-			attribute_names = paste(colnames(model_matrix_training_data)[1 : ncol(model_matrix_training_data) - 1], collapse = ", ")
-			stop(paste("covariate prior vector length =", length(cov_prior_vec), "has to be equal to p =", ncol(model_matrix_training_data) - 1, "\nattribute names in order for the prior:", attribute_names), call. = FALSE)
-			return(TRUE)
-		} else if (sum(cov_prior_vec > 0) != ncol(model_matrix_training_data) - 1){
-			stop("covariate prior vector has to have all its elements be positive", call. = FALSE)
-			return(TRUE)
-		}
-		.jcall(java_bart_machine, "V", "setCovSplitPrior", as.numeric(cov_prior_vec))
-		if (verbose){
-			cat("Covariate importance prior ON\n")
-		}
-	}
-	
-	#now load the training data into BART
-	for (i in 1 : nrow(model_matrix_training_data)){
-		.jcall(java_bart_machine, "V", "addTrainingDataRow", as.character(model_matrix_training_data[i, ]))
-	}
-	.jcall(java_bart_machine, "V", "finalizeTrainingData")
-	
-	#build the bart machine and let the user know what type of BART this is
-	if (verbose){
-		cat("Building BART for", pred_type, "...\n")
-	}
-	.jcall(java_bart_machine, "V", "Build")
-	
-	#now once it's done, let's extract things that are related to diagnosing the build of the BART model
-	p = ncol(model_matrix_training_data) - 1 # we subtract one because we tacked on the response as the last column
-	bart_machine = list(java_bart_machine = java_bart_machine,
-		training_data_features = colnames(model_matrix_training_data)[1 : ifelse(use_missing_data, (p / 2), p)],
-		training_data_features_with_missing_features = colnames(model_matrix_training_data)[1 : p],
-		X = X,
-		y = y,
-		y_levels = y_levels,
-		pred_type = pred_type,
-		model_matrix_training_data = model_matrix_training_data,
-		n = nrow(model_matrix_training_data),
-		p = p,
-		num_cores = BART_NUM_CORES,
-		num_trees = num_trees,
-		num_burn_in = num_burn_in,
-		num_iterations_after_burn_in = num_iterations_after_burn_in, 
-		num_gibbs = num_gibbs,
-		alpha = alpha,
-		beta = beta,
-		k = k,
-		q = q,
-		nu = nu,
-		prob_rule_class = prob_rule_class,
-		mh_prob_steps = mh_prob_steps,
-		s_sq_y = s_sq_y,
-		run_in_sample = run_in_sample,
-		cov_prior_vec = cov_prior_vec,
-		sig_sq_est = sig_sq_est,
-		time_to_build = Sys.time() - t0,
-		use_missing_data = use_missing_data,
-		verbose = verbose,
-		bart_destroyed = FALSE
-	)
-	
-	#once its done gibbs sampling, see how the training data does if user wants
-	if (run_in_sample){
-		if (verbose){
-			cat("evaluating in sample data...")
-		}
-		if (pred_type == "regression"){
-			y_hat_posterior_samples = 
-				t(sapply(.jcall(bart_machine$java_bart_machine, "[[D", "getGibbsSamplesForPrediction", .jarray(model_matrix_training_data, dispatch = TRUE), as.integer(BART_NUM_CORES)), .jevalArray))
-			
-			#to get y_hat.. just take straight mean of posterior samples
-			y_hat_train = rowMeans(y_hat_posterior_samples)
-			#return a bunch more stuff
-			bart_machine$y_hat_train = y_hat_train
-			bart_machine$residuals = y - bart_machine$y_hat_train
-			bart_machine$L1_err_train = sum(abs(bart_machine$residuals))
-			bart_machine$L2_err_train = sum(bart_machine$residuals^2)
-			bart_machine$PseudoRsq = 1 - bart_machine$L2_err_train / sum((y - mean(y))^2) #pseudo R^2 acc'd to our dicussion with Ed and Shane
-			bart_machine$rmse_train = sqrt(bart_machine$L2_err_train / bart_machine$n)
-		} else if (pred_type == "classification"){
-			p_hat_posterior_samples = 
-					t(sapply(.jcall(bart_machine$java_bart_machine, "[[D", "getGibbsSamplesForPrediction", .jarray(model_matrix_training_data, dispatch = TRUE), as.integer(BART_NUM_CORES)), .jevalArray))
-			
-			#to get y_hat.. just take straight mean of posterior samples
-			p_hat_train = rowMeans(p_hat_posterior_samples)
-			y_hat_train = ifelse(p_hat_train > prob_rule_class, y_levels[2], y_levels[1])
-			#return a bunch more stuff
-			bart_machine$p_hat_train = p_hat_train
-			bart_machine$y_hat_train = y_hat_train
-			
-			#calculate confusion matrix
-			confusion_matrix = as.data.frame(matrix(NA, nrow = 3, ncol = 3))
-			rownames(confusion_matrix) = c(paste("actual", y_levels), "use errors")
-			colnames(confusion_matrix) = c(paste("predicted", y_levels), "model errors")
-			
-			confusion_matrix[1 : 2, 1 : 2] = as.integer(table(y, y_hat_train)) 
-			confusion_matrix[3, 1] = round(confusion_matrix[2, 1] / (confusion_matrix[1, 1] + confusion_matrix[2, 1]), 3)
-			confusion_matrix[3, 2] = round(confusion_matrix[1, 2] / (confusion_matrix[1, 2] + confusion_matrix[2, 2]), 3)
-			confusion_matrix[1, 3] = round(confusion_matrix[1, 2] / (confusion_matrix[1, 1] + confusion_matrix[1, 2]), 3)
-			confusion_matrix[2, 3] = round(confusion_matrix[2, 1] / (confusion_matrix[2, 1] + confusion_matrix[2, 2]), 3)
-			confusion_matrix[3, 3] = round((confusion_matrix[1, 2] + confusion_matrix[2, 1]) / sum(confusion_matrix[1 : 2, 1 : 2]), 3)
-					
-			bart_machine$confusion_matrix = confusion_matrix
-			bart_machine$misclassification_error = confusion_matrix[3, 3]
-		}
-		if (verbose){
-			cat("done\n")
-		}
-	}
-	
-	#use R's S3 object orientation
-	class(bart_machine) = "bart_machine"
-	bart_machine
-}
-
-bart_machine_duplicate = function(bart_machine, X = NULL, y = NULL, cov_prior_vec = NULL, num_trees = NULL, run_in_sample = NULL, ...){
-	if (bart_machine$bart_destroyed){
-		stop("This BART machine has been destroyed. Please recreate.")
-	}	
-	if (is.null(X)){
-		X = bart_machine$X
-	}
-	if (is.null(y)){
-		y = bart_machine$y
-	}
-	if (is.null(cov_prior_vec)){
-		cov_prior_vec = bart_machine$cov_prior_vec
-	}
-	if (is.null(num_trees)){
-		num_trees = bart_machine$num_trees
-	}	
-	if (is.null(run_in_sample)){
-		run_in_sample = FALSE
-	}
-	build_bart_machine(X, y,
-		num_trees = num_trees,
-		num_burn_in = bart_machine$num_burn_in, 
-		num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in, 
-		alpha = bart_machine$alpha,
-		beta = bart_machine$beta,
-		debug_log = FALSE,
-		s_sq_y = bart_machine$s_sq_y,
-		num_cores = bart_machine$num_cores,
-		cov_prior_vec = cov_prior_vec,
-		print_tree_illustrations = FALSE,
-		run_in_sample = run_in_sample,
-		verbose = FALSE, 
-		...)
-}
-
-destroy_bart_machine = function(bart_machine){
-	.jcall(bart_machine$java_bart_machine, "V", "destroy")
-	bart_machine$bart_destroyed = TRUE
-	#explicitly ask the JVM to give use the RAM back right now
-	.jcall("java/lang/System", "V", "gc")
-}
 
 size_of_bart_chisq_cache_inquire = function(){
 	init_java_for_bart()
@@ -459,7 +126,7 @@ bart_machine_predict = function(bart_machine, X, ppi = 0.95){
 	#check for errors in data
 	#
 	#now process and make dummies if necessary
-	X = pre_process_new_data(X, bart_machine$training_data_features, bart_machine$use_missing_data, bart_machine$verbose)	
+	X = pre_process_new_data(X, bart_machine)
 		
 	#check for missing data if this feature was not turned on
 	if (!bart_machine$use_missing_data){
@@ -577,7 +244,7 @@ print.bart_machine = function(bart_machine){
 
 calc_ppis_from_prediction = function(bart_machine, new_data, ppi_conf = 0.95){
 	#first convert the rows to the correct dummies etc
-	new_data = pre_process_new_data(new_data, bart_machine$training_data_features, bart_machine$use_missing_data, bart_machine$verbose)
+	new_data = pre_process_new_data(new_data, bart_machine)
 	n_test = nrow(new_data)
 	
 	ppi_lower_bd = array(NA, n_test)
@@ -645,11 +312,18 @@ is.missing = function(x){
 }
 
 ###TO-DO this has to updated for the M matrix
-pre_process_new_data = function(new_data, training_data_features, use_missing_data = TRUE, verbose = FALSE){
+pre_process_new_data = function(new_data, bart_machine){
 	new_data = as.data.frame(new_data)
-	new_data = pre_process_training_data(new_data, use_missing_data, verbose)
+	new_data = pre_process_training_data(new_data, bart_machine$use_missing_data, bart_machine$verbose)
 	n = nrow(new_data)
 	new_data_features = colnames(new_data)
+	
+	if (bart_machine$use_missing_data){
+		training_data_features = bart_machine$training_data_features_with_missing_features
+	} else {
+		training_data_features = bart_machine$training_data_features
+	}
+	
 	
 	#iterate through and see
 	for (j in 1 : length(training_data_features)){

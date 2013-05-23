@@ -47,9 +47,9 @@ xnew = as.data.frame(t(as.matrix(c(0, 1, 0))))
 pred = bart_machine_predict(bart_machine, xnew) #E[Y] = 0
 plot_hist_of_posterior(pred, 2)
 
-xnew = as.data.frame(t(as.matrix(c(0, 1, 0))))
+xnew = as.data.frame(t(as.matrix(c(0, 0, 1))))
 pred = bart_machine_predict(bart_machine, xnew) #E[Y] = 0
-plot_hist_of_posterior(pred, 2)
+plot_hist_of_posterior(pred, 1)
 
 xnew = as.data.frame(t(as.matrix(c(1,0,1))))
 pred = bart_machine_predict(bart_machine, xnew) #E[Y] = 0
