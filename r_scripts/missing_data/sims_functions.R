@@ -38,6 +38,16 @@ knockout_nmar = function(X, prop){
 				X$lstat[i] = NA
 			}
 		}
+		if (X$crim[i] > 0.25){
+			if (runif(1) < prop){
+				X$crim[i] = NA
+			}
+		}	
+		if (X$rm[i] <= 5.5 || X$rm[i] >= 7){
+			if (runif(1) < prop){
+				X$rm[i] = NA
+			}
+		}		
 	}
 	X
 }

@@ -41,7 +41,7 @@ bart_machine = build_bart_machine(Xtrain, ytrain,
 		num_trees = 200,
 		num_burn_in = 300,
 		num_iterations_after_burn_in = 1000,
-		use_missing_data = FALSE)
+		use_missing_data = TRUE)
 bart_machine
 head(bart_machine$model_matrix_training_data)
 plot_y_vs_yhat(bart_machine)

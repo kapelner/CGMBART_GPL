@@ -152,12 +152,12 @@ for (i in 1 : length(KnockoutPROP)){
 }
 
 
-crazy_model_results = rbind(oos_rmse_vanilla, oos_rmse_crazy_model)
-rownames(crazy_model_results) = c(0, KnockoutPROP)
-crazy_model_results = cbind(crazy_model_results, apply(crazy_model_results, 1, mean))
+crazy_model_results_bartm = rbind(oos_rmse_vanilla, oos_rmse_crazy_model)
+rownames(crazy_model_results_bartm) = c(0, KnockoutPROP)
+crazy_model_results_bartm = cbind(crazy_model_results_bartm, apply(crazy_model_results_bartm, 1, mean))
 #mcar_results = cbind(mcar_results, apply(mcar_results, 1, quantile, probs = ALPHA / 2))
 #mcar_results = cbind(mcar_results, apply(mcar_results, 1, quantile, probs = (1 - ALPHA) / 2))
-write.csv(crazy_model_results, "crazy_model_results.csv")
+write.csv(crazy_model_results_bartm, "crazy_model_results_bartm.csv")
 
 
 
@@ -286,7 +286,7 @@ write.csv(crazy_model_results_rf, "crazy_model_results_rf.csv")
 #		ylab = "Multiple of Error", ylim = c(0, 2),
 #		lwd = 3,
 #		col = "red")
-plot(rownames(crazy_model_xbarj_no_M_results), crazy_model_xbarj_no_M_results[, Nsim + 1] / crazy_model_results[1, Nsim + 1], 
+plot(rownames(crazy_model_xbarj_no_M_results), crazy_model_xbarj_no_M_results[, Nsim + 1] / crazy_model_results_bartm[1, Nsim + 1], 
 		type = "b", 
 		main = "", 
 		xlab = "Proportion Data Missing", 
@@ -294,13 +294,13 @@ plot(rownames(crazy_model_xbarj_no_M_results), crazy_model_xbarj_no_M_results[, 
 		lwd = 3,
 		col = "purple")
 
-points(rownames(crazy_model_results_lm), crazy_model_results_lm[, Nsim + 1] / crazy_model_results[1, Nsim + 1], col = "red", lwd = 3, type = "b")
+points(rownames(crazy_model_results_lm), crazy_model_results_lm[, Nsim + 1] / crazy_model_results_bartm[1, Nsim + 1], col = "red", lwd = 3, type = "b")
 
 
 #points(rownames(crazy_model_xbarj_results), crazy_model_xbarj_results[, Nsim + 1] / crazy_model_xbarj_results[1, Nsim + 1], col = "purple", lwd = 2, type = "b")
 #points(rownames(crazy_model_xbarj_no_M_results), crazy_model_xbarj_no_M_results[, Nsim + 1] / crazy_model_xbarj_no_M_results[1, Nsim + 1], col = "blue", lwd = 2, type = "b")
-points(rownames(crazy_model_results), crazy_model_results[, Nsim + 1] / crazy_model_results[1, Nsim + 1], col = "green", lwd = 3, type = "b")
-points(rownames(crazy_model_results_rf), crazy_model_results_rf[, Nsim + 1] / crazy_model_results[1, Nsim + 1], col = "black", lwd = 3, type = "b")
+points(rownames(crazy_model_results_bartm), crazy_model_results_bartm[, Nsim + 1] / crazy_model_results_bartm[1, Nsim + 1], col = "green", lwd = 3, type = "b")
+points(rownames(crazy_model_results_rf), crazy_model_results_rf[, Nsim + 1] / crazy_model_results_bartm[1, Nsim + 1], col = "black", lwd = 3, type = "b")
 
 
 

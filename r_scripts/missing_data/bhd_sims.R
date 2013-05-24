@@ -25,7 +25,7 @@ y = X$medv
 X$medv = NULL
 
 #set simulation params
-Nsim = 5
+Nsim = 300
 ALPHA = 0.05
 KnockoutPROP = c(0.01, 0.05, 0.10, 0.2, 0.3, 0.4, 0.5, 0.9)
 set_bart_machine_num_cores(4)
@@ -162,9 +162,11 @@ for (i in 1 : length(KnockoutPROP)){
 		} else {
 			rf_mod = randomForest(ytrain ~ ., rfImpute(Xtrain, ytrain))		
 		}
-		Xtest_miss_rf = missForest(Xtest, verbose = TRUE)$ximp		
 		
-#		Xtest_miss_rf = imputeMatrixByXbarj(Xtest, Xtrain)
+		#to get Xtest, impute also using Xtrain
+		imputed = missForest(rbind(Xtest, Xtrain), verbose = TRUE)$ximp		
+		Xtest_miss_rf = imputed[1 : n_test, ]		
+		
 		y_hat = predict(rf_mod, Xtest_miss_rf)
 		oos_rmse_bhd_rf_mcar[i, nsim] = sqrt((sum(ytest - y_hat)^2) / n_test)
 		print(oos_rmse_bhd_rf_mcar)
@@ -178,8 +180,8 @@ write.csv(bhd_results_rf_mcar, "bhd_results_rf_mcar.csv")
 
 
 
-
-plot(rownames(bhd_xbarj_no_M_results_mcar), bhd_xbarj_no_M_results_mcar[, Nsim + 1] / bhd_results_bartm[1, Nsim + 1], 
+windows()
+plot(rownames(bhd_xbarj_no_M_results_mcar), bhd_xbarj_no_M_results_mcar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), 
 		type = "b", 
 		main = "", 
 		xlab = "Proportion Data Missing", 
@@ -187,9 +189,9 @@ plot(rownames(bhd_xbarj_no_M_results_mcar), bhd_xbarj_no_M_results_mcar[, Nsim +
 		lwd = 3,
 		col = "purple")
 
-points(rownames(bhd_lm_results_mcar), bhd_lm_results_mcar[, Nsim + 1] / bhd_results_bartm[1, Nsim + 1], col = "red", lwd = 3, type = "b")
-points(rownames(bhd_results_bartm), bhd_results_bartm[, Nsim + 1] / bhd_results_bartm[1, Nsim + 1], col = "green", lwd = 3, type = "b")
-points(rownames(bhd_results_rf_mcar), bhd_results_rf_mcar[, Nsim + 1] / bhd_results_bartm[1, Nsim + 1], col = "black", lwd = 3, type = "b")
+points(rownames(bhd_lm_results_mcar), bhd_lm_results_mcar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), col = "red", lwd = 3, type = "b")
+points(rownames(bhd_bartm_results_mcar), bhd_bartm_results_mcar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), col = "green", lwd = 3, type = "b")
+points(rownames(bhd_results_rf_mcar), bhd_results_rf_mcar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), col = "black", lwd = 3, type = "b")
 
 
 
@@ -308,7 +310,9 @@ for (i in 1 : length(KnockoutPROP)){
 		} else {
 			rf_mod = randomForest(ytrain ~ ., rfImpute(Xtrain, ytrain))		
 		}
-		Xtest_miss_rf = missForest(Xtest, verbose = TRUE)$ximp		
+		#to get Xtest, impute also using Xtrain
+		imputed = missForest(rbind(Xtest, Xtrain), verbose = TRUE)$ximp		
+		Xtest_miss_rf = imputed[1 : n_test, ]		
 		
 #		Xtest_miss_rf = imputeMatrixByXbarj(Xtest, Xtrain)
 		y_hat = predict(rf_mod, Xtest_miss_rf)
@@ -324,8 +328,8 @@ write.csv(bhd_rf_results_mar, "bhd_rf_results_mar.csv")
 
 
 
-
-plot(rownames(bhd_xbarj_no_M_results_mar), bhd_xbarj_no_M_results_mar[, Nsim + 1] / bhd_results_bartm[1, Nsim + 1], 
+windows()
+plot(rownames(bhd_xbarj_no_M_results_mar), bhd_xbarj_no_M_results_mar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), 
 		type = "b", 
 		main = "", 
 		xlab = "Proportion Data Missing", 
@@ -333,9 +337,9 @@ plot(rownames(bhd_xbarj_no_M_results_mar), bhd_xbarj_no_M_results_mar[, Nsim + 1
 		lwd = 3,
 		col = "purple")
 
-points(rownames(bhd_lm_results_mar), bhd_lm_results_mar[, Nsim + 1] / bhd_results_bartm[1, Nsim + 1], col = "red", lwd = 3, type = "b")
-points(rownames(bhd_results_bartm), bhd_results_bartm[, Nsim + 1] / bhd_results_bartm[1, Nsim + 1], col = "green", lwd = 3, type = "b")
-points(rownames(bhd_rf_results_mar), bhd_rf_results_mar[, Nsim + 1] / bhd_results_bartm[1, Nsim + 1], col = "black", lwd = 3, type = "b")
+points(rownames(bhd_lm_results_mar), bhd_lm_results_mar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), col = "red", lwd = 3, type = "b")
+points(rownames(bhd_bartm_results_mar), bhd_bartm_results_mar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), col = "green", lwd = 3, type = "b")
+points(rownames(bhd_rf_results_mar), bhd_rf_results_mar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), col = "black", lwd = 3, type = "b")
 
 
 
@@ -452,9 +456,10 @@ for (i in 1 : length(KnockoutPROP)){
 		} else {
 			rf_mod = randomForest(ytrain ~ ., rfImpute(Xtrain, ytrain))		
 		}
-		Xtest_miss_rf = missForest(Xtest, verbose = TRUE)$ximp		
+		#to get Xtest, impute also using Xtrain
+		imputed = missForest(rbind(Xtest, Xtrain), verbose = TRUE)$ximp		
+		Xtest_miss_rf = imputed[1 : n_test, ]		
 		
-#		Xtest_miss_rf = imputeMatrixByXbarj(Xtest, Xtrain)
 		y_hat = predict(rf_mod, Xtest_miss_rf)
 		oos_rmse_bhd_rf_nmar[i, nsim] = sqrt((sum(ytest - y_hat)^2) / n_test)
 		print(oos_rmse_bhd_rf_nmar)
@@ -468,16 +473,16 @@ write.csv(bhd_results_rf_nmar, "bhd_results_rf_nmar.csv")
 
 
 
-
-plot(rownames(bhd_xbarj_no_M_results_nmar), bhd_xbarj_no_M_results_nmar[, Nsim + 1] / bhd_results_bartm[1, Nsim + 1], 
+windows()
+plot(rownames(bhd_xbarj_no_M_results_nmar), bhd_xbarj_no_M_results_nmar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), 
 		type = "b", 
 		main = "", 
 		xlab = "Proportion Data Missing", 
-		ylab = "Multiple of Baseline Error", ylim = c(1, 3),
+		ylab = "Multiple of Baseline Error", ylim = c(0, 3),
 		lwd = 3,
 		col = "purple")
 
-points(rownames(bhd_lm_results_nmar), bhd_lm_results_nmar[, Nsim + 1] / bhd_results_bartm[1, Nsim + 1], col = "red", lwd = 3, type = "b")
-points(rownames(bhd_results_bartm), bhd_results_bartm[, Nsim + 1] / bhd_results_bartm[1, Nsim + 1], col = "green", lwd = 3, type = "b")
-points(rownames(bhd_results_rf_nmar), bhd_results_rf_nmar[, Nsim + 1] / bhd_results_bartm[1, Nsim + 1], col = "black", lwd = 3, type = "b")
+points(rownames(bhd_lm_results_nmar), bhd_lm_results_nmar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), col = "red", lwd = 3, type = "b")
+points(rownames(bhd_bartm_results_nmar), bhd_bartm_results_nmar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), col = "green", lwd = 3, type = "b")
+points(rownames(bhd_results_rf_nmar), bhd_results_rf_nmar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), col = "black", lwd = 3, type = "b")
 
