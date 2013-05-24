@@ -1,3 +1,6 @@
+library(randomForest)
+library(missForest)
+
 directory_where_code_is = getwd() #usually we're on a linux box and we'll just navigate manually to the directory
 #if we're on windows, then we're on the dev box, so use a prespecified directory
 if (.Platform$OS.type == "windows"){
@@ -209,85 +212,6 @@ crazy_model_results_lm = cbind(crazy_model_results_lm, apply(crazy_model_results
 write.csv(crazy_model_results_lm, "crazy_model_results_lm.csv")
 
 
-
-#oos_rmse_crazy_model_cc = matrix(NA, nrow = length(KnockoutPROP), ncol = Nsim)
-#
-#for (i in 1 : length(KnockoutPROP)){
-#	for (nsim in 1 : Nsim){	
-#		Xy = generate_crazy_model(n_dataset, prop = KnockoutPROP[i], missing_offset, sigma_e)
-#		X = Xy[, 1 : 3]
-#		y = Xy[, 4]		
-#		test_indices = sample(1 : nrow(X), n_test)
-#		
-#		Xtrain = X[-test_indices, ]
-#		ytrain = y[-test_indices]
-#		Xtrain_ccy = na.omit(cbind(Xtrain, ytrain))
-#		
-#
-#		
-#		Xy = generate_crazy_model(n_dataset, prop = 0, missing_offset, sigma_e)
-#		X = Xy[, 1 : 3]
-#		y = Xy[, 4]	
-#		
-#		Xtest = X[test_indices, ]
-#		ytest = y[test_indices]
-#		Xtest_ccy = na.omit(cbind(Xtest, ytest))
-#		
-#		cat(nrow(Xtrain_ccy), "rows of", nrow(X), "on prop", KnockoutPROP[i], "\n")
-#		if (nrow(Xtrain_ccy) == 0 || nrow(Xtest_ccy) == 0){
-#			next
-#		}
-#		bart_machine = build_bart_machine(Xy = Xtrain_ccy, verbose = TRUE, run_in_sample = FALSE)
-#		
-#		Xtest = Xtest_ccy[, 1 : 3]
-#		ytest = Xtest_ccy[, 4]
-#		predict_obj = bart_predict_for_test_data(bart_machine, Xtest, ytest)
-#		destroy_bart_machine(bart_machine)
-#		oos_rmse_crazy_model_cc[i, nsim] = predict_obj$rmse
-#		print(oos_rmse_crazy_model_cc)
-#	}
-#}
-#
-#crazy_model_results_cc = rbind(oos_rmse_vanilla, oos_rmse_crazy_model_cc)
-#rownames(crazy_model_results_cc) = c(0, KnockoutPROP)
-#crazy_model_results_cc = cbind(crazy_model_results_cc, apply(crazy_model_results_cc, 1, mean))
-##mcar_results_cc = cbind(mcar_results_cc, apply(mcar_results_cc, 1, quantile, probs = ALPHA / 2))
-##mcar_results_cc = cbind(mcar_results_cc, apply(mcar_results_cc, 1, quantile, probs = (1 - ALPHA) / 2))
-#write.csv(crazy_model_results_cc, "crazy_model_results_cc.csv")
-
-
-#oos_rmse_crazy_model_xbarj = matrix(NA, nrow = length(KnockoutPROP), ncol = Nsim)
-#
-#for (i in 1 : length(KnockoutPROP)){
-#	for (nsim in 1 : Nsim){	
-#		Xy = generate_crazy_model(n_dataset, prop = KnockoutPROP[i], missing_offset, sigma_e)
-#		X = Xy[, 1 : 3]
-#		y = Xy[, 4]		
-#		
-#		test_indices = sample(1 : nrow(X), n_test)
-#		Xtest = X[test_indices, ]
-#		ytest = y[test_indices]
-#		Xtrain = X[-test_indices, ]
-#		ytrain = y[-test_indices]
-#		bart_machine = build_bart_machine(X = Xtrain, y = ytrain, verbose = TRUE, run_in_sample = FALSE, replace_missing_data_with_x_j_bar = TRUE)
-#		
-#		Xtest = imputeMatrixByXbarj(Xtest, Xtrain)
-#		predict_obj = bart_predict_for_test_data(bart_machine, Xtest, ytest)
-#		destroy_bart_machine(bart_machine)
-#		oos_rmse_crazy_model_xbarj[i, nsim] = predict_obj$rmse
-#		print(oos_rmse_crazy_model_xbarj)
-#	}
-#}
-#
-#crazy_model_xbarj_results = rbind(oos_rmse_vanilla, oos_rmse_crazy_model_xbarj)
-#rownames(crazy_model_xbarj_results) = c(0, KnockoutPROP)
-#crazy_model_xbarj_results = cbind(crazy_model_xbarj_results, apply(crazy_model_xbarj_results, 1, mean))
-##mcar_xbarj_results = cbind(mcar_xbarj_results, apply(mcar_xbarj_results, 1, quantile, probs = ALPHA / 2))
-##mcar_xbarj_results = cbind(mcar_xbarj_results, apply(mcar_xbarj_results, 1, quantile, probs = (1 - ALPHA) / 2))
-#write.csv(crazy_model_xbarj_results, "crazy_model_results_xbarj.csv")
-
-
-
 oos_rmse_crazy_model_xbarj_no_M = matrix(NA, nrow = length(KnockoutPROP), ncol = Nsim)
 
 for (i in 1 : length(KnockoutPROP)){
@@ -319,11 +243,6 @@ crazy_model_xbarj_no_M_results = cbind(crazy_model_xbarj_no_M_results, apply(cra
 write.csv(crazy_model_xbarj_no_M_results, "crazy_model_results_xbarj_no_M.csv")
 
 
-
-
-library(randomForest)
-install.packages("missForest")
-library(missForest)
 
 oos_rmse_crazy_model_rf = matrix(NA, nrow = length(KnockoutPROP), ncol = Nsim)
 
