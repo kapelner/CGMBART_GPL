@@ -107,7 +107,7 @@ public abstract class Classifier implements Serializable {
 			}
 			catch (NumberFormatException e){
 				record[i] = MISSING_VALUE;
-				System.out.println("missing value at record #" + X_y.size() + " attribute #" + i);
+//				System.out.println("missing value at record #" + X_y.size() + " attribute #" + i);
 			}
 		}				
 		X_y.add(record);		
