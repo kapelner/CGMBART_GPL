@@ -29,6 +29,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		cov_prior_vec = NULL,
 		use_missing_data = TRUE,
 		replace_missing_data_with_x_j_bar = FALSE,
+		add_imputations = FALSE,
 		replace_missing_data_with_x_j_bar_for_lm = TRUE,
 		mem_cache_for_speed = TRUE,
 		verbose = TRUE){
@@ -103,7 +104,19 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		cat("Missing data feature ON. ")
 	}
 	
-	model_matrix_training_data = cbind(pre_process_training_data(X, use_missing_data, verbose), y_numeric)
+	imputations = NULL
+	if (add_imputations){
+		if (nrow(na.omit(X)) == nrow(X)){ #for the cases where it doesn't impute
+			warning("No missing entries in the training data to impute.")
+			imputations = X
+		} else {
+			imputations = rfImpute(X, y)
+			imputations = imputations[, 2 : ncol(imputations)]	
+		}
+		colnames(imputations) = paste(colnames(imputations), "_imp", sep = "")
+	}
+
+	model_matrix_training_data = cbind(pre_process_training_data(X, use_missing_data, imputations, verbose), y_numeric)
 	
 	#if we're not using missing data, go on and nuke it
 	if (!use_missing_data && !replace_missing_data_with_x_j_bar){
@@ -242,6 +255,8 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 			sig_sq_est = sig_sq_est,
 			time_to_build = Sys.time() - t0,
 			use_missing_data = use_missing_data,
+			replace_missing_data_with_x_j_bar = replace_missing_data_with_x_j_bar,
+			add_imputations = add_imputations,
 			verbose = verbose,
 			bart_destroyed = FALSE
 	)

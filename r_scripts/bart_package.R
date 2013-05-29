@@ -272,7 +272,7 @@ check_for_errors_in_training_data = function(data){
 	FALSE
 }
 
-pre_process_training_data = function(data, use_missing_data = TRUE, verbose = FALSE){
+pre_process_training_data = function(data, use_missing_data = TRUE, imputations = NULL, verbose = FALSE){
 	
 	#first convert characters to factors
 	character_vars = names(which(sapply(data, class) == "character"))
@@ -300,8 +300,15 @@ pre_process_training_data = function(data, use_missing_data = TRUE, verbose = FA
 			}
 		}
 		colnames(M) = paste("M_", colnames(data), sep = "")
+		
+		#now we may want to add imputations
+		if (!is.null(imputations)){
+			data = cbind(data, imputations)
+		}
+		
 		#append the missing dummy columns to data as if they're real attributes themselves
 		data = cbind(data, M)
+
 	}
 	#make sure to cast it as a data matrix
 	data.matrix(data)
@@ -311,10 +318,17 @@ is.missing = function(x){
 	is.na(x) || is.nan(x)
 }
 
-###TO-DO this has to updated for the M matrix
 pre_process_new_data = function(new_data, bart_machine){
 	new_data = as.data.frame(new_data)
-	new_data = pre_process_training_data(new_data, bart_machine$use_missing_data, bart_machine$verbose)
+	
+	imputations = NULL #global namespace?
+	if (bart_machine$add_imputations){
+		#we ahve to impute with missForest since we don't have y's for the test data we want to predict
+		imputations = missForest(rbind(new_data, bart_machine$X), verbose = bart_machine$verbose)$ximp
+		imputations = imputations[1 : nrow(new_data), ]
+		colnames(imputations) = paste(colnames(imputations), "_imp", sep = "")
+	}
+	new_data = pre_process_training_data(new_data, bart_machine$use_missing_data, imputations, bart_machine$verbose)
 	n = nrow(new_data)
 	new_data_features = colnames(new_data)
 	

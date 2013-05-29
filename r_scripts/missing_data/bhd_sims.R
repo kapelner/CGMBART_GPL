@@ -180,10 +180,36 @@ write.csv(bhd_results_rf_mcar, "bhd_results_rf_mcar.csv")
 
 
 
+oos_rmse_bhd_bart_with_imp_mcar = matrix(NA, nrow = length(KnockoutPROP), ncol = Nsim)
+
+for (i_knockout in 1 : length(KnockoutPROP)){
+	for (nsim in 1 : Nsim){	
+		Xm = knockout_mcar(X, KnockoutPROP[i_knockout])
+		
+		test_indices = sample(1 : nrow(X), n_test)
+		Xtest = X[test_indices, ]
+		ytest = y[test_indices]
+		Xtrain = X[-test_indices, ]
+		ytrain = y[-test_indices]
+		bart_machine = build_bart_machine(Xtrain, ytrain, verbose = FALSE, run_in_sample = FALSE, add_imputations = TRUE, debug_log = TRUE)
+		predict_obj = bart_predict_for_test_data(bart_machine, Xtest, ytest)
+		destroy_bart_machine(bart_machine)
+		oos_rmse_bhd_bart_with_imp_mcar[i_knockout, nsim] = predict_obj$rmse
+		print(oos_rmse_bhd_bart_with_imp_mcar)
+	}
+}
+
+bhd_results_bart_with_imp_mcar = rbind(oos_rmse_vanilla_bhd, oos_rmse_bhd_bart_with_imp_mcar)
+rownames(bhd_results_bart_with_imp_mcar) = c(0, KnockoutPROP)
+bhd_results_bart_with_imp_mcar = cbind(bhd_results_bart_with_imp_mcar, apply(bhd_results_bart_with_imp_mcar, 1, mean))
+write.csv(bhd_results_bart_with_imp_mcar, "bhd_results_bart_with_imp_mcar.csv")
+
+
+
 windows()
 plot(rownames(bhd_xbarj_no_M_results_mcar), bhd_xbarj_no_M_results_mcar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), 
 		type = "b", 
-		main = "", 
+		main = "MCAR", 
 		xlab = "Proportion Data Missing", 
 		ylab = "Multiple of Baseline Error", ylim = c(1, 3),
 		lwd = 3,
@@ -192,6 +218,7 @@ plot(rownames(bhd_xbarj_no_M_results_mcar), bhd_xbarj_no_M_results_mcar[, Nsim +
 points(rownames(bhd_lm_results_mcar), bhd_lm_results_mcar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), col = "red", lwd = 3, type = "b")
 points(rownames(bhd_bartm_results_mcar), bhd_bartm_results_mcar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), col = "green", lwd = 3, type = "b")
 points(rownames(bhd_results_rf_mcar), bhd_results_rf_mcar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), col = "black", lwd = 3, type = "b")
+points(rownames(bhd_results_bart_with_imp_mcar), bhd_results_bart_with_imp_mcar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), col = "brown", lwd = 3, type = "b")
 
 
 
@@ -327,11 +354,36 @@ bhd_rf_results_mar = cbind(bhd_rf_results_mar, apply(bhd_rf_results_mar, 1, mean
 write.csv(bhd_rf_results_mar, "bhd_rf_results_mar.csv")
 
 
+oos_rmse_bhd_bart_with_imp_mar = matrix(NA, nrow = length(KnockoutPROP), ncol = Nsim)
+
+for (i_knockout in 1 : length(KnockoutPROP)){
+	for (nsim in 1 : Nsim){	
+		Xm = knockout_mar(X, KnockoutPROP[i])	
+		
+		test_indices = sample(1 : nrow(X), n_test)
+		Xtest = X[test_indices, ]
+		ytest = y[test_indices]
+		Xtrain = X[-test_indices, ]
+		ytrain = y[-test_indices]
+		bart_machine = build_bart_machine(Xtrain, ytrain, verbose = FALSE, run_in_sample = FALSE, add_imputations = TRUE, debug_log = TRUE)
+		predict_obj = bart_predict_for_test_data(bart_machine, Xtest, ytest)
+		destroy_bart_machine(bart_machine)
+		oos_rmse_bhd_bart_with_imp_mar[i_knockout, nsim] = predict_obj$rmse
+		print(oos_rmse_bhd_bart_with_imp_mar)
+	}
+}
+
+bhd_results_bart_with_imp_mar = rbind(oos_rmse_vanilla, oos_rmse_bhd_bart_with_imp_mar)
+rownames(bhd_results_bart_with_imp_mar) = c(0, KnockoutPROP)
+bhd_results_bart_with_imp_mar = cbind(bhd_results_bart_with_imp_mar, apply(bhd_results_bart_with_imp_mar, 1, mean))
+write.csv(bhd_results_bart_with_imp_mar, "bhd_results_bart_with_imp_mar.csv")
+
+
 
 windows()
 plot(rownames(bhd_xbarj_no_M_results_mar), bhd_xbarj_no_M_results_mar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), 
 		type = "b", 
-		main = "", 
+		main = "MAR", 
 		xlab = "Proportion Data Missing", 
 		ylab = "Multiple of Baseline Error", ylim = c(1, 3),
 		lwd = 3,
@@ -340,6 +392,7 @@ plot(rownames(bhd_xbarj_no_M_results_mar), bhd_xbarj_no_M_results_mar[, Nsim + 1
 points(rownames(bhd_lm_results_mar), bhd_lm_results_mar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), col = "red", lwd = 3, type = "b")
 points(rownames(bhd_bartm_results_mar), bhd_bartm_results_mar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), col = "green", lwd = 3, type = "b")
 points(rownames(bhd_rf_results_mar), bhd_rf_results_mar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), col = "black", lwd = 3, type = "b")
+points(rownames(bhd_results_bart_with_imp_mar), bhd_results_bart_with_imp_mar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), col = "brown", lwd = 3, type = "b")
 
 
 
@@ -472,11 +525,36 @@ bhd_results_rf_nmar = cbind(bhd_results_rf_nmar, apply(bhd_results_rf_nmar, 1, m
 write.csv(bhd_results_rf_nmar, "bhd_results_rf_nmar.csv")
 
 
+oos_rmse_bhd_bart_with_imp_nmar = matrix(NA, nrow = length(KnockoutPROP), ncol = Nsim)
+
+for (i_knockout in 1 : length(KnockoutPROP)){
+	for (nsim in 1 : Nsim){	
+		Xm = knockout_mar(X, KnockoutPROP[i])	
+		
+		test_indices = sample(1 : nrow(X), n_test)
+		Xtest = X[test_indices, ]
+		ytest = y[test_indices]
+		Xtrain = X[-test_indices, ]
+		ytrain = y[-test_indices]
+		bart_machine = build_bart_machine(Xtrain, ytrain, verbose = FALSE, run_in_sample = FALSE, add_imputations = TRUE, debug_log = TRUE)
+		predict_obj = bart_predict_for_test_data(bart_machine, Xtest, ytest)
+		destroy_bart_machine(bart_machine)
+		oos_rmse_bhd_bart_with_imp_nmar[i_knockout, nsim] = predict_obj$rmse
+		print(oos_rmse_bhd_bart_with_imp_nmar)
+	}
+}
+
+bhd_results_bart_with_imp_nmar = rbind(oos_rmse_vanilla, oos_rmse_bhd_bart_with_imp_nmar)
+rownames(bhd_results_bart_with_imp_nmar) = c(0, KnockoutPROP)
+bhd_results_bart_with_imp_nmar = cbind(bhd_results_bart_with_imp_nmar, apply(bhd_results_bart_with_imp_nmar, 1, mean))
+write.csv(bhd_results_bart_with_imp_nmar, "bhd_results_bart_with_imp_nmar.csv")
+
+
 
 windows()
 plot(rownames(bhd_xbarj_no_M_results_nmar), bhd_xbarj_no_M_results_nmar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), 
 		type = "b", 
-		main = "", 
+		main = "NMAR", 
 		xlab = "Proportion Data Missing", 
 		ylab = "Multiple of Baseline Error", ylim = c(0, 3),
 		lwd = 3,
@@ -485,4 +563,8 @@ plot(rownames(bhd_xbarj_no_M_results_nmar), bhd_xbarj_no_M_results_nmar[, Nsim +
 points(rownames(bhd_lm_results_nmar), bhd_lm_results_nmar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), col = "red", lwd = 3, type = "b")
 points(rownames(bhd_bartm_results_nmar), bhd_bartm_results_nmar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), col = "green", lwd = 3, type = "b")
 points(rownames(bhd_results_rf_nmar), bhd_results_rf_nmar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), col = "black", lwd = 3, type = "b")
+points(rownames(bhd_results_bart_with_imp_nmar), bhd_results_bart_with_imp_nmar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), col = "brown", lwd = 3, type = "b")
+
+
+
 

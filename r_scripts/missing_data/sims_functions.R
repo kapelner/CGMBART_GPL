@@ -14,16 +14,11 @@ knockout_mcar = function(X, prop){
 
 knockout_mar = function(X, prop){
 	for (i in 1 : nrow(X)){
-		for (j in 7 : 12){ ###13th col is lstat
-			if (X$lstat[i] > 15){
+		for (j in c(2 : 13)){ ###1st col is crim
+			if (X$crim > 0.25){
 				if (runif(1) < prop){
 					X[i, j] = NA
 				}
-			}
-			if (X$lstat[i] < 5 && j == 6){ ###6th col is rm
-				if (runif(1) < prop){
-					X[i, j] = NA
-				}				
 			}
 		}
 	}
@@ -42,10 +37,20 @@ knockout_nmar = function(X, prop){
 			if (runif(1) < prop){
 				X$crim[i] = NA
 			}
-		}	
+		}
+		if (X$tax[i] > 400){
+			if (runif(1) < prop){
+				X$tax[i] = NA
+			}
+		}		
 		if (X$rm[i] <= 5.5 || X$rm[i] >= 7){
 			if (runif(1) < prop){
 				X$rm[i] = NA
+			}
+		}
+		if (X$age[i] > 60){
+			if (runif(1) < prop){
+				X$age[i] = NA
 			}
 		}		
 	}
@@ -173,10 +178,10 @@ generate_simple_model_probit_with_missingness = function(n, mu_1 = -1, mu_2 = 1,
 	X_2 = rnorm(n, mu_2, sigma_2)
 	Z = ifelse(is.na(X_1), X_2, X_1)
 	probs = pnorm(Z) #probit model
-	h1 = hist(probs[!is.na(X_1)], br = 50, main = "missing distribution in red, non-missing in blue", xlab = "P(Y=1)")
-	h2 = hist(probs[is.na(X_1)], br = 50, main = "missing distribution in red, non-missing in blue", xlab = "P(Y=1)")	
-	plot(h1, xlim = c(0, 1), col = rgb(0,0,1,1/4), main = "missing distribution in red, non-missing in blue", xlab = "P(Y=1)")
-	plot(h2, add = TRUE, col = rgb(1,0,0,1/4), main = "missing distribution in red, non-missing in blue", xlab = "P(Y=1)")
+	h1 = hist(probs[!is.na(X_1)], br = 25,  xlab = "P(Y=1)") #main = "missing distribution in red, non-missing in blue",
+	h2 = hist(probs[is.na(X_1)], br = 25, xlab = "P(Y=1)")	
+	plot(h1, xlim = c(0, 1), col = rgb(0,0,1,1/4), xlab = "P(Y=1)", main = "")
+	plot(h2, add = TRUE, col = rgb(1,0,0,1/4), xlab = "P(Y=1)", main = "")
 	abline(v = mean(probs[!is.na(X_1)]), lwd = 3)
 	abline(v = mean(probs[is.na(X_1)]), lwd = 3)
 	Y = as.factor(rbinom(n, 1, probs))
