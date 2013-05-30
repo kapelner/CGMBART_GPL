@@ -6,6 +6,10 @@ directory_where_code_is = getwd() #usually we're on a linux box and we'll just n
 if (.Platform$OS.type == "windows"){
 	directory_where_code_is = "C:\\Users\\kapelner\\workspace\\CGMBART_GPL"
 }
+
+##FOR JUSTIN
+#directory_where_code_is = "C:\\Users\\jbleich\\workspace\\CGMBART_GPL"
+
 setwd(directory_where_code_is)
 
 source("r_scripts/bart_package.R")
@@ -22,6 +26,8 @@ p_crazy = 3
 prop_missing = 0.1
 offset_missing = 5
 sigma_e = 1
+
+##justin set_bart_machine_num_cores(1)
 
 graphics.off()
 
@@ -82,6 +88,11 @@ plot_hist_of_posterior(pred, 0.5)
 xnew = as.data.frame(t(as.matrix(c(NA, NA, NA))))
 pred = bart_machine_predict(bart_machine, xnew)
 plot_hist_of_posterior(pred, offset_missing + 0.5)
+
+
+##########################story plots (variable and interaction)
+investigate_var_importance(bart_machine=bart_machine)
+interaction_investigator(bart_machine)
 
 
 ################ plots of crazy model vs competitors

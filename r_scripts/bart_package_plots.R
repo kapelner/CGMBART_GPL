@@ -410,9 +410,15 @@ interaction_investigator = function(bart_machine, plot = TRUE, num_replicates_fo
 	cat("\n")
 	
 	interaction_counts_avg = apply(interaction_counts, 1 : 2, mean)
-	rownames(interaction_counts_avg) = bart_machine$training_data_features
-	colnames(interaction_counts_avg) = bart_machine$training_data_features	
-	interaction_counts_sd = apply(interaction_counts, 1 : 2, sd)
+  if(bart_machine$use_missing_data == T){
+    rownames(interaction_counts_avg) = bart_machine$training_data_features_with_missing_features
+    colnames(interaction_counts_avg) = bart_machine$training_data_features_with_missing_features
+  }
+  else{
+	  rownames(interaction_counts_avg) = bart_machine$training_data_features
+	  colnames(interaction_counts_avg) = bart_machine$training_data_features	
+  }
+  interaction_counts_sd = apply(interaction_counts, 1 : 2, sd)
 	interaction_counts_s_w_test = apply(interaction_counts, 1 : 2, shapiro_wilk_p_val)
 	
 	#now vectorize the interaction counts
