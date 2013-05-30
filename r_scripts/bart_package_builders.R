@@ -431,7 +431,7 @@ bart_machine_duplicate = function(bart_machine, X = NULL, y = NULL, cov_prior_ve
 			beta = bart_machine$beta,
 			debug_log = FALSE,
 			s_sq_y = bart_machine$s_sq_y,
-			num_cores = bart_machine$num_cores,
+			#num_cores = bart_machine$num_cores,
 			cov_prior_vec = cov_prior_vec,
 			print_tree_illustrations = FALSE,
 			run_in_sample = run_in_sample,
