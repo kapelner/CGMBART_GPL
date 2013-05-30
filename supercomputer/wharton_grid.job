@@ -1,9 +1,0 @@
-#!/bin/csh
-#PBS -l ncpus=16
-#ncpus must be a multiple of 16
-#PBS -l walltime=20:00
-#PBS -j oe
-#PBS -q batch
-set echo
-#run my executable
-R --no-save < r_scripts/bart_bakeoff.R > r_log/bart_output.out

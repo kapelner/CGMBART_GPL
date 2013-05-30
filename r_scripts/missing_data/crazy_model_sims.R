@@ -315,6 +315,7 @@ crazy_model_results_bart_with_imp = cbind(crazy_model_results_bart_with_imp, app
 write.csv(crazy_model_results_bart_with_imp, "crazy_model_results_bart_with_imp.csv")
 
 
+
 plot(rownames(crazy_model_xbarj_no_M_results), crazy_model_xbarj_no_M_results[, Nsim + 1] / crazy_model_results_bartm[1, Nsim + 1], 
 	type = "b", 
 	main = "", 
