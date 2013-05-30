@@ -3,19 +3,38 @@ library(missForest)
 library(MASS)
 
 
-directory_where_code_is = getwd() #usually we're on a linux box and we'll just navigate manually to the directory
-#if we're on windows, then we're on the dev box, so use a prespecified directory
-if (.Platform$OS.type == "windows"){
-	directory_where_code_is = "C:\\Users\\kapelner\\workspace\\CGMBART_GPL"
-}
-setwd(directory_where_code_is)
+###########GRID COMPUTING
+LAST_NAME = "kapelner"
+NOT_ON_GRID = length(grep("wharton.upenn.edu", Sys.getenv(c("HOSTNAME")))) == 0
 
-source("r_scripts/bart_package.R")
-source("r_scripts/bart_package_builders.R")
-source("r_scripts/bart_package_plots.R")
-source("r_scripts/bart_package_variable_selection.R")
-source("r_scripts/bart_package_f_tests.R")
-source("r_scripts/missing_data/sims_functions.R")
+if (NOT_ON_GRID){
+	directory_where_code_is = "C:\\Users\\kapelner\\workspace\\CGMBART_GPL\\missing_data"
+} else {
+	directory_where_code_is = getwd()
+}
+
+source("../bart_package.R")
+source("../bart_package_builders.R")
+source("../bart_package_plots.R")
+source("../bart_package_variable_selection.R")
+source("../bart_package_f_tests.R")
+source("../missing_data/sims_functions.R")
+
+args = commandArgs(TRUE)
+print(paste("args:", args))
+
+if (length(args) > 0){
+	for (i in 1 : length(args)){
+		eval(parse(text = args[[i]]))
+	}
+}
+if (NOT_ON_GRID){
+	iter_num = 1
+	set_bart_machine_num_cores(4)
+}
+
+
+
 
 #get the Boston housing data
 data(Boston)
@@ -34,28 +53,6 @@ pct_test_data = 0.2
 n_test = round(pct_test_data * nrow(X))
 
 
-###########GRID COMPUTING
-LAST_NAME = "kapelner"
-NOT_ON_GRID = length(grep("wharton.upenn.edu", Sys.getenv(c("HOSTNAME")))) == 0
-
-if (NOT_ON_GRID){
-	setwd("C:/Users/Kapelner/workspace/bart_gene/simulations_for_var_selection")
-} else {
-	setwd("simulations_for_var_selection")
-}
-
-args = commandArgs(TRUE)
-print(paste("args:", args))
-
-if (length(args) > 0){
-	for (i in 1 : length(args)){
-		eval(parse(text = args[[i]]))
-	}
-}
-if (NOT_ON_GRID){
-	iter_num = 1
-	set_bart_machine_num_cores(4)
-}
 
 
 
