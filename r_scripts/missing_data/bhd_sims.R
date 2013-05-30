@@ -8,17 +8,18 @@ LAST_NAME = "kapelner"
 NOT_ON_GRID = length(grep("wharton.upenn.edu", Sys.getenv(c("HOSTNAME")))) == 0
 
 if (NOT_ON_GRID){
-	directory_where_code_is = "C:\\Users\\kapelner\\workspace\\CGMBART_GPL\\missing_data"
+	directory_where_code_is = "C:\\Users\\kapelner\\workspace\\CGMBART_GPL"
 } else {
 	directory_where_code_is = getwd()
 }
+setwd(directory_where_code_is)
 
-source("../bart_package.R")
-source("../bart_package_builders.R")
-source("../bart_package_plots.R")
-source("../bart_package_variable_selection.R")
-source("../bart_package_f_tests.R")
-source("../missing_data/sims_functions.R")
+source("r_scripts/bart_package.R")
+source("r_scripts/bart_package_builders.R")
+source("r_scripts/bart_package_plots.R")
+source("r_scripts/bart_package_variable_selection.R")
+source("r_scripts/bart_package_f_tests.R")
+source("r_scripts/missing_data/sims_functions.R")
 
 args = commandArgs(TRUE)
 print(paste("args:", args))
@@ -90,7 +91,7 @@ if (iter_num == 1){
 			ytest = y[test_indices]
 			Xtrain = Xm[-test_indices, ]
 			ytrain = y[-test_indices]
-			bart_machine = build_bart_machine(Xtrain, ytrain, verbose = FALSE, run_in_sample = FALSE)
+			bart_machine = build_bart_machine(Xtrain, ytrain, verbose = FALSE, run_in_sample = FALSE, num_burn_in = BURN_IN)
 			predict_obj = bart_predict_for_test_data(bart_machine, Xtest, ytest)
 			destroy_bart_machine(bart_machine)
 			oos_rmse_bhd_bartm_mcar[i, nsim] = predict_obj$rmse
@@ -150,7 +151,7 @@ if (iter_num == 3){
 			ytest = y[test_indices]
 			Xtrain = Xm[-test_indices, ]
 			ytrain = y[-test_indices]
-			bart_machine = build_bart_machine(X = Xtrain, y = ytrain, verbose = TRUE, run_in_sample = FALSE, replace_missing_data_with_x_j_bar = TRUE, use_missing_data = FALSE)
+			bart_machine = build_bart_machine(X = Xtrain, y = ytrain, verbose = TRUE, run_in_sample = FALSE, replace_missing_data_with_x_j_bar = TRUE, use_missing_data = FALSE, num_burn_in = BURN_IN)
 			
 			Xtest = imputeMatrixByXbarj(Xtest, Xtrain)
 			predict_obj = bart_predict_for_test_data(bart_machine, Xtest, ytest)
@@ -218,7 +219,7 @@ if (iter_num == 5){
 			ytest = y[test_indices]
 			Xtrain = Xm[-test_indices, ]
 			ytrain = y[-test_indices]
-			bart_machine = build_bart_machine(Xtrain, ytrain, verbose = FALSE, run_in_sample = FALSE, add_imputations = TRUE, debug_log = TRUE)
+			bart_machine = build_bart_machine(Xtrain, ytrain, verbose = FALSE, run_in_sample = FALSE, add_imputations = TRUE, debug_log = TRUE, num_burn_in = BURN_IN)
 			
 			print(bart_machine)
 			predict_obj = bart_predict_for_test_data(bart_machine, Xtest, ytest)
@@ -269,7 +270,7 @@ if (iter_num == 6){
 			ytest = y[test_indices]
 			Xtrain = Xm[-test_indices, ]
 			ytrain = y[-test_indices]
-			bart_machine = build_bart_machine(Xtrain, ytrain, verbose = FALSE, run_in_sample = FALSE)
+			bart_machine = build_bart_machine(Xtrain, ytrain, verbose = FALSE, run_in_sample = FALSE, num_burn_in = BURN_IN)
 			predict_obj = bart_predict_for_test_data(bart_machine, Xtest, ytest)
 			destroy_bart_machine(bart_machine)
 			oos_rmse_bhd_bartm_mar[i, nsim] = predict_obj$rmse
@@ -328,7 +329,7 @@ if (iter_num == 8){
 			ytest = y[test_indices]
 			Xtrain = Xm[-test_indices, ]
 			ytrain = y[-test_indices]
-			bart_machine = build_bart_machine(X = Xtrain, y = ytrain, verbose = TRUE, run_in_sample = FALSE, replace_missing_data_with_x_j_bar = TRUE, use_missing_data = FALSE)
+			bart_machine = build_bart_machine(X = Xtrain, y = ytrain, verbose = TRUE, run_in_sample = FALSE, replace_missing_data_with_x_j_bar = TRUE, use_missing_data = FALSE, num_burn_in = BURN_IN)
 			
 			Xtest = imputeMatrixByXbarj(Xtest, Xtrain)
 			predict_obj = bart_predict_for_test_data(bart_machine, Xtest, ytest)
@@ -397,7 +398,7 @@ if (iter_num == 10){
 			ytest = y[test_indices]
 			Xtrain = Xm[-test_indices, ]
 			ytrain = y[-test_indices]
-			bart_machine = build_bart_machine(Xtrain, ytrain, verbose = FALSE, run_in_sample = FALSE, add_imputations = TRUE, debug_log = TRUE)
+			bart_machine = build_bart_machine(Xtrain, ytrain, verbose = FALSE, run_in_sample = FALSE, add_imputations = TRUE, debug_log = TRUE, num_burn_in = BURN_IN)
 			predict_obj = bart_predict_for_test_data(bart_machine, Xtest, ytest)
 			destroy_bart_machine(bart_machine)
 			oos_rmse_bhd_bart_with_imp_mar[i_knockout, nsim] = predict_obj$rmse
@@ -447,7 +448,7 @@ if (iter_num == 11){
 			ytest = y[test_indices]
 			Xtrain = Xm[-test_indices, ]
 			ytrain = y[-test_indices]
-			bart_machine = build_bart_machine(Xtrain, ytrain, verbose = FALSE, run_in_sample = FALSE)
+			bart_machine = build_bart_machine(Xtrain, ytrain, verbose = FALSE, run_in_sample = FALSE, num_burn_in = BURN_IN)
 			predict_obj = bart_predict_for_test_data(bart_machine, Xtest, ytest)
 			destroy_bart_machine(bart_machine)
 			oos_rmse_bhd_bartm_nmar[i, nsim] = predict_obj$rmse
@@ -507,7 +508,7 @@ if (iter_num == 13){
 			ytest = y[test_indices]
 			Xtrain = Xm[-test_indices, ]
 			ytrain = y[-test_indices]
-			bart_machine = build_bart_machine(X = Xtrain, y = ytrain, verbose = TRUE, run_in_sample = FALSE, replace_missing_data_with_x_j_bar = TRUE, use_missing_data = FALSE)
+			bart_machine = build_bart_machine(X = Xtrain, y = ytrain, verbose = TRUE, run_in_sample = FALSE, replace_missing_data_with_x_j_bar = TRUE, use_missing_data = FALSE, num_burn_in = BURN_IN)
 			
 			Xtest = imputeMatrixByXbarj(Xtest, Xtrain)
 			predict_obj = bart_predict_for_test_data(bart_machine, Xtest, ytest)
@@ -574,7 +575,7 @@ if (iter_num == 15){
 			ytest = y[test_indices]
 			Xtrain = Xm[-test_indices, ]
 			ytrain = y[-test_indices]
-			bart_machine = build_bart_machine(Xtrain, ytrain, verbose = FALSE, run_in_sample = FALSE, add_imputations = TRUE, debug_log = TRUE)
+			bart_machine = build_bart_machine(Xtrain, ytrain, verbose = FALSE, run_in_sample = FALSE, add_imputations = TRUE, debug_log = TRUE, num_burn_in = BURN_IN)
 			predict_obj = bart_predict_for_test_data(bart_machine, Xtest, ytest)
 			destroy_bart_machine(bart_machine)
 			oos_rmse_bhd_bart_with_imp_nmar[i_knockout, nsim] = predict_obj$rmse
