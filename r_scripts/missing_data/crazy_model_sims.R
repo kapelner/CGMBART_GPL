@@ -103,8 +103,7 @@ n_dataset = 300
 sigma_e = 1
 missing_offset = 5
 
-
-Nsim = 200
+Nsim = 300
 ALPHA = 0.05
 KnockoutPROP = c(0.01, 0.05, 0.10, 0.2, 0.3, 0.4, 0.5, 0.9)
 set_bart_machine_num_cores(4)

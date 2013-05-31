@@ -58,7 +58,7 @@ knockout_nmar = function(X, prop){
 }
 
 
-generate_crazy_model = function(n_crazy, p_crazy, prop, missing_offset, sigma_e){
+generate_crazy_model = function(n_crazy, prop, missing_offset, sigma_e){
 	p_crazy = 3
 	Xs_crazy = matrix(runif(n_crazy * p_crazy, -1, 1), ncol = p_crazy)
 	error_crazy = rnorm(n_crazy, 0, sigma_e)
