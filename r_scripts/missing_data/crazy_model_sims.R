@@ -91,8 +91,19 @@ plot_hist_of_posterior(pred, offset_missing + 0.5)
 
 
 ##########################story plots (variable and interaction)
+##Model 1:
+prop_missing = 0.1
+Xy = generate_crazy_model(n_crazy, p_crazy, prop_missing, offset_missing, sigma_e)
+bart_machine = build_bart_machine(Xy = Xy, use_missing_data = TRUE, num_burn_in = 5000, num_trees = 20)
 investigate_var_importance(bart_machine=bart_machine)
-interaction_investigator(bart_machine)
+interaction_investigator(bart_machine, num_var = 5, num_replicates = 10)
+
+##Model 2:
+prop_missing = 0.5
+Xy = generate_crazy_model(n_crazy, p_crazy, prop_missing, offset_missing, sigma_e)
+bart_machine = build_bart_machine(Xy = Xy, use_missing_data = TRUE, num_burn_in = 5000, num_trees = 20)
+investigate_var_importance(bart_machine=bart_machine)
+interaction_investigator(bart_machine, num_var = 10, num_replicates = 10)
 
 
 ################ plots of crazy model vs competitors
