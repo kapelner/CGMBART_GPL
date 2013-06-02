@@ -1,5 +1,3 @@
-set_bart_machine_num_cores(4)
-
 knockout_mcar = function(X, prop){
 	for (i in 1 : nrow(X)){
 		for (j in 1 : ncol(X)){
@@ -65,24 +63,24 @@ generate_crazy_model = function(n_crazy, prop, missing_offset, sigma_e){
 	X1 = Xs_crazy[, 1]
 	X2 = Xs_crazy[, 2]
 	X3 = Xs_crazy[, 3]
-	y_crazy = Xs_crazy[, 1] + Xs_crazy[, 2] + Xs_crazy[, 3] - Xs_crazy[, 1]^2 + Xs_crazy[, 2]^2 + Xs_crazy[, 1] * Xs_crazy[, 2] + error_crazy #
-
 	
-	#X1 is MCAR at 5%
+	y_crazy = X1 + X2 + X3 - X1^2 + X2^2 + X1 * X2 + error_crazy
+	
+	#X1 is MCAR w.p. gamma
 	for (i in 1 : n_crazy){
 		if (runif(1) < prop){
 			Xs_crazy[i, 1] = NA
 		}
 	}
 	
-	#X3 is MAR at 5% if X1 > 0
+	#X3 is MAR w.p. gamma if X1 > 0
 	for (i in 1 : n_crazy){
 		if (runif(1) < prop && X1[i] > 0){
 			Xs_crazy[i, 3] = NA
 		}
 	}
 	
-	#X2 is NMAR at 5% if X2 > 0
+	#X2 is NMAR w.p. gamma if X2 > 0
 	for (i in 1 : n_crazy){
 		if (runif(1) < prop && X2[i] > 0){
 			Xs_crazy[i, 2] = NA
@@ -94,18 +92,20 @@ generate_crazy_model = function(n_crazy, prop, missing_offset, sigma_e){
 		if (is.na(Xs_crazy[i, 3])){
 			y_crazy[i] = y_crazy[i] + missing_offset
 		}
-	}	
+	}
 	
 	data.frame(Xs_crazy, y_crazy)
 }
 
 plot_hist_of_posterior = function(pred, expectation){
 	hist(pred$y_hat_posterior_samples[1,], 
-			br = 50, 
-			main = paste("posterior of yhat, mean =", round(mean(pred$y_hat_posterior_samples[1,]), 2), "and se = ", round(sd(pred$y_hat_posterior_samples[1,]), 2)), 
-			xlab = "")
-	abline(v = expectation, col = "blue", lwd = 2)
-	abline(v = pred$y_hat[1], col = "green", lwd = 0.5)
+		br = 50,
+		main = "",
+#		main = paste("posterior of yhat, mean =", round(mean(pred$y_hat_posterior_samples[1,]), 2), "and se = ", round(sd(pred$y_hat_posterior_samples[1,]), 2)), 
+		xlab = expression(hat(f)(x)))
+	cat("yhat =", round(mean(pred$y_hat_posterior_samples[1,]), 2), "se(yhat) =", round(sd(pred$y_hat_posterior_samples[1,]), 3), "\n")
+	abline(v = expectation, col = "blue", lwd = 3)
+	abline(v = pred$y_hat[1], col = "green", lwd = 3)
 	abline(v = pred$ppi_a[1], col = "orange", lwd = 3)
 	abline(v = pred$ppi_b[1], col = "orange", lwd = 3)
 }

@@ -14,8 +14,9 @@ if (NOT_ON_GRID){
 }
 setwd(directory_where_code_is)
 
-source("r_scripts/bart_package.R")
+source("r_scripts/bart_package_inits.R")
 source("r_scripts/bart_package_builders.R")
+source("r_scripts/bart_package_data_preprocessing.R")
 source("r_scripts/bart_package_plots.R")
 source("r_scripts/bart_package_variable_selection.R")
 source("r_scripts/bart_package_f_tests.R")
@@ -76,6 +77,7 @@ for (nsim in 1 : Nsim){
 }
 cat("\n")
 write.csv(oos_rmse_vanilla_bhd, file = "oos_rmse_vanilla_bhd.csv")
+oos_rmse_vanilla_bhd = read.csv("oos_rmse_vanilla_bhd.csv")[, 2]
 
 ############################  MCAR
 
@@ -104,6 +106,7 @@ if (iter_num == 1){
 	rownames(bhd_bartm_results_mcar) = c(0, KnockoutPROP)
 	bhd_bartm_results_mcar = cbind(bhd_bartm_results_mcar, apply(bhd_bartm_results_mcar, 1, mean))
 	write.csv(bhd_bartm_results_mcar, "bhd_bartm_results_mcar.csv")
+	bhd_bartm_results_mcar = read.csv("bhd_bartm_results_mcar.csv", row.names = 1, header = T)
 }
 
 
@@ -133,6 +136,7 @@ if (iter_num == 2){
 	rownames(bhd_lm_results_mcar) = c(0, KnockoutPROP)
 	bhd_lm_results_mcar = cbind(bhd_lm_results_mcar, apply(bhd_lm_results_mcar, 1, mean))
 	write.csv(bhd_lm_results_mcar, "bhd_lm_results_mcar.csv")	
+	bhd_lm_results_mcar = read.csv("bhd_lm_results_mcar.csv", row.names = 1, header = T)
 }
 
 
@@ -165,7 +169,7 @@ if (iter_num == 3){
 	rownames(bhd_xbarj_no_M_results_mcar) = c(0, KnockoutPROP)
 	bhd_xbarj_no_M_results_mcar = cbind(bhd_xbarj_no_M_results_mcar, apply(bhd_xbarj_no_M_results_mcar, 1, mean))
 	write.csv(bhd_xbarj_no_M_results_mcar, "bhd_xbarj_no_M_results_mcar.csv")
-
+	bhd_xbarj_no_M_results_mcar = read.csv("bhd_xbarj_no_M_results_mcar.csv", row.names = 1, header = T)
 }
 
 
@@ -203,6 +207,7 @@ if (iter_num == 4){
 	rownames(bhd_results_rf_mcar) = c(0, KnockoutPROP)
 	bhd_results_rf_mcar = cbind(bhd_results_rf_mcar, apply(bhd_results_rf_mcar, 1, mean))
 	write.csv(bhd_results_rf_mcar, "bhd_results_rf_mcar.csv")
+	bhd_results_rf_mcar = read.csv("bhd_results_rf_mcar.csv", row.names = 1, header = T)
 
 }
 
@@ -233,16 +238,17 @@ if (iter_num == 5){
 	rownames(bhd_results_bart_with_imp_mcar) = c(0, KnockoutPROP)
 	bhd_results_bart_with_imp_mcar = cbind(bhd_results_bart_with_imp_mcar, apply(bhd_results_bart_with_imp_mcar, 1, mean))
 	write.csv(bhd_results_bart_with_imp_mcar, "bhd_results_bart_with_imp_mcar.csv")
+	bhd_results_bart_with_imp_mcar = read.csv("bhd_results_bart_with_imp_mcar.csv", row.names = 1, header = T)
 
 }
 
 if (NOT_ON_GRID){
-
+	par(mar = c(4,4,0.5,0.5))
 	windows()
 	plot(rownames(bhd_xbarj_no_M_results_mcar), bhd_xbarj_no_M_results_mcar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), 
-			type = "b", 
-			main = "MCAR", 
-			xlab = "Proportion Data Missing", 
+			type = "n", 
+#			main = "MCAR", 
+			xlab = expression(gamma), 
 			ylab = "Multiple of Baseline Error", ylim = c(1, 3),
 			lwd = 3,
 			col = "purple")
@@ -283,6 +289,7 @@ if (iter_num == 6){
 	rownames(bhd_bartm_results_mar) = c(0, KnockoutPROP)
 	bhd_bartm_results_mar = cbind(bhd_bartm_results_mar, apply(bhd_bartm_results_mar, 1, mean))
 	write.csv(bhd_bartm_results_mar, "bhd_bartm_results_mar.csv")
+	bhd_bartm_results_mar = read.csv("bhd_bartm_results_mar.csv", header = T, row.names = 1)
 
 }
 
@@ -313,6 +320,7 @@ if (iter_num == 7){
 	rownames(bhd_lm_results_mar) = c(0, KnockoutPROP)
 	bhd_lm_results_mar = cbind(bhd_lm_results_mar, apply(bhd_lm_results_mar, 1, mean))
 	write.csv(bhd_lm_results_mar, "bhd_lm_results_mar.csv")
+	bhd_lm_results_mar = read.csv("bhd_lm_results_mar.csv", header = T, row.names = 1)
 
 }
 
@@ -343,7 +351,7 @@ if (iter_num == 8){
 	rownames(bhd_xbarj_no_M_results_mar) = c(0, KnockoutPROP)
 	bhd_xbarj_no_M_results_mar = cbind(bhd_xbarj_no_M_results_mar, apply(bhd_xbarj_no_M_results_mar, 1, mean))
 	write.csv(bhd_xbarj_no_M_results_mar, "bhd_xbarj_no_M_results_mar.csv")
-
+	bhd_xbarj_no_M_results_mar = read.csv("bhd_xbarj_no_M_results_mar.csv", header = T, row.names = 1)
 }
 
 
@@ -381,6 +389,7 @@ if (iter_num == 9){
 	rownames(bhd_rf_results_mar) = c(0, KnockoutPROP)
 	bhd_rf_results_mar = cbind(bhd_rf_results_mar, apply(bhd_rf_results_mar, 1, mean))
 	write.csv(bhd_rf_results_mar, "bhd_rf_results_mar.csv")
+	bhd_rf_results_mar = read.csv("bhd_rf_results_mar.csv", header = T, row.names = 1)
 
 }
 
@@ -410,7 +419,7 @@ if (iter_num == 10){
 	rownames(bhd_results_bart_with_imp_mar) = c(0, KnockoutPROP)
 	bhd_results_bart_with_imp_mar = cbind(bhd_results_bart_with_imp_mar, apply(bhd_results_bart_with_imp_mar, 1, mean))
 	write.csv(bhd_results_bart_with_imp_mar, "bhd_results_bart_with_imp_mar.csv")
-	bhd_results_bart_with_imp_mar = read.csv("bhd_results_bart_with_imp_mar.csv")
+	bhd_results_bart_with_imp_mar = read.csv("bhd_results_bart_with_imp_mar.csv", header = T, row.names = 1)
 
 }
 
@@ -418,14 +427,14 @@ if (NOT_ON_GRID){
 
 	windows()
 	plot(rownames(bhd_xbarj_no_M_results_mar), bhd_xbarj_no_M_results_mar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), 
-			type = "b", 
-			main = "MAR", 
+			type = "n", 
+#			main = "MAR", 
 			xlab = "Proportion Data Missing", 
-			ylab = "Multiple of Baseline Error", ylim = c(1, 3),
+			ylab = "Multiple of Baseline Error", ylim = c(0.9, 1.05),
 			lwd = 3,
 			col = "purple")
 	
-	points(rownames(bhd_lm_results_mar), bhd_lm_results_mar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), col = "red", lwd = 3, type = "b")
+#	points(rownames(bhd_lm_results_mar), bhd_lm_results_mar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), col = "red", lwd = 3, type = "b")
 	points(rownames(bhd_bartm_results_mar), bhd_bartm_results_mar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), col = "green", lwd = 3, type = "b")
 	points(rownames(bhd_rf_results_mar), bhd_rf_results_mar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), col = "black", lwd = 3, type = "b")
 	points(rownames(bhd_results_bart_with_imp_mar), bhd_results_bart_with_imp_mar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), col = "brown", lwd = 3, type = "b")
@@ -461,6 +470,7 @@ if (iter_num == 11){
 	rownames(bhd_bartm_results_nmar) = c(0, KnockoutPROP)
 	bhd_bartm_results_nmar = cbind(bhd_bartm_results_nmar, apply(bhd_bartm_results_nmar, 1, mean))
 	write.csv(bhd_bartm_results_nmar, "bhd_bartm_results_nmar.csv")
+	bhd_bartm_results_nmar = read.csv("bhd_bartm_results_nmar.csv", header = T, row.names = 1)
 
 }
 
@@ -492,7 +502,7 @@ if (iter_num == 12){
 	rownames(bhd_lm_results_nmar) = c(0, KnockoutPROP)
 	bhd_lm_results_nmar = cbind(bhd_lm_results_nmar, apply(bhd_lm_results_nmar, 1, mean))
 	write.csv(bhd_lm_results_nmar, "bhd_lm_results_nmar.csv")
-
+	bhd_lm_results_nmar = read.csv("bhd_lm_results_nmar.csv", header = T, row.names =1 )
 }
 
 if (iter_num == 13){
@@ -522,7 +532,7 @@ if (iter_num == 13){
 	rownames(bhd_xbarj_no_M_results_nmar) = c(0, KnockoutPROP)
 	bhd_xbarj_no_M_results_nmar = cbind(bhd_xbarj_no_M_results_nmar, apply(bhd_xbarj_no_M_results_nmar, 1, mean))
 	write.csv(bhd_xbarj_no_M_results_nmar, "bhd_xbarj_no_M_results_nmar.csv")
-
+	bhd_xbarj_no_M_results_nmar = read.csv("bhd_xbarj_no_M_results_nmar.csv", header = T, row.names =1)
 }
 
 
@@ -559,7 +569,7 @@ if (iter_num == 14){
 	rownames(bhd_results_rf_nmar) = c(0, KnockoutPROP)
 	bhd_results_rf_nmar = cbind(bhd_results_rf_nmar, apply(bhd_results_rf_nmar, 1, mean))
 	write.csv(bhd_results_rf_nmar, "bhd_results_rf_nmar.csv")
-
+	bhd_results_rf_nmar = read.csv("bhd_results_rf_nmar.csv", header = T, row.names = 1)
 }
 
 if (iter_num == 15){
@@ -588,23 +598,23 @@ if (iter_num == 15){
 	bhd_results_bart_with_imp_nmar = cbind(bhd_results_bart_with_imp_nmar, apply(bhd_results_bart_with_imp_nmar, 1, mean))
 	write.csv(bhd_results_bart_with_imp_nmar, "bhd_results_bart_with_imp_nmar.csv")
 	bhd_results_bart_with_imp_nmar = read.csv("bhd_results_bart_with_imp_nmar.csv")
-
+	bhd_results_bart_with_imp_nmar = read.csv("bhd_results_bart_with_imp_nmar.csv", header= T, row.names = 1)
 }
 
 if (NOT_ON_GRID){
 
 	windows()
 	plot(rownames(bhd_xbarj_no_M_results_nmar), bhd_xbarj_no_M_results_nmar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), 
-			type = "b", 
-			main = "NMAR", 
+			type = "n", 
+#			main = "NMAR", 
 			xlab = "Proportion Data Missing", 
-			ylab = "Multiple of Baseline Error", ylim = c(0, 3),
+			ylab = "Multiple of Baseline Error", ylim = c(0.95, 1.3),
 			lwd = 3,
 			col = "purple")
 	
-	points(rownames(bhd_lm_results_nmar), bhd_lm_results_nmar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), col = "red", lwd = 3, type = "b")
+#	points(rownames(bhd_lm_results_nmar), bhd_lm_results_nmar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), col = "red", lwd = 3, type = "b")
 	points(rownames(bhd_bartm_results_nmar), bhd_bartm_results_nmar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), col = "green", lwd = 3, type = "b")
-	points(rownames(bhd_results_rf_nmar), bhd_results_rf_nmar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), col = "black", lwd = 3, type = "b")
+#	points(rownames(bhd_results_rf_nmar), bhd_results_rf_nmar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), col = "black", lwd = 3, type = "b")
 	points(rownames(bhd_results_bart_with_imp_nmar), bhd_results_bart_with_imp_nmar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), col = "brown", lwd = 3, type = "b")
 
 }

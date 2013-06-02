@@ -71,11 +71,12 @@ r_log/*.txt
 *.log
 *.out
 *.dvi
-.RData
-.Rhistory
+*.RData
+*.Rhistory
 bin/*
 randsamps/chisq*
 RWeka/
+*.csv
 
 datasets/r_zach.csv
 datasets/c_crime.csv

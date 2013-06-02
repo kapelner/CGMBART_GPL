@@ -360,12 +360,14 @@ investigate_var_importance = function(bart_machine, type = "splits", plot = TRUE
 			moe = 1.96 * sd_var_props / sqrt(num_replicates_for_avg)
 		}
 		bars = barplot(avg_var_props, 
-				names.arg = names(avg_var_props), 
-				las = 2, 
-				ylab = "Inclusion Proportion", 
-				col = "gray",#rgb(0.39, 0.39, 0.59),
-				ylim = c(0, max(avg_var_props + moe)),
-				main = paste("Important Variables Averaged over", num_replicates_for_avg, "Replicates by", ifelse(type == "splits", "Number of Variable Splits", "Number of Trees")))
+			names.arg = names(avg_var_props), 
+			las = 2, 
+#			xlab = "Predictor",
+			ylab = "Inclusion Proportion", 
+#			main = paste("Important Variables Averaged over", num_replicates_for_avg, "Replicates by", ifelse(type == "splits", "Number of Variable Splits", "Number of Trees")),
+			col = "gray",#rgb(0.39, 0.39, 0.59),
+			ylim = c(0, max(avg_var_props + moe))
+		)
 		conf_upper = avg_var_props + 1.96 * sd_var_props / sqrt(num_replicates_for_avg)
 		conf_lower = avg_var_props - 1.96 * sd_var_props / sqrt(num_replicates_for_avg)
 		segments(bars, avg_var_props, bars, conf_upper, col = rgb(0.59, 0.39, 0.39), lwd = 3) # Draw error bars
@@ -386,6 +388,10 @@ plot_convergence_diagnostics = function(bart_machine){
 	par(mfrow = c(1, 1))
 }
 
+plot.bart_machine = function(bart_machine){
+	plot_convergence_diagnostics(bart_machine)
+}
+
 shapiro_wilk_p_val = function(vec){
 	tryCatch(shapiro.test(vec)$p.value, error = function(e){})
 }
@@ -398,7 +404,7 @@ interaction_investigator = function(bart_machine, plot = TRUE, num_replicates_fo
 		if (r == 1 & num_trees_bottleneck == bart_machine$num_trees){
 			interaction_counts[, , r] = sapply(.jcall(bart_machine$java_bart_machine, "[[I", "getInteractionCounts", as.integer(BART_NUM_CORES)), .jevalArray)
 		} else {
-			bart_machine_dup = bart_machine_duplicate(bart_machine)			
+			bart_machine_dup = bart_machine_duplicate(bart_machine, num_trees = num_trees_bottleneck)			
 			interaction_counts[, , r] = sapply(.jcall(bart_machine_dup$java_bart_machine, "[[I", "getInteractionCounts", as.integer(BART_NUM_CORES)), .jevalArray)
 			destroy_bart_machine(bart_machine_dup)
 			cat(".")
@@ -466,8 +472,9 @@ interaction_investigator = function(bart_machine, plot = TRUE, num_replicates_fo
 			ylab = "Relative Importance", 
 			col = "gray",#rgb(0.39, 0.39, 0.59),
 			ylim = c(ylim_bottom, max(avg_counts + moe)),
-			xpd = FALSE, #clips the bars outside of the display region (why is this not a default setting?)
-			main = paste("Interactions in BART Model Averaged over", num_replicates_for_avg, "Replicates"))
+#			main = paste("Interactions in BART Model Averaged over", num_replicates_for_avg, "Replicates"),
+			xpd = FALSE #clips the bars outside of the display region (why is this not a default setting?)
+		)
 		if (!is.na(sd_counts[1])){
 			conf_upper = avg_counts + 1.96 * sd_counts / sqrt(num_replicates_for_avg)
 			conf_lower = avg_counts - 1.96 * sd_counts / sqrt(num_replicates_for_avg)
