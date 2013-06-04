@@ -16,6 +16,7 @@ setwd(directory_where_code_is)
 
 source("r_scripts/bart_package_inits.R")
 source("r_scripts/bart_package_builders.R")
+source("r_scripts/bart_package_predicts.R")
 source("r_scripts/bart_package_data_preprocessing.R")
 source("r_scripts/bart_package_plots.R")
 source("r_scripts/bart_package_variable_selection.R")
