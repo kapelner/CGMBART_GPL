@@ -12,8 +12,8 @@ knockout_mcar = function(X, prop){
 
 knockout_mar = function(X, prop){
 	for (i in 1 : nrow(X)){
-		for (j in c(2 : 13)){ ###1st col is crim
-			if (X$crim > 0.25){
+		for (j in c(1 : 9, 11 : 13)){ ###10th col is tax
+			if (X$tax[i] > 279){
 				if (runif(1) < prop){
 					X[i, j] = NA
 				}
@@ -101,8 +101,10 @@ plot_hist_of_posterior = function(pred, expectation){
 	hist(pred$y_hat_posterior_samples[1,], 
 		br = 50,
 		main = "",
+		xlab = ""
 #		main = paste("posterior of yhat, mean =", round(mean(pred$y_hat_posterior_samples[1,]), 2), "and se = ", round(sd(pred$y_hat_posterior_samples[1,]), 2)), 
-		xlab = expression(hat(f)(x)))
+#		xlab = expression(hat(f)(x))
+	)
 	cat("yhat =", round(mean(pred$y_hat_posterior_samples[1,]), 2), "se(yhat) =", round(sd(pred$y_hat_posterior_samples[1,]), 3), "\n")
 	abline(v = expectation, col = "blue", lwd = 3)
 	abline(v = pred$y_hat[1], col = "green", lwd = 3)
@@ -178,10 +180,10 @@ generate_simple_model_probit_with_missingness = function(n, mu_1 = -1, mu_2 = 1,
 	X_2 = rnorm(n, mu_2, sigma_2)
 	Z = ifelse(is.na(X_1), X_2, X_1)
 	probs = pnorm(Z) #probit model
-	h1 = hist(probs[!is.na(X_1)], br = 25,  xlab = "P(Y=1)") #main = "missing distribution in red, non-missing in blue",
-	h2 = hist(probs[is.na(X_1)], br = 25, xlab = "P(Y=1)")	
-	plot(h1, xlim = c(0, 1), col = rgb(0,0,1,1/4), xlab = "P(Y=1)", main = "")
-	plot(h2, add = TRUE, col = rgb(1,0,0,1/4), xlab = "P(Y=1)", main = "")
+	h1 = hist(probs[!is.na(X_1)], br = 25) #main = "missing distribution in red, non-missing in blue",
+	h2 = hist(probs[is.na(X_1)], br = 25)	
+	plot(h1, xlim = c(0, 1), col = rgb(0,0,1,1/4), xlab = "", main = "")
+	plot(h2, add = TRUE, col = rgb(1,0,0,1/4), xlab = "", main = "")
 	abline(v = mean(probs[!is.na(X_1)]), lwd = 3)
 	abline(v = mean(probs[is.na(X_1)]), lwd = 3)
 	Y = as.factor(rbinom(n, 1, probs))

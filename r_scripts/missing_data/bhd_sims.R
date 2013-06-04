@@ -248,12 +248,12 @@ if (NOT_ON_GRID){
 	plot(rownames(bhd_xbarj_no_M_results_mcar), bhd_xbarj_no_M_results_mcar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), 
 			type = "n", 
 #			main = "MCAR", 
-			xlab = expression(gamma), 
+			xlab = "Proportion Data Missing", 
 			ylab = "Multiple of Baseline Error", ylim = c(1, 3),
 			lwd = 3,
 			col = "purple")
 	
-	points(rownames(bhd_lm_results_mcar), bhd_lm_results_mcar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), col = "red", lwd = 3, type = "b")
+#	points(rownames(bhd_lm_results_mcar), bhd_lm_results_mcar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), col = "red", lwd = 3, type = "b")
 	points(rownames(bhd_bartm_results_mcar), bhd_bartm_results_mcar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), col = "green", lwd = 3, type = "b")
 	points(rownames(bhd_results_rf_mcar), bhd_results_rf_mcar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), col = "black", lwd = 3, type = "b")
 	points(rownames(bhd_results_bart_with_imp_mcar), bhd_results_bart_with_imp_mcar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), col = "brown", lwd = 3, type = "b")
@@ -288,7 +288,7 @@ if (iter_num == 6){
 	bhd_bartm_results_mar = rbind(oos_rmse_vanilla_bhd, oos_rmse_bhd_bartm_mar)
 	rownames(bhd_bartm_results_mar) = c(0, KnockoutPROP)
 	bhd_bartm_results_mar = cbind(bhd_bartm_results_mar, apply(bhd_bartm_results_mar, 1, mean))
-	write.csv(bhd_bartm_results_mar, "bhd_bartm_results_mar.csv")
+	write.csv(bhd_bartm_results_mar, "bhd_bartm_results_mar2.csv")
 	bhd_bartm_results_mar = read.csv("bhd_bartm_results_mar.csv", header = T, row.names = 1)
 
 }
@@ -388,7 +388,7 @@ if (iter_num == 9){
 	bhd_rf_results_mar = rbind(oos_rmse_vanilla_bhd, oos_rmse_bhd_rf_mar)
 	rownames(bhd_rf_results_mar) = c(0, KnockoutPROP)
 	bhd_rf_results_mar = cbind(bhd_rf_results_mar, apply(bhd_rf_results_mar, 1, mean))
-	write.csv(bhd_rf_results_mar, "bhd_rf_results_mar.csv")
+	write.csv(bhd_rf_results_mar, "bhd_rf_results_mar2.csv")
 	bhd_rf_results_mar = read.csv("bhd_rf_results_mar.csv", header = T, row.names = 1)
 
 }
@@ -430,7 +430,7 @@ if (NOT_ON_GRID){
 			type = "n", 
 #			main = "MAR", 
 			xlab = "Proportion Data Missing", 
-			ylab = "Multiple of Baseline Error", ylim = c(0.9, 1.05),
+			ylab = "Multiple of Baseline Error", ylim = c(0.9, 4),
 			lwd = 3,
 			col = "purple")
 	
@@ -597,7 +597,6 @@ if (iter_num == 15){
 	rownames(bhd_results_bart_with_imp_nmar) = c(0, KnockoutPROP)
 	bhd_results_bart_with_imp_nmar = cbind(bhd_results_bart_with_imp_nmar, apply(bhd_results_bart_with_imp_nmar, 1, mean))
 	write.csv(bhd_results_bart_with_imp_nmar, "bhd_results_bart_with_imp_nmar.csv")
-	bhd_results_bart_with_imp_nmar = read.csv("bhd_results_bart_with_imp_nmar.csv")
 	bhd_results_bart_with_imp_nmar = read.csv("bhd_results_bart_with_imp_nmar.csv", header= T, row.names = 1)
 }
 
@@ -608,15 +607,42 @@ if (NOT_ON_GRID){
 			type = "n", 
 #			main = "NMAR", 
 			xlab = "Proportion Data Missing", 
-			ylab = "Multiple of Baseline Error", ylim = c(0.95, 1.3),
+			ylab = "Multiple of Baseline Error", ylim = c(0.95, 1.5),
 			lwd = 3,
 			col = "purple")
 	
 #	points(rownames(bhd_lm_results_nmar), bhd_lm_results_nmar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), col = "red", lwd = 3, type = "b")
 	points(rownames(bhd_bartm_results_nmar), bhd_bartm_results_nmar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), col = "green", lwd = 3, type = "b")
-#	points(rownames(bhd_results_rf_nmar), bhd_results_rf_nmar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), col = "black", lwd = 3, type = "b")
+	points(rownames(bhd_results_rf_nmar), bhd_results_rf_nmar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), col = "black", lwd = 3, type = "b")
 	points(rownames(bhd_results_bart_with_imp_nmar), bhd_results_bart_with_imp_nmar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), col = "brown", lwd = 3, type = "b")
 
 }
+
+
+
+
+
+
+###std errors table 3
+
+
+#NMAR
+gamma_ind = 4
+
+sd(as.numeric(bhd_bartm_results_nmar[gamma_ind, 1:Nsim]))
+sd(as.numeric(bhd_xbarj_no_M_results_nmar[gamma_ind, 1:Nsim]))
+sd(as.numeric(bhd_results_rf_nmar[gamma_ind, 1:Nsim]))
+sd(as.numeric(bhd_lm_results_nmar[gamma_ind, 1:Nsim]))
+
+sd(as.numeric(bhd_bartm_results_mar[gamma_ind, 1:Nsim]))
+sd(as.numeric(bhd_xbarj_no_M_results_mar[gamma_ind, 1:Nsim]))
+sd(as.numeric(bhd_rf_results_mar[gamma_ind, 1:Nsim]))
+sd(as.numeric(bhd_lm_results_mar[gamma_ind, 1:Nsim]))
+
+sd(as.numeric(bhd_bartm_results_mcar[gamma_ind, 1:Nsim]))
+sd(as.numeric(bhd_xbarj_no_M_results_mcar[gamma_ind, 1:Nsim]))
+sd(as.numeric(bhd_results_rf_mcar[gamma_ind, 1:Nsim]))
+sd(as.numeric(bhd_lm_results_mcar[gamma_ind, 1:Nsim]))
+
 
 

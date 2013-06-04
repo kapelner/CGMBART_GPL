@@ -12,7 +12,8 @@ if (.Platform$OS.type == "windows"){
 
 setwd(directory_where_code_is)
 
-source("r_scripts/bart_package.R")
+source("r_scripts/bart_package_inits.R")
+source("r_scripts/bart_package_data_preprocessing.R")
 source("r_scripts/bart_package_builders.R")
 source("r_scripts/bart_package_plots.R")
 source("r_scripts/bart_package_predicts.R")
@@ -50,7 +51,7 @@ interaction_investigator(bart_machine, num_replicates_for_avg = 20)
 
 setwd("C:\\Users\\Kapelner\\Desktop\\Dropbox\\BARTm_project\\publication\\images")
 
-par(mar = c(4,4,0.5,0.5))
+par(mar = c(2,4,0.5,0.5))
 ###make sure it works...
 new_data = as.data.frame(t(as.matrix(c(0, 0, 0))))
 colnames(new_data) = colnames(Xy[, 1 : 3])
@@ -162,7 +163,7 @@ for (nsim in 1 : Nsim){
 }
 cat("\n")
 write.csv(oos_rmse_vanilla_crazy_model, file = "oos_rmse_vanilla_crazy_model.csv")
-oos_rmse_vanilla_crazy_model = read.csv("oos_rmse_vanilla_crazy_model.csv")[,2]
+oos_rmse_vanilla_crazy_model = read.csv("oos_rmse_vanilla_crazy_model.csv")[, 2]
 
 oos_rmse_crazy_model = matrix(NA, nrow = length(KnockoutPROP), ncol = Nsim)
 
@@ -397,7 +398,7 @@ par(mar = c(4,4,0.5,0.5))
 plot(rownames(crazy_model_results_xbarj_no_M), crazy_model_results_xbarj_no_M[, Nsim + 1] / crazy_model_results_bartm[1, Nsim + 1], 
 	type = "n", 
 	main = "", 
-	xlab = expression(gamma), 
+	xlab = "Proportion Data Missing", 
 	ylab = "Multiple of Baseline Error", ylim = c(1, 1.35),
 	lwd = 3,
 	col = "purple")

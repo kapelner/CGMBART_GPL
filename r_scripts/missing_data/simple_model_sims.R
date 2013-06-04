@@ -6,7 +6,7 @@ if (.Platform$OS.type == "windows"){
 }
 setwd(directory_where_code_is)
 
-source("r_scripts/bart_package.R")
+source("r_scripts/bart_package_inits.R")
 source("r_scripts/bart_package_builders.R")
 source("r_scripts/bart_package_plots.R")
 source("r_scripts/bart_package_variable_selection.R")
@@ -44,7 +44,7 @@ predict_obj$y_hat
 
 
 
-
+par(mar = c(2,4,0.5,0.5))
 n_probit = 500
 training_data = generate_simple_model_probit_with_missingness(n = n_probit, mu_1 = -1, mu_2 = 1, gamma = 0.2)
 Xy = training_data$Xy
