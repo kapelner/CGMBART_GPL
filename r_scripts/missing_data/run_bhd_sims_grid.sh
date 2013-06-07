@@ -2,7 +2,7 @@
 
 #$ -j y
 #$ -N bhd_bakeoff_sims
-#$ -t 6-10
+#$ -t 6
 #$ -q intel
 
 echo "starting R for task # $SGE_TASK_ID"

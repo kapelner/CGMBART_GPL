@@ -21,6 +21,7 @@ source("r_scripts/bart_package_data_preprocessing.R")
 source("r_scripts/bart_package_plots.R")
 source("r_scripts/bart_package_variable_selection.R")
 source("r_scripts/bart_package_f_tests.R")
+source("r_scripts/bart_package_summaries.R")
 source("r_scripts/missing_data/sims_functions.R")
 
 args = commandArgs(TRUE)
@@ -277,8 +278,18 @@ if (iter_num == 6){
 			ytest = y[test_indices]
 			Xtrain = Xm[-test_indices, ]
 			ytrain = y[-test_indices]
-			bart_machine = build_bart_machine(Xtrain, ytrain, verbose = FALSE, run_in_sample = FALSE, num_burn_in = BURN_IN)
-			predict_obj = bart_predict_for_test_data(bart_machine, Xtest, ytest)
+			if (nrow(na.omit(Xtrain)) == nrow(Xtrain)){
+				Xtrain_imputed = cbind(Xtrain, ytrain)
+			} else {
+				Xtrain_imputed = rfImpute(Xtrain, ytrain)	
+				
+			}
+			Xtrain_imputed = Xtrain_imputed[, 2 : ncol(Xtrain_imputed)]
+			
+			bart_machine = build_bart_machine(Xtrain_imputed, ytrain, verbose = FALSE, run_in_sample = FALSE, num_burn_in = BURN_IN, use_missing_data = FALSE)
+			imputed = missForest(rbind(Xtest, Xtrain), verbose = TRUE)$ximp		
+			Xtest_miss_rf = imputed[1 : n_test, ]		
+			predict_obj = bart_predict_for_test_data(bart_machine, Xtest_miss_rf, ytest)
 			destroy_bart_machine(bart_machine)
 			oos_rmse_bhd_bartm_mar[i, nsim] = predict_obj$rmse
 			print(oos_rmse_bhd_bartm_mar)
@@ -289,7 +300,7 @@ if (iter_num == 6){
 	bhd_bartm_results_mar = rbind(oos_rmse_vanilla_bhd, oos_rmse_bhd_bartm_mar)
 	rownames(bhd_bartm_results_mar) = c(0, KnockoutPROP)
 	bhd_bartm_results_mar = cbind(bhd_bartm_results_mar, apply(bhd_bartm_results_mar, 1, mean))
-	write.csv(bhd_bartm_results_mar, "bhd_bartm_results_mar2.csv")
+	write.csv(bhd_bartm_results_mar, "bhd_bart_with_rf_impute_results_mar.csv")
 	bhd_bartm_results_mar = read.csv("bhd_bartm_results_mar.csv", header = T, row.names = 1)
 
 }
@@ -389,7 +400,7 @@ if (iter_num == 9){
 	bhd_rf_results_mar = rbind(oos_rmse_vanilla_bhd, oos_rmse_bhd_rf_mar)
 	rownames(bhd_rf_results_mar) = c(0, KnockoutPROP)
 	bhd_rf_results_mar = cbind(bhd_rf_results_mar, apply(bhd_rf_results_mar, 1, mean))
-	write.csv(bhd_rf_results_mar, "bhd_rf_results_mar2.csv")
+	write.csv(bhd_rf_results_mar, "bhd_rf_results_mar.csv")
 	bhd_rf_results_mar = read.csv("bhd_rf_results_mar.csv", header = T, row.names = 1)
 
 }
@@ -425,17 +436,17 @@ if (iter_num == 10){
 }
 
 if (NOT_ON_GRID){
-
+	par(mar = c(4,4,0.5,0.5))
 	windows()
 	plot(rownames(bhd_xbarj_no_M_results_mar), bhd_xbarj_no_M_results_mar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), 
-			type = "n", 
+			type = "b", 
 #			main = "MAR", 
 			xlab = "Proportion Data Missing", 
-			ylab = "Multiple of Baseline Error", ylim = c(0.9, 4),
+			ylab = "Multiple of Baseline Error", ylim = c(1, 2.5),
 			lwd = 3,
 			col = "purple")
 	
-#	points(rownames(bhd_lm_results_mar), bhd_lm_results_mar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), col = "red", lwd = 3, type = "b")
+	points(rownames(bhd_lm_results_mar), bhd_lm_results_mar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), col = "red", lwd = 3, type = "b")
 	points(rownames(bhd_bartm_results_mar), bhd_bartm_results_mar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), col = "green", lwd = 3, type = "b")
 	points(rownames(bhd_rf_results_mar), bhd_rf_results_mar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), col = "black", lwd = 3, type = "b")
 	points(rownames(bhd_results_bart_with_imp_mar), bhd_results_bart_with_imp_mar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), col = "brown", lwd = 3, type = "b")
