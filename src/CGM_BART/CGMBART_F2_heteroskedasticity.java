@@ -57,23 +57,6 @@ public class CGMBART_F2_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
 	}
 	
 	private void SampleSigsqF2(int sample_num, double[] es) {
-//		if (gibbs_sample_num < num_gibbs_burn_in){
-//			double sigsq = drawSigsqFromPosterior(sample_num, es);
-//			for (int i = 0; i < n; i++){
-////				double[] one_residual = {es[i]};
-////				double sigsq = drawSigsqFromPosterior(sample_num, one_residual);
-//				gibbs_samples_of_sigsq_hetero[sample_num][i] = sigsq;	
-////				System.out.println("sample sigsq e_i = " + es[i] + " sigsq_i = " + sigsq);
-//			}			
-//		}
-//		else {
-//			double sigsq = drawSigsqFromPosterior(sample_num, es);
-			for (int i = 0; i < n; i++){
-				double sigsq = StatToolbox.sample_from_inv_gamma((hyper_nu + es.length) / 2, 2 / (es.length * es[i] * es[i] + hyper_nu * hyper_lambda), this);
-				gibbs_samples_of_sigsq_hetero[sample_num][i] = sigsq;	
-//				System.out.println("sample sigsq e_i = " + es[i] + " sigsq_i = " + sigsq);
-			}				
-//		}
 
 	}
 	
@@ -90,13 +73,9 @@ public class CGMBART_F2_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
 //		System.out.println("assignLeafValsUsingPosteriorMeanAndCurrentSigsq sigsq: " + sigsq);
 		if (node.isLeaf){
 			//update ypred
-			double sum_sigsqs_leaf = 0;
-			for (int index : node.indicies){
-				sum_sigsqs_leaf += sigsqs[index];
-			}
-			double posterior_var = calcLeafPosteriorVarF2(node, sum_sigsqs_leaf);
+			double posterior_var = calcLeafPosteriorVarF2(node, sigsqs);
 			//draw from posterior distribution
-			double posterior_mean = calcLeafPosteriorMeanF2(node, sum_sigsqs_leaf, posterior_var);
+			double posterior_mean = calcLeafPosteriorMeanF2(node, posterior_var, sigsqs);
 //			System.out.println("assignLeafVals n_k = " + node.n_eta + " sum_nk_sq = " + Math.pow(node.n_eta, 2) + " node = " + node.stringLocation(true));
 //			System.out.println("assignLeafVals sum_sigsqs_leaf = " + sum_sigsqs_leaf + " posterior_mean = " + posterior_mean + " posterior_sigsq = " + posterior_var + " node.avg_response = " + node.avg_response_untransformed());
 			node.y_pred = StatToolbox.sample_from_norm_dist(posterior_mean, posterior_var);
@@ -114,12 +93,20 @@ public class CGMBART_F2_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
 		}
 	}	
 	
-	private double calcLeafPosteriorMeanF2(CGMBARTTreeNode node, double sum_sigsqs, double posterior_var) {
-		return (Math.pow(node.n_eta, 2) * node.avgResponse() / sum_sigsqs) * posterior_var;
+	private double calcLeafPosteriorMeanF2(CGMBARTTreeNode node, double posterior_var, double[] sigsqs) {
+		double numerator = 0;
+		for (int ell = 0; ell < node.n_eta; ell++){
+			numerator += node.responses[ell] / sigsqs[node.indicies[ell]];
+		}		
+		return numerator * posterior_var;
 	}
 
-	private double calcLeafPosteriorVarF2(CGMBARTTreeNode node, double sum_sigsqs) {
-		return 1 / (1 / hyper_sigsq_mu + Math.pow(node.n_eta, 2) / sum_sigsqs);
+	private double calcLeafPosteriorVarF2(CGMBARTTreeNode node, double[] sigsqs) {
+		double sum_sigsqs_leaf = 0;
+		for (int index : node.indicies){
+			sum_sigsqs_leaf += sigsqs[index];
+		}
+		return 1 / (1 / hyper_sigsq_mu + 1 / sum_sigsqs_leaf);
 	}
 
 	public void useHeteroskedasticity(){
