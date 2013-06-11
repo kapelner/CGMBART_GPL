@@ -41,10 +41,10 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Random;
 
-import org.apache.commons.math.MathException;
-import org.apache.commons.math.distribution.GammaDistributionImpl;
-import org.apache.commons.math.distribution.NormalDistributionImpl;
-import org.apache.commons.math.special.Gamma;
+import org.apache.commons.math3.special.Gamma;
+import org.apache.commons.math3.distribution.GammaDistribution;
+import org.apache.commons.math3.distribution.MultivariateNormalDistribution;
+import org.apache.commons.math3.distribution.NormalDistribution;
 
 /**
  * This is a class where we're going to put all sorts of useful functions
@@ -182,14 +182,7 @@ public class StatToolbox {
 	}
 	
 	public static double sample_from_gamma(double k, double theta){
-		GammaDistributionImpl gamma_dist = new GammaDistributionImpl(k, theta);
-		try {
-			return gamma_dist.inverseCumulativeProbability(StatToolbox.rand());
-		} catch (MathException e) {
-//			System.out.println("sample_from_inv_gamma failed: " + e.toString());
-			e.printStackTrace();
-		}
-		return ILLEGAL_FLAG;
+		return new GammaDistribution(k, theta).inverseCumulativeProbability(StatToolbox.rand());
 	}
 
 	
@@ -200,16 +193,14 @@ public class StatToolbox {
 //		START_POS++;
 		return mu + Math.sqrt(sigsq) * std_norm_realization;
 	}
+	
+	public static double[] sample_from_mult_norm_dist(double[] mu, double[][] Sigma){
+		return new MultivariateNormalDistribution(mu, Sigma).sample();
+	}
 
 	
 	public static double inv_norm_dist(double p){
-		//System.out.println("inv_norm_dist p=" + p);
-		try {
-			return new NormalDistributionImpl().inverseCumulativeProbability(p);
-		} catch (MathException e) {
-			e.printStackTrace();
-		}
-		return ILLEGAL_FLAG;
+		return new NormalDistribution().inverseCumulativeProbability(p);
 	}
 	
     private static double NORM_CDF_a1 =  0.254829592;
@@ -319,12 +310,7 @@ public class StatToolbox {
 	}
 	
 	public static final double cumul_dens_function_inv_gamma(double alpha, double beta, double x){
-		try {
-			return Gamma.regularizedGammaQ(alpha, beta / x);
-		} catch (MathException e) {
-			e.printStackTrace();
-		}
-		return ILLEGAL_FLAG;
+		return Gamma.regularizedGammaQ(alpha, beta / x);
 	}	
 	
 //	public static final double inverse_cumul_dens_function_inv_gamma(double nu, double lambda, double p){

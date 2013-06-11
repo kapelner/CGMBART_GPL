@@ -5,7 +5,8 @@
 	<classpathentry kind="lib" path="jai_core.jar"/>
 	<classpathentry kind="lib" path="junit-4.10.jar"/>
 	<classpathentry kind="lib" path="trove-3.0.3.jar" sourcepath="trove-3.0.3-src.jar"/>
-	<classpathentry kind="lib" path="commons-math-2.1.jar"/>
+	<classpathentry kind="lib" path="Jama-1.0.3.jar" sourcepath="Jama-1.0.3.zip"/>
+	<classpathentry kind="lib" path="commons-math3-3.2.jar" sourcepath="commons-math3-3.2-sources.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

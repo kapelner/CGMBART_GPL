@@ -5,8 +5,7 @@ import gnu.trove.list.array.TDoubleArrayList;
 import java.io.Serializable;
 import java.util.ArrayList;
 
-import org.apache.commons.math.MathException;
-import org.apache.commons.math.distribution.ChiSquaredDistributionImpl;
+import org.apache.commons.math3.distribution.ChiSquaredDistribution;
 
 
 public abstract class CGMBART_02_hyperparams extends CGMBART_01_base implements Serializable {
@@ -58,14 +57,7 @@ public abstract class CGMBART_02_hyperparams extends CGMBART_01_base implements 
 		}
 
 		//calculate lambda from q
-		double ten_pctile_chisq_df_hyper_nu = 0;		
-		ChiSquaredDistributionImpl chi_sq_dist = new ChiSquaredDistributionImpl(hyper_nu);
-		try {
-			ten_pctile_chisq_df_hyper_nu = chi_sq_dist.inverseCumulativeProbability(1 - hyper_q);
-		} catch (MathException e) {
-			System.err.println("Could not calculate inverse cum prob density for chi sq df = " + hyper_nu + " with q = " + hyper_q);
-			System.exit(0);
-		}
+		double ten_pctile_chisq_df_hyper_nu = new ChiSquaredDistribution(hyper_nu).inverseCumulativeProbability(1 - hyper_q);
 
 		hyper_lambda = ten_pctile_chisq_df_hyper_nu / hyper_nu * sample_var_y;
 //		System.out.println("hyper_lambda via invcumprob: " + hyper_lambda);			

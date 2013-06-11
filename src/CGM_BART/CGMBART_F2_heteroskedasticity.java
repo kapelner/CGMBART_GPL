@@ -2,8 +2,9 @@ package CGM_BART;
 
 import java.util.ArrayList;
 
-import org.apache.commons.math.MathException;
-import org.apache.commons.math.distribution.ChiSquaredDistributionImpl;
+import org.apache.commons.math3.distribution.ChiSquaredDistribution;
+
+import Jama.Matrix;
 
 
 public class CGMBART_F2_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
@@ -14,7 +15,9 @@ public class CGMBART_F2_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
 	protected double hyper_q_sigsq = 0.9;
 	protected double hyper_nu_sigsq = 3.0;
 	protected double hyper_lambda_sigsq;
+	protected double hyper_sigsq_beta_sigsq = 1;
 	protected double sample_var_e;
+	protected double hyper_beta_sigsq;
 	
 	/** the variance of the errors as well as other things necessary for Gibbs sampling */
 	protected double[][] gibbs_samples_of_sigsq_hetero;
@@ -24,12 +27,28 @@ public class CGMBART_F2_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
 	protected double[] gibbs_samples_of_tausq_for_lm_sigsqs;
 	protected double[] gibbs_samples_of_tausq_for_lm_sigsqs_after_burn_in;
 
+	private Matrix Xmat_star;
+
 	public void setData(ArrayList<double[]> X_y){
 		super.setData(X_y);
 		tabulateSimulationDistributionsF2();
-		calculateHyperparametersF2();		
+		calculateHyperparametersF2();
+		
+		//precompute X as a Matrix object
+		Xmat_star = new Matrix(n + p, p);
+		for (int i = 0; i < n; i++){
+			for (int j = 0; j < p; j++){
+				Xmat_star.set(i, j, X_y.get(i)[j]);
+			}
+		}
+		for (int i = n; i < n + p; i++){
+			for (int j = 0; j < p; j++){
+				Xmat_star.set(i, j, 1);
+			}
+		}		
+		
 	}
-	
+
 	protected void tabulateSimulationDistributionsF2() {
 		StatToolbox.cacheInvGammas(hyper_nu_sigsq, n, this);
 	}
@@ -37,13 +56,8 @@ public class CGMBART_F2_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
 	private void calculateHyperparametersF2() {
 		super.calculateHyperparameters();
 		double ten_pctile_chisq_df_hyper_nu = 0;		
-		ChiSquaredDistributionImpl chi_sq_dist = new ChiSquaredDistributionImpl(hyper_nu_sigsq);
-		try {
-			ten_pctile_chisq_df_hyper_nu = chi_sq_dist.inverseCumulativeProbability(1 - hyper_q_sigsq);
-		} catch (MathException e) {
-			System.err.println("Could not calculate inverse cum prob density for chi sq df = " + hyper_nu_sigsq + " with q = " + hyper_q_sigsq);
-			System.exit(0);
-		}
+		ChiSquaredDistribution chi_sq_dist = new ChiSquaredDistribution(hyper_nu_sigsq);
+		ten_pctile_chisq_df_hyper_nu = chi_sq_dist.inverseCumulativeProbability(1 - hyper_q_sigsq);
 
 		hyper_lambda_sigsq = ten_pctile_chisq_df_hyper_nu / hyper_nu_sigsq * sample_var_e;		
 	}
@@ -96,7 +110,7 @@ public class CGMBART_F2_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
 	
 	private void SampleSigsqF2(int sample_num, double[] es) {
 		//this comes in three steps
-		SampleBetaForLMSigsqs(es);
+		SampleBetaForLMSigsqs(es, gibbs_samples_of_tausq_for_lm_sigsqs[sample_num]);
 		SampleTausqForLMSigsqs(es);
 		SampleSigsqsViaLM(es, sample_num);
 	}
@@ -115,19 +129,27 @@ public class CGMBART_F2_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
 		}
 	}
 
-	private void SampleTausqForLMSigsqs(double[] es) {
+	private double SampleTausqForLMSigsqs(double[] es) {
 		double sse = 0;
 		for (double e : es){
 			sse += e * e; 
 		}
-//		System.out.println("hyper_nu = " + hyper_nu + " hyper_lambda = " + hyper_lambda + " esl = " + es.length + " sse = " + sse);
-		//we're sampling from sigsq ~ InvGamma((nu + n) / 2, 1/2 * (sum_i error^2_i + lambda * nu))
-		//which is equivalent to sampling (1 / sigsq) ~ Gamma((nu + n) / 2, 2 / (sum_i error^2_i + lambda * nu))
-		return StatToolbox.sample_from_inv_gamma((hyper_nu_sigsq + n + p + 1) / 2, 2 / (sse + hyper_nu * hyper_lambda), this);
+		return StatToolbox.sample_from_inv_gamma((hyper_nu_sigsq + n + p + 1) / 2, 2 / (sse + hyper_nu_sigsq * hyper_lambda_sigsq), this);
 	}
 
-	private void SampleBetaForLMSigsqs(double[] es) {
-		// TODO Auto-generated method stub
+	private void SampleBetaForLMSigsqs(double[] es, double tau_sq) {
+		Matrix variance_weighted = new Matrix(n + p + 1, n + p + 1);
+		for (int i = 0; i < n; i++){
+			for (int j = 0; j < n; j++){
+				variance_weighted.set(i, j, tau_sq);
+			}
+		}
+		for (int i = n; i < n + p + 1; i++){
+			for (int j = n; j < n + p + 1; j++){
+				variance_weighted.set(i, j, hyper_beta_sigsq);
+			}
+		}
+		Matrix triple_X_weighted;
 		
 	}
 
@@ -253,5 +275,12 @@ public class CGMBART_F2_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
 	public void setSampleVarResiduals(double sample_var_e){
 		this.sample_var_e = sample_var_e;
 	}
+
+	public void setHyperSigsqBetaSigsq(double hyper_sigsq_beta_sigsq){
+		this.hyper_sigsq_beta_sigsq = hyper_sigsq_beta_sigsq;
+	}
 	
+	public void setHyperBetaSigsq(double hyper_beta_sigsq){
+		this.hyper_beta_sigsq = hyper_beta_sigsq;
+	}
 }
