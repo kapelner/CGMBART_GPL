@@ -1,14 +1,52 @@
 package CGM_BART;
 
+import java.util.ArrayList;
+
+import org.apache.commons.math.MathException;
+import org.apache.commons.math.distribution.ChiSquaredDistributionImpl;
+
 
 public class CGMBART_F2_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
 	private static final long serialVersionUID = -3069428133597923502L;
 
 	protected boolean use_heteroskedasticity;
 	
-	/** the variance of the errors */
+	protected double hyper_q_sigsq = 0.9;
+	protected double hyper_nu_sigsq = 3.0;
+	protected double hyper_lambda_sigsq;
+	protected double sample_var_e;
+	
+	/** the variance of the errors as well as other things necessary for Gibbs sampling */
 	protected double[][] gibbs_samples_of_sigsq_hetero;
 	protected double[][] gibbs_samples_of_sigsq_hetero_after_burn_in;	
+	protected double[][] gibbs_samples_of_betas_for_lm_sigsqs;
+	protected double[][] gibbs_samples_of_betas_for_lm_sigsqs_after_burn_in;
+	protected double[] gibbs_samples_of_tausq_for_lm_sigsqs;
+	protected double[] gibbs_samples_of_tausq_for_lm_sigsqs_after_burn_in;
+
+	public void setData(ArrayList<double[]> X_y){
+		super.setData(X_y);
+		tabulateSimulationDistributionsF2();
+		calculateHyperparametersF2();		
+	}
+	
+	protected void tabulateSimulationDistributionsF2() {
+		StatToolbox.cacheInvGammas(hyper_nu_sigsq, n, this);
+	}
+	
+	private void calculateHyperparametersF2() {
+		super.calculateHyperparameters();
+		double ten_pctile_chisq_df_hyper_nu = 0;		
+		ChiSquaredDistributionImpl chi_sq_dist = new ChiSquaredDistributionImpl(hyper_nu_sigsq);
+		try {
+			ten_pctile_chisq_df_hyper_nu = chi_sq_dist.inverseCumulativeProbability(1 - hyper_q_sigsq);
+		} catch (MathException e) {
+			System.err.println("Could not calculate inverse cum prob density for chi sq df = " + hyper_nu_sigsq + " with q = " + hyper_q_sigsq);
+			System.exit(0);
+		}
+
+		hyper_lambda_sigsq = ten_pctile_chisq_df_hyper_nu / hyper_nu_sigsq * sample_var_e;		
+	}
 	
 	
 	private double calcLnLikRatioGrowF2(CGMBARTTreeNode grow_node) {
@@ -57,9 +95,42 @@ public class CGMBART_F2_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
 	}
 	
 	private void SampleSigsqF2(int sample_num, double[] es) {
-
+		//this comes in three steps
+		SampleBetaForLMSigsqs(es);
+		SampleTausqForLMSigsqs(es);
+		SampleSigsqsViaLM(es, sample_num);
 	}
 	
+	private void SampleSigsqsViaLM(double[] es, int sample_num) {
+		double[] beta_lm_sigsq = gibbs_samples_of_betas_for_lm_sigsqs[sample_num];
+		double tausq_lm_sigsq = gibbs_samples_of_tausq_for_lm_sigsqs[sample_num];
+		double[] sigsqs_gibbs_sample = gibbs_samples_of_sigsq_hetero[sample_num];
+		for (int i = 0; i < n; i++){
+			//initialize to be the intercept
+			double x_trans_beta_lm_sigsq = beta_lm_sigsq[0];
+			for (int j = 1; j <= p; j++){
+				x_trans_beta_lm_sigsq += X_y.get(i)[j - 1] * beta_lm_sigsq[j];
+			}
+			sigsqs_gibbs_sample[i] = StatToolbox.sample_from_norm_dist(x_trans_beta_lm_sigsq, tausq_lm_sigsq);
+		}
+	}
+
+	private void SampleTausqForLMSigsqs(double[] es) {
+		double sse = 0;
+		for (double e : es){
+			sse += e * e; 
+		}
+//		System.out.println("hyper_nu = " + hyper_nu + " hyper_lambda = " + hyper_lambda + " esl = " + es.length + " sse = " + sse);
+		//we're sampling from sigsq ~ InvGamma((nu + n) / 2, 1/2 * (sum_i error^2_i + lambda * nu))
+		//which is equivalent to sampling (1 / sigsq) ~ Gamma((nu + n) / 2, 2 / (sum_i error^2_i + lambda * nu))
+		return StatToolbox.sample_from_inv_gamma((hyper_nu_sigsq + n + p + 1) / 2, 2 / (sse + hyper_nu * hyper_lambda), this);
+	}
+
+	private void SampleBetaForLMSigsqs(double[] es) {
+		// TODO Auto-generated method stub
+		
+	}
+
 	public double[] getSigsqsByGibbsSample(int g){
 		return gibbs_samples_of_sigsq_hetero[g];
 	}
@@ -117,7 +188,11 @@ public class CGMBART_F2_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
 		super.InitGibbsSamplingData();
 		if (use_heteroskedasticity){
 			gibbs_samples_of_sigsq_hetero = new double[num_gibbs_total_iterations + 1][n];	
-			gibbs_samples_of_sigsq_hetero_after_burn_in = new double[num_gibbs_total_iterations - num_gibbs_burn_in][n];	
+			gibbs_samples_of_sigsq_hetero_after_burn_in = new double[num_gibbs_total_iterations - num_gibbs_burn_in][n];
+			gibbs_samples_of_betas_for_lm_sigsqs = new double[num_gibbs_total_iterations + 1 ][p + 1];
+			gibbs_samples_of_betas_for_lm_sigsqs_after_burn_in = new double[num_gibbs_total_iterations - num_gibbs_burn_in][p + 1];
+			gibbs_samples_of_tausq_for_lm_sigsqs = new double[num_gibbs_total_iterations + 1];
+			gibbs_samples_of_tausq_for_lm_sigsqs_after_burn_in = new double[num_gibbs_total_iterations - num_gibbs_burn_in];
 		}	
 	}	
 	
@@ -167,5 +242,16 @@ public class CGMBART_F2_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
 		return super.calcLnLikRatioGrow(grow_node);
 	}
 
+	public void setQSigsq(double hyper_q_sigsq) {
+		this.hyper_q_sigsq = hyper_q_sigsq;
+	}
+
+	public void setNuSigsq(double hyper_nu_sigsq) {
+		this.hyper_nu_sigsq = hyper_nu_sigsq;
+	}
+	
+	public void setSampleVarResiduals(double sample_var_e){
+		this.sample_var_e = sample_var_e;
+	}
 	
 }

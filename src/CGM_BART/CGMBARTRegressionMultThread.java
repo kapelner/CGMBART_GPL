@@ -143,7 +143,7 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 	}	
 	
 	protected void ConstructBurnedChainForTreesAndOtherInformation() {
-		gibbs_samples_of_cgm_trees_after_burn_in = new CGMBARTTreeNode[numSamplesAfterBurning()][num_trees];
+		gibbs_samples_of_cgm_trees_after_burn_in = new CGMBARTTreeNode[num_gibbs_total_iterations - num_gibbs_burn_in][num_trees];
 
 		if (verbose){
 			System.out.print("burning and aggregating chains from all threads... ");
@@ -155,7 +155,7 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 				int offset = t * (total_iterations_multithreaded - num_gibbs_burn_in);
 				int g = offset + (i - num_gibbs_burn_in);
 //				System.out.println("t = " + t + " total_iterations_multithreaded = " + total_iterations_multithreaded + " g = " + g);
-				if (g >= numSamplesAfterBurning()){
+				if (g >= num_gibbs_total_iterations - num_gibbs_burn_in){
 					break;
 				}
 				gibbs_samples_of_cgm_trees_after_burn_in[g] = bart_model.gibbs_samples_of_cgm_trees[i];
@@ -285,10 +285,6 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 		data[0] = record;
 		double[][] gibbs_samples = getGibbsSamplesForPrediction(data, num_cores_evaluate);
 		return StatToolbox.sample_average(gibbs_samples[0]);
-	}
-	
-	public int numSamplesAfterBurning(){
-		return num_gibbs_total_iterations - num_gibbs_burn_in;
 	}	
 	
 	/**
@@ -300,7 +296,7 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 	 * @return
 	 */
 	protected double[][] getGibbsSamplesForPrediction(final double[][] data, final int num_cores){
-		final int num_samples_after_burn_in = numSamplesAfterBurning();
+		final int num_samples_after_burn_in = num_gibbs_total_iterations - num_gibbs_burn_in;
 		final CGMBARTRegression first_bart = bart_gibbs_chain_threads[0];
 		
 		final int n = data.length;
@@ -309,7 +305,7 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 		
 		if (num_cores == 1){
 			for (int i = 0; i < n; i++){
-				double[] y_gibbs_samples = new double[num_samples_after_burn_in];
+				double[] y_gibbs_samples = new double[num_gibbs_total_iterations - num_gibbs_burn_in];
 				for (int g = 0; g < num_samples_after_burn_in; g++){
 					CGMBARTTreeNode[] cgm_trees = gibbs_samples_of_cgm_trees_after_burn_in[g];
 					double yt_i = 0;
