@@ -12,11 +12,16 @@ knockout_mcar = function(X, prop){
 
 knockout_mar = function(X, prop){
 	for (i in 1 : nrow(X)){
-		for (j in c(1 : 9, 11 : 13)){ ###10th col is tax
-			if (X$tax[i] > 279){
+		for (j in 1 : 12){
+			if (X$lstat[i] > 15){
 				if (runif(1) < prop){
 					X[i, j] = NA
 				}
+			}
+			if (X$lstat[i] < 5 && j == 6){
+				if (runif(1) < prop){
+					X[i, j] = NA
+				}        
 			}
 		}
 	}

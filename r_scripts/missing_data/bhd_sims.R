@@ -302,6 +302,7 @@ if (iter_num == 6){
 	bhd_bartm_results_mar = cbind(bhd_bartm_results_mar, apply(bhd_bartm_results_mar, 1, mean))
 	write.csv(bhd_bartm_results_mar, "bhd_bart_with_rf_impute_results_mar.csv")
 	bhd_bartm_results_mar = read.csv("bhd_bartm_results_mar.csv", header = T, row.names = 1)
+	bhd_bart_with_rf_impute_results_mar = read.csv("bhd_bart_with_rf_impute_results_mar.csv", header = T, row.names = 1)
 
 }
 
@@ -450,7 +451,9 @@ if (NOT_ON_GRID){
 	points(rownames(bhd_bartm_results_mar), bhd_bartm_results_mar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), col = "green", lwd = 3, type = "b")
 	points(rownames(bhd_rf_results_mar), bhd_rf_results_mar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), col = "black", lwd = 3, type = "b")
 	points(rownames(bhd_results_bart_with_imp_mar), bhd_results_bart_with_imp_mar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), col = "brown", lwd = 3, type = "b")
-
+	points(rownames(bhd_bart_with_rf_impute_results_mar), bhd_bart_with_rf_impute_results_mar[, Nsim + 1] / mean(oos_rmse_vanilla_bhd), col = "blue", lwd = 3, type = "b")
+	
+	
 }
 
 
@@ -657,4 +660,4 @@ sd(as.numeric(bhd_results_rf_mcar[gamma_ind, 1:Nsim]))
 sd(as.numeric(bhd_lm_results_mcar[gamma_ind, 1:Nsim]))
 
 
-
+sd(as.numeric(bhd_bart_with_rf_impute_results_mar[gamma_ind, 1:Nsim])) 

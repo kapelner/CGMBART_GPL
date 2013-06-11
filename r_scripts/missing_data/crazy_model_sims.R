@@ -36,7 +36,7 @@ set_bart_machine_num_cores(4)
 
 graphics.off()
 
-Xy = generate_crazy_model(n_crazy, prop_missing, offset_missing, sigma_e)
+Xy = generate_crazy_model(n_crazy, 0, offset_missing, sigma_e)
 hist(Xy[, 4], br = 50, main = "distribution of response")
 bart_machine = build_bart_machine(Xy = Xy, use_missing_data = TRUE, num_burn_in = 5000)
 plot_y_vs_yhat(bart_machine)
