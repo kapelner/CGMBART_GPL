@@ -188,11 +188,13 @@ public class StatToolbox {
 	
 
 	public static double sample_from_norm_dist(double mu, double sigsq){
-		double std_norm_realization = NORM_SAMPS[(int)Math.floor(rand() * NUM_NORM_SAMPS)];
-//		System.out.println("sample_from_norm_dist S = " + START_POS + " P = " + START_POS % NUM_NORM_SAMPS + "real = " + std_norm_realization);
-//		START_POS++;
-		return mu + Math.sqrt(sigsq) * std_norm_realization;
+		return mu + Math.sqrt(sigsq) * sample_from_std_norm_dist();
 	}
+	
+	public static double sample_from_std_norm_dist(){
+		return NORM_SAMPS[(int)Math.floor(rand() * NUM_NORM_SAMPS)];
+	}	
+		
 	
 	public static double[] sample_from_mult_norm_dist(double[] mu, double[][] Sigma){
 		return new MultivariateNormalDistribution(mu, Sigma).sample();

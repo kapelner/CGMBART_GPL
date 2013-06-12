@@ -5,11 +5,14 @@ import java.util.ArrayList;
 import org.apache.commons.math3.distribution.ChiSquaredDistribution;
 
 import Jama.Matrix;
+import Jama.QRDecomposition;
 
 
 public class CGMBART_F2_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
 	private static final long serialVersionUID = -3069428133597923502L;
 
+	private static final double IntialTauSqLM = 1;
+	
 	protected boolean use_heteroskedasticity;
 	
 	protected double hyper_q_sigsq = 0.9;
@@ -45,7 +48,9 @@ public class CGMBART_F2_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
 			for (int j = 0; j < p; j++){
 				Xmat_star.set(i, j, 1);
 			}
-		}		
+		}
+		
+
 		
 	}
 
@@ -109,50 +114,96 @@ public class CGMBART_F2_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
 	}
 	
 	private void SampleSigsqF2(int sample_num, double[] es) {
-		//this comes in three steps
-		SampleBetaForLMSigsqs(es, gibbs_samples_of_tausq_for_lm_sigsqs[sample_num]);
-		SampleTausqForLMSigsqs(es);
-		SampleSigsqsViaLM(es, sample_num);
+		//first convert the residuals to log residual squareds
+		//first calculate the "y" vector
+		Matrix log_sq_resid_vec = new Matrix(n + p + 1, 1);
+		for (int i = 0; i < n; i++){
+			log_sq_resid_vec.set(i, 1, Math.log(Math.pow(es[i], 2)));
+		}
+		for (int i = n; i < n + p + 1; i++){
+			log_sq_resid_vec.set(i, 1, 0);
+		}
+		
+		
+		////this comes in three steps
+		
+		//1 - draw beta
+		Matrix beta_draw_matrix = SampleBetaForLMSigsqs(log_sq_resid_vec, gibbs_samples_of_tausq_for_lm_sigsqs[sample_num - 1], sample_num);
+		
+		//now take this matrix form and convert it to a double vec which is a pain in the neck
+		double[][] beta_draw_double_matrix = beta_draw_matrix.getArray();
+		double[] beta_draw = new double[n + p + 1];
+		for (int i = 0; i < n + p + 1; i++){
+			beta_draw[i] = beta_draw_double_matrix[i][1];
+		}
+		
+		gibbs_samples_of_betas_for_lm_sigsqs[sample_num] = beta_draw;
+		
+		//now calculate the y_hats from using the recently sampled beta
+		Matrix y_hat = Xmat_star.times(beta_draw_matrix);
+		Matrix resids = log_sq_resid_vec.minus(y_hat);
+		
+		//2 - draw tausq
+		SampleTausqForLMSigsqs(resids, sample_num);
+		//3 - draw sigsqs and send back to BART
+		SampleSigsqsViaLM(sample_num);
+	}
+
+	private Matrix SampleBetaForLMSigsqs(Matrix log_sq_resid_vec, double tau_sq, int sample_num) {
+		
+		Matrix Sigma_star_neg_half = new Matrix(n + p + 1, n + p + 1);
+		double one_over_tau = 1 / Math.sqrt(tau_sq);
+		double one_over_sqrt_hyper_beta_sigsq = 1 / Math.sqrt(hyper_beta_sigsq);
+		for (int i = 0; i < n; i++){
+			Sigma_star_neg_half.set(i, i, one_over_tau);
+		}
+		for (int i = n; i < n + p + 1; i++){
+			Sigma_star_neg_half.set(i, i, one_over_sqrt_hyper_beta_sigsq);
+		}
+		
+		Matrix Sigma_star_neg_half_X_mat = Sigma_star_neg_half.times(Xmat_star);
+		Matrix Sigma_star_neg_half_log_sq_resid_vec = Sigma_star_neg_half.times(log_sq_resid_vec);
+		
+		QRDecomposition QR = new QRDecomposition(Sigma_star_neg_half_X_mat);
+		Matrix Qt = QR.getQ().transpose();
+		Matrix R = QR.getR();
+		Matrix Rinv = R.inverse();
+		Matrix V_beta = Rinv.times(Rinv.transpose());
+		Matrix Beta_vec = Rinv.times(Qt).times(Sigma_star_neg_half_log_sq_resid_vec);
+		
+		Matrix z = new Matrix(n + p + 1, 1);
+		for (int i = 0; i < n + p + 1; i++){
+			z.set(i, 1, StatToolbox.sample_from_std_norm_dist());
+		}
+		
+		return Beta_vec.plus(V_beta.times(z));
+	}
+
+
+	private void SampleTausqForLMSigsqs(Matrix resids, int sample_num) {
+		double sse = 0;
+		for (int i = 0; i < n + p + 1; i++){
+			sse += resids.get(i, 1); 
+		}
+		gibbs_samples_of_tausq_for_lm_sigsqs[sample_num] = 
+			StatToolbox.sample_from_inv_gamma((hyper_nu_sigsq + n + p + 1) / 2, 2 / (sse + hyper_nu_sigsq * hyper_lambda_sigsq), this);
 	}
 	
-	private void SampleSigsqsViaLM(double[] es, int sample_num) {
+	
+	private void SampleSigsqsViaLM(int sample_num) {
 		double[] beta_lm_sigsq = gibbs_samples_of_betas_for_lm_sigsqs[sample_num];
 		double tausq_lm_sigsq = gibbs_samples_of_tausq_for_lm_sigsqs[sample_num];
-		double[] sigsqs_gibbs_sample = gibbs_samples_of_sigsq_hetero[sample_num];
+		double[] sigsqs_gibbs_sample = gibbs_samples_of_sigsq_hetero[sample_num]; //pointer to what we need to populate
 		for (int i = 0; i < n; i++){
 			//initialize to be the intercept
 			double x_trans_beta_lm_sigsq = beta_lm_sigsq[0];
 			for (int j = 1; j <= p; j++){
 				x_trans_beta_lm_sigsq += X_y.get(i)[j - 1] * beta_lm_sigsq[j];
 			}
-			sigsqs_gibbs_sample[i] = StatToolbox.sample_from_norm_dist(x_trans_beta_lm_sigsq, tausq_lm_sigsq);
+			sigsqs_gibbs_sample[i] = Math.exp(StatToolbox.sample_from_norm_dist(x_trans_beta_lm_sigsq, tausq_lm_sigsq));
 		}
 	}
-
-	private double SampleTausqForLMSigsqs(double[] es) {
-		double sse = 0;
-		for (double e : es){
-			sse += e * e; 
-		}
-		return StatToolbox.sample_from_inv_gamma((hyper_nu_sigsq + n + p + 1) / 2, 2 / (sse + hyper_nu_sigsq * hyper_lambda_sigsq), this);
-	}
-
-	private void SampleBetaForLMSigsqs(double[] es, double tau_sq) {
-		Matrix variance_weighted = new Matrix(n + p + 1, n + p + 1);
-		for (int i = 0; i < n; i++){
-			for (int j = 0; j < n; j++){
-				variance_weighted.set(i, j, tau_sq);
-			}
-		}
-		for (int i = n; i < n + p + 1; i++){
-			for (int j = n; j < n + p + 1; j++){
-				variance_weighted.set(i, j, hyper_beta_sigsq);
-			}
-		}
-		Matrix triple_X_weighted;
-		
-	}
-
+	
 	public double[] getSigsqsByGibbsSample(int g){
 		return gibbs_samples_of_sigsq_hetero[g];
 	}
@@ -206,6 +257,7 @@ public class CGMBART_F2_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
 		use_heteroskedasticity = true;
 	}
 	
+	
 	protected void InitGibbsSamplingData(){
 		super.InitGibbsSamplingData();
 		if (use_heteroskedasticity){
@@ -214,6 +266,7 @@ public class CGMBART_F2_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
 			gibbs_samples_of_betas_for_lm_sigsqs = new double[num_gibbs_total_iterations + 1 ][p + 1];
 			gibbs_samples_of_betas_for_lm_sigsqs_after_burn_in = new double[num_gibbs_total_iterations - num_gibbs_burn_in][p + 1];
 			gibbs_samples_of_tausq_for_lm_sigsqs = new double[num_gibbs_total_iterations + 1];
+			gibbs_samples_of_tausq_for_lm_sigsqs[0] = IntialTauSqLM;
 			gibbs_samples_of_tausq_for_lm_sigsqs_after_burn_in = new double[num_gibbs_total_iterations - num_gibbs_burn_in];
 		}	
 	}	
