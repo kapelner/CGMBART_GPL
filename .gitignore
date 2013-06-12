@@ -76,7 +76,7 @@ r_log/*.txt
 bin/*
 randsamps/chisq*
 RWeka/
-*.csv
+/*.csv
 
 old_mar/*
 datasets/r_zach.csv

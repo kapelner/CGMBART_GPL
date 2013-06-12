@@ -18,8 +18,8 @@ public class CGMBART_F2_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
 	protected double hyper_q_sigsq = 0.9;
 	protected double hyper_nu_sigsq = 3.0;
 	protected double hyper_lambda_sigsq;
-	protected double hyper_sigsq_beta_sigsq = 1;
-	protected double sample_var_e;
+	protected double hyper_sigsq_beta_sigsq = 10;
+	protected double sample_var_e = 11.20568;
 	protected double hyper_beta_sigsq;
 	
 	/** the variance of the errors as well as other things necessary for Gibbs sampling */
@@ -38,13 +38,15 @@ public class CGMBART_F2_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
 		calculateHyperparametersF2();
 		
 		//precompute X as a Matrix object
-		Xmat_star = new Matrix(n + p, p);
+		Xmat_star = new Matrix(n + p + 1, p);
+		//the top part is just the original X training matrix
 		for (int i = 0; i < n; i++){
 			for (int j = 0; j < p; j++){
 				Xmat_star.set(i, j, X_y.get(i)[j]);
 			}
 		}
-		for (int i = n; i < n + p; i++){
+		//the bottom portion is the identiyy matrix
+		for (int i = n; i < n + p + 1; i++){
 			for (int j = 0; j < p; j++){
 				Xmat_star.set(i, j, 1);
 			}
@@ -59,10 +61,8 @@ public class CGMBART_F2_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
 	}
 	
 	private void calculateHyperparametersF2() {
-		super.calculateHyperparameters();
-		double ten_pctile_chisq_df_hyper_nu = 0;		
-		ChiSquaredDistribution chi_sq_dist = new ChiSquaredDistribution(hyper_nu_sigsq);
-		ten_pctile_chisq_df_hyper_nu = chi_sq_dist.inverseCumulativeProbability(1 - hyper_q_sigsq);
+		double ten_pctile_chisq_df_hyper_nu = 
+			new ChiSquaredDistribution(hyper_nu_sigsq).inverseCumulativeProbability(1 - hyper_q_sigsq);
 
 		hyper_lambda_sigsq = ten_pctile_chisq_df_hyper_nu / hyper_nu_sigsq * sample_var_e;		
 	}
@@ -70,7 +70,7 @@ public class CGMBART_F2_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
 	
 	private double calcLnLikRatioGrowF2(CGMBARTTreeNode grow_node) {
 		double[] sigsqs = gibbs_samples_of_sigsq_hetero[gibbs_sample_num - 1];
-				
+
 		//we need sum_inv_sigsqs for the parent and both children
 		//as well as weighted sum responses for the parent and both children
 		double sum_inv_sigsq_parent = 0;
