@@ -45,18 +45,18 @@ plot_tree_depths = function(bart_machine){
 	
 	tree_depths_after_burn_in = get_tree_depths(bart_machine)
 	
-	num_after_burn_in_per_core = nrow(tree_depths_after_burn_in)
+	num_after_burn_in_per_core = ncol(tree_depths_after_burn_in)
 	
 	plot(1 : num_after_burn_in_per_core, rep(0, num_after_burn_in_per_core), type = "n", 
 		main = "Tree Depth by Gibbs Sample After Burn-in", xlab = "Gibbs Sample", 
 		ylab = paste("Tree Depth for all cores"), ylim = c(0, max(tree_depths_after_burn_in)))
 	#plot burn in
-	for (t in 1 : ncol(tree_depths_after_burn_in)){
-		lines(1 : num_after_burn_in_per_core, tree_depths_after_burn_in[, t], col = rgb(0.9,0.9,0.9))
+	for (t in 1 : nrow(tree_depths_after_burn_in)){
+		lines(1 : num_after_burn_in_per_core, tree_depths_after_burn_in[t, ], col = rgb(0.9,0.9,0.9))
 	}
-	lines(1 : num_after_burn_in_per_core, apply(tree_depths_after_burn_in, 1, mean), col = "blue", lwd = 4)
-	lines(1 : num_after_burn_in_per_core, apply(tree_depths_after_burn_in, 1, min), col = "black")
-	lines(1 : num_after_burn_in_per_core, apply(tree_depths_after_burn_in, 1, max), col = "black")
+	lines(1 : num_after_burn_in_per_core, apply(tree_depths_after_burn_in, 2, mean), col = "blue", lwd = 4)
+	lines(1 : num_after_burn_in_per_core, apply(tree_depths_after_burn_in, 2, min), col = "black")
+	lines(1 : num_after_burn_in_per_core, apply(tree_depths_after_burn_in, 2, max), col = "black")
 	
 	
 	if (bart_machine$num_cores > 1){
@@ -82,19 +82,19 @@ plot_tree_num_nodes = function(bart_machine){
 	
 	tree_num_nodes_and_leaves_after_burn_in = get_tree_num_nodes_and_leaves(bart_machine)
 	
-	num_after_burn_in_per_core = nrow(tree_num_nodes_and_leaves_after_burn_in)
+	num_after_burn_in_per_core = ncol(tree_num_nodes_and_leaves_after_burn_in)
 	
 	plot(1 : num_after_burn_in_per_core, rep(0, num_after_burn_in_per_core), type = "n", 
 		main = "Tree Num Nodes And Leaves by Gibbs Sample After Burn-in", xlab = "Gibbs Sample", 
 		ylab = paste("Tree Num Nodes and Leaves for all cores"), 
 		ylim = c(0, max(tree_num_nodes_and_leaves_after_burn_in)))
 	#plot burn in
-	for (t in 1 : ncol(tree_num_nodes_and_leaves_after_burn_in)){
-		lines(1 : num_after_burn_in_per_core, tree_num_nodes_and_leaves_after_burn_in[, t], col = rgb(0.9, 0.9, 0.9))
+	for (t in 1 : nrow(tree_num_nodes_and_leaves_after_burn_in)){
+		lines(1 : num_after_burn_in_per_core, tree_num_nodes_and_leaves_after_burn_in[t, ], col = rgb(0.9, 0.9, 0.9))
 	}
-	lines(1 : num_after_burn_in_per_core, apply(tree_num_nodes_and_leaves_after_burn_in, 1, mean), col = "blue", lwd = 4)
-	lines(1 : num_after_burn_in_per_core, apply(tree_num_nodes_and_leaves_after_burn_in, 1, min), col = "black")
-	lines(1 : num_after_burn_in_per_core, apply(tree_num_nodes_and_leaves_after_burn_in, 1, max), col = "black")
+	lines(1 : num_after_burn_in_per_core, apply(tree_num_nodes_and_leaves_after_burn_in, 2, mean), col = "blue", lwd = 4)
+	lines(1 : num_after_burn_in_per_core, apply(tree_num_nodes_and_leaves_after_burn_in, 2, min), col = "black")
+	lines(1 : num_after_burn_in_per_core, apply(tree_num_nodes_and_leaves_after_burn_in, 2, max), col = "black")
 	
 	if (bart_machine$num_cores > 1){
 		for (c in 2 : bart_machine$num_cores){
@@ -119,7 +119,7 @@ plot_mh_acceptance_reject = function(bart_machine){
 	
 	mh_acceptance_reject = get_mh_acceptance_reject(bart_machine)
 	a_r_before_burn_in = mh_acceptance_reject[["a_r_before_burn_in"]]
-	a_r_before_burn_in_avg_over_trees = rowSums(a_r_before_burn_in) / bart_machine$num_trees
+	a_r_before_burn_in_avg_over_trees = colSums(a_r_before_burn_in) / bart_machine$num_trees
 	
 	a_r_after_burn_in_avgs_over_trees = list()
 	for (c in 1 : bart_machine$num_cores){

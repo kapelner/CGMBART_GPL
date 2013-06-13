@@ -21,21 +21,35 @@ source("r_scripts/missing_data/sims_functions.R")
 
 
 n = 500
-x1 = runif(n)
-x2 = runif(n)
-sigma = sqrt(exp(2 * x1 + 2 * x2))
+x1 = sort(runif(n))
+sigma = sqrt(exp(0.5 * x1))
+plot(x1, sigma)
 
-y = 3 * x1 + 3 * x2 + rnorm(n, 0, sigma)
+y = 10 * x1 + rnorm(n, 0, sigma)
+plot(x1, y)
 
-Xy = data.frame(x1, x2, y)
+
+
+Xy = data.frame(x1, y)
+
+write.csv(Xy, "datasets/r_super_simple_hetero_model.csv", row.names = FALSE)
+Xy = read.csv("datasets/r_super_simple_hetero_model.csv")
 
 lm_mod = lm(y ~ ., Xy)
+plot(Xy[, 1], Xy[, 2])
+plot(lm_mod)
 mse = var(summary(lm_mod)$residuals)
 
 
 
 ### test BART on it
 set_bart_machine_num_cores(4)
-bart_machine = build_bart_machine(Xy = Xy, use_heteroskedasticity = TRUE, num_trees = 200)
+bart_machine = build_bart_machine(Xy = Xy, use_heteroskedasticity = FALSE, num_trees = 200, mh_prob_steps = c(0.5, 0.5, 0.5))
 plot_y_vs_yhat(bart_machine)
+windows()
+plot_tree_depths(bart_machine)
+plot_tree_num_nodes(bart_machine)
+plot_mh_acceptance_reject(bart_machine)
+
+
 
