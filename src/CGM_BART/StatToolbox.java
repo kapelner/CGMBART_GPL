@@ -177,7 +177,7 @@ public class StatToolbox {
 	}
 
 	public static double sample_from_inv_gamma(double k, double theta, CGMBART_02_hyperparams bart){
-//		System.out.println("sample_from_inv_gamma k = " + k + " theta = " + theta);
+		System.out.println("sample_from_inv_gamma k = " + k + " theta = " + theta);
 		return (1 / (theta / 2)) / bart.samps_chi_sq_df_eq_nu_plus_n[(int)Math.floor(rand() * NUM_CHI_SQ_SAMPS)];
 	}
 	

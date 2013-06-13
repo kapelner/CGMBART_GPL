@@ -313,7 +313,7 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements
 	}
 	
 	
-	private double calcLnLikRatioChange(CGMBARTTreeNode eta, CGMBARTTreeNode eta_star) {
+	protected double calcLnLikRatioChange(CGMBARTTreeNode eta, CGMBARTTreeNode eta_star) {
 		int n_1_star = eta_star.left.n_eta;
 		int n_2_star = eta_star.right.n_eta;
 		int n_1 = eta.left.n_eta;

@@ -16,20 +16,20 @@ import OpenSourceExtensions.UnorderedPair;
 public class CGMBARTRegressionMultThread extends Classifier implements Serializable {
 	private static final long serialVersionUID = -4537075714317768756L;
 	
-	private static final int DEFAULT_NUM_CORES = 4;//Runtime.getRuntime().availableProcessors() - 1;
+	private static final int DEFAULT_NUM_CORES = 1;//Runtime.getRuntime().availableProcessors() - 1;
 		
 	protected static final int NUM_TREES_DEFAULT = 200;
-	protected static final int NUM_GIBBS_BURN_IN_DEFAULT = 250;
-	protected static final int NUM_GIBBS_TOTAL_ITERATIONS_DEFAULT = 2000; //this must be larger than the number of burn in!!!
+	protected static final int NUM_GIBBS_BURN_IN_DEFAULT = 20;
+	protected static final int NUM_GIBBS_TOTAL_ITERATIONS_DEFAULT = 40; //this must be larger than the number of burn in!!!
 
 	protected static double HYPER_ALPHA_DEFAULT = 0.95;
 	protected static double HYPER_BETA_DEFUALT = 2; //see p271 in CGM10	
 	protected static double HYPER_K_DEFAULT = 2.0;	
 	protected static double HYPER_Q_DEFAULT = 0.9;
 	protected static double HYPER_NU_DEFAULT = 3.0;
-	protected static double PROB_GROW_DEFAULT = 2.5 / 9.0;
-	protected static double PROB_PRUNE_DEFAULT = 2.5 / 9.0;
-	protected static double PROB_CHANGE_DEFAULT = 4 / 9.0;	
+	protected static double PROB_GROW_DEFAULT = 4.5 / 9.0;
+	protected static double PROB_PRUNE_DEFAULT = 4.5 / 9.0;
+	protected static double PROB_CHANGE_DEFAULT = 0 / 9.0;	
 	
 	protected int num_cores;
 	protected int num_trees;

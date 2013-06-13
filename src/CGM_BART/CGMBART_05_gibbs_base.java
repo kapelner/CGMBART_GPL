@@ -59,6 +59,7 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 			long mem_used = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
 			long max_mem = Runtime.getRuntime().maxMemory();
 			message += "  mem: " + TreeIllustration.one_digit_format.format(mem_used / 1000000.0) + "/" + TreeIllustration.one_digit_format.format(max_mem / 1000000.0) + "MB";
+			System.out.println("vanilla BART sigsq: " + gibbs_samples_of_sigsq[t]);
 			System.out.println(message);
 		}
 	}
@@ -68,6 +69,7 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 		//subtract out previous tree's yhats
 //		System.out.println("  previous yhats = " + Tools.StringJoin(previous_tree.yhats));
 		sum_resids_vec = Tools.subtract_arrays(sum_resids_vec, previous_tree.yhats);
+//		System.out.println("sample tree gs#" + sample_num + " t = " + t + " sum_resids_vec = " + Tools.StringJoin(sum_resids_vec));
 //		System.out.println("SampleMu sample_num " +  sample_num + " t " + t + " gibbs array " + gibbs_samples_of_cgm_trees.get(sample_num));
 		CGMBARTTreeNode tree = gibbs_samples_of_cgm_trees[sample_num][t];
 
@@ -118,7 +120,7 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 		//okay so first we need to get "y" that this tree sees. This is defined as R_j in formula 12 on p274
 		//just go to sum_residual_vec and subtract it from y_trans
 		double[] R_j = Tools.add_arrays(Tools.subtract_arrays(y_trans, sum_resids_vec), copy_of_old_jth_tree.yhats);
-//		System.out.println("sample tree gs#" + sample_num + " t = " + t + " sum_resids = " + Tools.StringJoin(sum_resids_vec));
+//		System.out.println("sample tree gs#" + sample_num + " t = " + t + " R_j = " + Tools.StringJoin(R_j));
 		
 		//now, (important!) set the R_j's as this tree's data.
 		copy_of_old_jth_tree.updateWithNewResponsesRecursively(R_j);
