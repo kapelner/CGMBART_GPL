@@ -20,7 +20,7 @@ source("r_scripts/missing_data/sims_functions.R")
 
 
 
-n = 1000
+n = 500
 x1 = runif(n)
 x2 = runif(n)
 sigma = sqrt(exp(2 * x1 + 2 * x2))
@@ -33,4 +33,9 @@ lm_mod = lm(y ~ ., Xy)
 mse = var(summary(lm_mod)$residuals)
 
 
+
+### test BART on it
+set_bart_machine_num_cores(4)
+bart_machine = build_bart_machine(Xy = Xy, use_heteroskedasticity = TRUE, num_trees = 200)
+plot_y_vs_yhat(bart_machine)
 

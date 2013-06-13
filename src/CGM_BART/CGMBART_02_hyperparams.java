@@ -20,8 +20,8 @@ public abstract class CGMBART_02_hyperparams extends CGMBART_01_base implements 
 	protected double hyper_k = 2.0; //StatToolbox.inv_norm_dist(1 - (1 - CGMShared.MostOfTheDistribution) / 2.0);	
 	protected double hyper_q = 0.9;
 	protected double hyper_nu = 3.0;	
-	protected double alpha = 0.95;
-	protected double beta = 2; //see p271 in CGM10	
+	protected double alpha = 0.99;//0.95;
+	protected double beta = 0.05;//2; //see p271 in CGM10	
 	/** information about the response variable */
 	protected double y_min;
 	protected double y_max;

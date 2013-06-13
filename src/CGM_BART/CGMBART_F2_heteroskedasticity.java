@@ -59,8 +59,6 @@ public class CGMBART_F2_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
 		
 		System.out.println("Xmat_star");
 		Xmat_star.print(3, 5);
-
-		
 	}
 
 	protected void tabulateSimulationDistributionsF2() {
@@ -141,7 +139,7 @@ public class CGMBART_F2_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
 		}
 		
 		System.out.println("log_sq_resid_vec");
-		log_sq_resid_vec.print(3, 5);
+		log_sq_resid_vec.transpose().print(3, 5);
 		
 		
 		////this comes in three steps
@@ -195,25 +193,25 @@ public class CGMBART_F2_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
 			Sigma_star_neg_half.set(i, i, one_over_sqrt_hyper_beta_sigsq);
 		}
 		
-		System.out.println("Sigma_star_neg_half");
-		Sigma_star_neg_half.print(3, 5);
+//		System.out.println("Sigma_star_neg_half");
+//		Sigma_star_neg_half.print(3, 5);
 		
 		Matrix Sigma_star_neg_half_X_mat = Sigma_star_neg_half.times(Xmat_star);
 		Matrix Sigma_star_neg_half_log_sq_resid_vec = Sigma_star_neg_half.times(log_sq_resid_vec);
 		
-		System.out.println("Sigma_star_neg_half_X_mat");
-		Sigma_star_neg_half_X_mat.print(3, 5);
-		System.out.println("Sigma_star_neg_half_log_sq_resid_vec");
-		Sigma_star_neg_half_log_sq_resid_vec.print(3, 5);
+//		System.out.println("Sigma_star_neg_half_X_mat");
+//		Sigma_star_neg_half_X_mat.print(3, 5);
+//		System.out.println("Sigma_star_neg_half_log_sq_resid_vec");
+//		Sigma_star_neg_half_log_sq_resid_vec.print(3, 5);
 		
 		QRDecomposition QR = new QRDecomposition(Sigma_star_neg_half_X_mat);
 		Matrix Qt = QR.getQ().transpose();
 		Matrix R = QR.getR();
-		System.out.println("R");
-		R.print(3, 5);		
+//		System.out.println("R");
+//		R.print(3, 5);		
 		Matrix Rinv = R.inverse();
-		System.out.println("Qt");
-		Qt.print(3, 5);
+//		System.out.println("Qt");
+//		Qt.print(3, 5);
 		System.out.println("Rinv");
 		Rinv.print(3, 5);
 		Matrix V_beta = Rinv.times(Rinv.transpose());
@@ -252,9 +250,11 @@ public class CGMBART_F2_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
 	
 	
 	private void SampleSigsqsViaLM(int sample_num) {
-		double[] beta_lm_sigsq = gibbs_samples_of_betas_for_lm_sigsqs[sample_num];
+//		double[] beta_lm_sigsq = gibbs_samples_of_betas_for_lm_sigsqs[sample_num];
+		double[] beta_lm_sigsq = {0, 2, 2};
 		double tausq_lm_sigsq = gibbs_samples_of_tausq_for_lm_sigsqs[sample_num];
 		double[] sigsqs_gibbs_sample = gibbs_samples_of_sigsq_hetero[sample_num]; //pointer to what we need to populate
+		double[] ln_sigsqs = new double[n];
 		for (int i = 0; i < n; i++){
 			//initialize to be the intercept
 			double x_trans_beta_lm_sigsq = beta_lm_sigsq[0];
@@ -262,8 +262,11 @@ public class CGMBART_F2_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
 				x_trans_beta_lm_sigsq += X_y.get(i)[j - 1] * beta_lm_sigsq[j];
 			}
 //			sigsqs_gibbs_sample[i] = Math.exp(StatToolbox.sample_from_norm_dist(x_trans_beta_lm_sigsq, tausq_lm_sigsq));
+//			sigsqs_gibbs_sample[i] = Math.exp(x_trans_beta_lm_sigsq); //SSSSSSSSSSSSSSSSSSSSSS
+			ln_sigsqs[i] = x_trans_beta_lm_sigsq;
 			sigsqs_gibbs_sample[i] = Math.exp(x_trans_beta_lm_sigsq); //SSSSSSSSSSSSSSSSSSSSSS
 		}
+		System.out.println("ln_sigsq estimates: " + Tools.StringJoin(ln_sigsqs));
 		System.out.println("sigsq estimates: " + Tools.StringJoin(sigsqs_gibbs_sample));
 	}
 	
@@ -285,6 +288,7 @@ public class CGMBART_F2_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
 			double posterior_mean = calcLeafPosteriorMeanF2(node, posterior_var, sigsqs);
 //			System.out.println("assignLeafVals n_k = " + node.n_eta + " sum_nk_sq = " + Math.pow(node.n_eta, 2) + " node = " + node.stringLocation(true));
 			System.out.println("assignLeafVals hyper_sigsq_mu = " + hyper_sigsq_mu + " posterior_mean = " + posterior_mean + " posterior_sigsq = " + posterior_var + " node.avg_response = " + node.avg_response_untransformed());
+			System.out.println("node responses: " + Tools.StringJoin(node.responses));
 			node.y_pred = StatToolbox.sample_from_norm_dist(posterior_mean, posterior_var);
 			if (node.y_pred == StatToolbox.ILLEGAL_FLAG){				
 				node.y_pred = 0.0; //this could happen on an empty node

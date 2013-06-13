@@ -30,6 +30,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		use_missing_data = FALSE,
 		replace_missing_data_with_x_j_bar = FALSE,
 		add_imputations = FALSE,
+		use_heteroskedasticity = FALSE,
 		replace_missing_data_with_x_j_bar_for_lm = TRUE,
 		mem_cache_for_speed = TRUE,
 		verbose = TRUE){
@@ -209,8 +210,13 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		}
 		.jcall(java_bart_machine, "V", "setCovSplitPrior", as.numeric(cov_prior_vec))
 		if (verbose){
-			cat("Covariate importance prior ON\n")
+			cat("Covariate importance prior ON.\n")
 		}
+	}
+	
+	if (use_heteroskedasticity){
+		.jcall(java_bart_machine, "V", "useHeteroskedasticity")
+		cat("Heteroskedastic BART feature ON.\n")
 	}
 	
 	#now load the training data into BART
