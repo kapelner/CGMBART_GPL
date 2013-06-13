@@ -30,7 +30,7 @@ public abstract class CGMBART_03_debug extends CGMBART_02_hyperparams implements
 		tree_illust = true;
 	}		
 
-	protected void DebugSample(int gibbs_sample_num, TreeArrayIllustration tree_array_illustration) {
+	protected void DebugSampleDraw(int gibbs_sample_num, TreeArrayIllustration tree_array_illustration) {
 		if (tree_illust){ //
 			tree_array_illustration.CreateIllustrationAndSaveImage();
 		}

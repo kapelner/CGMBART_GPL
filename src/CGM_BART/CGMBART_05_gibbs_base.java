@@ -39,15 +39,19 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 		//we cycle over each tree and update it according to formulas 15, 16 on p274
 		double[] R_j = new double[n];
 		for (int t = 0; t < num_trees; t++){
-			if (verbose){
-				GibbsSampleDebugMessage(t);
-			}
 			R_j = SampleTree(gibbs_sample_num, t, cgm_trees, tree_array_illustration);
 			SampleMusWrapper(gibbs_sample_num, t);				
 		}
 		//now we have the last residual vector which we pass on to sample sigsq
 		SampleSigsq(gibbs_sample_num, getResidualsFromFullSumModel(gibbs_sample_num, R_j));
-		DebugSample(gibbs_sample_num, tree_array_illustration);
+		
+		//debug stuff
+		if (verbose){
+			for (int t = 0; t < num_trees; t++){			
+				GibbsSampleDebugMessage(t);
+			}
+			DebugSampleDraw(gibbs_sample_num, tree_array_illustration);		
+		}	
 	}
 
 	protected void GibbsSampleDebugMessage(int t) {
@@ -59,7 +63,7 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 			long mem_used = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
 			long max_mem = Runtime.getRuntime().maxMemory();
 			message += "  mem: " + TreeIllustration.one_digit_format.format(mem_used / 1000000.0) + "/" + TreeIllustration.one_digit_format.format(max_mem / 1000000.0) + "MB";
-			System.out.println("vanilla BART sigsq: " + gibbs_samples_of_sigsq[t]);
+//			System.out.println("vanilla BART sigsq: " + gibbs_samples_of_sigsq[gibbs_sample_num]);
 			System.out.println(message);
 		}
 	}
@@ -92,6 +96,7 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 
 	protected void SampleSigsq(int sample_num, double[] es) {
 		double sigsq = drawSigsqFromPosterior(sample_num, es);
+//		System.out.println("drawn sigsq: " + sigsq);
 		gibbs_samples_of_sigsq[sample_num] = sigsq;
 	}
 	

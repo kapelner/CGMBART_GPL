@@ -14,7 +14,7 @@ public class CGMBART_F2_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
 
 	private static final double IntialTauSqLM = 1;
 	
-	protected boolean use_heteroskedasticity = true;
+	protected boolean use_heteroskedasticity = false;
 	
 	protected double hyper_q_sigsq = 0.9;
 	protected double hyper_nu_sigsq = 3.0;
@@ -34,31 +34,33 @@ public class CGMBART_F2_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
 
 	public void setData(ArrayList<double[]> X_y){
 		super.setData(X_y);
-		System.out.println("n: " + n + " p: " + p);
-		
-		tabulateSimulationDistributionsF2();
-		calculateHyperparametersF2();
-		
-		//precompute X as a Matrix object
-		Xmat_star = new Matrix(n + p + 1, p + 1);
-		//the top part is just the original X training matrix
-		for (int i = 0; i < n; i++){
-			for (int j = 0; j < p + 1; j++){
-				if (j == 0){
-					Xmat_star.set(i, j, 1); //this is the intercept
-				}
-				else {
-					Xmat_star.set(i, j, X_y.get(i)[j - 1]);
+		if (use_heteroskedasticity){
+			System.out.println("n: " + n + " p: " + p);
+			
+			tabulateSimulationDistributionsF2();
+			calculateHyperparametersF2();
+			
+			//precompute X as a Matrix object
+			Xmat_star = new Matrix(n + p + 1, p + 1);
+			//the top part is just the original X training matrix
+			for (int i = 0; i < n; i++){
+				for (int j = 0; j < p + 1; j++){
+					if (j == 0){
+						Xmat_star.set(i, j, 1); //this is the intercept
+					}
+					else {
+						Xmat_star.set(i, j, X_y.get(i)[j - 1]);
+					}
 				}
 			}
+			//the bottom portion is the identity matrix
+			for (int i = n; i < n + p + 1; i++){
+				Xmat_star.set(i, i - n, 1);
+			}
+			
+			System.out.println("Xmat_star");
+			Xmat_star.print(3, 5);
 		}
-		//the bottom portion is the identity matrix
-		for (int i = n; i < n + p + 1; i++){
-			Xmat_star.set(i, i - n, 1);
-		}
-		
-		System.out.println("Xmat_star");
-		Xmat_star.print(3, 5);
 	}
 
 	protected void tabulateSimulationDistributionsF2() {
@@ -178,6 +180,7 @@ public class CGMBART_F2_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
 //		//2 - draw tausq
 //		SampleTausqForLMSigsqs(resids, sample_num);
 		//3 - draw sigsqs and send back to BART
+		super.SampleSigsq(sample_num, es);
 		SampleSigsqsViaLM(sample_num);
 	}
 
@@ -250,6 +253,9 @@ public class CGMBART_F2_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
 	
 	
 	private void SampleSigsqsViaLM(int sample_num) {
+//		double sigsq_from_vanilla_bart = gibbs_samples_of_sigsq[sample_num];
+		
+		
 //		double[] beta_lm_sigsq = gibbs_samples_of_betas_for_lm_sigsqs[sample_num];
 		double[] beta_lm_sigsq = {0, 0.5};
 		double tausq_lm_sigsq = gibbs_samples_of_tausq_for_lm_sigsqs[sample_num];
@@ -287,7 +293,7 @@ public class CGMBART_F2_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
 			//draw from posterior distribution
 			double posterior_mean = calcLeafPosteriorMeanF2(node, posterior_var, sigsqs);
 //			System.out.println("assignLeafVals n_k = " + node.n_eta + " sum_nk_sq = " + Math.pow(node.n_eta, 2) + " node = " + node.stringLocation(true));
-//			System.out.println("assignLeafVals hyper_sigsq_mu = " + hyper_sigsq_mu + " posterior_mean = " + posterior_mean + " posterior_sigsq = " + posterior_var + " node.avg_response = " + node.avg_response_untransformed());
+			System.out.println("assignLeafVals posterior_mean = " + posterior_mean + " posterior_sigsq = " + posterior_var + " node.avg_response = " + node.avg_response_untransformed() + " hyper_sigsq_mu = " + hyper_sigsq_mu);
 //			System.out.println("node responses: " + Tools.StringJoin(node.responses));
 			node.y_pred = StatToolbox.sample_from_norm_dist(posterior_mean, posterior_var);
 			if (node.y_pred == StatToolbox.ILLEGAL_FLAG){				
@@ -317,6 +323,7 @@ public class CGMBART_F2_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
 		for (int index : node.indicies){
 			sum_one_over_sigsqs_leaf += 1 / sigsqs[index];
 		}
+		System.out.println("sum_one_over_sigsqs_leaf: " + sum_one_over_sigsqs_leaf);
 		return 1 / (1 / hyper_sigsq_mu + sum_one_over_sigsqs_leaf);
 	}
 

@@ -84,6 +84,7 @@ public class DataAnalysis {
 //			machine = new RandomForest(data, new JProgressBarAndLabel(0, 0, null));
 //			for (int num_times = 0; num_times < 100; num_times++){
 			machine = new CGMBARTRegressionMultThread();
+			((CGMBARTRegressionMultThread)machine).useHeteroskedasticity();
 			machine.setData(data.getX_y());
 //				double[] cov_split_prior = {1, 1000,1000};
 //				((CGMBARTRegressionMultThread)machine).setCovSplitPrior(cov_split_prior);
