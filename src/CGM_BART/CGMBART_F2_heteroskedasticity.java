@@ -32,6 +32,8 @@ public class CGMBART_F2_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
 
 	private Matrix Xmat_star;
 
+	private double sigsq_from_vanilla_bart;
+
 	public void setData(ArrayList<double[]> X_y){
 		super.setData(X_y);
 		if (use_heteroskedasticity){
@@ -58,8 +60,8 @@ public class CGMBART_F2_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
 				Xmat_star.set(i, i - n, 1);
 			}
 			
-			System.out.println("Xmat_star");
-			Xmat_star.print(3, 5);
+//			System.out.println("Xmat_star");
+//			Xmat_star.print(3, 5);
 		}
 	}
 
@@ -73,7 +75,6 @@ public class CGMBART_F2_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
 
 		hyper_lambda_sigsq = ten_pctile_chisq_df_hyper_nu / hyper_nu_sigsq * sample_var_e;		
 	}
-	
 	
 	private double calcLnLikRatioGrowF2(CGMBARTTreeNode grow_node) {
 		double[] sigsqs = gibbs_samples_of_sigsq_hetero[gibbs_sample_num - 1];
@@ -120,13 +121,13 @@ public class CGMBART_F2_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
 		return 0.5 * (a - b - c) + hyper_sigsq_mu / 2 * (d + e - f);
 	}
 	
-	
 	private double calcLnLikRatioChangeF2(CGMBARTTreeNode eta, CGMBARTTreeNode eta_star) {
+		//TODO
 		return 0;
 	}		
 	
 	private void SampleSigsqF2(int sample_num, double[] es) {
-//		System.out.println("\n\nGibbs sample_num: " + sample_num + "\n" + "----------------------------------------------------");
+		System.out.println("\n\nGibbs sample_num: " + sample_num + "  Sigsqs \n" + "----------------------------------------------------");
 //		System.out.println("es: " + Tools.StringJoin(es));
 //		
 //		//first convert the residuals to log residual squareds
@@ -238,7 +239,6 @@ public class CGMBART_F2_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
 		return return_obj;
 	}
 
-
 	private void SampleTausqForLMSigsqs(Matrix resids, int sample_num) {
 		double sse = 0;
 		for (int i = 0; i < n + p + 1; i++){
@@ -251,16 +251,17 @@ public class CGMBART_F2_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
 		System.out.println("tausq draw: " + gibbs_samples_of_tausq_for_lm_sigsqs[sample_num]);
 	}
 	
-	
 	private void SampleSigsqsViaLM(int sample_num) {
 //		double sigsq_from_vanilla_bart = gibbs_samples_of_sigsq[sample_num];
 		
 		
+		
 //		double[] beta_lm_sigsq = gibbs_samples_of_betas_for_lm_sigsqs[sample_num];
 		double[] beta_lm_sigsq = {0, 0.5};
+//		double[] beta_lm_sigsq = {0, 2, 2};
 		double tausq_lm_sigsq = gibbs_samples_of_tausq_for_lm_sigsqs[sample_num];
 		double[] sigsqs_gibbs_sample = gibbs_samples_of_sigsq_hetero[sample_num]; //pointer to what we need to populate
-		double[] ln_sigsqs = new double[n];
+//		double[] ln_sigsqs = new double[n];
 		for (int i = 0; i < n; i++){
 			//initialize to be the intercept
 			double x_trans_beta_lm_sigsq = beta_lm_sigsq[0];
@@ -269,33 +270,51 @@ public class CGMBART_F2_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
 			}
 //			sigsqs_gibbs_sample[i] = Math.exp(StatToolbox.sample_from_norm_dist(x_trans_beta_lm_sigsq, tausq_lm_sigsq));
 //			sigsqs_gibbs_sample[i] = Math.exp(x_trans_beta_lm_sigsq); //SSSSSSSSSSSSSSSSSSSSSS
-			ln_sigsqs[i] = x_trans_beta_lm_sigsq;
-			sigsqs_gibbs_sample[i] = Math.exp(x_trans_beta_lm_sigsq); //SSSSSSSSSSSSSSSSSSSSSS
+//			ln_sigsqs[i] = x_trans_beta_lm_sigsq;
+//			sigsqs_gibbs_sample[i] = sigsq_from_vanilla_bart; 
+			sigsqs_gibbs_sample[i] = Math.pow(transform_y(Math.sqrt(Math.exp(x_trans_beta_lm_sigsq))), 2); //SSSSSSSSSSSSSSSSSSSSSS
 		}
 //		System.out.println("ln_sigsq estimates: " + Tools.StringJoin(ln_sigsqs));
-//		System.out.println("sigsq estimates: " + Tools.StringJoin(sigsqs_gibbs_sample));
+		System.out.println("sigsq estimates: " + Tools.StringJoin(sigsqs_gibbs_sample));
 	}
 	
-//	public double[] getSigsqsByGibbsSample(int g){
-//		return gibbs_samples_of_sigsq_hetero[g];
-//	}
-	
-	private void SampleMusF2(int sample_num, CGMBARTTreeNode tree) {
+	private void SampleMusF2(int sample_num, CGMBARTTreeNode node) {
+		System.out.println("\n\nGibbs sample_num: " + sample_num + "  Mus \n" + "----------------------------------------------------");
 		double[] current_sigsqs = gibbs_samples_of_sigsq_hetero[sample_num - 1];
-		assignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsqsAndUpdateYhatsF2(tree, current_sigsqs);	
+		assignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsqsAndUpdateYhatsF2(node, current_sigsqs);
+		sigsq_from_vanilla_bart = gibbs_samples_of_sigsq[sample_num - 1];
 	}	
 	
 	protected void assignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsqsAndUpdateYhatsF2(CGMBARTTreeNode node, double[] sigsqs) {
 //		System.out.println("assignLeafValsUsingPosteriorMeanAndCurrentSigsq sigsqs: " + Tools.StringJoin(sigsqs));
 		if (node.isLeaf){
+			
+//			System.out.println("sigsq_from_vanilla_bart: " + sigsq_from_vanilla_bart + " 1 / sigsq_from_vanilla_bart: " + 1 / sigsq_from_vanilla_bart);
+			System.out.println("n = " + node.n_eta + " n over sigsq_from_vanilla_bart: " + node.n_eta / sigsq_from_vanilla_bart);
+			
 			//update ypred
 			double posterior_var = calcLeafPosteriorVarF2(node, sigsqs);
 			//draw from posterior distribution
 			double posterior_mean = calcLeafPosteriorMeanF2(node, posterior_var, sigsqs);
 //			System.out.println("assignLeafVals n_k = " + node.n_eta + " sum_nk_sq = " + Math.pow(node.n_eta, 2) + " node = " + node.stringLocation(true));
-			System.out.println("assignLeafVals posterior_mean = " + posterior_mean + " posterior_sigsq = " + posterior_var + " node.avg_response = " + node.avg_response_untransformed() + " hyper_sigsq_mu = " + hyper_sigsq_mu);
 //			System.out.println("node responses: " + Tools.StringJoin(node.responses));
 			node.y_pred = StatToolbox.sample_from_norm_dist(posterior_mean, posterior_var);
+			
+			double posterior_mean_untransformed = un_transform_y(posterior_mean);
+			double posterior_sigma_untransformed = un_transform_y(Math.sqrt(posterior_var));
+			double y_pred_untransformed = un_transform_y(node.y_pred);
+			if (node.avg_response_untransformed() > 9){ 
+				double posterior_mean_vanilla_un = un_transform_y(node.sumResponses() / sigsq_from_vanilla_bart / (1 / hyper_sigsq_mu + node.n_eta / sigsq_from_vanilla_bart));
+				System.out.println("posterior_mean in BART = " + posterior_mean_vanilla_un);
+				
+				System.out.println("posterior_mean in HBART = " + posterior_mean_untransformed + 
+						" node.avg_response = " + node.avg_response_untransformed() + 
+						" y_pred_untransformed = " + y_pred_untransformed + 
+						" posterior_sigma = " + posterior_sigma_untransformed + 
+						" hyper_sigsq_mu = " + hyper_sigsq_mu);
+			}
+			
+			
 			if (node.y_pred == StatToolbox.ILLEGAL_FLAG){				
 				node.y_pred = 0.0; //this could happen on an empty node
 				System.err.println("ERROR assignLeafFINAL " + node.y_pred + " (sigsq = " + Tools.StringJoin(sigsqs) + ")");
@@ -310,28 +329,32 @@ public class CGMBART_F2_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
 		}
 	}	
 	
-	private double calcLeafPosteriorMeanF2(CGMBARTTreeNode node, double posterior_var, double[] sigsqs) {
+	private double calcLeafPosteriorMeanF2(CGMBARTTreeNode node, double posterior_var, double[] sigsqs) {		
 		double numerator = 0;
 		for (int ell = 0; ell < node.n_eta; ell++){
+//			System.out.println("y_i = " + node.responses[ell] + " sigsq_i = " + sigsqs[node.indicies[ell]]);
 			numerator += node.responses[ell] / sigsqs[node.indicies[ell]];
-		}		
+		}
+//		System.out.println("calcLeafPosteriorMeanF2 numerator: " + numerator);
 		return numerator * posterior_var;
 	}
 
 	private double calcLeafPosteriorVarF2(CGMBARTTreeNode node, double[] sigsqs) {
+//		System.out.println("calcLeafPosteriorVarF2 sigsqs: " + Tools.StringJoin(sigsqs));
 		double sum_one_over_sigsqs_leaf = 0;
+//		System.out.print(" 1 / sigsqs: ");
 		for (int index : node.indicies){
+//			System.out.print( 1 / sigsqs[index] + ", ");
 			sum_one_over_sigsqs_leaf += 1 / sigsqs[index];
 		}
+//		System.out.print("\n");
 		System.out.println("sum_one_over_sigsqs_leaf: " + sum_one_over_sigsqs_leaf);
 		return 1 / (1 / hyper_sigsq_mu + sum_one_over_sigsqs_leaf);
 	}
 
-	public void useHeteroskedasticity(){
-		use_heteroskedasticity = true;
-	}
-	
-	
+	/**
+	 * We run the default initialization plus all initializations for our sigsq model
+	 */
 	protected void InitGibbsSamplingData(){
 		super.InitGibbsSamplingData();
 		if (use_heteroskedasticity){
@@ -345,6 +368,9 @@ public class CGMBART_F2_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
 		}	
 	}	
 	
+	/**
+	 * Instead of just setting one sigsq to the initial value, set sigsq's for all n observations to the initial value
+	 */
 	private void InitizializeSigsqF2() {
 		double[] initial_sigsqs = gibbs_samples_of_sigsq_hetero[0];
 		for (int i = 0; i < n; i++){
@@ -352,17 +378,12 @@ public class CGMBART_F2_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
 		}	
 	}	
 	
-	
-	
 	/////////////nothing but scaffold code below, do not alter!
-	
-	
+
 	protected void InitizializeSigsq() {
+		super.InitizializeSigsq();
 		if (use_heteroskedasticity){
 			InitizializeSigsqF2();
-		}
-		else {
-			super.InitizializeSigsq();
 		}
 	}
 
@@ -412,5 +433,13 @@ public class CGMBART_F2_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
 
 	public void setHyperBetaSigsq(double hyper_beta_sigsq){
 		this.hyper_beta_sigsq = hyper_beta_sigsq;
+	}
+
+	/**
+	 * The user specifies this flag. Once set, the functions in this class are used over the default homoskedastic functions
+	 * in parent classes
+	 */
+	public void useHeteroskedasticity(){
+		use_heteroskedasticity = true;
 	}
 }

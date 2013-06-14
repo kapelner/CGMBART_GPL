@@ -15,6 +15,7 @@ public abstract class CGMBART_06_gibbs_internal extends CGMBART_05_gibbs_base im
 			double posterior_mean = calcLeafPosteriorMean(node, sigsq, posterior_var);
 //			System.out.println("assignLeafVals posterior_mean = " + posterior_mean + " posterior_sigsq = " + posterior_var + " node.avg_response = " + node.avg_response_untransformed());
 			node.y_pred = StatToolbox.sample_from_norm_dist(posterior_mean, posterior_var);
+			
 			if (node.y_pred == StatToolbox.ILLEGAL_FLAG){				
 				node.y_pred = 0.0; //this could happen on an empty node
 				System.err.println("ERROR assignLeafFINAL " + node.y_pred + " (sigsq = " + sigsq + ")");

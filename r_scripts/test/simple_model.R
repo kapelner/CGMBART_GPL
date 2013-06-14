@@ -47,11 +47,11 @@ mean(sigma)
 
 ### test BART on it
 set_bart_machine_num_cores(4)
-bart_machine = build_bart_machine(Xy = Xytrain, num_trees = 1, mh_prob_steps = c(0.5, 0.5, 0))
+bart_machine = build_bart_machine(Xy = Xytrain, num_trees = 200, mh_prob_steps = c(0.5, 0.5, 0))
 bart_machine
 new_data = as.matrix(Xytest[, 1])
 colnames(new_data)[1] = "x1"
-plot_y_vs_yhat(bart_machine, new_data, Xytest[, 2])
+#plot_y_vs_yhat(bart_machine, new_data, Xytest[, 2], ppis = TRUE)
 obj = bart_predict_for_test_data(bart_machine, new_data, Xytest[, 2])
 obj$rmse
 
@@ -61,15 +61,15 @@ obj$rmse
 new_data = as.matrix(seq(-0.3, 1.3, 0.005))
 colnames(new_data)[1] = "x1"
 y_hat = predict(bart_machine, new_data)
-plot(new_data, y_hat, ylim = c(-1, 11))
+plot(new_data, y_hat, ylim = c(-1, 11), main = "vanilla")
 #y_hat
 
 windows()
 
 
-bart_machine_hetero = build_bart_machine(Xy = Xytrain, num_trees = 1, mh_prob_steps = c(0.5, 0.5, 0), use_heteroskedasticity = TRUE)
+bart_machine_hetero = build_bart_machine(Xy = Xytrain, num_trees = 200, mh_prob_steps = c(0.5, 0.5, 0), use_heteroskedasticity = TRUE)
 bart_machine_hetero
-plot_y_vs_yhat(bart_machine_hetero)
+plot_y_vs_yhat(bart_machine_hetero, ppis = TRUE)
 new_data = as.matrix(Xytest[, 1])
 colnames(new_data)[1] = "x1"
 obj_hetero = bart_predict_for_test_data(bart_machine_hetero, new_data, Xytest[, 2])
@@ -79,14 +79,14 @@ obj_hetero$rmse
 new_data = as.matrix(seq(-0.3, 1.3, 0.005))
 colnames(new_data)[1] = "x1"
 y_hat = predict(bart_machine_hetero, new_data)
-plot(new_data, y_hat, ylim = c(-1, 11))
-y_hat
+plot(new_data, y_hat, ylim = c(-1, 11), main = "hetero")
+#y_hat
 
 
-windows()
+#windows()
 plot_tree_depths(bart_machine)
-plot_tree_num_nodes(bart_machine)
-plot_mh_acceptance_reject(bart_machine)
+#plot_tree_num_nodes(bart_machine)
+#plot_mh_acceptance_reject(bart_machine)
 
 
 

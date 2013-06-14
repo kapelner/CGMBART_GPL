@@ -38,10 +38,7 @@ public class TreeArrayIllustration {
 	private ArrayList<Double> likelihoods;
 	private String unique_name;
 	
-	public static NumberFormat one_digit_format = NumberFormat.getInstance();
-	static {
-		one_digit_format.setMaximumFractionDigits(1);
-	}	
+	
 
 	public TreeArrayIllustration(int sample_num, String unique_name) {
 		this.sample_num = sample_num;

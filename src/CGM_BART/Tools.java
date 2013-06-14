@@ -3,6 +3,7 @@ package CGM_BART;
 import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.list.array.TIntArrayList;
 
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -10,6 +11,13 @@ import java.util.HashSet;
 import OpenSourceExtensions.UnorderedPair;
 
 public class Tools {
+	
+	public static NumberFormat one_digit_format = NumberFormat.getInstance();
+	public static NumberFormat two_digit_format = NumberFormat.getInstance();
+	static {
+		one_digit_format.setMaximumFractionDigits(1);
+		two_digit_format.setMaximumFractionDigits(2);
+	}
 	
 	
 	@SuppressWarnings("rawtypes")
