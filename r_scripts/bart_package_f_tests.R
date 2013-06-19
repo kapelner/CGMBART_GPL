@@ -1,5 +1,5 @@
 
-cov_importance_test = function(bart_machine, covariates = NULL, num_permutations = 200, num_trees = NULL, plot = TRUE){
+cov_importance_test = function(bart_machine, covariates = NULL, num_permutations = 100, plot = TRUE, num_trees = NULL){
 	if (is.null(covariates)){
 		title = "BART omnibus test for covariate importance\n"
 	} else {
@@ -40,7 +40,7 @@ cov_importance_test = function(bart_machine, covariates = NULL, num_permutations
 	}
 	cat("\n")
 	
-	pval = sum(pseudoRsq_obs < pseudoRsq_perm_samples) / num_permutations
+	pval = sum(pseudoRsq_obs < pseudoRsq_perm_samples) / (num_permutations + 1) #speak to Andreas Buja for why the +1 is there
 	
 	if (plot){
 		hist(pseudoRsq_perm_samples, 

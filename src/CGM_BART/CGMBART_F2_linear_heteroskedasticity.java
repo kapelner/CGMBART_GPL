@@ -34,8 +34,6 @@ public class CGMBART_F2_linear_heteroskedasticity extends CGMBART_F1_prior_cov_s
 
 	private Matrix Xmat_star;
 
-	private double sigsq_from_vanilla_bart;
-
 	public void setData(ArrayList<double[]> X_y){
 		super.setData(X_y);
 		if (use_heteroskedasticity){
@@ -157,19 +155,19 @@ public class CGMBART_F2_linear_heteroskedasticity extends CGMBART_F1_prior_cov_s
 //		////this comes in three steps
 //		
 //		//1 - draw beta
-//		HashMap<String, Matrix> beta_sample = SampleBetaForLMSigsqs(log_sq_resid_vec, gibbs_samples_of_tausq_for_lm_sigsqs[sample_num - 1], sample_num);
-//		Matrix beta_draw_matrix = beta_sample.get("beta_draw");
-//		Matrix beta_vec = beta_sample.get("beta_vec");
+		HashMap<String, Matrix> beta_sample = SampleBetaForLMSigsqs(log_sq_resid_vec, gibbs_samples_of_tausq_for_lm_sigsqs[sample_num - 1], sample_num);
+		Matrix beta_draw_matrix = beta_sample.get("beta_draw");
+		Matrix beta_vec = beta_sample.get("beta_vec");
 		
 		
-//		System.out.println("beta_draw_matrix");
-//		beta_draw_matrix.print(3, 5);
+		System.out.println("beta_draw_matrix");
+		beta_draw_matrix.print(3, 5);
 		
 		//////////////////
-		QRDecomposition QR = Xmat_star.qr();
-		Matrix Qt = QR.getQ().transpose();
-		Matrix Rinv = QR.getR().inverse();
-		Matrix beta_vec = (Rinv.times(Qt)).times(log_sq_resid_vec);
+//		QRDecomposition QR = Xmat_star.qr();
+//		Matrix Qt = QR.getQ().transpose();
+//		Matrix Rinv = QR.getR().inverse();
+//		Matrix beta_vec = (Rinv.times(Qt)).times(log_sq_resid_vec);
 		//////////////////
 		
 		
@@ -258,19 +256,19 @@ public class CGMBART_F2_linear_heteroskedasticity extends CGMBART_F1_prior_cov_s
 		return_obj.put("beta_draw", Beta_vec.plus(V_beta.times(z)));
 		
 		return return_obj;
-	}
+	} 
 
-	private void SampleTausqForLMSigsqs(Matrix resids, int sample_num) {
-		double sse = 0;
-		for (int i = 0; i < n + p + 1; i++){
-			sse += Math.pow(resids.get(i, 0), 2); 
-		}
-		System.out.println("sse: " + sse);
-		gibbs_samples_of_tausq_for_lm_sigsqs[sample_num] = 1; //SSSSSSSSSSSSSSSSS
-//			StatToolbox.sample_from_inv_gamma((hyper_nu_sigsq + n + p + 1) / 2, 2 / (sse + hyper_nu_sigsq * hyper_lambda_sigsq), this);
-		
-		System.out.println("tausq draw: " + gibbs_samples_of_tausq_for_lm_sigsqs[sample_num]);
-	}
+//	private void SampleTausqForLMSigsqs(Matrix resids, int sample_num) {
+//		double sse = 0;
+//		for (int i = 0; i < n + p + 1; i++){
+//			sse += Math.pow(resids.get(i, 0), 2); 
+//		}
+//		System.out.println("sse: " + sse);
+//		gibbs_samples_of_tausq_for_lm_sigsqs[sample_num] = 1; //SSSSSSSSSSSSSSSSS
+////			StatToolbox.sample_from_inv_gamma((hyper_nu_sigsq + n + p + 1) / 2, 2 / (sse + hyper_nu_sigsq * hyper_lambda_sigsq), this);
+//		
+//		System.out.println("tausq draw: " + gibbs_samples_of_tausq_for_lm_sigsqs[sample_num]);
+//	}
 	
 	private void SampleSigsqsViaLM(int sample_num) {
 //		double sigsq_from_vanilla_bart = gibbs_samples_of_sigsq[sample_num];
@@ -319,7 +317,7 @@ public class CGMBART_F2_linear_heteroskedasticity extends CGMBART_F1_prior_cov_s
 //		System.out.println("\n\nGibbs sample_num: " + sample_num + "  Mus \n" + "----------------------------------------------------");
 		double[] current_sigsqs = gibbs_samples_of_sigsq_hetero[sample_num - 1];
 		assignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsqsAndUpdateYhatsF2(node, current_sigsqs);
-		sigsq_from_vanilla_bart = gibbs_samples_of_sigsq[sample_num - 1];
+//		sigsq_from_vanilla_bart = gibbs_samples_of_sigsq[sample_num - 1];
 	}	
 	
 	protected void assignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsqsAndUpdateYhatsF2(CGMBARTTreeNode node, double[] sigsqs) {
@@ -337,10 +335,10 @@ public class CGMBART_F2_linear_heteroskedasticity extends CGMBART_F1_prior_cov_s
 //			System.out.println("node responses: " + Tools.StringJoin(node.responses));
 			node.y_pred = StatToolbox.sample_from_norm_dist(posterior_mean, posterior_var);
 			
-			double posterior_mean_untransformed = un_transform_y(posterior_mean);
-			double posterior_sigma_untransformed = un_transform_y(Math.sqrt(posterior_var));
-			double y_pred_untransformed = un_transform_y(node.y_pred);
-			if (node.avg_response_untransformed() > 9){ 
+//			double posterior_mean_untransformed = un_transform_y(posterior_mean);
+//			double posterior_sigma_untransformed = un_transform_y(Math.sqrt(posterior_var));
+//			double y_pred_untransformed = un_transform_y(node.y_pred);
+//			if (node.avg_response_untransformed() > 9){ 
 //				double posterior_mean_vanilla_un = un_transform_y(node.sumResponses() / sigsq_from_vanilla_bart / (1 / hyper_sigsq_mu + node.n_eta / sigsq_from_vanilla_bart));
 //				System.out.println("posterior_mean in BART = " + posterior_mean_vanilla_un);
 				
@@ -349,7 +347,7 @@ public class CGMBART_F2_linear_heteroskedasticity extends CGMBART_F1_prior_cov_s
 //						" y_pred_untransformed = " + y_pred_untransformed + 
 //						" posterior_sigma = " + posterior_sigma_untransformed + 
 //						" hyper_sigsq_mu = " + hyper_sigsq_mu);
-			}
+//			}
 			
 			
 			if (node.y_pred == StatToolbox.ILLEGAL_FLAG){				
