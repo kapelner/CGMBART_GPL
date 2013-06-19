@@ -146,6 +146,10 @@ public abstract class CGMBART_02_hyperparams extends CGMBART_01_base implements 
 		return sigsq_t_i * y_range_sq;
 	}
 	
+	public double transform_sigsq(double sigsq_t_i){
+		return sigsq_t_i / y_range_sq;
+	}	
+	
 	public double[] un_transform_sigsq(double[] sigsq_t_is){
 		double[] sigsq_is = new double[sigsq_t_is.length];
 		for (int i = 0; i < sigsq_t_is.length; i++){

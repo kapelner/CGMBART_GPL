@@ -141,6 +141,16 @@ public class Tools {
         return max;
     }
     
+    public static double min(double[] values) {
+    	double min = Double.POSITIVE_INFINITY;
+        for (double value : values) {
+        	if (value < min){
+        		min = value;
+        	}
+        }
+        return min;
+    }    
+    
     public static double sum_array(double[] arr){
     	double sum = 0;
     	for (int i = 0; i < arr.length; i++){
