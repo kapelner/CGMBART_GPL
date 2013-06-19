@@ -241,4 +241,14 @@ public class Tools {
 		return sum;
 	}
 
+	public static double min_positive_val(double[] values) {
+    	double min = Double.POSITIVE_INFINITY;
+        for (double value : values) {
+        	if (value < min && value > 0){
+        		min = value;
+        	}
+        }
+        return min;
+	}
+
 }

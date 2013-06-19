@@ -9,12 +9,12 @@ import Jama.Matrix;
 import Jama.QRDecomposition;
 
 
-public class CGMBART_F2_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
+public class CGMBART_F2_linear_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
 	private static final long serialVersionUID = -3069428133597923502L;
 
 	private static final double IntialTauSqLM = 1;
 	
-	protected boolean use_heteroskedasticity = false;
+	protected boolean use_heteroskedasticity;
 	
 	protected double hyper_q_sigsq = 0.9;
 	protected double hyper_nu_sigsq = 3.0;
@@ -301,11 +301,15 @@ public class CGMBART_F2_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
 		}
 		
 		//correct using kludge
+		int num_times_neg = 0;
+		double min_pos_sigsq = Tools.min_positive_val(sigsqs_gibbs_sample);
 		for (int i = 0; i < n; i++){
 			if (sigsqs_gibbs_sample[i] < 0){
-				sigsqs_gibbs_sample[i] = 0.001;
+				num_times_neg++; 
+				sigsqs_gibbs_sample[i] = min_pos_sigsq;
 			}
-		}		
+		}
+		System.out.println("# NEG: " + num_times_neg);
 		
 		for (int j = 0; j < p + 1; j++){
 //			System.out.println("beta[" + i + "] = " + un_transform_y(beta_lm_sigsq[i]));
@@ -347,11 +351,11 @@ public class CGMBART_F2_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
 //				double posterior_mean_vanilla_un = un_transform_y(node.sumResponses() / sigsq_from_vanilla_bart / (1 / hyper_sigsq_mu + node.n_eta / sigsq_from_vanilla_bart));
 //				System.out.println("posterior_mean in BART = " + posterior_mean_vanilla_un);
 				
-				System.out.println("posterior_mean in HBART = " + posterior_mean_untransformed + 
-						" node.avg_response = " + node.avg_response_untransformed() + 
-						" y_pred_untransformed = " + y_pred_untransformed + 
-						" posterior_sigma = " + posterior_sigma_untransformed + 
-						" hyper_sigsq_mu = " + hyper_sigsq_mu);
+//				System.out.println("posterior_mean in HBART = " + posterior_mean_untransformed + 
+//						" node.avg_response = " + node.avg_response_untransformed() + 
+//						" y_pred_untransformed = " + y_pred_untransformed + 
+//						" posterior_sigma = " + posterior_sigma_untransformed + 
+//						" hyper_sigsq_mu = " + hyper_sigsq_mu);
 			}
 			
 			
