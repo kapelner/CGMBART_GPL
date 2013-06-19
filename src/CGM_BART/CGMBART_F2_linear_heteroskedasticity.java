@@ -16,13 +16,13 @@ public class CGMBART_F2_linear_heteroskedasticity extends CGMBART_F1_prior_cov_s
 
 	private static final double EXPE_LOG_CHISQ_1 = 1.274693;
 	
-	protected boolean use_heteroskedasticity;
+	protected boolean use_linear_heteroskedasticity_model;
 	
 	protected double hyper_q_sigsq = 0.9;
 	protected double hyper_nu_sigsq = 3.0;
 	protected double hyper_lambda_sigsq;
 	protected double sample_var_e = 11.20568;
-	protected double hyper_beta_sigsq = 10;
+	protected double hyper_beta_sigsq = 1;
 	
 	/** the variance of the errors as well as other things necessary for Gibbs sampling */
 	protected double[][] gibbs_samples_of_sigsq_hetero;
@@ -36,7 +36,7 @@ public class CGMBART_F2_linear_heteroskedasticity extends CGMBART_F1_prior_cov_s
 
 	public void setData(ArrayList<double[]> X_y){
 		super.setData(X_y);
-		if (use_heteroskedasticity){
+		if (use_linear_heteroskedasticity_model){
 			System.out.println("n: " + n + " p: " + p);
 			
 			tabulateSimulationDistributionsF2();
@@ -213,9 +213,7 @@ public class CGMBART_F2_linear_heteroskedasticity extends CGMBART_F1_prior_cov_s
 //		//1 - draw beta
 //		HashMap<String, Matrix> beta_sample = SampleBetaForLMSigsqs(log_sq_resid_vec, gibbs_samples_of_tausq_for_lm_sigsqs[sample_num - 1], sample_num);
 //		Matrix beta_draw_matrix = beta_sample.get("beta_draw");
-//		Matrix beta_vec = beta_sample.get("beta_vec");
-		
-		
+//		Matrix beta_vec = beta_sample.get("beta_vec");		
 //		System.out.println("beta_draw_matrix");
 //		beta_draw_matrix.print(3, 5);
 //		
@@ -254,6 +252,7 @@ public class CGMBART_F2_linear_heteroskedasticity extends CGMBART_F1_prior_cov_s
 //		Matrix resids = log_sq_resid_vec.minus(y_hat);
 //		
 //		//2 - draw tausq
+		gibbs_samples_of_tausq_for_lm_sigsqs[sample_num] = 1; 
 //		SampleTausqForLMSigsqs(resids, sample_num);
 		//3 - draw sigsqs and send back to BART
 //		super.SampleSigsq(sample_num, es);
@@ -448,7 +447,7 @@ public class CGMBART_F2_linear_heteroskedasticity extends CGMBART_F1_prior_cov_s
 	 */
 	protected void InitGibbsSamplingData(){
 		super.InitGibbsSamplingData();
-		if (use_heteroskedasticity){
+		if (use_linear_heteroskedasticity_model){
 			gibbs_samples_of_sigsq_hetero = new double[num_gibbs_total_iterations + 1][n];	
 			gibbs_samples_of_sigsq_hetero_after_burn_in = new double[num_gibbs_total_iterations - num_gibbs_burn_in][n];
 			gibbs_samples_of_betas_for_lm_sigsqs = new double[num_gibbs_total_iterations + 1 ][p + 1];
@@ -473,13 +472,13 @@ public class CGMBART_F2_linear_heteroskedasticity extends CGMBART_F1_prior_cov_s
 
 	protected void InitizializeSigsq() {
 		super.InitizializeSigsq();
-		if (use_heteroskedasticity){
+		if (use_linear_heteroskedasticity_model){
 			InitizializeSigsqF2();
 		}
 	}
 
 	protected void SampleMus(int sample_num, CGMBARTTreeNode tree) {
-		if (use_heteroskedasticity){
+		if (use_linear_heteroskedasticity_model){
 			SampleMusF2(sample_num, tree);
 		}
 		else {
@@ -488,7 +487,7 @@ public class CGMBART_F2_linear_heteroskedasticity extends CGMBART_F1_prior_cov_s
 	}	
 
 	protected void SampleSigsq(int sample_num, double[] es) {
-		if (use_heteroskedasticity){
+		if (use_linear_heteroskedasticity_model){
 			SampleSigsqF2(sample_num, es);
 		}
 		else {
@@ -497,14 +496,14 @@ public class CGMBART_F2_linear_heteroskedasticity extends CGMBART_F1_prior_cov_s
 	}
 
 	protected double calcLnLikRatioGrow(CGMBARTTreeNode grow_node) {
-		if (use_heteroskedasticity){
+		if (use_linear_heteroskedasticity_model){
 			return calcLnLikRatioGrowF2(grow_node);
 		}
 		return super.calcLnLikRatioGrow(grow_node);
 	}
 	
 	protected double calcLnLikRatioChange(CGMBARTTreeNode eta, CGMBARTTreeNode eta_star) {
-		if (use_heteroskedasticity){
+		if (use_linear_heteroskedasticity_model){
 			return calcLnLikRatioChangeF2(eta, eta_star);
 		}
 		return super.calcLnLikRatioChange(eta, eta_star);
@@ -530,7 +529,7 @@ public class CGMBART_F2_linear_heteroskedasticity extends CGMBART_F1_prior_cov_s
 	 * The user specifies this flag. Once set, the functions in this class are used over the default homoskedastic functions
 	 * in parent classes
 	 */
-	public void useHeteroskedasticity(){
-		use_heteroskedasticity = true;
+	public void useLinearHeteroskedasticityModel(){
+		use_linear_heteroskedasticity_model = true;
 	}
 }

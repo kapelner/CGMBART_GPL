@@ -30,7 +30,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		use_missing_data = FALSE,
 		replace_missing_data_with_x_j_bar = FALSE,
 		add_imputations = FALSE,
-		use_heteroskedasticity = FALSE,
+		use_linear_heteroskedasticity_model = FALSE,
 		replace_missing_data_with_x_j_bar_for_lm = TRUE,
 		mem_cache_for_speed = TRUE,
 		verbose = TRUE){
@@ -214,8 +214,8 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		}
 	}
 	
-	if (use_heteroskedasticity){
-		.jcall(java_bart_machine, "V", "useHeteroskedasticity")
+	if (use_linear_heteroskedasticity_model){
+		.jcall(java_bart_machine, "V", "useLinearHeteroskedasticityModel")
 		cat("Heteroskedastic BART feature ON.\n")
 	}
 	

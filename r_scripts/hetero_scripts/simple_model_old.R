@@ -67,7 +67,7 @@ plot(new_data, y_hat, ylim = c(-1, 11), main = "vanilla")
 windows()
 
 
-bart_machine_hetero = build_bart_machine(Xy = Xytrain, num_trees = 200, mh_prob_steps = c(0.5, 0.5, 0), use_heteroskedasticity = TRUE)
+bart_machine_hetero = build_bart_machine(Xy = Xytrain, num_trees = 200, mh_prob_steps = c(0.5, 0.5, 0), use_linear_heteroskedasticity_model = TRUE)
 bart_machine_hetero
 plot_y_vs_yhat(bart_machine_hetero, ppis = TRUE)
 new_data = as.matrix(Xytest[, 1])

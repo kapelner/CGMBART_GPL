@@ -18,7 +18,7 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 	
 	private static final int DEFAULT_NUM_CORES = 1;//Runtime.getRuntime().availableProcessors() - 1;
 		
-	protected static final int NUM_TREES_DEFAULT = 200;
+	protected static final int NUM_TREES_DEFAULT = 1;
 	protected static final int NUM_GIBBS_BURN_IN_DEFAULT = 500;
 	protected static final int NUM_GIBBS_TOTAL_ITERATIONS_DEFAULT = 1000; //this must be larger than the number of burn in!!!
 
@@ -27,9 +27,9 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 	protected static double HYPER_K_DEFAULT = 2.0;	
 	protected static double HYPER_Q_DEFAULT = 0.9;
 	protected static double HYPER_NU_DEFAULT = 3.0;
-	protected static double PROB_GROW_DEFAULT = 4.5 / 9.0;
-	protected static double PROB_PRUNE_DEFAULT = 4.5 / 9.0;
-	protected static double PROB_CHANGE_DEFAULT = 0 / 9.0;
+	protected static double PROB_GROW_DEFAULT = 2.5 / 9.0;
+	protected static double PROB_PRUNE_DEFAULT = 2.5 / 9.0;
+	protected static double PROB_CHANGE_DEFAULT = 4 / 9.0;
 	
 	protected int num_cores;
 	protected int num_trees;
@@ -55,7 +55,7 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 	protected boolean verbose = true;
 	protected boolean mem_cache_for_speed = true;
 
-	protected transient boolean use_heteroskedasticity;
+	protected transient boolean use_linear_heteroskedasticity_model;
 
 	
 
@@ -111,8 +111,8 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 		if (cov_split_prior != null){
 			bart.setCovSplitPrior(cov_split_prior);
 		}
-		if (use_heteroskedasticity){
-			bart.useHeteroskedasticity();
+		if (use_linear_heteroskedasticity_model){
+			bart.useLinearHeteroskedasticityModel();
 		}
 		//do special stuff for regression model
 		if (!(bart instanceof CGMBARTClassification)){
@@ -499,8 +499,8 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 		this.cov_split_prior = cov_split_prior;
 	}
 	
-	public void useHeteroskedasticity(){
-		use_heteroskedasticity = true;		
+	public void useLinearHeteroskedasticityModel(){
+		use_linear_heteroskedasticity_model = true;		
 	}
 
 	public double[] getSigsqsByGibbsSample(int g){

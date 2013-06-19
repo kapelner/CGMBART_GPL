@@ -131,7 +131,7 @@ obj$rmse
 
 
 set_bart_machine_num_cores(4)
-hbart_machine = build_bart_machine(Xy = Xytrain, use_heteroskedasticity = TRUE)
+hbart_machine = build_bart_machine(Xy = Xytrain, use_linear_heteroskedasticity_model = TRUE)
 hbart_machine
 
 hobj = bart_predict_for_test_data(hbart_machine, Xytest[, 1 : 3], Xytest[, 4])
@@ -190,7 +190,7 @@ predict_obj$rmse
 
 
 set_bart_machine_num_cores(4)
-hbart_machine = build_bart_machine(Xtrain, ytrain, num_burn_in = 500, num_iterations_after_burn_in = 1000, use_heteroskedasticity = TRUE)
+hbart_machine = build_bart_machine(Xtrain, ytrain, num_burn_in = 500, num_iterations_after_burn_in = 1000, use_linear_heteroskedasticity_model = TRUE)
 hbart_machine
 
 windows(); plot_y_vs_yhat(hbart_machine, Xtest, ytest, ppis = TRUE)

@@ -47,6 +47,7 @@ public class DataAnalysis {
 //	private static final String DataSetFilename = "r_boston_tiny_with_missing";	
 //	private static final String DataSetFilename = "r_simple_hetero_model";	
 	private static final String DataSetFilename = "r_super_simple_hetero_model";
+//	private static final String DataSetFilename = "r_super_simple_hetero_model_small";	
 //	private static final String DataSetFilename = "r_zach";
 //	private static final String DataSetFilename = "r_forestfires";
 //	private static final String DataSetFilename = "r_wine_white";
@@ -83,7 +84,7 @@ public class DataAnalysis {
 //			machine = new RandomForest(data, new JProgressBarAndLabel(0, 0, null));
 //			for (int num_times = 0; num_times < 100; num_times++){
 			machine = new CGMBARTRegressionMultThread();
-			((CGMBARTRegressionMultThread)machine).useHeteroskedasticity();
+			((CGMBARTRegressionMultThread)machine).useLinearHeteroskedasticityModel();
 			machine.setData(data.getX_y());
 //				double[] cov_split_prior = {1, 1000,1000};
 //				((CGMBARTRegressionMultThread)machine).setCovSplitPrior(cov_split_prior);
