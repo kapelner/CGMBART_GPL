@@ -27,7 +27,7 @@ x0 = rep(1, n)
 x1 = runif(n, 0, 1)
 x2 = runif(n, 0, 1)
 x3 = runif(n, 0, 1)
-beta = c(2, 0, 0, 0)
+beta = c(-3, 3, -2, 3)
 sigma = sqrt(exp(cbind(x0, x1, x2, x3) %*% beta))
 #sigma = sqrt((4 + 5 * x1))
 plot(x1, sigma)
@@ -166,7 +166,7 @@ plot(new_data[, 1], y_hat, ylim = c(-1, 11), main = "hetero")
 
 library(MASS)
 data(Boston)
-X = Boston[sample(1 : nrow(Boston), nrow(Boston)), ]
+X = Boston
 #X = cbind(X, rnorm(nrow(X)))
 y = X$medv
 X$medv = NULL
@@ -180,9 +180,9 @@ Xtest = X[(nrow(X) / 2 + 1) : nrow(X), ]
 ytest = y[(nrow(X) / 2 + 1) : nrow(X)]
 
 set_bart_machine_num_cores(4)
-bart_machine = build_bart_machine(Xtrain, ytrain, num_burn_in = 500, num_iterations_after_burn_in = 1000)
+bart_machine = build_bart_machine(Xtrain, ytrain, num_burn_in = 500, num_iterations_after_burn_in = 1000, mh_prob_steps = c(0.5, 0.5, 0))
 bart_machine
-#plot_convergence_diagnostics(bart_machine)
+plot_convergence_diagnostics(bart_machine)
 
 plot_y_vs_yhat(bart_machine, Xtest, ytest, ppis = TRUE)
 predict_obj = bart_predict_for_test_data(bart_machine, Xtest, ytest)
@@ -190,10 +190,10 @@ predict_obj$rmse
 
 
 set_bart_machine_num_cores(4)
-hbart_machine = build_bart_machine(Xtrain, ytrain, num_burn_in = 500, num_iterations_after_burn_in = 1000, use_heteroskedasticity = TRUE)
+hbart_machine = build_bart_machine(Xtrain, ytrain, num_burn_in = 500, num_iterations_after_burn_in = 1000, use_heteroskedasticity = TRUE, mh_prob_steps = c(0.5, 0.5, 0))
 hbart_machine
 
-windows(); plot_y_vs_yhat(hbart_machine, Xtest, ytest, ppis = TRUE)
+windows(); plot_y_vs_yhat(bart_machine, Xtest, ytest, ppis = TRUE)
 hpredict_obj = bart_predict_for_test_data(hbart_machine, Xtest, ytest)
 hpredict_obj$rmse
 

@@ -25,7 +25,6 @@
 package CGM_BART;
 
 import java.awt.image.BufferedImage;
-import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 

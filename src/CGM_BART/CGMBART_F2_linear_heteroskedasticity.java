@@ -122,8 +122,64 @@ public class CGMBART_F2_linear_heteroskedasticity extends CGMBART_F1_prior_cov_s
 	}
 	
 	private double calcLnLikRatioChangeF2(CGMBARTTreeNode eta, CGMBARTTreeNode eta_star) {
-		//TODO
-		return 0;
+		double[] sigsqs = gibbs_samples_of_sigsq_hetero[gibbs_sample_num - 1];
+				
+		double sum_inv_sigsq_ell_star = 0;
+		double sum_responses_weighted_by_inv_sigsq_ell_star = 0;
+		for (int i = 0; i < eta_star.left.n_eta; i++){
+			int index = eta_star.left.indicies[i];
+			double response_i = eta_star.left.responses[i];
+			double sigsq_i = sigsqs[index];
+			sum_inv_sigsq_ell_star += 1 / sigsq_i;
+			sum_responses_weighted_by_inv_sigsq_ell_star += response_i / sigsq_i;
+		}
+		
+		double sum_inv_sigsq_r_star = 0;
+		double sum_responses_weighted_by_inv_sigsq_r_star = 0;
+		for (int i = 0; i < eta_star.right.n_eta; i++){
+			int index = eta_star.right.indicies[i];
+			double response_i = eta_star.right.responses[i];
+			double sigsq_i = sigsqs[index];
+			sum_inv_sigsq_r_star += 1 / sigsq_i;
+			sum_responses_weighted_by_inv_sigsq_r_star += response_i / sigsq_i;
+		}
+		
+		double sum_inv_sigsq_ell = 0;
+		double sum_responses_weighted_by_inv_sigsq_ell = 0;
+		for (int i = 0; i < eta.left.n_eta; i++){
+			int index = eta.left.indicies[i];
+			double response_i = eta.left.responses[i];
+			double sigsq_i = sigsqs[index];
+			sum_inv_sigsq_ell += 1 / sigsq_i;
+			sum_responses_weighted_by_inv_sigsq_ell += response_i / sigsq_i;
+		}
+		
+		double sum_inv_sigsq_r = 0;
+		double sum_responses_weighted_by_inv_sigsq_r = 0;
+		for (int i = 0; i < eta.right.n_eta; i++){
+			int index = eta.right.indicies[i];
+			double response_i = eta.right.responses[i];
+			double sigsq_i = sigsqs[index];
+			sum_inv_sigsq_r += 1 / sigsq_i;
+			sum_responses_weighted_by_inv_sigsq_r += response_i / sigsq_i;
+		}	
+		
+		double one_plus_sigsq_mu_times_sum_one_over_sigsq_i_n_ell_star = 1 + hyper_sigsq_mu * sum_inv_sigsq_ell_star;
+		double one_plus_sigsq_mu_times_sum_one_over_sigsq_i_n_r_star = 1 + hyper_sigsq_mu * sum_inv_sigsq_r_star;
+		double one_plus_sigsq_mu_times_sum_one_over_sigsq_i_n_ell = 1 + hyper_sigsq_mu * sum_inv_sigsq_ell;
+		double one_plus_sigsq_mu_times_sum_one_over_sigsq_i_n_r = 1 + hyper_sigsq_mu * sum_inv_sigsq_r;
+		
+		double a = Math.log(one_plus_sigsq_mu_times_sum_one_over_sigsq_i_n_ell_star);
+		double b = Math.log(one_plus_sigsq_mu_times_sum_one_over_sigsq_i_n_r_star);
+		double c = Math.log(one_plus_sigsq_mu_times_sum_one_over_sigsq_i_n_ell);
+		double d = Math.log(one_plus_sigsq_mu_times_sum_one_over_sigsq_i_n_r);
+		
+		double e = Math.pow(sum_responses_weighted_by_inv_sigsq_ell_star, 2) / one_plus_sigsq_mu_times_sum_one_over_sigsq_i_n_ell_star;
+		double f = Math.pow(sum_responses_weighted_by_inv_sigsq_r_star, 2) / one_plus_sigsq_mu_times_sum_one_over_sigsq_i_n_r_star;
+		double g = Math.pow(sum_responses_weighted_by_inv_sigsq_ell, 2) / one_plus_sigsq_mu_times_sum_one_over_sigsq_i_n_ell;
+		double h = Math.pow(sum_responses_weighted_by_inv_sigsq_r, 2) / one_plus_sigsq_mu_times_sum_one_over_sigsq_i_n_r;		
+		
+		return 0.5 * (a + b - c - d) + hyper_sigsq_mu / 2 * (e + f - g - h);
 	}		
 	
 	private void SampleSigsqF2(int sample_num, double[] es) {
@@ -155,19 +211,19 @@ public class CGMBART_F2_linear_heteroskedasticity extends CGMBART_F1_prior_cov_s
 //		////this comes in three steps
 //		
 //		//1 - draw beta
-		HashMap<String, Matrix> beta_sample = SampleBetaForLMSigsqs(log_sq_resid_vec, gibbs_samples_of_tausq_for_lm_sigsqs[sample_num - 1], sample_num);
-		Matrix beta_draw_matrix = beta_sample.get("beta_draw");
-		Matrix beta_vec = beta_sample.get("beta_vec");
+//		HashMap<String, Matrix> beta_sample = SampleBetaForLMSigsqs(log_sq_resid_vec, gibbs_samples_of_tausq_for_lm_sigsqs[sample_num - 1], sample_num);
+//		Matrix beta_draw_matrix = beta_sample.get("beta_draw");
+//		Matrix beta_vec = beta_sample.get("beta_vec");
 		
 		
-		System.out.println("beta_draw_matrix");
-		beta_draw_matrix.print(3, 5);
-		
+//		System.out.println("beta_draw_matrix");
+//		beta_draw_matrix.print(3, 5);
+//		
 		//////////////////
-//		QRDecomposition QR = Xmat_star.qr();
-//		Matrix Qt = QR.getQ().transpose();
-//		Matrix Rinv = QR.getR().inverse();
-//		Matrix beta_vec = (Rinv.times(Qt)).times(log_sq_resid_vec);
+		QRDecomposition QR = Xmat_star.qr();
+		Matrix Qt = QR.getQ().transpose();
+		Matrix Rinv = QR.getR().inverse();
+		Matrix beta_vec = (Rinv.times(Qt)).times(log_sq_resid_vec);
 		//////////////////
 		
 		
