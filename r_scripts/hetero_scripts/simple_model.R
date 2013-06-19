@@ -21,19 +21,19 @@ source("r_scripts/missing_data/sims_functions.R")
 
 expe_log_chisq_1 = 1.274693
 
-n = 500000
+n = 1000
 x0 = rep(1, n)
-x1 = runif(n, -2, 2)
+x1 = runif(n, 0, 1)
 x2 = runif(n, -2, 2)
 x3 = runif(n, -2, 2)
-beta = c(6, 1, -2, 3)
+beta = c(0, 0.5, 0, 0)
 sigma = sqrt(exp(cbind(x0, x1, x2, x3) %*% beta))
 #sigma = sqrt((4 + 5 * x1))
 plot(x1, sigma)
 
-y = 15 * x1 - 5 * x2 + 2*x3 + rnorm(n, 0, sigma)
+y = 10 * x1 + rnorm(n, 0, sigma)
 #Xy = data.frame(x1, y)
-Xy = data.frame(x1, x2, x3, y)
+Xy = data.frame(x1, y)
 plot(x1, y)
 
 Xytrain = Xy[1 : 500, ]
@@ -42,8 +42,8 @@ Xytest = Xy[501 : 1000, ]
 mean(sigma)
 mean(sigma^2)
 
-#write.csv(Xy, "datasets/r_simple_hetero_model.csv", row.names = FALSE)
-#Xy = read.csv("datasets/r_simple_hetero_model.csv")
+#write.csv(Xy, "datasets/r_super_simple_hetero_model.csv", row.names = FALSE)
+Xy = read.csv("datasets/r_simple_hetero_model.csv")
 
 lm_mod = lm(y ~ ., Xy)
 mse = var(summary(lm_mod)$residuals)
@@ -101,7 +101,7 @@ windows(); hist(sigsqs_lm_adj[x1 < 0.05], br = 50)
 
 ### test BART on it
 set_bart_machine_num_cores(4)
-bart_machine = build_bart_machine(Xy = Xytrain, num_trees = 200, mh_prob_steps = c(0.5, 0.5, 0))
+bart_machine = build_bart_machine(Xy = Xytrain, mh_prob_steps = c(0.5, 0.5, 0))
 bart_machine
 colnames(new_data)[1] = "x1"
 #plot_y_vs_yhat(bart_machine, new_data, Xytest[, 2], ppis = TRUE)
@@ -166,6 +166,7 @@ bart_machine = build_bart_machine(Xtrain, ytrain, num_burn_in = 500, num_iterati
 bart_machine
 plot_convergence_diagnostics(bart_machine)
 
+plot_y_vs_yhat()
 predict_obj = bart_predict_for_test_data(bart_machine, Xtest, ytest)
 predict_obj$rmse
 
@@ -181,3 +182,8 @@ hpredict_obj$rmse
 e_i_sqds = (ytrain - bart_machine$y_hat)^2
 mod = lm(e_i_sqds ~ ., Xtrain)
 summary(mod)
+
+library(randomForest)
+mod = randomForest(y = ytrain, x = Xtrain)
+y_hat = predict(mod, Xtest)
+sqrt(sum((ytest - y_hat)^2) / nrow(Xtest))

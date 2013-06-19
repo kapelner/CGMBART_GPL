@@ -13,6 +13,8 @@ public class CGMBART_F2_linear_heteroskedasticity extends CGMBART_F1_prior_cov_s
 	private static final long serialVersionUID = -3069428133597923502L;
 
 	private static final double IntialTauSqLM = 1;
+
+	private static final double EXPE_LOG_CHISQ_1 = 1.274693;
 	
 	protected boolean use_heteroskedasticity;
 	
@@ -128,23 +130,23 @@ public class CGMBART_F2_linear_heteroskedasticity extends CGMBART_F1_prior_cov_s
 	
 	private void SampleSigsqF2(int sample_num, double[] es) {
 		System.out.println("\n\nGibbs sample_num: " + sample_num + "  Sigsqs \n" + "----------------------------------------------------");
-		System.out.println("es: " + Tools.StringJoin(es));
-		
-		System.out.println("s^2_e = " + StatToolbox.sample_variance(es));
+//		System.out.println("es: " + Tools.StringJoin(es));
+
+//		System.out.println("s^2_e = " + StatToolbox.sample_variance(es));
 		
 		double[] es_sq = new double[n];
 		for (int i = 0; i < n; i++){
 			es_sq[i] = un_transform_sigsq(Math.pow(es[i], 2));
 		}
-		System.out.println("es_sq: " + Tools.StringJoin(es_sq));
+//		System.out.println("es_sq: " + Tools.StringJoin(es_sq));
 		
-		Matrix sq_resid_vec = new Matrix(n + p + 1, 1);
+		Matrix log_sq_resid_vec = new Matrix(n + p + 1, 1);
 		
 		for (int i = 0; i < n; i++){
-			sq_resid_vec.set(i, 0, es_sq[i]);
+			log_sq_resid_vec.set(i, 0, Math.log(es_sq[i]));
 		}
 		for (int i = n; i < n + p + 1; i++){
-			sq_resid_vec.set(i, 0, 0);
+			log_sq_resid_vec.set(i, 0, 0);
 		}
 
 //		
@@ -167,7 +169,7 @@ public class CGMBART_F2_linear_heteroskedasticity extends CGMBART_F1_prior_cov_s
 		QRDecomposition QR = Xmat_star.qr();
 		Matrix Qt = QR.getQ().transpose();
 		Matrix Rinv = QR.getR().inverse();
-		Matrix beta_vec = (Rinv.times(Qt)).times(sq_resid_vec);
+		Matrix beta_vec = (Rinv.times(Qt)).times(log_sq_resid_vec);
 		//////////////////
 		
 		
@@ -284,6 +286,8 @@ public class CGMBART_F2_linear_heteroskedasticity extends CGMBART_F1_prior_cov_s
 //		double[] beta_lm_sigsq = {0, 2, 2};
 //		double tausq_lm_sigsq = gibbs_samples_of_tausq_for_lm_sigsqs[sample_num];
 		double[] sigsqs_gibbs_sample = gibbs_samples_of_sigsq_hetero[sample_num]; //pointer to what we need to populate
+		
+		beta_lm_sigsq[0] += EXPE_LOG_CHISQ_1;
 //		double[] ln_sigsqs = new double[n];
 		for (int i = 0; i < n; i++){
 			//initialize to be the intercept
@@ -297,19 +301,8 @@ public class CGMBART_F2_linear_heteroskedasticity extends CGMBART_F1_prior_cov_s
 //			ln_sigsqs[i] = x_trans_beta_lm_sigsq;
 //			sigsqs_gibbs_sample[i] = sigsq_from_vanilla_bart; 
 //			sigsqs_gibbs_sample[i] = Math.pow(transform_y(Math.sqrt(Math.exp(x_trans_beta_lm_sigsq))), 2); //SSSSSSSSSSSSSSSSSSSSSS
-			sigsqs_gibbs_sample[i] = transform_sigsq(x_trans_beta_lm_sigsq); //SSSSSSSSSSSSSSSSSSSSSS
+			sigsqs_gibbs_sample[i] = transform_sigsq(Math.exp(x_trans_beta_lm_sigsq)); //SSSSSSSSSSSSSSSSSSSSSS
 		}
-		
-		//correct using kludge
-		int num_times_neg = 0;
-		double min_pos_sigsq = Tools.min_positive_val(sigsqs_gibbs_sample);
-		for (int i = 0; i < n; i++){
-			if (sigsqs_gibbs_sample[i] < 0){
-				num_times_neg++; 
-				sigsqs_gibbs_sample[i] = min_pos_sigsq;
-			}
-		}
-		System.out.println("# NEG: " + num_times_neg);
 		
 		for (int j = 0; j < p + 1; j++){
 //			System.out.println("beta[" + i + "] = " + un_transform_y(beta_lm_sigsq[i]));
@@ -319,7 +312,7 @@ public class CGMBART_F2_linear_heteroskedasticity extends CGMBART_F1_prior_cov_s
 		
 		
 //		System.out.println("ln_sigsq estimates: " + Tools.StringJoin(ln_sigsqs));
-		System.out.println("y_range_sq: " + y_range_sq + " sigsq estimates: " + Tools.StringJoin(sigsqs_gibbs_sample));
+//		System.out.println("y_range_sq: " + y_range_sq + " sigsq estimates: " + Tools.StringJoin(sigsqs_gibbs_sample));
 	}
 	
 	private void SampleMusF2(int sample_num, CGMBARTTreeNode node) {
