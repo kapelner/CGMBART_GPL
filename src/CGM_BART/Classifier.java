@@ -42,6 +42,7 @@ import java.util.logging.StreamHandler;
 
 import AlgorithmTesting.DataSetupForCSVFile;
 import CustomLogging.*;
+import Jama.Matrix;
 
 /**
  * The base class for all machine learning / statistical-learning
@@ -149,7 +150,7 @@ public abstract class Classifier implements Serializable {
 		this.X_y = addIndicesToDataMatrix(X_y);
 		this.X_y_by_col = getDataMatrixByCol(X_y);
 	}
-	
+
 	private ArrayList<double[]> getDataMatrixByCol(ArrayList<double[]> X_y) {
 		 ArrayList<double[]> X_y_by_col = new ArrayList<double[]>(n);
 		 for (int j = 0; j < p; j++){
