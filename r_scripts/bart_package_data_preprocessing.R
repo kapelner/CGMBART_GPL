@@ -6,8 +6,8 @@ check_for_errors_in_training_data = function(data){
 	FALSE
 }
 
-pre_process_training_data = function(data, use_missing_data = TRUE, imputations = NULL, verbose = FALSE){
-	
+pre_process_training_data = function(data, use_missing_data_dummies_as_covars = FALSE, imputations = NULL, verbose = FALSE){
+
 	#first convert characters to factors
 	character_vars = names(which(sapply(data, class) == "character"))
 	for (character_var in character_vars){
@@ -23,7 +23,7 @@ pre_process_training_data = function(data, use_missing_data = TRUE, imputations 
 		data[, fac] = NULL
 	}
 	
-	if (use_missing_data){		
+	if (use_missing_data_dummies_as_covars){		
 		#now take care of missing data
 		M = matrix(0, nrow = nrow(data), ncol = ncol(data))
 		for (i in 1 : nrow(data)){

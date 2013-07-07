@@ -1,14 +1,10 @@
-imputeMatrixByXbarj = function(X_with_missing, X_for_calculating_avgs){
-	for (i in 1 : nrow(X_with_missing)){
-		for (j in 1 : ncol(X_with_missing)){
-			if (is.na(X_with_missing[i, j])){
-				X_with_missing[i, j] = mean(X_for_calculating_avgs[, j], na.rm = TRUE)
-			}
-		}
-	}
-	X_with_missing
-}
-
+DEFAULT_ALPHA = 0.95
+DEFAULT_BETA = 2
+DEFAULT_K = 2
+DEFAULT_Q = 0.9
+DEFAULT_NU = 3.0
+DEFAULT_PROB_STEPS = c(2.5, 2.5, 4) / 9
+DEFAULT_PROB_RULE_CLASS = 0.5
 
 build_bart_machine = function(X = NULL, y = NULL, Xy = NULL, 
 		num_trees = 200, 
@@ -28,9 +24,10 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		print_tree_illustrations = FALSE,
 		cov_prior_vec = NULL,
 		use_missing_data = FALSE,
+		use_missing_data_dummies_as_covars = FALSE,
 		replace_missing_data_with_x_j_bar = FALSE,
-		add_imputations = FALSE,
-		replace_missing_data_with_x_j_bar_for_lm = TRUE,
+		impute_missingness_with_rf_impute = FALSE,
+		impute_missingness_with_x_j_bar_for_lm = TRUE,
 		mem_cache_for_speed = TRUE,
 		verbose = TRUE){
 	
@@ -100,23 +97,20 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	if (length(na.omit(y_numeric)) != length(y_numeric)){
 		stop("You cannot have any missing data in your response vector.")
 	}
-	if (verbose && use_missing_data){
-		cat("Missing data feature ON. ")
-	}
 	
-	imputations = NULL
-	if (add_imputations){
+	rf_imputations_for_missing = NULL
+	if (impute_missingness_with_rf_impute){
 		if (nrow(na.omit(X)) == nrow(X)){ #for the cases where it doesn't impute
 			warning("No missing entries in the training data to impute.")
-			imputations = X
+			rf_imputations_for_missing = X
 		} else {
-			imputations = rfImpute(X, y)
-			imputations = imputations[, 2 : ncol(imputations)]	
+			rf_imputations_for_missing = rfImpute(X, y)
+			rf_imputations_for_missing = rf_imputations_for_missing[, 2 : ncol(rf_imputations_for_missing)]	
 		}
-		colnames(imputations) = paste(colnames(imputations), "_imp", sep = "")
+		colnames(rf_imputations_for_missing) = paste(colnames(rf_imputations_for_missing), "_imp", sep = "")
 	}
 
-	model_matrix_training_data = cbind(pre_process_training_data(X, use_missing_data, imputations, verbose), y_numeric)
+	model_matrix_training_data = cbind(pre_process_training_data(X, use_missing_data_dummies_as_covars, rf_imputations_for_missing, verbose), y_numeric)
 	
 	#if we're not using missing data, go on and nuke it
 	if (!use_missing_data && !replace_missing_data_with_x_j_bar){
@@ -162,7 +156,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		y_trans = (y - min(y)) / y_range - 0.5
 		if (s_sq_y == "mse"){
 			X_for_lm = as.data.frame(model_matrix_training_data)[1 : (ncol(model_matrix_training_data) - 1)]
-			if (replace_missing_data_with_x_j_bar_for_lm){
+			if (impute_missingness_with_x_j_bar_for_lm){
 				X_for_lm = imputeMatrixByXbarj(X_for_lm, X_for_lm)
 			}
 			mod = lm(y_trans ~ ., X_for_lm)
@@ -199,18 +193,20 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	
 	if (length(cov_prior_vec) != 0){
 		#put in checks here for user to make sure the covariate prior vec is the correct length
+		offset = length(cov_prior_vec) - (ncol(model_matrix_training_data) - 1) 
+		if (offset < 0){
+			warning(paste("covariate prior vector length =", length(cov_prior_vec), "has to be equal to p =", ncol(model_matrix_training_data) - 1, "the vector was lengthened (with 1's)"))
+			cov_prior_vec = c(cov_prior_vec, rep(1, -offset))
+		}
 		if (length(cov_prior_vec) != ncol(model_matrix_training_data) - 1){
-			attribute_names = paste(colnames(model_matrix_training_data)[1 : ncol(model_matrix_training_data) - 1], collapse = ", ")
-			stop(paste("covariate prior vector length =", length(cov_prior_vec), "has to be equal to p =", ncol(model_matrix_training_data) - 1, "\nattribute names in order for the prior:", attribute_names), call. = FALSE)
-			return(TRUE)
-		} else if (sum(cov_prior_vec > 0) != ncol(model_matrix_training_data) - 1){
+			warning(paste("covariate prior vector length =", length(cov_prior_vec), "has to be equal to p =", ncol(model_matrix_training_data) - 1, "the vector was shortened"))
+			cov_prior_vec = cov_prior_vec[1 : (ncol(model_matrix_training_data) - 1)]		
+		}		
+		if (sum(cov_prior_vec > 0) != ncol(model_matrix_training_data) - 1){
 			stop("covariate prior vector has to have all its elements be positive", call. = FALSE)
 			return(TRUE)
 		}
 		.jcall(java_bart_machine, "V", "setCovSplitPrior", as.numeric(cov_prior_vec))
-		if (verbose){
-			cat("Covariate importance prior ON\n")
-		}
 	}
 	
 	#now load the training data into BART
@@ -221,7 +217,20 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	
 	#build the bart machine and let the user know what type of BART this is
 	if (verbose){
-		cat("Building BART for", pred_type, "...\n")
+		cat("Building BART for", pred_type, "...")
+		if (length(cov_prior_vec) != 0){
+			cat("Covariate importance prior ON. ")
+		}
+		if (use_missing_data){
+			cat("Missing data feature ON. ")
+		}
+		if (use_missing_data_dummies_as_covars){
+			cat("Missingness used as covariates. ")
+		}
+		if (impute_missingness_with_rf_impute){
+			cat("Missing values imputed via rfImpute. ")
+		}
+		cat("\n")
 	}
 	.jcall(java_bart_machine, "V", "Build")
 	
@@ -256,7 +265,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 			time_to_build = Sys.time() - t0,
 			use_missing_data = use_missing_data,
 			replace_missing_data_with_x_j_bar = replace_missing_data_with_x_j_bar,
-			add_imputations = add_imputations,
+			add_imputations = impute_missingness_with_rf_impute,
 			verbose = verbose,
 			bart_destroyed = FALSE
 	)
@@ -444,4 +453,15 @@ destroy_bart_machine = function(bart_machine){
 	bart_machine$bart_destroyed = TRUE
 	#explicitly ask the JVM to give use the RAM back right now
 	.jcall("java/lang/System", "V", "gc")
+}
+
+imputeMatrixByXbarj = function(X_with_missing, X_for_calculating_avgs){
+	for (i in 1 : nrow(X_with_missing)){
+		for (j in 1 : ncol(X_with_missing)){
+			if (is.na(X_with_missing[i, j])){
+				X_with_missing[i, j] = mean(X_for_calculating_avgs[, j], na.rm = TRUE)
+			}
+		}
+	}
+	X_with_missing
 }

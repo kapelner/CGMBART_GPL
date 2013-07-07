@@ -16,13 +16,7 @@ VERSION = "1.0b"
 BART_MAX_MEM_MB = 8000
 PLOTS_DIR = "output_plots"
 JAR_DEPENDENCIES = c("bart_java.jar", "commons-math-2.1.jar", "jai_codec.jar", "jai_core.jar", "trove-3.0.3.jar")
-DEFAULT_ALPHA = 0.95
-DEFAULT_BETA = 2
-DEFAULT_K = 2
-DEFAULT_Q = 0.9
-DEFAULT_NU = 3.0
-DEFAULT_PROB_STEPS = c(2.5, 2.5, 4) / 9
-DEFAULT_PROB_RULE_CLASS = 0.5
+
 COLORS = array(NA, 500)
 for (i in 1 : 500){
 	COLORS[i] = rgb(runif(1, 0, 0.7), runif(1, 0, 0.7), runif(1, 0, 0.7))
