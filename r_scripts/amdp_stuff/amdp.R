@@ -17,9 +17,9 @@ apdp = function(model, X, j, num_grid_pts = 50, xtest_margin = 0, plot_margin = 
 	xj = X[, j]
 	n = nrow(X)
 	
-	plot_points_indices = which(as.logical(rbinom(n, 1, pct_to_plot)))
-	
 	#now create xj-to-predict values
+	min_xj = NULL
+	max_xj = NULL
 	vals = sort(as.numeric(names(table(xj))))
 	if (length(vals) <= ORD_VAR_MAX_NUM_LEVELS){
 		pred_test_values = vals
@@ -32,11 +32,9 @@ apdp = function(model, X, j, num_grid_pts = 50, xtest_margin = 0, plot_margin = 
 		max_xj_seq = max_xj + xtest_margin * (max_xj - min_xj)
 		pred_test_values = seq(from = min_xj_seq, to = max_xj_seq, by = (max_xj_seq - min_xj_seq) / (num_grid_pts - 1))		
 	}
-
-	
-
-	
+		
 	#now pull out which xi's we're going to look at as well as their corresponding colors
+	plot_points_indices = which(as.logical(rbinom(n, 1, pct_to_plot)))
 	X_with_gridded_xj = as.data.frame(X)[plot_points_indices, ]
 	colorvec = colorvec[plot_points_indices]
 	
