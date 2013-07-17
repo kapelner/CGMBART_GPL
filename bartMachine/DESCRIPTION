@@ -1,0 +1,12 @@
+Package: bartMachine
+Type: Package
+Title: Bayesian Additive Regression Trees
+Version: 1.0
+Date: 2013-07-16
+Author: Adam Kapelner and Justin Bleich
+Maintainer: Adam Kapelner <kapelner@wharton.upenn.edu>
+Description: An advanced implementation of Bayesian Additive Regression Trees (BART, Chipman et al, 2010)
+License: GPL2
+Depends: R (>= 2.13.0)
+Imports: rJava, car
+SystemRequirements: Java (>= 1.7.0)

@@ -1,8 +1,6 @@
 
 
 check_bart_error_assumptions = function(bart_machine, alpha_normal_test = 0.05, alpha_hetero_test = 0.05, hetero_plot = "yhats"){
-	#load the library
-	tryCatch(library(car), error = function(e){install.packages("car")}, finally = library(car))
 	
 	if (bart_machine$pred_type == "classification"){
 		stop("There are no convergence diagnostics for classification.")

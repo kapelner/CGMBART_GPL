@@ -1,4 +1,4 @@
-predict.bart_machine = function(bart_machine, new_data){
+predict.bartMachine = function(bart_machine, new_data){
 	bart_machine_predict(bart_machine, new_data)$y_hat
 }
 

@@ -6,6 +6,11 @@ check_for_errors_in_training_data = function(data){
 	FALSE
 }
 
+dummify_data = function(data, ...){
+	as.data.frame(pre_process_training_data(data, ...))
+}
+
+
 pre_process_training_data = function(data, use_missing_data_dummies_as_covars = FALSE, imputations = NULL, verbose = FALSE){
 
 	#first convert characters to factors
