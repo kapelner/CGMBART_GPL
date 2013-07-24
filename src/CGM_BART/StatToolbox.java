@@ -43,8 +43,9 @@ import java.util.Random;
 
 import org.apache.commons.math3.special.Gamma;
 import org.apache.commons.math3.distribution.GammaDistribution;
-import org.apache.commons.math3.distribution.MultivariateNormalDistribution;
 import org.apache.commons.math3.distribution.NormalDistribution;
+
+import Jama.Matrix;
 
 /**
  * This is a class where we're going to put all sorts of useful functions
@@ -182,7 +183,7 @@ public class StatToolbox {
 	}
 	
 	public static double sample_from_gamma(double k, double theta){
-		return new GammaDistribution(k, theta).inverseCumulativeProbability(StatToolbox.rand());
+		return new GammaDistribution(k, theta).inverseCumulativeProbability(rand());
 	}
 
 	
@@ -193,11 +194,16 @@ public class StatToolbox {
 	
 	public static double sample_from_std_norm_dist(){
 		return NORM_SAMPS[(int)Math.floor(rand() * NUM_NORM_SAMPS)];
-	}	
+	}
 		
 	
-	public static double[] sample_from_mult_norm_dist(double[] mu, double[][] Sigma){
-		return new MultivariateNormalDistribution(mu, Sigma).sample();
+	public static Matrix sample_from_mult_norm_dist(Matrix mu, Matrix Sigma){
+		int n = mu.getRowDimension();
+		Matrix z_vec = new Matrix(n, 1);
+		for (int i = 0; i < n; i++){
+			z_vec.set(i, 0, sample_from_std_norm_dist());
+		}		
+		return (Sigma.times(z_vec)).plus(mu);
 	}
 
 	
@@ -236,26 +242,6 @@ public class StatToolbox {
 
 	    return 0.5*(1.0 + sign*y);
 	}	
-	
-	
-	
-//	public static double sample_from_norm_dist(double mu, double sigsq){
-////		System.out.println("sample_from_norm_dist mu=" + mu + " sigsq=" + sigsq);
-//		try {
-//			return new NormalDistributionImpl(mu, Math.sqrt(sigsq)).inverseCumulativeProbability(StatToolbox.rand());
-//		} catch (MathException e) {
-////			System.err.println("ERROR sample_from_norm_dist mu=" + mu + " sigsq=" + sigma);
-////			e.printStackTrace();
-//		}
-//		return ILLEGAL_FLAG;		
-//	}
-	
-	// test the sampling of the normal
-//	static {
-//		for (int i = 0; i < 1000; i++){
-//			System.out.println(sample_from_norm_dist(0, 2));
-//		}
-//	}
 	
 	public static final double sample_average(double[] y){
 		double y_bar = 0;
@@ -396,7 +382,7 @@ public class StatToolbox {
 	}
 
 	public static int multinomial_sample(TIntArrayList vals, double[] probs) {
-		double r = StatToolbox.rand();
+		double r = rand();
 		double cum_prob = 0;
 		int index = 0;
 		if (r < probs[0]){

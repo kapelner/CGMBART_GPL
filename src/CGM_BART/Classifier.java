@@ -42,7 +42,6 @@ import java.util.logging.StreamHandler;
 
 import AlgorithmTesting.DataSetupForCSVFile;
 import CustomLogging.*;
-import Jama.Matrix;
 
 /**
  * The base class for all machine learning / statistical-learning

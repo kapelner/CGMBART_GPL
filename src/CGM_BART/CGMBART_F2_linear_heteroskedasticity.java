@@ -1,7 +1,6 @@
 package CGM_BART;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 import org.apache.commons.math3.distribution.ChiSquaredDistribution;
 
@@ -12,74 +11,101 @@ import Jama.QRDecomposition;
 public class CGMBART_F2_linear_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
 	private static final long serialVersionUID = -3069428133597923502L;
 
-	private static final double IntialTauSqLM = 1;
-
-	private static final double EXPE_LOG_CHISQ_1 = 1.274693;
 	
 	protected boolean use_linear_heteroskedasticity_model;
 	
-	protected double hyper_q_sigsq = 0.9;
-	protected Matrix gamma_0;
-	protected double hyper_nu_sigsq = 3.0;
-	protected double hyper_lambda_sigsq;
-	protected double sample_var_e = 11.20568;
-	protected double hyper_beta_sigsq = 1000;
+	protected Matrix hyper_gamma_mean_vec;
+	protected Matrix hyper_gamma_var_mat;
 	
 	/** the variance of the errors as well as other things necessary for Gibbs sampling */
 	protected double[][] gibbs_samples_of_sigsq_hetero;
 	protected double[][] gibbs_samples_of_sigsq_hetero_after_burn_in;	
 	protected Matrix[] gibbs_samples_of_gamma_for_lm_sigsqs;
 	protected Matrix[] gibbs_samples_of_gamma_for_lm_sigsqs_after_burn_in;
-	protected double[] gibbs_samples_of_tausq_for_lm_sigsqs;
-	protected double[] gibbs_samples_of_tausq_for_lm_sigsqs_after_burn_in;
 
-	private Matrix Xmat_star;
+	/** convenience caches */
+	private Matrix Xmat_with_intercept;
+	private ArrayList<Matrix> x_is;
+	private Matrix Sigmainv;
+	private Matrix Sigmainv_times_hyper_gamma_mean_vec;
+	private Matrix Bmatinv;
+	private Matrix Bmat;
+	private Matrix halves;
+	private Matrix Xmat_with_intercept_transpose;
+	private Matrix halves_times_Xmat_with_intercept_transpose;
+
+
+	
+	
 
 	public void setData(ArrayList<double[]> X_y){
 		super.setData(X_y);
 		if (use_linear_heteroskedasticity_model){
-			System.out.println("n: " + n + " p: " + p);
-			
-			tabulateSimulationDistributionsF2();
-			calculateHyperparametersF2();
-			
+			System.out.println("use_linear_heteroskedasticity_model   n: " + n + " p: " + p);
+						
 			//precompute X as a Matrix object
-			Xmat_star = new Matrix(n + p + 1, p + 1);
+			Xmat_with_intercept = new Matrix(n, p + 1);
 			//the top part is just the original X training matrix
 			for (int i = 0; i < n; i++){
 				for (int j = 0; j < p + 1; j++){
 					if (j == 0){
-						Xmat_star.set(i, j, 1); //this is the intercept
+						Xmat_with_intercept.set(i, j, 1); //this is the intercept
 					}
 					else {
-						Xmat_star.set(i, j, X_y.get(i)[j - 1]);
+						Xmat_with_intercept.set(i, j, X_y.get(i)[j - 1]);
 					}
 				}
 			}
 			//the bottom portion is the identity matrix
-			for (int i = n; i < n + p + 1; i++){
-				Xmat_star.set(i, i - n, 1);
-			}
+//			for (int i = n; i < n + p + 1; i++){
+//				Xmat_star.set(i, i - n, 1);
+//			}
+			
+			Xmat_with_intercept_transpose = Xmat_with_intercept.transpose();
 			
 			System.out.println("Xmat_star");
-			Xmat_star.print(3, 5);
-		}
+			Xmat_with_intercept.print(3, 5);
+			
+			
 		
-		//set hyperparameters
-		gamma_0 = new Matrix(p + 1, 1);
-		gamma_0.set(0, 0, 0);
-		gamma_0.set(1, 0, 0.5);
-	}
-
-	protected void tabulateSimulationDistributionsF2() {
-		StatToolbox.cacheInvGammas(hyper_nu_sigsq, n, this);
-	}
-	
-	private void calculateHyperparametersF2() {
-		double ten_pctile_chisq_df_hyper_nu = 
-			new ChiSquaredDistribution(hyper_nu_sigsq).inverseCumulativeProbability(1 - hyper_q_sigsq);
-
-		hyper_lambda_sigsq = ten_pctile_chisq_df_hyper_nu / hyper_nu_sigsq * sample_var_e;		
+			//now we make another convenience structure
+			
+			x_is = new ArrayList<Matrix>(n);
+			for (int i = 0; i < n; i++){
+				Matrix x_i = new Matrix(1, p + 1);
+				for (int j = 0; j < p + 1; j++){
+					x_i.set(0, j, Xmat_with_intercept.get(i, j));
+				}
+				x_is.add(x_i); //this goes in order, so it's okay
+			}
+		
+			//set hyperparameters
+			hyper_gamma_mean_vec = new Matrix(p + 1, 1); //all zeroes for now
+			hyper_gamma_var_mat = new Matrix(p + 1, p + 1);
+			for (int j = 0; j < p + 1; j++){
+				hyper_gamma_var_mat.set(j, j, 1000);
+			}
+			halves = new Matrix(p + 1, p + 1);
+			for (int j = 0; j < p + 1; j++){
+				halves.set(j, j, 0.5);
+			}	
+			
+			System.out.println("hyper_gamma_var_mat");
+			hyper_gamma_var_mat.print(3, 5);
+			
+			halves_times_Xmat_with_intercept_transpose = halves.times(Xmat_with_intercept_transpose);
+			
+			//now we can cache intermediate values we'll use everywhere
+			Sigmainv = hyper_gamma_var_mat.inverse();
+			System.out.println("Sigmainv");
+			Sigmainv.print(3, 5);
+			Sigmainv_times_hyper_gamma_mean_vec = Sigmainv.times(hyper_gamma_mean_vec);
+			Bmatinv = hyper_gamma_var_mat.inverse().plus(halves_times_Xmat_with_intercept_transpose.times(Xmat_with_intercept));
+			System.out.println("Bmatinv");
+			Bmatinv.print(3, 5);
+			Bmat = Bmatinv.inverse();
+			Bmat.print(3, 5);
+		}
 	}
 	
 	private double calcLnLikRatioGrowF2(CGMBARTTreeNode grow_node) {
@@ -188,16 +214,6 @@ public class CGMBART_F2_linear_heteroskedasticity extends CGMBART_F1_prior_cov_s
 		return 0.5 * (a + b - c - d) + hyper_sigsq_mu / 2 * (e + f - g - h);
 	}		
 	
-	
-	//////////////////
-//	QRDecomposition QR = Xmat_star.qr();
-//	Matrix Qt = QR.getQ().transpose();
-//	Matrix Rinv = QR.getR().inverse();
-//	Matrix beta_vec = (Rinv.times(Qt)).times(log_sq_resid_vec);
-	//////////////////
-	
-	
-	
 	private void SampleSigsqF2(int sample_num, double[] es) {
 		System.out.println("\n\nGibbs sample_num: " + sample_num + "  Sigsqs \n" + "----------------------------------------------------");
 //		System.out.println("es: " + Tools.StringJoin(es));
@@ -208,179 +224,88 @@ public class CGMBART_F2_linear_heteroskedasticity extends CGMBART_F1_prior_cov_s
 		for (int i = 0; i < n; i++){
 			es_sq[i] = un_transform_sigsq(Math.pow(es[i], 2));
 		}
-//		System.out.println("es_sq: " + Tools.StringJoin(es_sq));
 		
-//		Matrix log_sq_resid_vec = new Matrix(n + p + 1, 1);
-//		
-//		for (int i = 0; i < n; i++){
-//			log_sq_resid_vec.set(i, 0, Math.log(es_sq[i]));
-//		}
-//		for (int i = n; i < n + p + 1; i++){
-//			log_sq_resid_vec.set(i, 0, 0);
-//		}
+		//now we need to draw a gamma
+		Matrix gamma_draw = DrawGammaVecViaMH(gibbs_samples_of_gamma_for_lm_sigsqs[sample_num - 1], es_sq);
+		gibbs_samples_of_gamma_for_lm_sigsqs[sample_num] = gamma_draw;
 
-//		
-//		System.out.println("log_sq_resid_vec");
-//		log_sq_resid_vec.print(3, 5);
-//		
-//		
-//		////this comes in three steps
-//		
-//		//1 - draw sigsqs
+		//now set the sigsqs just by doing exp(x_i^T \gammavec)
 		for (int i = 0; i < n; i++){
-			gibbs_samples_of_sigsq_hetero[sample_num][i] = DrawOneSigsq(es_sq[i], gibbs_samples_of_sigsq_hetero[sample_num - 1][i], sample_num, Xmat_star.getMatrix(i, i, 0, p));
-		}
-		
-		//2 - draw gamma_vec
-		gibbs_samples_of_gamma_for_lm_sigsqs[sample_num] = DrawGammaVec(gibbs_samples_of_sigsq_hetero[sample_num], gibbs_samples_of_tausq_for_lm_sigsqs[sample_num - 1]);
-
-		//3 - sample tau-sq
-		gibbs_samples_of_tausq_for_lm_sigsqs[sample_num] = 0.0001; 
-		
-	}
-
-	private double DrawOneSigsq(double e_i_sq, double sigsq_old, int sample_num, Matrix x_i) {
-		Matrix gamma_vec = gibbs_samples_of_gamma_for_lm_sigsqs[sample_num - 1];
-		double tau_sq = gibbs_samples_of_tausq_for_lm_sigsqs[sample_num - 1];
-		
-		//create proposal sigsq by sampling from a log-normal distribution ie exp(N(mu, tausq))
-		double sigsq_proposal = Math.exp(StatToolbox.sample_from_norm_dist(x_i.times(gamma_vec).get(0, 0), tau_sq));
-		
-		//now we calculate the ratio for the independent Metropolis step
-		double ln_r = 1 / 2 * ((Math.log(sigsq_old) - Math.log(sigsq_proposal)) - (e_i_sq * (1 / sigsq_proposal - 1 / sigsq_old)));
-		
-		//this is the random accept / reject		
-		return Math.log(StatToolbox.rand()) < ln_r ? sigsq_proposal : sigsq_old;	
-	}
-
-	private Matrix DrawGammaVec(double[] gibbs_sample_of_sigsq_hetero, double tau_sq) {
-		
-		Matrix Sigma_star_neg_half = new Matrix(n + p + 1, n + p + 1);
-		double one_over_tau = 1 / Math.sqrt(tau_sq);
-		double one_over_sqrt_hyper_beta_sigsq = 1 / Math.sqrt(hyper_beta_sigsq);
-		for (int i = 0; i < n; i++){
-			Sigma_star_neg_half.set(i, i, one_over_tau);
-		}
-		for (int i = n; i < n + p + 1; i++){
-			Sigma_star_neg_half.set(i, i, one_over_sqrt_hyper_beta_sigsq);
-		}
-		
-//		System.out.println("Sigma_star_neg_half");
-//		Sigma_star_neg_half.print(3, 5);
-		
-		//create log_sigsq augmented vector AKA y*
-		Matrix log_sigsq = new Matrix(n + p + 1, 1);		
-		for (int i = 0; i < n; i++){
-			log_sigsq.set(i, 0, Math.log(gibbs_sample_of_sigsq_hetero[i]));
-		}
-		for (int i = n; i < n + p + 1; i++){
-			log_sigsq.set(i, 0, gamma_0.get(i - n, 0));
+			gibbs_samples_of_sigsq_hetero[sample_num][i] = Math.exp(gamma_draw.times(x_is.get(i)).get(0, 0));
 		}		
-		System.out.println("log_sigsq");
-		log_sigsq.print(3, 5);
-				
-		
-		Matrix Sigma_star_neg_half_X_mat = Sigma_star_neg_half.times(Xmat_star);
-		Matrix Sigma_star_neg_half_log_sq_resid_vec = Sigma_star_neg_half.times(log_sigsq);
-		
-//		System.out.println("Sigma_star_neg_half_X_mat");
-//		Sigma_star_neg_half_X_mat.print(3, 5);
-//		System.out.println("Sigma_star_neg_half_log_sq_resid_vec");
-//		Sigma_star_neg_half_log_sq_resid_vec.print(3, 5);
-		
-		QRDecomposition QR = new QRDecomposition(Sigma_star_neg_half_X_mat);
-		Matrix Qt = QR.getQ().transpose();
-		Matrix R = QR.getR();
-//		System.out.println("R");
-//		R.print(3, 5);		
-		Matrix Rinv = R.inverse();
-//		System.out.println("Qt");
-//		Qt.print(3, 5);
-//		System.out.println("Rinv");
-//		Rinv.print(3, 5);
-		Matrix V_beta = Rinv.times(Rinv.transpose());
-		Matrix Beta_vec = Rinv.times(Qt).times(Sigma_star_neg_half_log_sq_resid_vec);
-//		System.out.println("V_beta");
-//		V_beta.print(3, 5);
-//		System.out.println("Beta_vec");
-//		Beta_vec.print(3, 5);
-		Matrix z = new Matrix(p + 1, 1);
-		for (int i = 0; i < p + 1; i++){
-			z.set(i, 0, StatToolbox.sample_from_std_norm_dist());
-		}
-//		System.out.println("z");
-//		z.print(3, 5);	
-		
-		//return everything
-//		HashMap<String, Matrix> return_obj = new HashMap<String, Matrix>();
-//		return_obj.put("beta_vec", Beta_vec);
-//		return_obj.put("beta_draw", Beta_vec.plus(V_beta.times(z)));
-		
-		Matrix gamma_vec = Beta_vec.plus(V_beta.times(z));
+	}
 
-		System.out.println("Beta_vec");
-		Beta_vec.print(3, 5);
-		System.out.println("gamma_vec");
-		gamma_vec.print(3, 5);
+	private Matrix DrawGammaVecViaMH(Matrix gamma, double[] es_sq) {
 		
-		return gamma_vec;
+		//this is the M-H step
+		
+		double sum_x_i_times_gamma = 0;
+		double sum_es_sq_over_exp_x_i_times_gamma = 0;
+		Matrix d = new Matrix(n, 1);
+		for (int i = 0; i < n; i++){
+			double x_i_times_gamma = x_is.get(i).times(gamma).get(0, 0);
+			double exp_x_i_times_gamma = Math.exp(x_i_times_gamma);
+			d.set(i, 0, x_i_times_gamma + es_sq[i] / exp_x_i_times_gamma - 1);
+			//cache for later
+			sum_x_i_times_gamma += x_i_times_gamma;
+			sum_es_sq_over_exp_x_i_times_gamma = es_sq[i] / exp_x_i_times_gamma;
+		}
+		
+//		System.out.println("dims Bmatinv: " + Bmatinv.getRowDimension() + " x " + Bmatinv.getColumnDimension());
+//		System.out.println("dims Sigmainv_times_hyper_gamma_mean_vec: " + Sigmainv_times_hyper_gamma_mean_vec.getRowDimension() + " x " + Sigmainv_times_hyper_gamma_mean_vec.getColumnDimension());
+//		System.out.println("dims halves_times_Xmat_with_intercept_transpose: " + halves_times_Xmat_with_intercept_transpose.getRowDimension() + " x " + halves_times_Xmat_with_intercept_transpose.getColumnDimension());
+//		System.out.println("dims d: " + d.getRowDimension() + " x " + d.getColumnDimension());
+		Matrix a = Bmatinv.times(Sigmainv_times_hyper_gamma_mean_vec.plus(halves_times_Xmat_with_intercept_transpose.times(d)));
+		
+		Matrix gamma_star = StatToolbox.sample_from_mult_norm_dist(a, Bmat);
+				
+		double sum_x_i_times_gamma_star = 0;
+		double sum_es_sq_over_exp_x_i_times_gamma_star = 0;
+		Matrix d_star = new Matrix(n, 1);
+		for (int i = 0; i < n; i++){
+			double x_i_times_gamma_star = x_is.get(i).times(gamma_star).get(0, 0);
+			double exp_x_i_times_gamma_star = Math.exp(x_i_times_gamma_star);
+			d.set(i, 0, x_i_times_gamma_star + es_sq[i] / exp_x_i_times_gamma_star - 1);
+			//cache for later
+			sum_x_i_times_gamma_star += x_i_times_gamma_star;
+			sum_es_sq_over_exp_x_i_times_gamma_star = es_sq[i] / exp_x_i_times_gamma_star;
+		}
+		
+		Matrix a_star = Bmatinv.times(Sigmainv_times_hyper_gamma_mean_vec.plus(halves_times_Xmat_with_intercept_transpose.times(d_star)));			
+		
+		Matrix gamma_minus_a_star = gamma.minus(a_star);
+		Matrix gamma_star_minus_a = gamma_star.minus(a);
+		
+		double log_prop_prob_gamma_star_to_gamma = -0.5 * (gamma_minus_a_star.transpose()).times(Bmatinv).times(gamma_minus_a_star).get(0, 0);
+		double log_prop_prob_gamma_to_gamma_star = -0.5 * (gamma_star_minus_a.transpose()).times(Bmatinv).times(gamma_star_minus_a).get(0, 0);
+		 
+		double sum_gamma_min_hyper_gamma_sq_over_hyper_var = 0;
+		double sum_gamma_star_min_hyper_gamma_star_sq_over_hyper_var = 0;	
+
+		for (int j = 0; j < p + 1; j++){
+			sum_gamma_min_hyper_gamma_sq_over_hyper_var += Math.pow(gamma.get(j, 0) - hyper_gamma_mean_vec.get(j, 0), 2) / hyper_gamma_var_mat.get(j, j);
+			sum_gamma_star_min_hyper_gamma_star_sq_over_hyper_var += Math.pow(gamma_star.get(j, 0) - hyper_gamma_mean_vec.get(j, 0), 2) / hyper_gamma_var_mat.get(j, j);
+		}
+		
+		
+		double log_prop_prob_gamma_star = -0.5 * (sum_x_i_times_gamma_star + sum_es_sq_over_exp_x_i_times_gamma_star + sum_gamma_star_min_hyper_gamma_star_sq_over_hyper_var);
+		double log_prop_prob_gamma = -0.5 * (sum_x_i_times_gamma + sum_es_sq_over_exp_x_i_times_gamma + sum_gamma_min_hyper_gamma_sq_over_hyper_var);
+		
+		double log_r = Math.log(StatToolbox.rand());
+		
+		double mh_ratio = log_prop_prob_gamma_star_to_gamma - log_prop_prob_gamma_to_gamma_star + log_prop_prob_gamma_star - log_prop_prob_gamma;
+		
+		System.out.println("log_prop_prob_gamma_star_to_gamma: " + log_prop_prob_gamma_star_to_gamma + " log_prop_prob_gamma_to_gamma_star: " + log_prop_prob_gamma_to_gamma_star + " log_prop_prob_gamma_star: " + log_prop_prob_gamma_star + "log_prop_prob_gamma: " + log_prop_prob_gamma);
+		System.out.println("mh_ratio: " + mh_ratio + " log_r: " + log_r);
+		
+		if (log_r < mh_ratio){
+			System.out.println("VAR ACCEPT MH");
+			return gamma_star;
+		}
+		System.out.println("VAR REJECT MH");
+		return gamma;
 	} 
 
-//	private void SampleTausqForLMSigsqs(Matrix resids, int sample_num) {
-//		double sse = 0;
-//		for (int i = 0; i < n + p + 1; i++){
-//			sse += Math.pow(resids.get(i, 0), 2); 
-//		}
-//		System.out.println("sse: " + sse);
-//		gibbs_samples_of_tausq_for_lm_sigsqs[sample_num] = 1; //SSSSSSSSSSSSSSSSS
-////			StatToolbox.sample_from_inv_gamma((hyper_nu_sigsq + n + p + 1) / 2, 2 / (sse + hyper_nu_sigsq * hyper_lambda_sigsq), this);
-//		
-//		System.out.println("tausq draw: " + gibbs_samples_of_tausq_for_lm_sigsqs[sample_num]);
-//	}
-	
-//	private void SampleSigsqsViaLM(int sample_num) {
-////		double sigsq_from_vanilla_bart = gibbs_samples_of_sigsq[sample_num];
-////		System.out.println("un_transform_sigsq(sigsq_from_vanilla_bart) = " + un_transform_sigsq(sigsq_from_vanilla_bart));
-////		double log_adj_sigsq_from_vanilla_bart = Math.log(un_transform_sigsq(sigsq_from_vanilla_bart));
-//		Matrix gamma_lm_sigsq = gibbs_samples_of_gamma_for_lm_sigsqs[sample_num];
-//		
-//		/////make adjustment for intercept
-////		beta_lm_sigsq[0] += Math.log(un_transform_sigsq(sigsq_from_vanilla_bart));
-//		
-//		
-////		double[] beta_lm_sigsq = {0, 0.5};
-////		double[] beta_lm_sigsq = {0, 2, 2};
-////		double tausq_lm_sigsq = gibbs_samples_of_tausq_for_lm_sigsqs[sample_num];
-//		double[] sigsqs_gibbs_sample = gibbs_samples_of_sigsq_hetero[sample_num]; //pointer to what we need to populate
-//		
-//		gamma_lm_sigsq[0] += EXPE_LOG_CHISQ_1;
-////		double[] ln_sigsqs = new double[n];
-//		for (int i = 0; i < n; i++){
-//			//initialize to be the intercept
-//			double x_trans_beta_lm_sigsq = gamma_lm_sigsq[0];
-//			for (int j = 1; j <= p; j++){				
-//				x_trans_beta_lm_sigsq += X_y.get(i)[j - 1] * gamma_lm_sigsq[j];
-//			}
-////			System.out.println("x_trans_beta_lm_sigsq[" + i + "] = " + x_trans_beta_lm_sigsq);
-////			sigsqs_gibbs_sample[i] = Math.exp(StatToolbox.sample_from_norm_dist(x_trans_beta_lm_sigsq, tausq_lm_sigsq));
-////			sigsqs_gibbs_sample[i] = Math.pow(transform_y(Math.sqrt(Math.exp(x_trans_beta_lm_sigsq))), 2); //SSSSSSSSSSSSSSSSSSSSSS
-////			ln_sigsqs[i] = x_trans_beta_lm_sigsq;
-////			sigsqs_gibbs_sample[i] = sigsq_from_vanilla_bart; 
-////			sigsqs_gibbs_sample[i] = Math.pow(transform_y(Math.sqrt(Math.exp(x_trans_beta_lm_sigsq))), 2); //SSSSSSSSSSSSSSSSSSSSSS
-//			sigsqs_gibbs_sample[i] = transform_sigsq(Math.exp(x_trans_beta_lm_sigsq)); //SSSSSSSSSSSSSSSSSSSSSS
-//		}
-//		
-//		for (int j = 0; j < p + 1; j++){
-////			System.out.println("beta[" + i + "] = " + un_transform_y(beta_lm_sigsq[i]));
-//			
-//			System.out.println("beta[" + j + "] = " + (gamma_lm_sigsq[j]));
-//		}
-//		
-//		
-////		System.out.println("ln_sigsq estimates: " + Tools.StringJoin(ln_sigsqs));
-////		System.out.println("y_range_sq: " + y_range_sq + " sigsq estimates: " + Tools.StringJoin(sigsqs_gibbs_sample));
-//	}
-	
 	private void SampleMusF2(int sample_num, CGMBARTTreeNode node) {
 //		System.out.println("\n\nGibbs sample_num: " + sample_num + "  Mus \n" + "----------------------------------------------------");
 		double[] current_sigsqs = gibbs_samples_of_sigsq_hetero[sample_num - 1];
@@ -464,11 +389,8 @@ public class CGMBART_F2_linear_heteroskedasticity extends CGMBART_F1_prior_cov_s
 			gibbs_samples_of_sigsq_hetero = new double[num_gibbs_total_iterations + 1][n];	
 			gibbs_samples_of_sigsq_hetero_after_burn_in = new double[num_gibbs_total_iterations - num_gibbs_burn_in][n];
 			gibbs_samples_of_gamma_for_lm_sigsqs = new Matrix[num_gibbs_total_iterations + 1];
-			gibbs_samples_of_gamma_for_lm_sigsqs[0] = new Matrix(p + 1, 1);
+			gibbs_samples_of_gamma_for_lm_sigsqs[0] = new Matrix(p + 1, 1); //start it up
 			gibbs_samples_of_gamma_for_lm_sigsqs_after_burn_in = new Matrix[num_gibbs_total_iterations - num_gibbs_burn_in];
-			gibbs_samples_of_tausq_for_lm_sigsqs = new double[num_gibbs_total_iterations + 1];
-			gibbs_samples_of_tausq_for_lm_sigsqs[0] = IntialTauSqLM;
-			gibbs_samples_of_tausq_for_lm_sigsqs_after_burn_in = new double[num_gibbs_total_iterations - num_gibbs_burn_in];
 		}	
 	}	
 	
@@ -523,22 +445,6 @@ public class CGMBART_F2_linear_heteroskedasticity extends CGMBART_F1_prior_cov_s
 		return super.calcLnLikRatioChange(eta, eta_star);
 	}
 
-	public void setQSigsq(double hyper_q_sigsq) {
-		this.hyper_q_sigsq = hyper_q_sigsq;
-	}
-
-	public void setNuSigsq(double hyper_nu_sigsq) {
-		this.hyper_nu_sigsq = hyper_nu_sigsq;
-	}
-	
-	public void setSampleVarResiduals(double sample_var_e){
-		this.sample_var_e = sample_var_e;
-	}
-
-	public void setHyperBetaSigsq(double hyper_beta_sigsq){
-		this.hyper_beta_sigsq = hyper_beta_sigsq;
-	}
-
 	/**
 	 * The user specifies this flag. Once set, the functions in this class are used over the default homoskedastic functions
 	 * in parent classes
@@ -546,4 +452,16 @@ public class CGMBART_F2_linear_heteroskedasticity extends CGMBART_F1_prior_cov_s
 	public void useLinearHeteroskedasticityModel(){
 		use_linear_heteroskedasticity_model = true;
 	}
+	
+	public void setHyper_gamma_mean_vec(double[] hyper_gamma_mean_vec) {
+		for (int i = 0; i < hyper_gamma_mean_vec.length; i++){
+			this.hyper_gamma_mean_vec.set(0, i, hyper_gamma_mean_vec[i]);
+		}
+	}
+
+	public void setHyper_gamma_var_mat(double[] hyper_gamma_var_mat_diag) {
+		for (int j = 0; j < hyper_gamma_var_mat_diag.length; j++){
+			hyper_gamma_var_mat.set(j, j, hyper_gamma_var_mat_diag[j]);
+		}
+	}	
 }
