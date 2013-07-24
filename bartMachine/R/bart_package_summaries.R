@@ -1,5 +1,5 @@
 
-summary.bart_machine = function(bart_machine, show_details_for_trees = FALSE){
+summary.bartMachine = function(bart_machine, show_details_for_trees = FALSE){
 	if (bart_machine$bart_destroyed){
 		stop("This BART machine has been destroyed. Please recreate.")
 	}	
@@ -63,6 +63,6 @@ summary.bart_machine = function(bart_machine, show_details_for_trees = FALSE){
 	cat("\n")
 }
 
-print.bart_machine = function(bart_machine){ #alias for summary
+print.bartMachine = function(bart_machine){ #alias for summary
 	summary(bart_machine)
 }

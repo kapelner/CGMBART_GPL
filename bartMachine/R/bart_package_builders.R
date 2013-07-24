@@ -237,7 +237,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	#now once it's done, let's extract things that are related to diagnosing the build of the BART model
 	p = ncol(model_matrix_training_data) - 1 # we subtract one because we tacked on the response as the last column
 	bart_machine = list(java_bart_machine = java_bart_machine,
-			training_data_features = colnames(model_matrix_training_data)[1 : ifelse(use_missing_data, (p / 2), p)],
+			training_data_features = colnames(model_matrix_training_data)[1 : ifelse(use_missing_data && use_missing_data_dummies_as_covars, (p / 2), p)],
 			training_data_features_with_missing_features = colnames(model_matrix_training_data)[1 : p],
 			X = X,
 			y = y,
@@ -320,7 +320,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	}
 	
 	#use R's S3 object orientation
-	class(bart_machine) = "bart_machine"
+	class(bart_machine) = "bartMachine"
 	bart_machine
 }
 

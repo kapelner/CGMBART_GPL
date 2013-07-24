@@ -1,5 +1,5 @@
 #libraries and dependencies
-#tryCatch(library(rJava), error = function(e){install.packages("rJava")}, finally = library(rJava))
+tryCatch(library(rJava), error = function(e){install.packages("rJava")}, finally = library(rJava))
 
 #constants
 VERSION = "1.0b"

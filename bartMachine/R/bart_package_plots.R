@@ -313,7 +313,7 @@ plot_sigsqs_convergence_diagnostics = function(bart_machine){
 
 }
 
-investigate_var_importance = function(bart_machine, type = "splits", plot = TRUE, num_replicates_for_avg = 5, num_trees_bottleneck = 20, num_var_plot = Inf){
+investigate_var_importance = function(bart_machine, type = "splits", plot = TRUE, num_replicates_for_avg = 5, num_trees_bottleneck = 20, num_var_plot = Inf, bottom_margin = 10){
 	if (bart_machine$bart_destroyed){
 		stop("This BART machine has been destroyed. Please recreate.")
 	}	
@@ -351,7 +351,7 @@ investigate_var_importance = function(bart_machine, type = "splits", plot = TRUE
 	sd_var_props = sd_var_props[avg_var_props_sorted_indices][1 : num_var_plot]		
 	
 	if (plot){
-		par(mar = c(5, 6, 3, 0))
+		par(mar = c(bottom_margin, 6, 3, 0))
 		if (is.na(sd_var_props[1])){
 			moe = 0
 		} else {
@@ -394,7 +394,7 @@ shapiro_wilk_p_val = function(vec){
 	tryCatch(shapiro.test(vec)$p.value, error = function(e){})
 }
 
-interaction_investigator = function(bart_machine, plot = TRUE, num_replicates_for_avg = 5, num_trees_bottleneck = 20, num_var_plot = Inf, cut_bottom = NULL){
+interaction_investigator = function(bart_machine, plot = TRUE, num_replicates_for_avg = 5, num_trees_bottleneck = 20, num_var_plot = Inf, cut_bottom = NULL, bottom_margin = 10){
 	
 	interaction_counts = array(NA, c(bart_machine$p, bart_machine$p, num_replicates_for_avg))
 	
@@ -458,7 +458,7 @@ interaction_investigator = function(bart_machine, plot = TRUE, num_replicates_fo
 	
 	if (plot){
 		#now create the bar plot
-		par(mar = c(10, 6, 3, 0))
+		par(mar = c(bottom_margin, 6, 3, 0))
 		if (is.na(sd_counts[1])){
 			moe = 0
 		} else {
