@@ -45,6 +45,7 @@ import org.apache.commons.math3.special.Gamma;
 import org.apache.commons.math3.distribution.GammaDistribution;
 import org.apache.commons.math3.distribution.NormalDistribution;
 
+import Jama.CholeskyDecomposition;
 import Jama.Matrix;
 
 /**
@@ -198,12 +199,17 @@ public class StatToolbox {
 		
 	
 	public static Matrix sample_from_mult_norm_dist(Matrix mu, Matrix Sigma){
+		Matrix Sigma_sqrt = Sigma.chol().getL();
+		return sample_from_mult_norm_dist_with_Sigma_sqrt(mu, Sigma_sqrt);
+	}
+	
+	public static Matrix sample_from_mult_norm_dist_with_Sigma_sqrt(Matrix mu, Matrix Sigma_sqrt){
 		int n = mu.getRowDimension();
 		Matrix z_vec = new Matrix(n, 1);
 		for (int i = 0; i < n; i++){
 			z_vec.set(i, 0, sample_from_std_norm_dist());
 		}		
-		return (Sigma.times(z_vec)).plus(mu);
+		return (Sigma_sqrt.times(z_vec)).plus(mu);
 	}
 
 	

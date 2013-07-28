@@ -8,6 +8,35 @@ if (NOT_ON_GRID){
 }
 setwd(directory_where_code_is)
 
+
+n = 1000
+p = 8
+
+X = cbind(rep(1, n), matrix(runif(n * p, 0, 1), ncol = p))
+
+#generate heteroskedastic model
+gamma = c(1, rep(0, p))
+sigma = sqrt(exp(X %*% gamma))
+
+#generate mean model
+beta = seq(-2, 2, length.out = p + 1)
+y = X %*% beta + rnorm(n, 0, sigma)
+
+
+Xy = data.frame(X[, -1], y)
+par(mfrow = c(1, p))
+for (j in 2 : p){
+	plot(X[, j], y, xlab = paste0("x_", j))
+}
+plot(y, sigma)
+
+write.csv(Xy, "datasets/r_simple_hetero_model_bigger.csv", row.names = FALSE)
+#write.csv(Xy, "datasets/r_simple_hetero_model.csv", row.names = FALSE)
+#Xy = read.csv("datasets/r_simple_hetero_model.csv")
+
+
+
+
 source("r_scripts/bart_package_inits.R")
 source("r_scripts/bart_package_builders.R")
 source("r_scripts/bart_package_predicts.R")
@@ -20,27 +49,6 @@ source("r_scripts/bart_package_summaries.R")
 source("r_scripts/missing_data/sims_functions.R")
 
 
-expe_log_chisq_1 = 1.274693
-
-n = 1000
-x0 = rep(1, n)
-x1 = runif(n, 0, 1)
-x2 = runif(n, 0, 1)
-x3 = runif(n, 0, 1)
-beta = c(0.25, -0.25, -0.75, 1.25)
-sigma = sqrt(exp(cbind(x0, x1, x2, x3) %*% beta))
-#sigma = sqrt((4 + 5 * x1))
-plot(x1, sigma)
-
-y = 10 * x1 - 4 * x2 + 5 * x3 * x2 * x1 + rnorm(n, 0, sigma)
-#Xy = data.frame(x1, y)
-Xy = data.frame(x1, x2, x3, y)
-par(mfrow = c(1, 4))
-plot(x1, y)
-plot(x2, y)
-plot(x3, y)
-plot(y, sigma)
-
 #is there heteroskedasticity?
 #bart_machine = build_bart_machine(Xy = Xy)
 #test_heteroskedasticity_of_bart_model(bart_machine)
@@ -51,8 +59,6 @@ Xytest = Xy[501 : 1000, ]
 mean(sigma)
 mean(sigma^2)
 
-write.csv(Xy, "datasets/r_simple_hetero_model.csv", row.names = FALSE)
-Xy = read.csv("datasets/r_simple_hetero_model.csv")
 
 lm_mod = lm(y ~ ., Xy)
 mse = var(summary(lm_mod)$residuals)
@@ -71,10 +77,14 @@ e_i_sqds = summary(lm_mod)$residuals^2
 
 mod = lm(log(e_i_sqds) ~ x1 + x2 + x3)
 summary(mod)
-beta
+gamma
 #log(mse)
 #log(sqrt(mse))
 #log(mean(sigma^2))
+
+expe_log_chisq_1 = 1.274693
+
+
 (coef(summary(mod))[1, 1]) + expe_log_chisq_1
 
 plot(x1, mod$fitted)

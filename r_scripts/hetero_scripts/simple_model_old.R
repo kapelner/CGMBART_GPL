@@ -22,7 +22,7 @@ source("r_scripts/missing_data/sims_functions.R")
 
 n = 1000
 x1 = runif(n)
-sigma = sqrt(exp(0.5 * x1))
+sigma = sqrt(exp(0 + 0.5 * x1))
 plot(x1, sigma)
 
 y = 10 * x1 + rnorm(n, 0, sigma)
@@ -35,7 +35,7 @@ Xytrain = Xy[1 : 500, ]
 Xytest = Xy[501 : 1000, ]
 mean(sigma)
 #
-#write.csv(Xy, "datasets/r_super_simple_hetero_model.csv", row.names = FALSE)
+write.csv(Xy, "datasets/r_super_simple_hetero_model.csv", row.names = FALSE)
 #Xy = read.csv("datasets/r_super_simple_hetero_model.csv")
 
 #lm_mod = lm(y ~ ., Xy)
