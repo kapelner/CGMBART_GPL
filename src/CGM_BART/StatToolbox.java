@@ -45,7 +45,6 @@ import org.apache.commons.math3.special.Gamma;
 import org.apache.commons.math3.distribution.GammaDistribution;
 import org.apache.commons.math3.distribution.NormalDistribution;
 
-import Jama.CholeskyDecomposition;
 import Jama.Matrix;
 
 /**
@@ -80,11 +79,9 @@ public class StatToolbox {
 //				System.out.println("START_POS: " + START_POS);
 //				System.out.println("NORM_SAMPS: " + Tools.StringJoin(NORM_SAMPS));
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		} catch (FileNotFoundException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}					
 	}

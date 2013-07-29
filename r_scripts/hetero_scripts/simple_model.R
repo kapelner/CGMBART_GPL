@@ -10,7 +10,7 @@ setwd(directory_where_code_is)
 
 
 n = 1000
-p = 8
+p = 10
 
 X = cbind(rep(1, n), matrix(runif(n * p, 0, 1), ncol = p))
 
