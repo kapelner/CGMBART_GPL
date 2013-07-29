@@ -111,9 +111,6 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 		if (cov_split_prior != null){
 			bart.setCovSplitPrior(cov_split_prior);
 		}
-		if (use_heteroskedasticity){
-			bart.useHeteroskedasticity();
-		}
 		//do special stuff for regression model
 		if (!(bart instanceof CGMBARTClassification)){
 			bart.setNu(hyper_nu);		
@@ -509,19 +506,7 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 	}
 
 	public double[] getSigsqsByGibbsSample(int g){
-//		if (gibbs_samples_of_sigsq_hetero_aggregated == null){
-//			gibbs_samples_of_sigsq_hetero_aggregated = new ArrayList<double[]>(numSamplesAfterBurning());
-//			for (int t = 0; t < num_cores; t++){
-//				for (int i = 0; i < total_iterations_multithreaded - num_gibbs_burn_in; i++){
-//					double[] sigsqs_gibbs = bart_gibbs_chain_threads[t].gibbs_samples_of_sigsq_hetero[i];
-//					System.out.println("sigsqs_gibbs: " + Tools.StringJoin(sigsqs_gibbs));
-//					gibbs_samples_of_sigsq_hetero_aggregated.add(sigsqs_gibbs);
-//				}
-//			}			
-//			
-//		}
-//		System.out.println("getSigsqsByGibbsSample  bart_gibbs_chain_threads[0]: " + bart_gibbs_chain_threads[0] + " g = " + g);
-		return bart_gibbs_chain_threads[0].un_transform_sigsq(bart_gibbs_chain_threads[0].gibbs_samples_of_sigsq_hetero[g]);
+		return bart_gibbs_chain_threads[0].un_transform_sigsq(bart_gibbs_chain_threads[0].gibbs_samples_of_sigsq);
 	}	
 		
 	public int[][] getDepthsForTreesInGibbsSampAfterBurnIn(int thread_num){

@@ -25,7 +25,7 @@
 package CGM_BART;
 
 
-public class CGMBARTRegression extends CGMBART_F2_heteroskedasticity {
+public class CGMBARTRegression extends CGMBART_F1_prior_cov_spec {
 	private static final long serialVersionUID = 6418127647567343927L;
 	
 	
