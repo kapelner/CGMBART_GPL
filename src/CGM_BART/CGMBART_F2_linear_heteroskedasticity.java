@@ -10,7 +10,6 @@ public class CGMBART_F2_linear_heteroskedasticity extends CGMBART_F1_prior_cov_s
 
 //	private static final boolean GAMERMAN = true;
 
-	
 	protected boolean use_linear_heteroskedasticity_model;
 	
 	protected Matrix hyper_gamma_mean_vec;
@@ -33,7 +32,6 @@ public class CGMBART_F2_linear_heteroskedasticity extends CGMBART_F1_prior_cov_s
 	private double[] tausq_j;
 	private int[][] minus_j_indices;
 	private Matrix Sigmainv_times_hyper_gamma_mean_vec;
-	private Matrix halves;
 	private Matrix Xmat_with_intercept_transpose;
 	private Matrix halves_times_Xmat_with_intercept_transpose;
 
@@ -63,9 +61,8 @@ public class CGMBART_F2_linear_heteroskedasticity extends CGMBART_F1_prior_cov_s
 					gamma_j_avg = StatToolbox.sample_average(gibbs_samples_gamma_j);
 					gamma_j_sd = StatToolbox.sample_standard_deviation(gibbs_samples_gamma_j);
 				}
-				System.out.println("gamma_" + j + " = " + gamma_j_avg + " +- " + gamma_j_sd +
-						((gamma_j_avg - 2 * gamma_j_sd < 0 && gamma_j_avg + 2 * gamma_j_sd > 0) ? " => plausibly 0" : " => *NOT* plausibly 0")
-						);
+				System.out.println("gamma_" + j + " = " + Tools.two_digit_format.format(gamma_j_avg) + " +- " + Tools.two_digit_format.format(gamma_j_sd) +
+						((gamma_j_avg - 2 * gamma_j_sd < 0 && gamma_j_avg + 2 * gamma_j_sd > 0) ? " => plausibly 0" : " => *NOT* plausibly 0"));
 			}
 		}
 	}	
@@ -113,14 +110,19 @@ public class CGMBART_F2_linear_heteroskedasticity extends CGMBART_F1_prior_cov_s
 		
 			//set hyperparameters
 			hyper_gamma_mean_vec = new Matrix(p + 1, 1);
-//			hyper_gamma_mean_vec.set(1, 0, 0.5);
+
 			
 			
 			hyper_gamma_var_mat = new Matrix(p + 1, p + 1);
 			for (int j = 0; j < p + 1; j++){
 				hyper_gamma_var_mat.set(j, j, 1000);
 			}
-			halves = new Matrix(p + 1, p + 1);
+			
+			///////////informed model
+//			hyper_gamma_mean_vec.set(0, 0, 1.093846);
+//			hyper_gamma_var_mat.set(0, 0, 0.001000);
+			
+			Matrix halves = new Matrix(p + 1, p + 1);
 			for (int j = 0; j < p + 1; j++){
 				halves.set(j, j, 0.5);
 			}
@@ -286,7 +288,7 @@ public class CGMBART_F2_linear_heteroskedasticity extends CGMBART_F1_prior_cov_s
 	}		
 	
 	private void SampleSigsqF2(int sample_num, double[] es) {
-		System.out.println("\n\nGibbs sample_num: " + sample_num + "  Sigsqs \n" + "----------------------------------------------------");
+//		System.out.println("\n\nGibbs sample_num: " + sample_num + "  Sigsqs \n" + "----------------------------------------------------");
 //		System.out.println("es: " + Tools.StringJoin(es));
 
 //		System.out.println("s^2_e = " + StatToolbox.sample_variance(es));
@@ -299,6 +301,8 @@ public class CGMBART_F2_linear_heteroskedasticity extends CGMBART_F1_prior_cov_s
 		
 		//now we need to draw a gamma
 		Matrix gamma_draw = DrawGammaVecViaMH(gibbs_samples_of_gamma_for_lm_sigsqs[sample_num - 1], es_sq, sample_num);
+		
+
 		gibbs_samples_of_gamma_for_lm_sigsqs[sample_num] = gamma_draw;
 
 		//now set the sigsqs just by doing exp(x_i^T \gammavec)
@@ -313,22 +317,21 @@ public class CGMBART_F2_linear_heteroskedasticity extends CGMBART_F1_prior_cov_s
 
 	private Matrix DrawGammaVecViaMH(Matrix gamma, double[] es_sq, int sample_num) {
 		
-		System.out.println("\nDrawGammaVecViaMH g = " + sample_num + "\n");
-		
+//		System.out.println("\nDrawGammaVecViaMH g = " + sample_num + "\n");
 		
 		Matrix gamma_copy = (Matrix) gamma.clone();
 		//do the whole thing for each dimension separately
 		for (int j = 0; j < p + 1; j++){
 			
-			System.out.println("\n   Sampling j = " + j + "\n");
+//			System.out.println("\n   Sampling j = " + j + " g = " + sample_num + "\n");
 			
 			double gamma_j = gamma_copy.get(j, 0);
 			
 		
 			Matrix gamma_star = (Matrix) gamma_copy.clone();
 			
-			System.out.println("gamma_copy");
-			gamma_copy.print(3, 5);
+//			System.out.println("gamma_copy");
+//			gamma_copy.print(3, 5);
 			
 			//get the d vectors
 			double sum_x_i_times_gamma = 0;
@@ -364,8 +367,8 @@ public class CGMBART_F2_linear_heteroskedasticity extends CGMBART_F1_prior_cov_s
 			double gamma_star_j = StatToolbox.sample_from_norm_dist(mu_j, tausq_j[j]);
 			gamma_star.set(j, 0, gamma_star_j);
 			
-			System.out.println("gamma_star");
-			gamma_star.print(3, 5);
+//			System.out.println("gamma_star");
+//			gamma_star.print(3, 5);
 			
 			
 
@@ -424,17 +427,20 @@ public class CGMBART_F2_linear_heteroskedasticity extends CGMBART_F1_prior_cov_s
 //			double mh_ratio = log_prop_prob_gamma_star - log_prop_prob_gamma;
 			
 //			System.out.println("\n\n log_prop_prob_gamma_star: " + log_prop_prob_gamma_star + " - log_prop_prob_gamma: " + log_prop_prob_gamma);
-			System.out.println("log_prop_prob_gamma_star_j_to_gamma_j: " + log_prop_prob_gamma_star_j_to_gamma_j + 
-					" - log_prop_prob_gamma_j_to_gamma_star_j: " + log_prop_prob_gamma_j_to_gamma_star_j + 
-					" + log_prop_prob_gamma_star_j: " + log_prop_prob_gamma_star_j + 
-					" - log_prop_prob_gamma_j: " + log_prop_prob_gamma_j);
+//			System.out.println("log_prop_prob_gamma_star_j_to_gamma_j: " + log_prop_prob_gamma_star_j_to_gamma_j + 
+//					" - log_prop_prob_gamma_j_to_gamma_star_j: " + log_prop_prob_gamma_j_to_gamma_star_j + 
+//					" + log_prop_prob_gamma_star_j: " + log_prop_prob_gamma_star_j + 
+//					" - log_prop_prob_gamma_j: " + log_prop_prob_gamma_j);
+			
+//			System.out.println("diff jumping: " + (log_prop_prob_gamma_star_j_to_gamma_j - log_prop_prob_gamma_j_to_gamma_star_j));
+//			System.out.println("diff lik: " + (log_prop_prob_gamma_star_j - log_prop_prob_gamma_j));
 			
 			double log_r = Math.log(StatToolbox.rand());
 			
-			System.out.println("log_r = " + log_r + " mh_ratio = " + mh_ratio);
+//			System.out.println("log_r = " + log_r + " mh_ratio = " + mh_ratio);
 			
 			if (log_r < mh_ratio){
-				System.out.println("VAR ACCEPT MH for j = " + j);
+//				System.out.println("VAR ACCEPT MH for j = " + j + " g = " + sample_num);
 				m_h_num_accept_over_gibbs_samples[j]++;
 				if (sample_num > num_gibbs_burn_in){
 					m_h_num_accept_over_gibbs_samples_after_burn_in[j]++;
@@ -442,8 +448,16 @@ public class CGMBART_F2_linear_heteroskedasticity extends CGMBART_F1_prior_cov_s
 				gamma_copy = gamma_star;
 			} 
 			else {
-				System.out.println("VAR REJECT MH for j = " + j);
+//				System.out.println("VAR REJECT MH for j = " + j + " g = " + sample_num);
 			}
+			
+//			if (sample_num > 20){
+//				try {
+//					Thread.sleep(1000);
+//				} catch (InterruptedException e) {
+//					e.printStackTrace();
+//				}
+//			}
 		}
 		
 		//this is all dimensions done - some of the p+1 will be changed, some will not be changed

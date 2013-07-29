@@ -214,7 +214,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		}
 	}
 	
-	if (use_linear_heteroskedasticity_model){
+	if (use_linear_heteroskedasticity_model && verbose){
 		.jcall(java_bart_machine, "V", "useLinearHeteroskedasticityModel")
 		cat("Heteroskedastic BART feature ON.\n")
 	}

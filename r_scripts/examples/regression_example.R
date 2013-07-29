@@ -6,10 +6,17 @@ if (.Platform$OS.type == "windows"){
 }
 setwd(directory_where_code_is)
 
-source("r_scripts/bart_package.R")
+source("r_scripts/bart_package_inits.R")
+source("r_scripts/bart_package_builders.R")
+source("r_scripts/bart_package_predicts.R")
+source("r_scripts/bart_package_data_preprocessing.R")
 source("r_scripts/bart_package_plots.R")
 source("r_scripts/bart_package_variable_selection.R")
 source("r_scripts/bart_package_f_tests.R")
+source("r_scripts/bart_package_summaries.R")
+source("r_scripts/bart_package_hetero_tests.R")
+source("r_scripts/bart_package_validation.R")
+
 
 #get some data
 library(MASS)
@@ -43,6 +50,12 @@ bart_machine = build_bart_machine(Xtrain, ytrain,
 		num_iterations_after_burn_in = 1000,
 		use_missing_data = TRUE)
 bart_machine
+
+
+
+kf = k_fold_cv(X, y)
+kf_hetero = k_fold_cv(X, y, use_linear_heteroskedasticity_model = TRUE)
+
 head(bart_machine$model_matrix_training_data)
 plot_y_vs_yhat(bart_machine)
 plot_y_vs_yhat(bart_machine, ppis = TRUE)

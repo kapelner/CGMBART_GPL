@@ -61,7 +61,7 @@ public abstract class CGMBART_04_init extends CGMBART_03_debug implements Serial
 	
 	protected static final double INITIAL_SIGSQ = Math.pow(0.5 / 3, 2); //median, doesn't matter anyway
 	protected void InitizializeSigsq() {
-		System.out.println("InitizializeSigsq vanilla BART to " + INITIAL_SIGSQ);
+//		System.out.println("InitizializeSigsq vanilla BART to " + INITIAL_SIGSQ);
 		gibbs_samples_of_sigsq[0] = INITIAL_SIGSQ;
 //		gibbs_samples_of_sigsq.add(0, sampleInitialSigsqByDrawingFromThePrior());
 	}

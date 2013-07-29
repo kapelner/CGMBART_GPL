@@ -69,6 +69,7 @@ public class DataAnalysis {
 			machine = new CGMBARTClassificationMultThread();
 			long start_time = System.currentTimeMillis();
 			machine.setData(data.getX_y());
+//			((CGMBARTClassificationMultThread)machine).useLinearHeteroskedasticityModel(); //shouldn't do anything
 			
 			machine.Build(); 
 			System.out.println("errors: " + 
@@ -77,7 +78,7 @@ public class DataAnalysis {
 					machine.getN() + 
 					"  (" + machine.calculateMisclassificationRate(4) + "%)");
 			long end_time = System.currentTimeMillis();
-			System.out.println("Current Time:"+ (end_time-start_time)/1000);
+			System.out.println("Current Time:" + (end_time-start_time) / 1000);
 		}
 		
 		else {

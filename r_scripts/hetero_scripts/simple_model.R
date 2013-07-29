@@ -10,17 +10,17 @@ setwd(directory_where_code_is)
 
 
 n = 1000
-p = 10
+p = 4
 
-X = cbind(rep(1, n), matrix(runif(n * p, 0, 1), ncol = p))
+X = as.data.frame(cbind(rep(1, n), matrix(runif(n * p, 0, 1), ncol = p)))
 
 #generate heteroskedastic model
-gamma = c(1, rep(0, p))
+gamma = c(0.1, 0.2, 0.3, 0.4, 0.5)
 sigma = sqrt(exp(X %*% gamma))
 
 #generate mean model
 beta = seq(-2, 2, length.out = p + 1)
-y = X %*% beta + rnorm(n, 0, sigma)
+y = as.numeric(X %*% beta + rnorm(n, 0, sigma))
 
 
 Xy = data.frame(X[, -1], y)
@@ -46,7 +46,35 @@ source("r_scripts/bart_package_variable_selection.R")
 source("r_scripts/bart_package_f_tests.R")
 source("r_scripts/bart_package_hetero_tests.R")
 source("r_scripts/bart_package_summaries.R")
-source("r_scripts/missing_data/sims_functions.R")
+source("r_scripts/bart_package_validation.R")
+
+
+
+class(y)
+set_bart_machine_num_cores(4)
+bart_machine = build_bart_machine(X, y,
+		num_trees = 200,
+		num_burn_in = 300,
+		num_iterations_after_burn_in = 1000,
+		use_missing_data = TRUE)
+bart_machine
+
+
+kf = k_fold_cv(X, y)
+kf_hetero = k_fold_cv(X, y, use_linear_heteroskedasticity_model = TRUE)
+kf_hetero
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 #is there heteroskedasticity?

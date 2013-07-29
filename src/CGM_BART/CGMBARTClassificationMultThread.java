@@ -41,4 +41,6 @@ public class CGMBARTClassificationMultThread extends CGMBARTRegressionMultThread
 	public void setClassificationRule(double classification_rule) {
 		this.classification_rule = classification_rule;
 	}	
+	
+	public void useLinearHeteroskedasticityModel(){} //cannot let that flag get set in the father class since there is no noise in a probit model
 }
