@@ -55,6 +55,8 @@ bart_machine
 
 kf = k_fold_cv(X, y)
 kf_hetero = k_fold_cv(X, y, use_linear_heteroskedasticity_model = TRUE)
+kf
+kf_hetero
 
 head(bart_machine$model_matrix_training_data)
 plot_y_vs_yhat(bart_machine)

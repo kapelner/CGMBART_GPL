@@ -10,26 +10,27 @@ setwd(directory_where_code_is)
 
 
 n = 1000
-p = 4
+p = 5
 
-X = as.data.frame(cbind(rep(1, n), matrix(runif(n * p, 0, 1), ncol = p)))
+X = cbind(rep(1, n), matrix(runif(n * p, 0, 1), ncol = p))
 
 #generate heteroskedastic model
-gamma = c(0.1, 0.2, 0.3, 0.4, 0.5)
+gamma = c(1, 0.3, 0.5, 0.3, 0.2, 0.5)
 sigma = sqrt(exp(X %*% gamma))
 
 #generate mean model
-beta = seq(-2, 2, length.out = p + 1)
+beta = seq(-2, 2, length.out  = p + 1)
 y = as.numeric(X %*% beta + rnorm(n, 0, sigma))
 
 
 Xy = data.frame(X[, -1], y)
-par(mfrow = c(1, p))
-for (j in 2 : p){
+par(mfrow = c(1, p + 1))
+for (j in 2 : (p + 1)){
 	plot(X[, j], y, xlab = paste0("x_", j))
 }
 plot(y, sigma)
 
+X = as.data.frame(X)
 write.csv(Xy, "datasets/r_simple_hetero_model_bigger.csv", row.names = FALSE)
 #write.csv(Xy, "datasets/r_simple_hetero_model.csv", row.names = FALSE)
 #Xy = read.csv("datasets/r_simple_hetero_model.csv")
@@ -49,19 +50,29 @@ source("r_scripts/bart_package_summaries.R")
 source("r_scripts/bart_package_validation.R")
 
 
-
-class(y)
 set_bart_machine_num_cores(4)
-bart_machine = build_bart_machine(X, y,
+bart_machine_homo = build_bart_machine(X[, -1], y,
 		num_trees = 200,
-		num_burn_in = 300,
+		num_burn_in = 500,
+		num_iterations_after_burn_in = 1000)
+bart_machine_homo
+bart_machine_hetero = build_bart_machine(X[, -1], y,
+		num_trees = 200,
+		num_burn_in = 500,
 		num_iterations_after_burn_in = 1000,
-		use_missing_data = TRUE)
-bart_machine
+		use_linear_heteroskedasticity_model = TRUE)
+bart_machine_hetero
+
+gg = getGammas(bart_machine_hetero)
+
+ggab = gg[(bart_machine_hetero$num_burn_in + 1) : nrow(gg), ]
+colMeans(ggab)
+apply(ggab, 2, sd)
 
 
-kf = k_fold_cv(X, y)
-kf_hetero = k_fold_cv(X, y, use_linear_heteroskedasticity_model = TRUE)
+kf = k_fold_cv(X[, -1], y, k_folds = 3)
+kf
+kf_hetero = k_fold_cv(X[, -1], y, use_linear_heteroskedasticity_model = TRUE, k_folds = 3)
 kf_hetero
 
 
@@ -118,11 +129,11 @@ expe_log_chisq_1 = 1.274693
 plot(x1, mod$fitted)
 points(x1, sigma^2, col = "red")
 
-bart_machine = build_bart_machine(y = e_i_sqds, X = data.frame(x1), run_in_sample = FALSE)
+bart_machine_hetero = build_bart_machine(y = e_i_sqds, X = data.frame(x1), run_in_sample = FALSE)
 
 #xs = seq(from = -0.1, to = 1.1, by = 0.001)
 xs = cbind(seq(from = -0.1, to = 1.1, by = 0.001), seq(from = -0.1, to = 1.1, by = 0.001))
-sigsq_preds = predict(bart_machine, as.matrix(xs))
+sigsq_preds = predict(bart_machine_hetero, as.matrix(xs))
 
 plot(xs[, 1], sigsq_preds, xlim = c(-0.1, 1.1))
 points(xs[, 1], 2 + 5 * xs[, 1] - 2 * xs[, 2], col = "red")
@@ -148,11 +159,11 @@ windows(); hist(sigsqs_lm_adj[x1 < 0.05], br = 50)
 
 ### test BART on it
 set_bart_machine_num_cores(4)
-bart_machine = build_bart_machine(Xy = Xytrain)
-bart_machine
+bart_machine_hetero = build_bart_machine(Xy = Xytrain)
+bart_machine_hetero
 #colnames(new_data)[1] = "x1"
 #plot_y_vs_yhat(bart_machine, new_data, Xytest[, 2], ppis = TRUE)
-obj = bart_predict_for_test_data(bart_machine, Xytest[, 1 : 3], Xytest[, 4])
+obj = bart_predict_for_test_data(bart_machine_hetero, Xytest[, 1 : 3], Xytest[, 4])
 obj$rmse
 
 
@@ -179,7 +190,7 @@ hobj$rmse
 cat((obj$rmse - hobj$rmse) / hobj$rmse * 100, "% better ... yeah buddy\n", sep = "")
 
 par(mfrow = c(1, 1))
-plot_y_vs_yhat(bart_machine, Xytest[, 1 : 3], Xytest[, 4], ppis = TRUE)
+plot_y_vs_yhat(bart_machine_hetero, Xytest[, 1 : 3], Xytest[, 4], ppis = TRUE)
 windows()
 plot_y_vs_yhat(hbart_machine, Xytest[, 1 : 3], Xytest[, 4], ppis = TRUE)
 
@@ -218,12 +229,12 @@ Xtest = X[(nrow(X) / 2 + 1) : nrow(X), ]
 ytest = y[(nrow(X) / 2 + 1) : nrow(X)]
 
 set_bart_machine_num_cores(4)
-bart_machine = build_bart_machine(Xtrain, ytrain, num_burn_in = 500, num_iterations_after_burn_in = 1000)
-bart_machine
+bart_machine_hetero = build_bart_machine(Xtrain, ytrain, num_burn_in = 500, num_iterations_after_burn_in = 1000)
+bart_machine_hetero
 #plot_convergence_diagnostics(bart_machine)
 
-plot_y_vs_yhat(bart_machine, Xtest, ytest, ppis = TRUE)
-predict_obj = bart_predict_for_test_data(bart_machine, Xtest, ytest)
+plot_y_vs_yhat(bart_machine_hetero, Xtest, ytest, ppis = TRUE)
+predict_obj = bart_predict_for_test_data(bart_machine_hetero, Xtest, ytest)
 predict_obj$rmse
 
 
@@ -235,7 +246,7 @@ windows(); plot_y_vs_yhat(hbart_machine, Xtest, ytest, ppis = TRUE)
 hpredict_obj = bart_predict_for_test_data(hbart_machine, Xtest, ytest)
 hpredict_obj$rmse
 
-e_i_sqds = (ytrain - bart_machine$y_hat)^2
+e_i_sqds = (ytrain - bart_machine_hetero$y_hat)^2
 mod = lm(e_i_sqds ~ ., Xtrain)
 summary(mod)
 
@@ -252,10 +263,10 @@ sqrt(sum((ytest - y_hat)^2) / nrow(Xtest))
 #######is Boston heteroskedastic??
 
 
-bart_machine = build_bart_machine(Boston[, 1 : 13], Boston[, 14], num_burn_in = 500, num_iterations_after_burn_in = 1000)
-bart_machine
+bart_machine_hetero = build_bart_machine(Boston[, 1 : 13], Boston[, 14], num_burn_in = 500, num_iterations_after_burn_in = 1000)
+bart_machine_hetero
 
-test_heteroskedasticity_of_bart_model(bart_machine)
+test_heteroskedasticity_of_bart_model(bart_machine_hetero)
 
 
 

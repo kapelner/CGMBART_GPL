@@ -108,3 +108,11 @@ append_to_log = function(text){
 	assign("bart_log", bart_log, .GlobalEnv)
 	write.table(bart_log, paste(LOG_DIR, "/", log_file_name, sep = ""), quote = FALSE, col.names = FALSE, row.names = FALSE)
 }
+
+getGammas = function(bart_machine){
+	if (!bart_machine$use_linear_heteroskedasticity_model){
+		stop("gammas only available for linear heteroskedastic models")
+	}
+	
+	t(sapply(.jcall(bart_machine$java_bart_machine, "[[D", "getGammas"), .jevalArray))
+}

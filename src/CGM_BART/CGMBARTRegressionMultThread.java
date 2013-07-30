@@ -396,6 +396,29 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 		return sigsqs_to_export.toArray();
 	}
 	
+	
+	public double[][] getGammas(){
+		ArrayList<double[]> gammas = new ArrayList<double[]>();
+		for (int t = 0; t < num_cores; t++){
+			double[][] gammas_t = bart_gibbs_chain_threads[t].getGammas();
+			if (t == 0){
+				for (int g = 0; g < total_iterations_multithreaded; g++){
+					gammas.add(gammas_t[g]);
+				}
+			}
+			else {
+				for (int g = num_gibbs_burn_in; g < total_iterations_multithreaded; g++){
+					gammas.add(gammas_t[g]);
+				}
+			}
+		}	
+		double[][] gammas_arr = new double[gammas.size()][p + 1];
+		for (int g = 0; g < gammas.size(); g++){
+			gammas_arr[g] = gammas.get(g);
+		}
+		return gammas_arr;
+	}	
+	
 	public boolean[][] getAcceptRejectMHsBurnin(){
 		boolean[][] accept_reject_mh_first_thread = bart_gibbs_chain_threads[0].getAcceptRejectMH();
 		boolean[][] accept_reject_mh_burn_ins = new boolean[num_gibbs_burn_in][num_trees];

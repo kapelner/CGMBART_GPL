@@ -214,9 +214,11 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		}
 	}
 	
-	if (use_linear_heteroskedasticity_model && verbose){
+	if (use_linear_heteroskedasticity_model){
 		.jcall(java_bart_machine, "V", "useLinearHeteroskedasticityModel")
-		cat("Heteroskedastic BART feature ON.\n")
+		if (verbose){
+			cat("Heteroskedastic BART feature ON.\n")
+		}
 	}
 	
 	#now load the training data into BART
@@ -261,6 +263,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 			sig_sq_est = sig_sq_est,
 			time_to_build = Sys.time() - t0,
 			use_missing_data = use_missing_data,
+			use_linear_heteroskedasticity_model = use_linear_heteroskedasticity_model,
 			replace_missing_data_with_x_j_bar = replace_missing_data_with_x_j_bar,
 			add_imputations = add_imputations,
 			verbose = verbose,

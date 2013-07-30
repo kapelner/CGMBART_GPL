@@ -8,3 +8,5 @@ test_heteroskedasticity_of_any_model = function(es, X, num_permutations = 100, p
 	#then do a global test to see if any of the covariates matter when predicting the log squared residuals
 	cov_importance_test(bart_machine, num_permutations = num_permutations, plot = plot, num_trees = num_trees)
 }
+
+
