@@ -137,8 +137,13 @@ hbart_machine
 hobj = bart_predict_for_test_data(hbart_machine, Xytest[, 1 : 3], Xytest[, 4])
 hobj$rmse
 
+kf = k_fold_cv(Xy = Xy, k_folds = 3)
+kf
+kf_hetero = k_fold_cv(Xy = Xy, use_linear_heteroskedasticity_model = TRUE, k_folds = 3)
+kf_hetero
 
-cat((obj$rmse - hobj$rmse) / hobj$rmse * 100, "% better ... yeah buddy\n", sep = "")
+
+cat((kf$rmse - kf_hetero$rmse) / kf_hetero$rmse * 100, "% better ... yeah buddy\n", sep = "")
 
 par(mfrow = c(1, 1))
 plot_y_vs_yhat(bart_machine, Xytest[, 1 : 3], Xytest[, 4], ppis = TRUE)

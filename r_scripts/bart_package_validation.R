@@ -60,10 +60,15 @@ build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL,
 }
 
 
-k_fold_cv = function(X, y, k_folds = 5, ...){
+k_fold_cv = function(X, y, Xy, k_folds = 5, use_missing_data = FALSE, ...){
+	
+	if (!missing(Xy)){
+		X = Xy[, 1 : (ncol(Xy) - 1)]
+		y = Xy[, ncol(Xy)]
+	}
 	
 	n = nrow(X)
-	Xpreprocess = pre_process_training_data(X)
+	Xpreprocess = pre_process_training_data(X, use_missing_data)
 	
 	p = ncol(Xpreprocess)
 	
@@ -91,8 +96,13 @@ k_fold_cv = function(X, y, k_folds = 5, ...){
 		
 		test_data_k = Xy[holdout_index_i : holdout_index_f, ]
 		training_data_k = Xy[-c(holdout_index_i : holdout_index_f), ]
-		
+#		bart_machine_cv = build_bart_machine(training_data_k[, 1 : p], training_data_k[, (p + 1)], run_in_sample = TRUE, verbose = TRUE, debug_log = FALSE, use_linear_heteroskedasticity_model = TRUE)
 		bart_machine_cv = build_bart_machine(training_data_k[, 1 : p], training_data_k[, (p + 1)], run_in_sample = FALSE, verbose = FALSE, ...)
+		
+		if (class(test_data_k[, 1 : p]) == "numeric"){
+			test_data_k[, 1 : p] = as.matrix(test_data_k[, 1 : p])
+		}
+		
 		predict_obj = bart_predict_for_test_data(bart_machine_cv, test_data_k[, 1 : p], test_data_k[, (p + 1)])
 		destroy_bart_machine(bart_machine_cv)
 		

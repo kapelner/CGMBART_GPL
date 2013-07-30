@@ -10,22 +10,23 @@ setwd(directory_where_code_is)
 
 
 n = 1000
-p = 5
+p = 1
 
-X = cbind(rep(1, n), matrix(runif(n * p, 0, 1), ncol = p))
+X = cbind(matrix(runif(n * p, 0, 1), ncol = p))
 
 #generate heteroskedastic model
-gamma = c(1, 0.3, 0.5, 0.3, 0.2, 0.5)
-sigma = sqrt(exp(X %*% gamma))
+gamma_0 = -5
+gamma = c(3)
+sigma = sqrt(exp(gamma_0 + X %*% gamma))
 
 #generate mean model
-beta = seq(-2, 2, length.out  = p + 1)
+beta = seq(-1, 1, length.out = p)
 y = as.numeric(X %*% beta + rnorm(n, 0, sigma))
 
 
-Xy = data.frame(X[, -1], y)
+Xy = data.frame(X, y)
 par(mfrow = c(1, p + 1))
-for (j in 2 : (p + 1)){
+for (j in 1 : p){
 	plot(X[, j], y, xlab = paste0("x_", j))
 }
 plot(y, sigma)
@@ -50,18 +51,27 @@ source("r_scripts/bart_package_summaries.R")
 source("r_scripts/bart_package_validation.R")
 
 
-set_bart_machine_num_cores(4)
-bart_machine_homo = build_bart_machine(X[, -1], y,
+set_bart_machine_num_cores(1)
+bart_machine_homo = build_bart_machine(X, y,
 		num_trees = 200,
 		num_burn_in = 500,
 		num_iterations_after_burn_in = 1000)
 bart_machine_homo
-bart_machine_hetero = build_bart_machine(X[, -1], y,
+bart_machine_hetero = build_bart_machine(X, y,
 		num_trees = 200,
 		num_burn_in = 500,
 		num_iterations_after_burn_in = 1000,
 		use_linear_heteroskedasticity_model = TRUE)
 bart_machine_hetero
+
+plot_y_vs_yhat(bart_machine_homo)
+y_hat_homo = predict(bart_machine_homo, X)
+plot_y_vs_yhat(bart_machine_hetero)
+y_hat_hetero = predict(bart_machine_hetero, X)
+
+graphics.off()
+plot(y_hat_homo, y_hat_hetero)
+cor(y_hat_homo, y_hat_hetero)
 
 gg = getGammas(bart_machine_hetero)
 
@@ -69,10 +79,30 @@ ggab = gg[(bart_machine_hetero$num_burn_in + 1) : nrow(gg), ]
 colMeans(ggab)
 apply(ggab, 2, sd)
 
+avg_gammas = colMeans(ggab)
+avg_gammas
 
-kf = k_fold_cv(X[, -1], y, k_folds = 3)
+
+true_sigsqs = sigma^2
+
+corrs = array(NA, n)
+for (i in 1 : n){
+	est_sigsqs = exp(as.matrix(X) %*% as.matrix(ggab[i, ]))
+	
+	corrs[i] = cor(true_sigsqs, est_sigsqs)	
+}
+hist(corrs, br = 50)
+
+
+est_sigsqs = exp(as.matrix(X) %*% as.matrix(avg_gammas))
+
+cor(true_sigsqs, as.numeric(est_sigsqs))
+plot(true_sigsqs, est_sigsqs)
+
+
+kf = k_fold_cv(X, y, k_folds = 3)
 kf
-kf_hetero = k_fold_cv(X[, -1], y, use_linear_heteroskedasticity_model = TRUE, k_folds = 3)
+kf_hetero = k_fold_cv(X, y, use_linear_heteroskedasticity_model = TRUE, k_folds = 3)
 kf_hetero
 
 

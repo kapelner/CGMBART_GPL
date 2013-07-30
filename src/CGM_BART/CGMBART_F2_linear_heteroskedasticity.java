@@ -132,16 +132,17 @@ public class CGMBART_F2_linear_heteroskedasticity extends CGMBART_F1_prior_cov_s
 			
 			hyper_gamma_var_mat = new Matrix(p + 1, p + 1);
 			for (int j = 0; j < p + 1; j++){
-				hyper_gamma_var_mat.set(j, j, 0.001);
+				hyper_gamma_var_mat.set(j, j, 1000);
 			}
 			
 			///////////informed model
-			hyper_gamma_mean_vec.set(0, 0, 1);
-			hyper_gamma_mean_vec.set(1, 0, 0.3);
-			hyper_gamma_mean_vec.set(2, 0, 0.5);
-			hyper_gamma_mean_vec.set(3, 0, 0.3);
-			hyper_gamma_mean_vec.set(4, 0, 0.2);
-			hyper_gamma_mean_vec.set(5, 0, 0.5);
+//			hyper_gamma_mean_vec.set(0, 0, 1);
+//			hyper_gamma_mean_vec.set(1, 0, 0.3);
+//			hyper_gamma_mean_vec.set(2, 0, 0.5);
+//			hyper_gamma_mean_vec.set(3, 0, 0.3);
+//			hyper_gamma_mean_vec.set(4, 0, 0.2);
+//			hyper_gamma_mean_vec.set(5, 0, 0.5);
+			
 			
 			
 			Matrix halves = new Matrix(p + 1, p + 1);
@@ -309,6 +310,8 @@ public class CGMBART_F2_linear_heteroskedasticity extends CGMBART_F1_prior_cov_s
 		return 0.5 * (a + b - c - d) + hyper_sigsq_mu / 2 * (e + f - g - h);
 	}		
 	
+	private static final double EXPE_LOG_CHISQ_1 = 1.274693;
+	
 	private void SampleSigsqF2(int sample_num, double[] es) {
 //		System.out.println("\n\nGibbs sample_num: " + sample_num + "  Sigsqs \n" + "----------------------------------------------------");
 //		System.out.println("es: " + Tools.StringJoin(es));
@@ -324,12 +327,15 @@ public class CGMBART_F2_linear_heteroskedasticity extends CGMBART_F1_prior_cov_s
 		//now we need to draw a gamma
 		Matrix gamma_draw = DrawGammaVecViaMH(gibbs_samples_of_gamma_for_lm_sigsqs[sample_num - 1], es_sq, sample_num);
 		gibbs_samples_of_gamma_for_lm_sigsqs[sample_num] = gamma_draw;
+		
+		
 
 		//now set the sigsqs just by doing exp(x_i^T \gammavec)
-//		double[] new_sigsqs = new double[n];
+		double[] new_sigsqs = new double[n];
 		for (int i = 0; i < n; i++){
 			double sigsq_i = Math.exp(x_is.get(i).times(gamma_draw).get(0, 0));
-//			new_sigsqs[i] = sigsq_i;
+			new_sigsqs[i] = sigsq_i;
+			 
 			gibbs_samples_of_sigsq_hetero[sample_num][i] = transform_sigsq(sigsq_i); //make sure we re-transform them
 		}	
 //		System.out.println("new_sigsqs: " + Tools.StringJoin(new_sigsqs));
@@ -337,6 +343,7 @@ public class CGMBART_F2_linear_heteroskedasticity extends CGMBART_F1_prior_cov_s
 
 	private Matrix DrawGammaVecViaMH(Matrix gamma, double[] es_sq, int sample_num) {
 		
+		/**	
 		Matrix ln_es_sq = new Matrix(n, 1);
 		for (int i = 0; i < n; i++){
 			ln_es_sq.set(i, 0, Math.log(es_sq[i]));
@@ -350,9 +357,13 @@ public class CGMBART_F2_linear_heteroskedasticity extends CGMBART_F1_prior_cov_s
 		System.out.println("gamma_star");
 		gamma_star.print(3, 5);
 		
-		return gamma_star;
+		//make this correction for sending it back
+		gamma_star.set(0, 0, gamma_star.get(0, 0) + EXPE_LOG_CHISQ_1);
 		
-		/**
+		return gamma_star;
+		 */
+		
+		/**		
 		System.out.println("\nDrawGammaVecViaMH g = " + sample_num + "\n");
 		
 		Matrix gamma_copy = (Matrix) gamma.clone();
@@ -498,15 +509,14 @@ public class CGMBART_F2_linear_heteroskedasticity extends CGMBART_F1_prior_cov_s
 		
 		//this is all dimensions done - some of the p+1 will be changed, some will not be changed
 		return gamma_copy;
-		
-		*/
+		*/		
 		
 		
 		
 		
 		
 		//-----------------------------------------------------
-		/**
+
 		
 		
 		
@@ -659,7 +669,6 @@ public class CGMBART_F2_linear_heteroskedasticity extends CGMBART_F1_prior_cov_s
 		}
 		System.out.println("VAR REJECT MH");
 		return gamma;
-		*/
 	} 
 
 	private void SampleMusF2(int sample_num, CGMBARTTreeNode node) {

@@ -12,7 +12,7 @@ imputeMatrixByXbarj = function(X_with_missing, X_for_calculating_avgs){
 
 build_bart_machine = function(X = NULL, y = NULL, Xy = NULL, 
 		num_trees = 200, 
-		num_burn_in = 250, 
+		num_burn_in = 1000, 
 		num_iterations_after_burn_in = 1000, 
 		alpha = DEFAULT_ALPHA,
 		beta = DEFAULT_BETA,
@@ -138,14 +138,18 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	#first set the name
 	.jcall(java_bart_machine, "V", "setUniqueName", unique_name)
 	#now set whether we want the program to log to a file
-	if (debug_log & verbose){
-		cat("warning: printing out the log file will slow down the runtime significantly\n")
+	if (debug_log){
 		.jcall(java_bart_machine, "V", "writeStdOutToLogFile")
+		if (verbose){
+			cat("warning: printing out the log file will slow down the runtime significantly\n")
+		}		
 	}
 	#set whether we want there to be tree illustrations
-	if (print_tree_illustrations & verbose){
-		cat("warning: printing tree illustrations will slow down the runtime significantly\n")
+	if (print_tree_illustrations){
 		.jcall(java_bart_machine, "V", "printTreeIllustations")
+		if (verbose){
+			cat("warning: printing tree illustrations will slow down the runtime significantly\n")
+		}		
 	}
 	
 	#set the std deviation of y to use
