@@ -50,7 +50,8 @@ import OpenSourceExtensions.UnorderedPair;
 public class CGMBARTTreeNode implements Cloneable, Serializable {
 	private static final long serialVersionUID = -5584590448078741112L;
 	
-
+	public static final boolean DEBUG_NODES = false;
+	
 	/** a link back to the overall bart model */
 	private CGMBART_02_hyperparams cgmbart;	
 	/** the parent node */
@@ -67,6 +68,8 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 	public int splitAttributeM;
 	/** the value this node makes a decision on */
 	public double splitValue;
+	/** send missing data to the right? */ 
+	public boolean sendMissingDataRight;
 	/** if this is a leaf node, then the result of the prediction for regression, otherwise null */
 	protected static final double BAD_FLAG_double = -Double.MAX_VALUE;
 	protected static final int BAD_FLAG_int = -Integer.MAX_VALUE;
@@ -94,6 +97,8 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 	protected transient Integer padj;	
 	
 	protected int[] attribute_split_counts;
+
+	
 	
 	public CGMBARTTreeNode(){}	
 
@@ -133,6 +138,7 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 //			copy.possible_rule_variables = possible_rule_variables_clone;
 //		}
 		copy.possible_rule_variables = possible_rule_variables;
+		copy.sendMissingDataRight = sendMissingDataRight;
 		//deep copy
 		copy.possible_split_vals_by_attr = possible_split_vals_by_attr;
 		copy.depth = depth;
@@ -251,7 +257,11 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 			//all split rules are less than or equals (this is merely a convention)
 			//it's a convention that makes sense - if X_.j is binary, and the split values can only be 0/1
 			//then it MUST be <= so both values can be considered
-			if (xs[evalNode.splitAttributeM] <= evalNode.splitValue){
+			//handle missing data first
+			if (Classifier.isMissing(xs[evalNode.splitAttributeM])){
+				evalNode = evalNode.sendMissingDataRight ? evalNode.right : evalNode.left;
+			}			
+			else if (xs[evalNode.splitAttributeM] <= evalNode.splitValue){
 				evalNode = evalNode.left;
 			}
 			else {
@@ -273,7 +283,6 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 			this.right.flushNodeData();
 	}
 	
-	public static final boolean DEBUG_NODES = false;
 	public void propagateDataByChangedRule() {		
 		if (isLeaf){ //only propagate if we are in a split node and NOT a leaf
 			if (DEBUG_NODES){
@@ -290,8 +299,21 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		
 		for (int i = 0; i < n_eta; i++){
 			double[] datum = cgmbart.X_y.get(indicies[i]);
-		
-			if (datum[splitAttributeM] <= splitValue){
+			//handle missing data first
+//			System.out.println("propagate: " + i + "val = " + datum[splitAttributeM] + " missing? " + (Classifier.isMissing(datum[splitAttributeM])));
+			if (Classifier.isMissing(datum[splitAttributeM])){
+				if (sendMissingDataRight){
+//					System.out.println("send missing RIGHT");
+					right_indices.add(indicies[i]);
+					right_responses.add(responses[i]);
+				} 
+				else {
+//					System.out.println("send missing LEFT");
+					left_indices.add(indicies[i]);
+					left_responses.add(responses[i]);					
+				}
+			}
+			else if (datum[splitAttributeM] <= splitValue){
 				left_indices.add(indicies[i]);
 				left_responses.add(responses[i]);
 			}
@@ -387,22 +409,32 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 	}	
 	
 	protected TIntArrayList predictorsThatCouldBeUsedToSplitAtNode() {
-		if (possible_rule_variables == null){
-			possible_rule_variables = new TIntArrayList();
+		if (cgmbart.mem_cache_for_speed){
+			if (possible_rule_variables == null){
+				possible_rule_variables = tabulatePredictorsThatCouldBeUsedToSplitAtNode();
+			}
+			return possible_rule_variables;			
+		}
+		else {
+			return tabulatePredictorsThatCouldBeUsedToSplitAtNode();
+		}
+	}
+	
+	private TIntArrayList tabulatePredictorsThatCouldBeUsedToSplitAtNode() {
+		TIntArrayList possible_rule_variables = new TIntArrayList();
+		
+		for (int j = 0; j < cgmbart.p; j++){
+			//if size of unique of x_i > 1
+			double[] x_dot_j = cgmbart.X_y_by_col.get(j);
 			
-			for (int j = 0; j < cgmbart.p; j++){
-				//if size of unique of x_i > 1
-				double[] x_dot_j = cgmbart.X_y_by_col.get(j);
-				
-				for (int i = 1; i < indicies.length; i++){
-					if (x_dot_j[indicies[i - 1]] != x_dot_j[indicies[i]]){
-						possible_rule_variables.add(j);
-						break;
-					}
+			for (int i = 1; i < indicies.length; i++){
+				if (x_dot_j[indicies[i - 1]] != x_dot_j[indicies[i]]){
+					possible_rule_variables.add(j);
+					break;
 				}
 			}
 		}
-		return possible_rule_variables;
+		return possible_rule_variables;	
 	}
 
 	/**
@@ -413,26 +445,41 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		return possibleSplitValuesGivenAttribute().size();
 	}	
 	
+	
 	protected TDoubleHashSetAndArray possibleSplitValuesGivenAttribute() {
-		if (possible_split_vals_by_attr == null){
-			possible_split_vals_by_attr = new HashMap<Integer, TDoubleHashSetAndArray>();
-		}
-		if (possible_split_vals_by_attr.get(splitAttributeM) == null){
-			//super inefficient
-			double[] x_dot_j = cgmbart.X_y_by_col.get(splitAttributeM);
-			double[] x_dot_j_node = new double[n_eta];
-			for (int i = 0; i < n_eta; i++){
-				x_dot_j_node[i] = x_dot_j[indicies[i]];
+		if (cgmbart.mem_cache_for_speed){
+			if (possible_split_vals_by_attr == null){
+				possible_split_vals_by_attr = new HashMap<Integer, TDoubleHashSetAndArray>();
 			}
-			
-			TDoubleHashSetAndArray unique_x_dot_j_node = new TDoubleHashSetAndArray(x_dot_j_node);
-			double max = Tools.max(x_dot_j_node);
-			unique_x_dot_j_node.remove(max);
-			possible_split_vals_by_attr.put(splitAttributeM, unique_x_dot_j_node);
+			if (possible_split_vals_by_attr.get(splitAttributeM) == null){
+				possible_split_vals_by_attr.put(splitAttributeM, tabulatePossibleSplitValuesGivenAttribute());
+			}
+			return possible_split_vals_by_attr.get(splitAttributeM);
+		} 
+		else {
+			return tabulatePossibleSplitValuesGivenAttribute();
 		}
-		return possible_split_vals_by_attr.get(splitAttributeM);
 	}
-
+	
+	private TDoubleHashSetAndArray tabulatePossibleSplitValuesGivenAttribute() {
+		double[] x_dot_j = cgmbart.X_y_by_col.get(splitAttributeM);
+		double[] x_dot_j_node = new double[n_eta];
+		for (int i = 0; i < n_eta; i++){
+			double val = x_dot_j[indicies[i]];
+			if (Classifier.isMissing(val)){
+				x_dot_j_node[i] = BAD_FLAG_double;
+			}
+			else {
+				x_dot_j_node[i] = val;
+			}
+		}		
+		
+		TDoubleHashSetAndArray unique_x_dot_j_node = new TDoubleHashSetAndArray(x_dot_j_node);
+		unique_x_dot_j_node.remove(BAD_FLAG_double); //kill all missings immediately
+		double max = Tools.max(x_dot_j_node);
+		unique_x_dot_j_node.remove(max); //kill the max
+		return unique_x_dot_j_node;
+	}
 
 	public double pickRandomSplitValue() {	
 		TDoubleHashSetAndArray split_values = possibleSplitValuesGivenAttribute();
@@ -440,6 +487,7 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 			return CGMBARTTreeNode.BAD_FLAG_double;
 		}
 		int rand_index = (int) Math.floor(StatToolbox.rand() * split_values.size());
+//		System.out.println("split_values: " + Tools.StringJoin(split_values.toArray()));
 		return split_values.getAtIndex(rand_index);
 	}
 	
@@ -530,19 +578,23 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		yhats = new double[n_eta];
 		//intialize the var counts
 		attribute_split_counts = new int[p];
+		//initialize sendMissing
+		sendMissingDataRight = pickRandomDirectionForMissingData();
 		
-		if (DEBUG_NODES){printNodeDebugInfo("setStumpData");}
+		if (DEBUG_NODES){
+			printNodeDebugInfo("setStumpData");
+		}
 	}
 
 	public void printNodeDebugInfo(String title) {		
 		System.out.println("\n" + title + " node debug info for " + this.stringLocation(true) + (isLeaf ? " (LEAF) " : " (INTERNAL NODE) ") + " d = " + depth);
 		System.out.println("-----------------------------------------");
 		System.out.println("n_eta = " + n_eta + " y_pred = " + (y_pred == BAD_FLAG_double ? "BLANK" : cgmbart.un_transform_y_and_round(y_pred)));
-		
-		System.out.println("cgmbart = " + cgmbart + " parent = " + parent + " left = " + left + " right = " + right);
+//		System.out.print("cgmbart = " + cgmbart + " ");
+		System.out.println("parent = " + parent + " left = " + left + " right = " + right);
 		
 		if (this.parent != null){
-			System.out.println("----- PARENT RULE:   X_" + parent.splitAttributeM + " <= " + parent.splitValue + " ------");
+			System.out.println("----- PARENT RULE:   X_" + parent.splitAttributeM + " <= " + parent.splitValue + " & M -> " + (parent.sendMissingDataRight ? "R" : "L") + " ------");
 			//get vals of this x currently here
 			double[] x_dot_j = cgmbart.X_y_by_col.get(parent.splitAttributeM);
 			double[] x_dot_j_node = new double[n_eta];
@@ -554,7 +606,7 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		}
 		
 		if (!isLeaf){
-			System.out.println("\n----- RULE:   X_" + splitAttributeM + " <= " + splitValue + " ------");
+			System.out.println("----- RULE:   X_" + splitAttributeM + " <= " + splitValue + " & M -> " + (sendMissingDataRight ? "R" : "L") + " ------");
 			//get vals of this x currently here
 			double[] x_dot_j = cgmbart.X_y_by_col.get(splitAttributeM);
 			double[] x_dot_j_node = new double[n_eta];
@@ -568,18 +620,20 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		
 		System.out.println("sum_responses_qty = " + sum_responses_qty + " sum_responses_qty_sqd = " + sum_responses_qty_sqd);
 		
-		System.out.println("possible_rule_variables: [" + Tools.StringJoin(possible_rule_variables, ", ") + "]");
-		System.out.println("possible_split_vals_by_attr: {");
-		if (possible_split_vals_by_attr != null){
-			for (int key : possible_split_vals_by_attr.keySet()){
-				double[] array = possible_split_vals_by_attr.get(key).toArray();
-				Arrays.sort(array);
-				System.out.println("  " + key + " -> [" + Tools.StringJoin(array) + "],");
+		if (cgmbart.mem_cache_for_speed){
+			System.out.println("possible_rule_variables: [" + Tools.StringJoin(possible_rule_variables, ", ") + "]");
+			System.out.println("possible_split_vals_by_attr: {");
+			if (possible_split_vals_by_attr != null){
+				for (int key : possible_split_vals_by_attr.keySet()){
+					double[] array = possible_split_vals_by_attr.get(key).toArray();
+					Arrays.sort(array);
+					System.out.println("  " + key + " -> [" + Tools.StringJoin(array) + "],");
+				}
+				System.out.print(" }\n");
 			}
-			System.out.print(" }\n");
-		}
-		else {
-			System.out.println(" NULL MAP\n}");
+			else {
+				System.out.println(" NULL MAP\n}");
+			}
 		}
 		
 		System.out.println("responses: (size " + responses.length + ") [" + Tools.StringJoin(cgmbart.un_transform_y_and_round(responses)) + "]");
@@ -670,5 +724,20 @@ public class CGMBARTTreeNode implements Cloneable, Serializable {
 		attribute_split_counts[j]++;
 		
 	}
+
+	public static boolean pickRandomDirectionForMissingData() {
+		return StatToolbox.rand() < 0.5 ? false : true;
+	}
+	
+//	public int sizeOfSplitVals(){
+//		if (this.isLeaf){
+//			return 0;
+//		}
+//		int sum = 0;
+//		for (Integer key : possible_split_vals_by_attr.keySet()){
+//			sum += possible_split_vals_by_attr.get(key).size();
+//		}
+//		return sum + this.left.sizeOfSplitVals() + this.right.sizeOfSplitVals();
+//	}
 
 }

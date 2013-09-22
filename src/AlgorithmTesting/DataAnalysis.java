@@ -38,36 +38,44 @@ public class DataAnalysis {
 //	private static final String DataSetFilename = "r_treemodel_high_p_low_n";
 //	private static final String DataSetFilename = "r_treemodel_high_n";
 //	private static final String DataSetFilename = "r_treemodel_low_n";	
-	private static final String DataSetFilename = "r_friedman";
+//	private static final String DataSetFilename = "r_friedman";
 //	private static final String DataSetFilename = "r_friedman_hd";	
 //	private static final String DataSetFilename = "r_univariatelinear";
 //	private static final String DataSetFilename = "r_bivariatelinear";
-//	private static final String DataSetFilename = "r_boston";
+	private static final String DataSetFilename = "r_boston";
 //	private static final String DataSetFilename = "r_boston_half";	
+//	private static final String DataSetFilename = "r_boston_tiny_with_missing";	
 //	private static final String DataSetFilename = "r_zach";
 //	private static final String DataSetFilename = "r_forestfires";
 //	private static final String DataSetFilename = "r_wine_white";
 //	private static final String DataSetFilename = "r_concretedata";
 //	private static final String DataSetFilename = "c_breastcancer";
+//	private static final String DataSetFilename = "c_crime";
+//	private static final String DataSetFilename = "c_crime_big";	
 
 	public static void main(String[] args) throws IOException{
 		System.out.println("java ver: " + System.getProperty("java.version"));
 		//make sure y is last column of data matrix
 		DataSetupForCSVFile data = new DataSetupForCSVFile(new File("datasets", DataSetFilename + ".csv"), true);
 		Classifier machine = null; //we're going to use some machine to do it... 
-
+		
 		//if the filename begins with a "c" => classification task, if it begins with an "r" => regression task
 		if (DataSetFilename.charAt(0) == 'c'){ //classification problem
 //			CGMClassificationTree tree = new CGMClassificationTree(data, new JProgressBarAndLabel(0, 0, null), data.getK());
 			machine = new CGMBARTClassificationMultThread();
+			long start_time = System.currentTimeMillis();
 			machine.setData(data.getX_y());
-			machine.Build();
+			
+			machine.Build(); 
 			System.out.println("errors: " + 
 					(int)machine.calculateInSampleLoss(Classifier.ErrorTypes.MISCLASSIFICATION, 4) + 
 					"/" + 
 					machine.getN() + 
 					"  (" + machine.calculateMisclassificationRate(4) + "%)");
+			long end_time = System.currentTimeMillis();
+			System.out.println("Current Time:"+ (end_time-start_time)/1000);
 		}
+		
 		else {
 		//regression problem
 //			machine = new RandomForest(data, new JProgressBarAndLabel(0, 0, null));

@@ -8,44 +8,8 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 	
 	@Override
 	public void Build() {
-//		System.out.println("INIT BART CHAIN m = " + num_trees + " n_B = " + num_gibbs_burn_in + " n_G = " + num_gibbs_total_iterations);
-//		System.out.println("Build CGMBART_05_gibbs_base");
-		//this can be different for any BART implementation
-		SetupGibbsSampling();		
-		//this section is different for the different BART implementations
-		//but it basically does all the Gibbs sampling
-		DoGibbsSampling();
-		//now we burn and thin the chains for each param
-//		BurnTreeAndSigsqChain();
-		//make sure debug files are closed
-//		CloseDebugFiles();
-		
-		//print out pctg of steps
-//		HashMap<Character, Integer> total_counts = new HashMap<Character, Integer>(3);
-//		total_counts.put('G', 0);
-//		total_counts.put('P', 0);
-//		total_counts.put('C', 0);
-//		HashMap<Character, Integer> counts_accepted = new HashMap<Character, Integer>(3);
-//		counts_accepted.put('G', 0);
-//		counts_accepted.put('P', 0);
-//		counts_accepted.put('C', 0);		
-//		for (int g = 1; g < num_gibbs_total_iterations; g++){
-//			for (int t = 0; t < num_trees; t++){
-//				char step = accept_reject_mh_steps[g][t];
-//				total_counts.put(step, total_counts.get(step) + 1);
-//				if (accept_reject_mh[g][t]){
-//					counts_accepted.put(step, counts_accepted.get(step) + 1);
-//				}
-//			}			
-//		}
-//		//print pctg of grows
-//		System.out.println("%grow total: " + total_counts.get('G') / (double) ((num_gibbs_total_iterations - 1) * num_trees));
-//		System.out.println("%prun total: " + total_counts.get('P') / (double) ((num_gibbs_total_iterations - 1) * num_trees));
-//		System.out.println("%chan total: " + total_counts.get('C') / (double) ((num_gibbs_total_iterations - 1) * num_trees));
-//		
-//		System.out.println("%grow acc: " + counts_accepted.get('G') / (double) total_counts.get('G'));
-//		System.out.println("%prun acc: " + counts_accepted.get('P') / (double) total_counts.get('P'));
-//		System.out.println("%chan acc: " + counts_accepted.get('C') / (double) total_counts.get('C'));		
+		SetupGibbsSampling();
+		DoGibbsSampling();	
 	}	
 
 	protected void DoGibbsSampling(){	
@@ -75,7 +39,9 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 		//we cycle over each tree and update it according to formulas 15, 16 on p274
 		double[] R_j = new double[n];
 		for (int t = 0; t < num_trees; t++){
-			GibbsSampleDebugMessage(t);
+			if (verbose){
+				GibbsSampleDebugMessage(t);
+			}
 			R_j = SampleTree(gibbs_sample_num, t, cgm_trees, tree_array_illustration);
 			SampleMusWrapper(gibbs_sample_num, t);				
 		}
@@ -85,7 +51,7 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 	}
 
 	protected void GibbsSampleDebugMessage(int t) {
-		if (t == 0 && gibbs_sample_num % 100 == 0){
+		if (t == 0 && gibbs_sample_num % 100 == 0){//&& gibbs_sample_num % 100 == 0
 			String message = "Sampling M_" + (t + 1) + "/" + num_trees + " iter " + gibbs_sample_num + "/" + num_gibbs_total_iterations;
 			if (num_cores > 1){
 				message += "  thread: " + (threadNum + 1);

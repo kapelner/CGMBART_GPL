@@ -1,0 +1,5 @@
+exportPattern("build_bart_machine")
+exportPattern("dummify_data")
+exportPattern("cov_importance_test")
+
+S3method(predict, bartMachine)

@@ -71,10 +71,17 @@ r_log/*.txt
 *.log
 *.out
 *.dvi
-.RData
-.Rhistory
+*.RData
+*.Rhistory
 bin/*
 randsamps/chisq*
 RWeka/
+*.csv
 
+old_mar/*
 datasets/r_zach.csv
+datasets/c_crime.csv
+datasets/c_crime_big.csv
+r_scripts/examples/sample_code.R
+r_scripts/examples/working1.rdata
+bartMachine/install_instructions.txt

@@ -52,7 +52,11 @@ import CustomLogging.*;
 public abstract class Classifier implements Serializable {
 	private static final long serialVersionUID = -2857913059676679308L;	
 
-	public static final double MISSING_VALUE = -Double.MAX_VALUE;
+	public static final double MISSING_VALUE = Double.NaN;
+	public static boolean isMissing(double x){
+		return Double.isNaN(x);
+	}
+	
 
 	/** the raw training data consisting of xi = [xi1,...,xiM, yi] that will be used to construct the classifier */
 	protected transient ArrayList<double[]> X_y;
@@ -103,6 +107,7 @@ public abstract class Classifier implements Serializable {
 			}
 			catch (NumberFormatException e){
 				record[i] = MISSING_VALUE;
+//				System.out.println("missing value at record #" + X_y.size() + " attribute #" + i);
 			}
 		}				
 		X_y.add(record);		
