@@ -1,0 +1,35 @@
+As long as the WPM() code uses the WekaPackageManager main() method,
+ensure in src/main/java/weka/core/WekaPackageManager.java that this does
+not call System.exit(0) [added in c8982].
+
+Then do
+
+  ant compile
+  ant exejar
+
+and use dist/weka.jar for RWekajars/inst/java/weka.jar.  
+
+<OLD>
+32-bit OS X only had 1.5, but this is no longer supported:
+
+The developer version releases available from 
+
+  http://www.cs.waikato.ac.nz/ml/weka/index_downloading.html
+
+are all compiled for Java 1.6.
+
+However, for Mac OS X Java 1.6 is only available for 64 bits, and in
+particular the CRAN Mac OS X build/check system is 32 bits.
+
+Hence, recompile weka.jar for Java 1.5.
+
+To do so, go to ~/src/org/weka/weka or alternatively, grab a Weka
+Developer version release .zip for Linux, unpack the .zip itself and
+then unarchive the thus obtained weka-src.jar with the sources.
+
+Ensure that build.xml has
+
+  source="1.5" target="1.5"
+
+in its compile target.
+</OLD>
