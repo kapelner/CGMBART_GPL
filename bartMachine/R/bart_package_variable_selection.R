@@ -246,8 +246,7 @@ var_selection_by_permute_response_cv = function(bart_machine, k_folds = 5, num_r
 		
 	if (k_folds <= 1 || k_folds > bart_machine$n){
 		stop("The number of folds must be at least 2 and less than or equal to n, use \"Inf\" for leave one out")
-	}
-	
+	}	
 	
 	if (k_folds == Inf){ #leave-one-out
 		k_folds = bart_machine$n

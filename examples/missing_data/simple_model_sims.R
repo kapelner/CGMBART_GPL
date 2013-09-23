@@ -37,7 +37,7 @@ plot_y_vs_yhat(bart_machine, X = X1, y = Xytest[, 2], ppis = TRUE)
 
 x_new = as.matrix(NA)
 colnames(x_new) = "X_1"
-predict_obj = bart_machine_predict(bart_machine, x_new)
+predict_obj = bart_machine_get_posterior(bart_machine, x_new)
 hist(predict_obj$y_hat_posterior_samples, br=100)
 predict_obj$y_hat
 
@@ -84,7 +84,7 @@ rf_mod
 
 x_new = as.matrix(Xy[, 1])
 colnames(x_new) = "X_1"
-predict_obj = bart_machine_predict(bart_machine, x_new)
+predict_obj = bart_machine_get_posterior(bart_machine, x_new)
 #hist(predict_obj$y_hat_posterior_samples, br=100)
 #predict_obj$y_hat
 

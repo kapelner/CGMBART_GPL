@@ -12,7 +12,7 @@
 	
     <target name="compile" description="compile the source code">
       <mkdir dir="class_files"/>
-      <javac srcdir="src" destdir="class_files" includeantruntime="false">
+      <javac srcdir="src" destdir="class_files" includeantruntime="false" createMissingPackageInfoClass="false">
       	<classpath refid="master-classpath" />	
       </javac>
     </target>	
@@ -23,5 +23,5 @@
 	
 	<target name="clean" description="Clean up" depends="dist">
 		<delete dir="class_files" />
-	</target>	
+	</target>
 </project>

@@ -1,11 +1,11 @@
-\name{bart_machine_duplicate}
-\alias{bart_machine_duplicate}
+\name{build_bart_machine}
+\alias{build_bart_machine}
 \title{no title}
 \description{
   no description
 }
 \usage{
-  bart_machine_duplicate()
+  build_bart_machine()
 }
 \details{
   no details
@@ -17,5 +17,5 @@
 	Adam Kapelner and Justin Bleich
 }
 \examples{
-  bart_machine_duplicate()
+  build_bart_machine()
 }

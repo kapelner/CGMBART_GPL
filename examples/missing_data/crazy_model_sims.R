@@ -55,57 +55,57 @@ par(mar = c(2,4,0.5,0.5))
 ###make sure it works...
 new_data = as.data.frame(t(as.matrix(c(0, 0, 0))))
 colnames(new_data) = colnames(Xy[, 1 : 3])
-pred = bart_machine_predict(bart_machine, new_data)
+pred = bart_machine_get_posterior(bart_machine, new_data)
 plot_hist_of_posterior(pred, 0)
 
 #new_data = as.data.frame(t(as.matrix(c(1, 0, 0))))
 #colnames(new_data) = colnames(Xy[, 1 : 3])
-#pred = bart_machine_predict(bart_machine, new_data)
+#pred = bart_machine_get_posterior(bart_machine, new_data)
 #plot_hist_of_posterior(pred, 0)
 #
 #new_data = as.data.frame(t(as.matrix(c(0, 1, 0))))
 #colnames(new_data) = colnames(Xy[, 1 : 3])
-#pred = bart_machine_predict(bart_machine, new_data)
+#pred = bart_machine_get_posterior(bart_machine, new_data)
 #plot_hist_of_posterior(pred, 2)
 #
 #new_data = as.data.frame(t(as.matrix(c(0, 0, 1))))
 #colnames(new_data) = colnames(Xy[, 1 : 3])
-#pred = bart_machine_predict(bart_machine, new_data)
+#pred = bart_machine_get_posterior(bart_machine, new_data)
 #plot_hist_of_posterior(pred, 1)
 #
 #new_data = as.data.frame(t(as.matrix(c(1,0,1))))
 #colnames(new_data) = colnames(Xy[, 1 : 3])
-#pred = bart_machine_predict(bart_machine, new_data)
+#pred = bart_machine_get_posterior(bart_machine, new_data)
 #plot_hist_of_posterior(pred, 1)
 
 new_data = as.data.frame(t(as.matrix(c(1, 1, 1))))
 colnames(new_data) = colnames(Xy[, 1 : 3])
-pred = bart_machine_predict(bart_machine, new_data)
+pred = bart_machine_get_posterior(bart_machine, new_data)
 plot_hist_of_posterior(pred, 4)
 
 new_data = as.data.frame(t(as.matrix(c(NA, 0, 0))))
 colnames(new_data) = colnames(Xy[, 1 : 3])
-pred = bart_machine_predict(bart_machine, new_data)
+pred = bart_machine_get_posterior(bart_machine, new_data)
 plot_hist_of_posterior(pred, -0.333)
 
 new_data = as.data.frame(t(as.matrix(c(0, NA, 0))))
 colnames(new_data) = colnames(Xy[, 1 : 3])
-pred = bart_machine_predict(bart_machine, new_data)
+pred = bart_machine_get_posterior(bart_machine, new_data)
 plot_hist_of_posterior(pred, 0.8333)
 
 new_data = as.data.frame(t(as.matrix(c(0, 0, NA))))
 colnames(new_data) = colnames(Xy[, 1 : 3])
-pred = bart_machine_predict(bart_machine, new_data)
+pred = bart_machine_get_posterior(bart_machine, new_data)
 plot_hist_of_posterior(pred, offset_missing)
 
 #new_data = as.data.frame(t(as.matrix(c(NA, NA, 0))))
 #colnames(new_data) = colnames(Xy[, 1 : 3])
-#pred = bart_machine_predict(bart_machine, new_data)
+#pred = bart_machine_get_posterior(bart_machine, new_data)
 #plot_hist_of_posterior(pred, 0.5)
 
 new_data = as.data.frame(t(as.matrix(c(NA, NA, NA))))
 colnames(new_data) = colnames(Xy[, 1 : 3])
-pred = bart_machine_predict(bart_machine, new_data)
+pred = bart_machine_get_posterior(bart_machine, new_data)
 plot_hist_of_posterior(pred, offset_missing + 0.5)
 
 

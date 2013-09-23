@@ -3,7 +3,7 @@
 VERSION = "1.0b"
 BART_MAX_MEM_MB = 8000
 PLOTS_DIR = "output_plots"
-JAR_DEPENDENCIES = c("bart_java.jar", "commons-math-2.1.jar", "trove-3.0.3.jar", "junit-4.10.jar")
+#JAR_DEPENDENCIES = c("bart_java.jar", "commons-math-2.1.jar", "trove-3.0.3.jar", "junit-4.10.jar")
 
 COLORS = array(NA, 500)
 for (i in 1 : 500){
@@ -27,23 +27,23 @@ bart_machine_num_cores = function(){
 init_java_for_bart = function(){
 	jinit_params = paste("-Xmx", BART_MAX_MEM_MB, "m", sep = "")
 	.jinit(parameters = jinit_params)
-	for (dependency in JAR_DEPENDENCIES){
-		.jaddClassPath(dependency)
-	}	
+#	for (dependency in JAR_DEPENDENCIES){
+#		.jaddClassPath(dependency)
+#	}	
 }
 
 
-size_of_bart_chisq_cache_inquire = function(){
-	init_java_for_bart()
-	num_bytes = .jcall("CGM_BART.StatToolbox", "I", "numBytesForInvChisqCache")
-	cat(paste(round(num_bytes / 1000000, 2), "MB\n"))
-	invisible(num_bytes)
-}
+#size_of_bart_chisq_cache_inquire = function(){
+#	init_java_for_bart()
+#	num_bytes = .jcall("CGM_BART.StatToolbox", "I", "numBytesForInvChisqCache")
+#	cat(paste(round(num_bytes / 1000000, 2), "MB\n"))
+#	invisible(num_bytes)
+#}
 
-delete_bart_chisq_cache = function(){
-	init_java_for_bart()
-	.jcall("CGM_BART.StatToolbox", "V", "clearInvChisqHash")
-}
+#delete_bart_chisq_cache = function(){
+#	init_java_for_bart()
+#	.jcall("CGM_BART.StatToolbox", "V", "clearInvChisqHash")
+#}
 
 get_var_counts_over_chain = function(bart_machine, type = "splits"){
 	C = t(sapply(.jcall(bart_machine$java_bart_machine, "[[I", "getCountsForAllAttribute", as.integer(BART_NUM_CORES), type), .jevalArray))

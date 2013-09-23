@@ -1,8 +1,9 @@
-cl = .jclassLoader()
-cl$verbose = T
+
 
 library(bartMachine)
 print(.jclassPath())
+cl = .jclassLoader()
+cl$verbose = T
 
 #get some data
 library(MASS)

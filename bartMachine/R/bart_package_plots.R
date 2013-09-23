@@ -386,7 +386,7 @@ plot_convergence_diagnostics = function(bart_machine){
 	par(mfrow = c(1, 1))
 }
 
-plot.bart_machine = function(bart_machine){
+plot.bartMachine = function(bart_machine){
 	plot_convergence_diagnostics(bart_machine)
 }
 
@@ -507,7 +507,7 @@ pd_plot = function(bart_machine, j, levs = c(0.05, seq(from = 0.10, to = 0.90, b
 		test_data = bart_machine$X
 		test_data[, j] = rep(x_j_quant, bart_machine$n)
 		
-		bart_predictions_by_quantile[q, , ] = bart_machine_predict(bart_machine, test_data)$y_hat_posterior_samples
+		bart_predictions_by_quantile[q, , ] = bart_machine_get_posterior(bart_machine, test_data)$y_hat_posterior_samples
 		cat(".")
 	}
 	cat("\n")

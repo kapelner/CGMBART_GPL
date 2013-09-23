@@ -1,5 +1,5 @@
 predict.bartMachine = function(bart_machine, new_data){
-	bart_machine_predict(bart_machine, new_data)$y_hat
+	bart_machine_get_posterior(bart_machine, new_data)$y_hat
 }
 
 bart_predict_for_test_data = function(bart_machine, Xtest, ytest){
@@ -19,9 +19,7 @@ bart_predict_for_test_data = function(bart_machine, Xtest, ytest){
 	)
 }
 
-
-
-bart_machine_predict = function(bart_machine, new_data, ppi = 0.95){
+bart_machine_get_posterior = function(bart_machine, new_data, ppi = 0.95){
 	if (bart_machine$bart_destroyed){
 		stop("This BART machine has been destroyed. Please recreate.")
 	}	

@@ -17,6 +17,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		print_tree_illustrations = FALSE,
 		cov_prior_vec = NULL,
 		use_missing_data = FALSE,
+		num_rand_samps_in_library = 10000,
 		use_missing_data_dummies_as_covars = FALSE,
 		replace_missing_data_with_x_j_bar = FALSE,
 		impute_missingness_with_rf_impute = FALSE,
@@ -183,6 +184,10 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	.jcall(java_bart_machine, "V", "setVerbose", verbose)
 	.jcall(java_bart_machine, "V", "setMemCacheForSpeed", mem_cache_for_speed)
 	
+	#now we need to set random samples
+	.jcall(java_bart_machine, "V", "setNormSamples", rnorm(num_rand_samps_in_library))
+	n_plus_hyper_nu = nrow(model_matrix_training_data) + nu	
+	.jcall(java_bart_machine, "V", "setGammaSamples", rgamma(num_rand_samps_in_library, n_plus_hyper_nu, 2))
 	
 	if (length(cov_prior_vec) != 0){
 		#put in checks here for user to make sure the covariate prior vec is the correct length

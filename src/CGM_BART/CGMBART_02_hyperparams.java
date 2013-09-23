@@ -30,18 +30,21 @@ public abstract class CGMBART_02_hyperparams extends CGMBART_01_base {
 	protected double y_range_sq;	
 	protected Double sample_var_y;
 	
-	protected transient double[] samps_chi_sq_df_eq_nu_plus_n;	
+	protected static double[] samps_chi_sq_df_eq_nu_plus_n;	
+	protected static int samps_chi_sq_df_eq_nu_plus_n_length;
+	protected static double[] samps_std_normal;
+	protected static int samps_std_normal_length;
 	
 	
 	public void setData(ArrayList<double[]> X_y){
 		super.setData(X_y);
 		calculateHyperparameters();	
-		tabulateSimulationDistributions();
+//		tabulateSimulationDistributions();
 	}		
 	
-	protected void tabulateSimulationDistributions() {
-		StatToolbox.cacheInvGammas(hyper_nu, n, this);
-	}
+//	protected void tabulateSimulationDistributions() {
+//		StatToolbox.cacheInvGammas(hyper_nu, n);
+//	}
 
 	// hist(1 / rgamma(5000, 1.5, 1.5 * 153.65), br=100)
 	protected void calculateHyperparameters() {
