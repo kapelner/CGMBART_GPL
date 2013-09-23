@@ -62,29 +62,30 @@ public class StatToolbox {
 	private static double[] NORM_SAMPS;
 	private static int NUM_NORM_SAMPS;	
 	static {
-		BufferedReader in;
-		try {
-			in = new BufferedReader(new FileReader(cacheDirectory + "/" + norm_samps_file));
-			try {
-				String raw = in.readLine();
-				String[] random_samps = raw.split(",");
-				NUM_NORM_SAMPS = random_samps.length;
-				NORM_SAMPS = new double[NUM_NORM_SAMPS];
-//				START_POS = (int)Math.floor(rand() * NUM_NORM_SAMPS);
-				for (int i = 0; i < NUM_NORM_SAMPS; i++){
-					NORM_SAMPS[i] = Double.parseDouble(random_samps[i]);
-				}	
-//				System.out.println("NUM_NORM_SAMPS: " + NUM_NORM_SAMPS);
-//				System.out.println("START_POS: " + START_POS);
-//				System.out.println("NORM_SAMPS: " + Tools.StringJoin(NORM_SAMPS));
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		} catch (FileNotFoundException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}					
+//		System.out.println("TRYING TO MAKE CACHE");
+//		BufferedReader in;
+//		try {
+//			in = new BufferedReader(new FileReader(cacheDirectory + "/" + norm_samps_file));
+//			try {
+//				String raw = in.readLine();
+//				String[] random_samps = raw.split(",");
+//				NUM_NORM_SAMPS = random_samps.length;
+//				NORM_SAMPS = new double[NUM_NORM_SAMPS];
+////				START_POS = (int)Math.floor(rand() * NUM_NORM_SAMPS);
+//				for (int i = 0; i < NUM_NORM_SAMPS; i++){
+//					NORM_SAMPS[i] = Double.parseDouble(random_samps[i]);
+//				}	
+////				System.out.println("NUM_NORM_SAMPS: " + NUM_NORM_SAMPS);
+////				System.out.println("START_POS: " + START_POS);
+////				System.out.println("NORM_SAMPS: " + Tools.StringJoin(NORM_SAMPS));
+//			} catch (IOException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+//		} catch (FileNotFoundException e1) {
+//			// TODO Auto-generated catch block
+//			e1.printStackTrace();
+//		}					
 	}
 	
 	private static final String chisq_df_samps_file_prefix = cacheDirectory + "/chisq_nu_n_";

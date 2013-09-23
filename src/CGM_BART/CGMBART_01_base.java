@@ -1,10 +1,10 @@
 package CGM_BART;
 
-import java.io.Serializable;
-
-public abstract class CGMBART_01_base extends Classifier implements Serializable {
-	private static final long serialVersionUID = -7068937615952180038L;
-
+public abstract class CGMBART_01_base extends Classifier {
+	
+	static {
+		System.out.println("made my way into CGMBART_01_base");
+	}
 	/** the actual list of trees */
 	protected CGMBARTTreeNode[][] gibbs_samples_of_cgm_trees;
 	protected CGMBARTTreeNode[][] gibbs_samples_of_cgm_trees_after_burn_in;

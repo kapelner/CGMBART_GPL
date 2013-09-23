@@ -1,12 +1,13 @@
 package CGM_BART;
 
-import java.io.Serializable;
 import java.util.Arrays;
 
 
-public abstract class CGMBART_09_eval extends CGMBART_07_mh implements Serializable {
-	private static final long serialVersionUID = -6670611007413531590L;
-
+public abstract class CGMBART_09_eval extends CGMBART_07_mh {
+	static {
+		System.out.println("made my way into CGMBART_09_eval");
+	}
+	
 	public double Evaluate(double[] record, int num_cores_evaluate) { //posterior sample median (it's what Rob uses)		
 		return EvaluateViaSampAvg(record, num_cores_evaluate);
 	}	

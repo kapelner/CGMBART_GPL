@@ -1,5 +1,7 @@
-exportPattern("build_bart_machine")
-exportPattern("dummify_data")
-exportPattern("cov_importance_test")
+import("rJava")
+
+export("set_bart_machine_num_cores")
+export("build_bart_machine")
+export("plot_y_vs_yhat")
 
 S3method(predict, bartMachine)

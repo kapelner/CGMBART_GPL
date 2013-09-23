@@ -3,8 +3,11 @@ package CGM_BART;
 import gnu.trove.list.array.TIntArrayList;
 
 public class CGMBART_F1_prior_cov_spec extends CGMBART_09_eval {
-	private static final long serialVersionUID = -7765686625013501694L;
 
+	static {
+		System.out.println("made my way into CGMBART_F1_prior_cov_spec");
+	}
+	
 	protected boolean use_prior_cov_spec;
 	/** This is the prior on which covs to split */
 	protected double[] cov_split_prior;	

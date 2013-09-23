@@ -1,11 +1,6 @@
 package CGM_BART;
 
-
-import java.io.Serializable;
-
-
-public class CGMBARTClassificationMultThread extends CGMBARTRegressionMultThread implements Serializable {
-	private static final long serialVersionUID = -3926822473365417428L;
+public class CGMBARTClassificationMultThread extends CGMBARTRegressionMultThread {
 	
 	private static double DEFAULT_CLASSIFICATION_RULE = 0.5;
 	private double classification_rule;

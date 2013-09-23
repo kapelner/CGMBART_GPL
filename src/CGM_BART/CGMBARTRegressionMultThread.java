@@ -2,7 +2,6 @@ package CGM_BART;
 
 import gnu.trove.list.array.TDoubleArrayList;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -13,8 +12,11 @@ import java.util.concurrent.TimeUnit;
 import OpenSourceExtensions.UnorderedPair;
 
 
-public class CGMBARTRegressionMultThread extends Classifier implements Serializable {
-	private static final long serialVersionUID = -4537075714317768756L;
+public class CGMBARTRegressionMultThread extends Classifier {
+	
+	static {
+		System.out.println("made my way into CGMBARTRegression");
+	}
 	
 	private static final int DEFAULT_NUM_CORES = 4;//Runtime.getRuntime().availableProcessors() - 1;
 		
@@ -377,25 +379,25 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 		return getPostPredictiveIntervalForPrediction(record, 0.95, num_cores_evaluate);
 	}	
 	
-	public double[] getGibbsSamplesSigsqs(){
-		TDoubleArrayList sigsqs_to_export = new TDoubleArrayList(num_gibbs_total_iterations);
-		for (int t = 0; t < num_cores; t++){
-			TDoubleArrayList sigsqs_to_export_by_thread = new TDoubleArrayList(bart_gibbs_chain_threads[t].getGibbsSamplesSigsqs());
-			if (t == 0){
-				sigsqs_to_export.addAll(sigsqs_to_export_by_thread);
-			}
-			else {
-				sigsqs_to_export.addAll(sigsqs_to_export_by_thread.subList(num_gibbs_burn_in, total_iterations_multithreaded));
-			}
-		}	
-		//what's the SIGSQ?
-//		for (int g = 0; g < sigsqs_to_export.size(); g++){
-//			System.out.println("g = " + g + " sigsq: " + sigsqs_to_export.get(g));			
-//		}
-//		System.out.println("MEAN: " + StatToolbox.sample_average(sigsqs_to_export.toArray()));
-		
-		return sigsqs_to_export.toArray();
-	}
+//	public double[] getGibbsSamplesSigsqs(){
+//		TDoubleArrayList sigsqs_to_export = new TDoubleArrayList(num_gibbs_total_iterations);
+//		for (int t = 0; t < num_cores; t++){
+//			TDoubleArrayList sigsqs_to_export_by_thread = new TDoubleArrayList(bart_gibbs_chain_threads[t].getGibbsSamplesSigsqs());
+//			if (t == 0){
+//				sigsqs_to_export.addAll(sigsqs_to_export_by_thread);
+//			}
+//			else {
+//				sigsqs_to_export.addAll(sigsqs_to_export_by_thread.subList(num_gibbs_burn_in, total_iterations_multithreaded));
+//			}
+//		}	
+//		//what's the SIGSQ?
+////		for (int g = 0; g < sigsqs_to_export.size(); g++){
+////			System.out.println("g = " + g + " sigsq: " + sigsqs_to_export.get(g));			
+////		}
+////		System.out.println("MEAN: " + StatToolbox.sample_average(sigsqs_to_export.toArray()));
+//		
+//		return sigsqs_to_export.toArray();
+//	}
 	
 	public boolean[][] getAcceptRejectMHsBurnin(){
 		boolean[][] accept_reject_mh_first_thread = bart_gibbs_chain_threads[0].getAcceptRejectMH();
@@ -509,13 +511,13 @@ public class CGMBARTRegressionMultThread extends Classifier implements Serializa
 		return bart_gibbs_chain_threads[0].un_transform_sigsq(bart_gibbs_chain_threads[0].gibbs_samples_of_sigsq);
 	}	
 		
-	public int[][] getDepthsForTreesInGibbsSampAfterBurnIn(int thread_num){
-		return bart_gibbs_chain_threads[thread_num - 1].getDepthsForTrees(num_gibbs_burn_in, total_iterations_multithreaded);
-	}	
-	
-	public int[][] getNumNodesAndLeavesForTreesInGibbsSampAfterBurnIn(int thread_num){
-		return bart_gibbs_chain_threads[thread_num - 1].getNumNodesAndLeavesForTrees(num_gibbs_burn_in, total_iterations_multithreaded);
-	}	
+//	public int[][] getDepthsForTreesInGibbsSampAfterBurnIn(int thread_num){
+//		return bart_gibbs_chain_threads[thread_num - 1].getDepthsForTrees(num_gibbs_burn_in, total_iterations_multithreaded);
+//	}	
+//	
+//	public int[][] getNumNodesAndLeavesForTreesInGibbsSampAfterBurnIn(int thread_num){
+//		return bart_gibbs_chain_threads[thread_num - 1].getNumNodesAndLeavesForTrees(num_gibbs_burn_in, total_iterations_multithreaded);
+//	}	
 	
 	public void destroy(){
 		bart_gibbs_chain_threads = null;

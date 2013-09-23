@@ -30,9 +30,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
-//import java.io.PrintStream;
 import java.io.PrintWriter;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.FileHandler;
@@ -49,9 +47,10 @@ import CustomLogging.*;
  * 
  * @author Adam Kapelner
  */
-public abstract class Classifier implements Serializable {
-	private static final long serialVersionUID = -2857913059676679308L;	
-
+public abstract class Classifier {
+	static {
+		System.out.println("made my way into Classifier");
+	}
 	public static final double MISSING_VALUE = Double.NaN;
 	public static boolean isMissing(double x){
 		return Double.isNaN(x);

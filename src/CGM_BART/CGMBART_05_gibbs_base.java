@@ -1,11 +1,10 @@
 package CGM_BART;
 
-import java.io.Serializable;
+public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init {
 
-public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements Serializable {
-	private static final long serialVersionUID = 1280579612167425306L;
-
-	
+	static {
+		System.out.println("made my way into CGMBART_05_gibbs_base");
+	}
 	@Override
 	public void Build() {
 		SetupGibbsSampling();
@@ -47,7 +46,7 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init implements S
 		}
 		//now we have the last residual vector which we pass on to sample sigsq
 		SampleSigsq(gibbs_sample_num, getResidualsFromFullSumModel(gibbs_sample_num, R_j));
-		DebugSample(gibbs_sample_num, tree_array_illustration);
+//		DebugSample(gibbs_sample_num, tree_array_illustration);
 	}
 
 	protected void GibbsSampleDebugMessage(int t) {

@@ -1,10 +1,9 @@
 package CGM_BART;
 
-import java.io.Serializable;
-
-public abstract class CGMBART_04_init extends CGMBART_03_debug implements Serializable {
-	private static final long serialVersionUID = 8239599486635371714L;
-	
+public abstract class CGMBART_04_init extends CGMBART_03_debug {
+	static {
+		System.out.println("made my way into CGMBART_04_init");
+	}
 	/** during debugging, we may want to fix sigsq */
 	protected double fixed_sigsq;
 	/** which gibbs sample are we on now? */

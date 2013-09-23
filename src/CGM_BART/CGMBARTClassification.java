@@ -27,9 +27,6 @@ package CGM_BART;
 import OpenSourceExtensions.StatUtil;
 
 public final class CGMBARTClassification extends CGMBARTRegression {
-	private static final long serialVersionUID = -9061432248755912576L;
-	
-
 
 	/**
 	 * Constructs the BART classifier for classification. We rely on the SetupClassification class to set the raw data

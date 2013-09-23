@@ -25,11 +25,13 @@
 package CGM_BART;
 
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import javax.media.jai.JAI;
+import javax.imageio.ImageIO;
 
 public class TreeArrayIllustration {
 
@@ -93,9 +95,8 @@ public class TreeArrayIllustration {
 //		System.out.println("w = " + image.getWidth() + " h = " + image.getHeight() + "sample_num: " + sample_num);
 		String title = "BART_" + unique_name + "_iter_" + LeadingZeroes(sample_num, 5);
 		try {
-			JAI.create("filestore", image, CGMBART_03_debug.DEBUG_DIR + "//" + title + ".png", "PNG");
-		}
-		catch (Exception e){
+			ImageIO.write(image, "PNG", new File(title + ".png"));
+		} catch (IOException e) {
 			System.err.println("can't save " + title);
 		}
 	}

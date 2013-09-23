@@ -27,7 +27,6 @@ package CGM_BART;
 import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.list.array.TIntArrayList;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -47,8 +46,7 @@ import OpenSourceExtensions.UnorderedPair;
  * 
  * @author Adam Kapelner
  */
-public class CGMBARTTreeNode implements Cloneable, Serializable {
-	private static final long serialVersionUID = -5584590448078741112L;
+public class CGMBARTTreeNode implements Cloneable {
 	
 	public static final boolean DEBUG_NODES = false;
 	

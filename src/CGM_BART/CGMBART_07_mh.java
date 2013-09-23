@@ -1,13 +1,13 @@
 package CGM_BART;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 
 
-public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal implements Serializable {
-	private static final long serialVersionUID = 1825856510284398699L;
+public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal {
 	private static final boolean DEBUG_MH = false;
-
+	static {
+		System.out.println("made my way into CGMBART_07_mh");
+	}
 	protected double prob_grow;
 	protected double prob_prune;
 	protected double prob_change;

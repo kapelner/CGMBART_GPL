@@ -30,10 +30,11 @@ import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FilenameFilter;
+import java.io.IOException;
 import java.text.NumberFormat;
 import java.util.HashMap;
 
-import javax.media.jai.JAI;
+import javax.imageio.ImageIO;
 
 
 public class TreeIllustration {
@@ -163,15 +164,19 @@ public class TreeIllustration {
 	}	
 
 	public static void DeletePreviousTreeIllustrations(){
-		 String[] image_filenames = new File(CGMBART_03_debug.DEBUG_DIR).list(new ImageFileFilter());
+		 String[] image_filenames = new File("/").list(new ImageFileFilter());
 		 for (String filename : image_filenames){
-			 new File(CGMBART_03_debug.DEBUG_DIR, filename).delete();
+			 new File(filename).delete();
 		 }
 	}
 
 	private void saveImageFile(BufferedImage image, HashMap<String, String> info) {
 		String title = "r" + info.get("num_restart") + "_a" + (info.get("num_acceptances") == null ? 0 : Integer.parseInt(info.get("num_acceptances")));
-		JAI.create("filestore", image, CGMBART_03_debug.DEBUG_DIR + "//" + title + ".png", "PNG");
+		try {
+			ImageIO.write(image, "PNG", new File(title + ".png"));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	private void initializeCanvas() {

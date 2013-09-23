@@ -1,11 +1,9 @@
-#libraries and dependencies
-tryCatch(library(rJava), error = function(e){install.packages("rJava")}, finally = library(rJava))
 
-#constants
+#constants -- these need to be moved into our own environmental variable soon
 VERSION = "1.0b"
 BART_MAX_MEM_MB = 8000
 PLOTS_DIR = "output_plots"
-JAR_DEPENDENCIES = c("bart_java.jar", "commons-math-2.1.jar", "jai_codec.jar", "jai_core.jar", "trove-3.0.3.jar")
+JAR_DEPENDENCIES = c("bart_java.jar", "commons-math-2.1.jar", "trove-3.0.3.jar", "junit-4.10.jar")
 
 COLORS = array(NA, 500)
 for (i in 1 : 500){

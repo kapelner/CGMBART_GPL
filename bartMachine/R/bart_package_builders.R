@@ -1,22 +1,15 @@
-DEFAULT_ALPHA = 0.95
-DEFAULT_BETA = 2
-DEFAULT_K = 2
-DEFAULT_Q = 0.9
-DEFAULT_NU = 3.0
-DEFAULT_PROB_STEPS = c(2.5, 2.5, 4) / 9
-DEFAULT_PROB_RULE_CLASS = 0.5
 
 build_bart_machine = function(X = NULL, y = NULL, Xy = NULL, 
 		num_trees = 200, 
 		num_burn_in = 250, 
 		num_iterations_after_burn_in = 1000, 
-		alpha = DEFAULT_ALPHA,
-		beta = DEFAULT_BETA,
-		k = DEFAULT_K,
-		q = DEFAULT_Q,
-		nu = DEFAULT_NU,
-		prob_rule_class = DEFAULT_PROB_RULE_CLASS,
-		mh_prob_steps = DEFAULT_PROB_STEPS,
+		alpha = 0.95,
+		beta = 2,
+		k = 2,
+		q = 0.9,
+		nu = 3.0,
+		prob_rule_class = 0.5,
+		mh_prob_steps = c(2.5, 2.5, 4) / 9,
 		debug_log = FALSE,
 		run_in_sample = TRUE,
 		s_sq_y = "mse", # "mse" or "var"

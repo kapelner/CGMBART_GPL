@@ -9,7 +9,7 @@
 \title{Hello Java World! A Tutorial for Interfacing to\\ Java Archives
        inside R Packages.}
 \author{Tobias Verbeke}
-\date{2008-04-28}
+\date{2010-02-22}
 
 \maketitle
 
@@ -40,7 +40,9 @@ provide a summary overview in Figure \ref{fig:pkgContents}.
           `- doc
               `- helloJavaWorld.Rnw       (this document)
           `- java
-              `- hellojavaworld.jar    
+              `- hellojavaworld.jar
+          `- javasrc
+              `- HelloJavaWorld.java         
       `- man
           `- helloJavaWorld.Rd
       `- R
@@ -107,7 +109,7 @@ the following content~:
 
 \begin{verbatim}
   .onLoad <- function(libname, pkgname) {
-    .jpackage(pkgname)
+    .jpackage(pkgname, lib.loc = libname)
   }
 \end{verbatim}
 
@@ -116,7 +118,9 @@ will be run immediately after loading the package.
 The function \texttt{.jpackage} that is called inside
 the \texttt{.onLoad} function takes care to initialize the JVM
 and to add the \texttt{java/} folder of the package to the class path.
-Note that when building the package the \verb|inst| level is `taken out', 
+If users make use of custom R library paths, they can rely on the 
+\texttt{libname} argument. Note that when building the package 
+the \verb|inst| level is `taken out', 
 so that in the built package the \verb|java/| subfolder will be directly
 in the root folder.
 
@@ -247,6 +251,6 @@ We would like to thank Simon Urbanek for his continuous efforts
 on the \texttt{rJava} package, without which it would not have
 been possible to say Hello from Java to R. The following persons
 provided feedback and suggestions that helped improve the
-document: Duncan Murdoch, Hadley Wickham.
+document: Duncan Murdoch, Simon Urbanek, Hadley Wickham.
 
 \end{document}

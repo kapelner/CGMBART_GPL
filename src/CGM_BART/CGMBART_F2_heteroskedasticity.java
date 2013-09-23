@@ -1,8 +1,6 @@
 package CGM_BART;
 
-
 public class CGMBART_F2_heteroskedasticity extends CGMBART_F1_prior_cov_spec {
-	private static final long serialVersionUID = -3069428133597923502L;
 
 	protected boolean use_heteroskedasticity;
 	
