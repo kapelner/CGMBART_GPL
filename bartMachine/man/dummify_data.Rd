@@ -1,11 +1,11 @@
-\name{build_bart_machine}
-\alias{build_bart_machine}
+\name{dummify_data}
+\alias{dummify_data}
 \title{no title}
 \description{
   no description
 }
 \usage{
-  build_bart_machine()
+ dummify_data()
 }
 \details{
   no details
@@ -17,5 +17,5 @@
 	Adam Kapelner and Justin Bleich
 }
 \examples{
-  build_bart_machine()
+  dummify_data()
 }

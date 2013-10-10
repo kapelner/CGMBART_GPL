@@ -1,11 +1,11 @@
-\name{build_bart_machine}
-\alias{build_bart_machine}
+\name{plot_tree_num_nodes}
+\alias{plot_tree_num_nodes}
 \title{no title}
 \description{
   no description
 }
 \usage{
-  build_bart_machine()
+ plot_tree_num_nodes()
 }
 \details{
   no details
@@ -17,5 +17,5 @@
 	Adam Kapelner and Justin Bleich
 }
 \examples{
-  build_bart_machine()
+  plot_tree_num_nodes()
 }

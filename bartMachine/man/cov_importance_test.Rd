@@ -1,11 +1,11 @@
-\name{build_bart_machine}
-\alias{build_bart_machine}
+\name{cov_importance_test}
+\alias{cov_importance_test}
 \title{no title}
 \description{
   no description
 }
 \usage{
-  build_bart_machine()
+  cov_importance_test()
 }
 \details{
   no details
@@ -17,5 +17,5 @@
 	Adam Kapelner and Justin Bleich
 }
 \examples{
-  build_bart_machine()
+  cov_importance_test()
 }

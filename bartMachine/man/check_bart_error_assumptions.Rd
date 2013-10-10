@@ -1,11 +1,11 @@
-\name{build_bart_machine}
-\alias{build_bart_machine}
+\name{check_bart_error_assumptions}
+\alias{check_bart_error_assumptions}
 \title{no title}
 \description{
   no description
 }
 \usage{
-  build_bart_machine()
+  check_bart_error_assumptions()
 }
 \details{
   no details
@@ -17,5 +17,5 @@
 	Adam Kapelner and Justin Bleich
 }
 \examples{
-  build_bart_machine()
+  check_bart_error_assumptions()
 }
