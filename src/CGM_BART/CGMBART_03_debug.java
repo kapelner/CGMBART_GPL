@@ -7,9 +7,9 @@ public abstract class CGMBART_03_debug extends CGMBART_02_hyperparams {
 	protected boolean tree_illust = false;
 	
 
-	static {		
-		TreeIllustration.DeletePreviousTreeIllustrations();
-	}
+//	static {		
+//		TreeIllustration.DeletePreviousTreeIllustrations();
+//	}
 	
 	protected void DebugInitialization() {
 		CGMBARTTreeNode[] initial_trees = gibbs_samples_of_cgm_trees[0];

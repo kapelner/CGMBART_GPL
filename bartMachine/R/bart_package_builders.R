@@ -131,8 +131,8 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	}
 	#set whether we want there to be tree illustrations
 	if (print_tree_illustrations & verbose){
-		cat("warning: printing tree illustrations will slow down the runtime significantly\n")
-		.jcall(java_bart_machine, "V", "printTreeIllustations")
+		cat("warning: we have disabled printing tree illustrations. If you need this feature, you can turn it on in the code by uncommenting the next line after this message.\n")
+#		.jcall(java_bart_machine, "V", "printTreeIllustations")
 	}
 	
 	#set the std deviation of y to use

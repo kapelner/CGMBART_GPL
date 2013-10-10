@@ -1,6 +1,7 @@
 import(rJava)
 
 export(build_bart_machine)
+export(destroy_bart_machine)
 
 export(set_bart_machine_num_cores)
 export(bart_machine_num_cores)
