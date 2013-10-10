@@ -29,15 +29,15 @@ import gnu.trove.list.array.TIntArrayList;
 
 //import java.io.BufferedInputStream;
 //import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
+//import java.io.BufferedReader;
 //import java.io.DataInputStream;
 //import java.io.DataOutputStream;
 //import java.io.File;
 //import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+//import java.io.FileNotFoundException;
 //import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
+//import java.io.FileReader;
+//import java.io.IOException;
 import java.util.Arrays;
 import java.util.Random;
 
@@ -56,35 +56,35 @@ public class StatToolbox {
 
 	public static final double ILLEGAL_FLAG = -999999999;	
 //	private static final int NUM_CHI_SQ_SAMPS = 10000;
-	private static final String cacheDirectory = "randsamps";	
-	private static final String norm_samps_file = "rnorm.csv";
-	
-	private static double[] NORM_SAMPS;
-	private static int NUM_NORM_SAMPS;	
-	static {
-		System.out.println("TRYING TO MAKE CACHE");
-		BufferedReader in;
-		try {
-			in = new BufferedReader(new FileReader(cacheDirectory + "/" + norm_samps_file));
-			try {
-				String raw = in.readLine();
-				String[] random_samps = raw.split(",");
-				NUM_NORM_SAMPS = random_samps.length;
-				NORM_SAMPS = new double[NUM_NORM_SAMPS];
-//				START_POS = (int)Math.floor(rand() * NUM_NORM_SAMPS);
-				for (int i = 0; i < NUM_NORM_SAMPS; i++){
-					NORM_SAMPS[i] = Double.parseDouble(random_samps[i]);
-				}	
-//				System.out.println("NUM_NORM_SAMPS: " + NUM_NORM_SAMPS);
-//				System.out.println("START_POS: " + START_POS);
-//				System.out.println("NORM_SAMPS: " + Tools.StringJoin(NORM_SAMPS));
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		} catch (FileNotFoundException e1) {
-			e1.printStackTrace();
-		}					
-	}
+//	private static final String cacheDirectory = "randsamps";	
+//	private static final String norm_samps_file = "rnorm.csv";
+//	
+//	private static double[] NORM_SAMPS;
+//	private static int NUM_NORM_SAMPS;	
+//	static {
+//		System.out.println("TRYING TO MAKE CACHE");
+//		BufferedReader in;
+//		try {
+//			in = new BufferedReader(new FileReader(cacheDirectory + "/" + norm_samps_file));
+//			try {
+//				String raw = in.readLine();
+//				String[] random_samps = raw.split(",");
+//				NUM_NORM_SAMPS = random_samps.length;
+//				NORM_SAMPS = new double[NUM_NORM_SAMPS];
+////				START_POS = (int)Math.floor(rand() * NUM_NORM_SAMPS);
+//				for (int i = 0; i < NUM_NORM_SAMPS; i++){
+//					NORM_SAMPS[i] = Double.parseDouble(random_samps[i]);
+//				}	
+////				System.out.println("NUM_NORM_SAMPS: " + NUM_NORM_SAMPS);
+////				System.out.println("START_POS: " + START_POS);
+////				System.out.println("NORM_SAMPS: " + Tools.StringJoin(NORM_SAMPS));
+//			} catch (IOException e) {
+//				e.printStackTrace();
+//			}
+//		} catch (FileNotFoundException e1) {
+//			e1.printStackTrace();
+//		}					
+//	}
 	
 //	private static final String chisq_df_samps_file_prefix = cacheDirectory + "/chisq_nu_n_";
 //	public static void cacheInvGammas(double hyper_nu, int n, CGMBART_02_hyperparams bart) {
