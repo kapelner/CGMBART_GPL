@@ -27,10 +27,6 @@ package CGM_BART;
 
 public class CGMBARTRegression extends CGMBART_F1_prior_cov_spec {
 	
-	static {
-		System.out.println("made my way into CGMBARTRegression");
-	}
-	
 	/**
 	 * Constructs the BART classifier for regression.
 	 */

@@ -1,9 +1,7 @@
 package CGM_BART;
 
 public abstract class CGMBART_03_debug extends CGMBART_02_hyperparams {
-	static {
-		System.out.println("made my way into CGMBART_03_debug");
-	}
+
 	protected boolean tree_illust = false;
 	
 

@@ -5,6 +5,7 @@ export(destroy_bart_machine)
 
 export(set_bart_machine_num_cores)
 export(bart_machine_num_cores)
+export(set_bart_machine_max_mem)
 
 export(dummify_data)
 export(get_var_counts_over_chain)

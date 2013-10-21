@@ -3,10 +3,7 @@ package CGM_BART;
 import gnu.trove.list.array.TIntArrayList;
 
 public abstract class CGMBART_06_gibbs_internal extends CGMBART_05_gibbs_base {
-	
-	static {
-		System.out.println("made my way into CGMBART_06_gibbs_internal");
-	}
+
 	protected void assignLeafValsBySamplingFromPosteriorMeanAndSigsqAndUpdateYhats(CGMBARTTreeNode node, double sigsq) {
 //		System.out.println("assignLeafValsUsingPosteriorMeanAndCurrentSigsq sigsq: " + sigsq);
 		if (node.isLeaf){

@@ -9,10 +9,7 @@ import org.apache.commons.math.distribution.ChiSquaredDistributionImpl;
 
 
 public abstract class CGMBART_02_hyperparams extends CGMBART_01_base {
-	
-	static {
-		System.out.println("made my way into CGMBART_02_hyperparams");
-	}
+
 	protected static final double YminAndYmaxHalfDiff = 0.5;
 	
 	/** all the hyperparameters */

@@ -2,9 +2,6 @@ package CGM_BART;
 
 public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init {
 
-	static {
-		System.out.println("made my way into CGMBART_05_gibbs_base");
-	}
 	@Override
 	public void Build() {
 		SetupGibbsSampling();

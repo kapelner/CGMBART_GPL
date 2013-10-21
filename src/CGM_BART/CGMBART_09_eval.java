@@ -4,9 +4,6 @@ import java.util.Arrays;
 
 
 public abstract class CGMBART_09_eval extends CGMBART_07_mh {
-	static {
-		System.out.println("made my way into CGMBART_09_eval");
-	}
 	
 	public double Evaluate(double[] record, int num_cores_evaluate) { //posterior sample median (it's what Rob uses)		
 		return EvaluateViaSampAvg(record, num_cores_evaluate);

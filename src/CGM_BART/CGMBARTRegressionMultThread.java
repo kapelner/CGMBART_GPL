@@ -14,10 +14,6 @@ import OpenSourceExtensions.UnorderedPair;
 
 public class CGMBARTRegressionMultThread extends Classifier {
 	
-	static {
-		System.out.println("made my way into CGMBARTRegression");
-	}
-	
 	private static final int DEFAULT_NUM_CORES = 4;//Runtime.getRuntime().availableProcessors() - 1;
 		
 	protected static final int NUM_TREES_DEFAULT = 200;

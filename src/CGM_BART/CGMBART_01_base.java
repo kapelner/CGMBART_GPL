@@ -1,10 +1,7 @@
 package CGM_BART;
 
 public abstract class CGMBART_01_base extends Classifier {
-	
-	static {
-		System.out.println("made my way into CGMBART_01_base");
-	}
+
 	/** the actual list of trees */
 	protected CGMBARTTreeNode[][] gibbs_samples_of_cgm_trees;
 	protected CGMBARTTreeNode[][] gibbs_samples_of_cgm_trees_after_burn_in;
