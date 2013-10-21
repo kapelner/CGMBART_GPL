@@ -1,7 +1,7 @@
 
 #constants -- these need to be moved into our own environmental variable soon
 VERSION = "1.0b"
-BART_MAX_MEM_MB = 8000
+BART_MAX_MEM_MB = 3000
 PLOTS_DIR = "output_plots"
 #JAR_DEPENDENCIES = c("bart_java.jar", "commons-math-2.1.jar", "trove-3.0.3.jar", "junit-4.10.jar")
 
