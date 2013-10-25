@@ -3,7 +3,7 @@
 VERSION = "1.0b"
 
 PLOTS_DIR = "output_plots"
-#JAR_DEPENDENCIES = c("bart_java.jar", "commons-math-2.1.jar", "trove-3.0.3.jar", "junit-4.10.jar")
+JAR_DEPENDENCIES = c("bart_java.jar", "commons-math-2.1.jar", "trove-3.0.3.jar", "junit-4.10.jar")
 
 COLORS = array(NA, 500)
 for (i in 1 : 500){
@@ -32,6 +32,9 @@ bart_machine_num_cores = function(){
 init_java_for_bart_machine_with_mem_in_mb = function(bart_max_mem){
 	jinit_params = paste("-Xmx", bart_max_mem, "m", sep = "")
 	.jinit(parameters = jinit_params)
+	for (dependency in JAR_DEPENDENCIES){
+		.jaddClassPath(paste("bartMachine/inst/java/", dependency, sep = ""))
+	} 
 }
 
 get_var_counts_over_chain = function(bart_machine, type = "splits"){

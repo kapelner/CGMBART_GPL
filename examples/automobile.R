@@ -1,6 +1,7 @@
 setwd("C:\\Users\\Kapelner\\workspace\\CGMBART_GPL")
 
-library(bartMachine)
+#library(bartMachine)
+library(rJava)
 
 Xy = read.csv("datasets/r_automobile.csv")
 Xy = Xy[!is.na(Xy$price), ]
@@ -22,8 +23,7 @@ hist(y, br = 30)
 hist(log(y), br = 30)
 
 set_bart_machine_num_cores(4)
-get_bart_machine_max_mem_mb()
-set_bart_machine_max_mem_mb(16000)
+init_java_for_bart_machine_with_mem_in_mb(3000)
 
 bart_machine = build_bart_machine(X, log(y), verbose = T)
 bart_machine
