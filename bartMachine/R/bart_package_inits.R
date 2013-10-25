@@ -1,7 +1,7 @@
 
 #constants -- these need to be moved into our own environmental variable soon
 VERSION = "1.0b"
-BART_MAX_MEM_MB = 3000
+
 PLOTS_DIR = "output_plots"
 #JAR_DEPENDENCIES = c("bart_java.jar", "commons-math-2.1.jar", "trove-3.0.3.jar", "junit-4.10.jar")
 
@@ -11,11 +11,12 @@ for (i in 1 : 500){
 }
 
 set_bart_machine_max_mem_mb = function(max_mem_mbs){
-	assign("BART_MAX_MEM_MB", max_mem_mbs, "bartMachine")
+#	unlockBinding("BART_MAX_MEM_MB", "package:bartMachine")
+	assign("BART_MAX_MEM_MB", max_mem_mbs, "package:bartMachine")
 }
 
 get_bart_machine_max_mem_mb = function(){
-	bartMachine:::BART_MAX_MEM_MB
+	BART_MAX_MEM_MB
 }
 
 BART_NUM_CORES = 1
@@ -28,8 +29,8 @@ bart_machine_num_cores = function(){
 	BART_NUM_CORES
 }
 
-init_java_for_bart = function(){
-	jinit_params = paste("-Xmx", BART_MAX_MEM_MB, "m", sep = "")
+init_java_for_bart_machine_with_mem_in_mb = function(bart_max_mem){
+	jinit_params = paste("-Xmx", bart_max_mem, "m", sep = "")
 	.jinit(parameters = jinit_params)
 }
 

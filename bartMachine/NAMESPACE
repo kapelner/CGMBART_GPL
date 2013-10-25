@@ -5,8 +5,7 @@ export(destroy_bart_machine)
 
 export(set_bart_machine_num_cores)
 export(bart_machine_num_cores)
-export(set_bart_machine_max_mem_mb)
-export(get_bart_machine_max_mem_mb)
+export(init_java_for_bart_machine_with_mem_in_mb)
 
 export(dummify_data)
 export(get_var_counts_over_chain)

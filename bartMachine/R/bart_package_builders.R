@@ -1,3 +1,4 @@
+BART_MAX_MEM_MB_DEFAULT = 3000
 
 build_bart_machine = function(X = NULL, y = NULL, Xy = NULL, 
 		num_trees = 200, 
@@ -26,8 +27,9 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		verbose = TRUE){
 	
 	t0 = Sys.time()
-	#immediately initialize Java
-	init_java_for_bart()
+	
+	#immediately initialize Java (if it has not already been initialized with a custom amount of memory)
+	init_java_for_bart_machine_with_mem_in_mb(BART_MAX_MEM_MB_DEFAULT)
 	
 	if ((is.null(X) && is.null(Xy)) || is.null(y) && is.null(Xy)){
 		stop("You need to give BART a training set either by specifying X and y or by specifying a matrix Xy which contains the response named \"y.\"\n")
