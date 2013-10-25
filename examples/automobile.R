@@ -1,7 +1,6 @@
 setwd("C:\\Users\\Kapelner\\workspace\\CGMBART_GPL")
 
-#library(bartMachine)
-library(rJava)
+library(bartMachine)
 
 Xy = read.csv("datasets/r_automobile.csv")
 Xy = Xy[!is.na(Xy$price), ]

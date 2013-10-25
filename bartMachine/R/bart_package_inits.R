@@ -10,15 +10,6 @@ for (i in 1 : 500){
 	COLORS[i] = rgb(runif(1, 0, 0.7), runif(1, 0, 0.7), runif(1, 0, 0.7))
 }
 
-set_bart_machine_max_mem_mb = function(max_mem_mbs){
-#	unlockBinding("BART_MAX_MEM_MB", "package:bartMachine")
-	assign("BART_MAX_MEM_MB", max_mem_mbs, "package:bartMachine")
-}
-
-get_bart_machine_max_mem_mb = function(){
-	BART_MAX_MEM_MB
-}
-
 BART_NUM_CORES = 1
 
 set_bart_machine_num_cores = function(num_cores){
@@ -33,7 +24,7 @@ init_java_for_bart_machine_with_mem_in_mb = function(bart_max_mem){
 	jinit_params = paste("-Xmx", bart_max_mem, "m", sep = "")
 	.jinit(parameters = jinit_params)
 	for (dependency in JAR_DEPENDENCIES){
-		.jaddClassPath(paste("bartMachine/inst/java/", dependency, sep = ""))
+		.jaddClassPath(paste("../inst/java/", dependency, sep = ""))
 	} 
 }
 
