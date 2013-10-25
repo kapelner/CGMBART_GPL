@@ -10,8 +10,12 @@ for (i in 1 : 500){
 	COLORS[i] = rgb(runif(1, 0, 0.7), runif(1, 0, 0.7), runif(1, 0, 0.7))
 }
 
-set_bart_machine_max_mem = function(max_mem_mbs){
-	assign("BART_MAX_MEM_MB", max_mem_mbs, ".GlobalEnv")
+set_bart_machine_max_mem_mb = function(max_mem_mbs){
+	BART_MAX_MEM_MB = max_mem_mbs
+}
+
+get_bart_machine_max_mem_mb = function(){
+	BART_MAX_MEM_MB
 }
 
 BART_NUM_CORES = 1

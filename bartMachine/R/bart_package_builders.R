@@ -44,18 +44,19 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	
 	#now take care of classification or regression
 	y_levels = levels(y)
-	if (class(y) == "numeric"){ #if y is numeric, then it's a regression problem
+	if (class(y) == "numeric" || class(y) == "integer"){ #if y is numeric, then it's a regression problem
 		java_bart_machine = .jnew("CGM_BART.CGMBARTRegressionMultThread")
 		y_numeric = y
 		pred_type = "regression"
+		if (class(y) == "integer"){
+			cat("Warning: The response y is integer, BART will run regression.\n")
+		}
 	} else if (class(y) == "factor" & length(y_levels) == 2){ #if y is a factor and binary
 		java_bart_machine = .jnew("CGM_BART.CGMBARTClassificationMultThread")
 		y_numeric = ifelse(y == y_levels[1], 0, 1)
 		pred_type = "classification"
 	} else if (class(y) == "factor" & length(y_levels) == 3){
 		stop("Please use the function \"--\" for trinomial classification.\n")
-	} else if (class(y) == "integer"){
-		stop("Please use the function \"--\" for ordinal classification.\n")
 	} else { #otherwise throw an error
 		stop("Your response must be either numeric, a factor with two or three levels or an integer.\n")
 	}	
@@ -112,7 +113,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		data = na.omit(model_matrix_training_data)
 		rows_after = nrow(model_matrix_training_data)
 		if (verbose && rows_before - rows_after > 0){
-			cat("Deleted", rows_before - rows_after, "row(s) due to missing data. Try turning missing data feature on next time. ")
+			cat("Deleted", rows_before - rows_after, "row(s) due to missing data. Try turning the \"use_missing_data\" or \"replace_missing_data_with_x_j_bar\" feature on next time. ")
 		}
 	} else if (replace_missing_data_with_x_j_bar){
 		model_matrix_training_data = imputeMatrixByXbarj(model_matrix_training_data, model_matrix_training_data)
