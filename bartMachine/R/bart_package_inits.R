@@ -11,11 +11,11 @@ for (i in 1 : 500){
 }
 
 set_bart_machine_max_mem_mb = function(max_mem_mbs){
-	BART_MAX_MEM_MB = max_mem_mbs
+	assign("BART_MAX_MEM_MB", max_mem_mbs, "bartMachine")
 }
 
 get_bart_machine_max_mem_mb = function(){
-	BART_MAX_MEM_MB
+	bartMachine:::BART_MAX_MEM_MB
 }
 
 BART_NUM_CORES = 1
@@ -31,23 +31,7 @@ bart_machine_num_cores = function(){
 init_java_for_bart = function(){
 	jinit_params = paste("-Xmx", BART_MAX_MEM_MB, "m", sep = "")
 	.jinit(parameters = jinit_params)
-#	for (dependency in JAR_DEPENDENCIES){
-#		.jaddClassPath(dependency)
-#	}	
 }
-
-
-#size_of_bart_chisq_cache_inquire = function(){
-#	init_java_for_bart()
-#	num_bytes = .jcall("CGM_BART.StatToolbox", "I", "numBytesForInvChisqCache")
-#	cat(paste(round(num_bytes / 1000000, 2), "MB\n"))
-#	invisible(num_bytes)
-#}
-
-#delete_bart_chisq_cache = function(){
-#	init_java_for_bart()
-#	.jcall("CGM_BART.StatToolbox", "V", "clearInvChisqHash")
-#}
 
 get_var_counts_over_chain = function(bart_machine, type = "splits"){
 	C = t(sapply(.jcall(bart_machine$java_bart_machine, "[[I", "getCountsForAllAttribute", as.integer(BART_NUM_CORES), type), .jevalArray))
