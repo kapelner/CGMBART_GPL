@@ -61,7 +61,7 @@ pre_process_new_data = function(new_data, bart_machine){
 	new_data = as.data.frame(new_data)
 	
 	imputations = NULL #global namespace?
-	if (bart_machine$add_imputations){
+	if (bart_machine$impute_missingness_with_rf_impute){
 		#we ahve to impute with missForest since we don't have y's for the test data we want to predict
 		imputations = missForest(rbind(new_data, bart_machine$X), verbose = bart_machine$verbose)$ximp
 		imputations = imputations[1 : nrow(new_data), ]

@@ -1,12 +1,14 @@
 
 
 check_bart_error_assumptions = function(bart_machine, alpha_normal_test = 0.05, alpha_hetero_test = 0.05, hetero_plot = "yhats"){
-	
+	if (!(hetero_plot %in% c("ys", "yhats"))){
+		stop("You must specify the parameter \"hetero_plot\" as \"ys\" or \"yhats\"")
+	}
 	if (bart_machine$pred_type == "classification"){
 		stop("There are no convergence diagnostics for classification.")
 	}	
 	graphics.off()
-	par(mfrow = c(1, 2))
+	par(mfrow = c(2, 1))
 	es = bart_machine$residuals
 	y_hat = bart_machine$y_hat
 	
@@ -19,21 +21,12 @@ check_bart_error_assumptions = function(bart_machine, alpha_normal_test = 0.05, 
 	#test for heteroskedasticity
 	if (hetero_plot == "yhats"){
 		plot(y_hat, es, main = paste("Assessment of Heteroskedasticity\nFitted vs residuals"), xlab = "Fitted Values", ylab = "Residuals", col = "blue")
-	} else {
+	} else if (hetero_plot == "ys") {
 		plot(bart_machine$y, es, main = paste("Assessment of Heteroskedasticity\nFitted vs residuals"), xlab = "Actual Values", ylab = "Residuals", col = "blue")
 	}
 	
 	abline(h = 0, col = "black")
-#	cat("p-val for shapiro-wilk test of normality of residuals:", normal_p_val, ifelse(normal_p_val > alpha_normal_test, "(ppis believable)", "(exercise caution when using ppis!)"), "\n")
 	par(mfrow = c(1, 1))
-	#TODO --- iterate over all x's and sort them
-	#see p225 in purple book for Szroeter's test
-#	n = length(es)
-#	h = sum(seq(1 : n) * es^2) / sum(es^2)
-#	Q = sqrt(6 * n / (n^2 - 1)) * (h - (n + 1) / 2)
-#	hetero_pval = 1 - pnorm(Q, 0, 1)
-#	cat("p-val for szroeter's test of homoskedasticity of residuals (assuming inputted observation order):", hetero_pval, ifelse(hetero_pval > alpha_hetero_test, "(ppis believable)", "(exercise caution when using ppis!)"), "\n")		
-	
 }
 
 plot_tree_depths = function(bart_machine){
@@ -329,6 +322,12 @@ investigate_var_importance = function(bart_machine, type = "splits", plot = TRUE
 				num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in, 
 				cov_prior_vec = bart_machine$cov_prior_vec,
 				run_in_sample = FALSE,
+				use_missing_data = bart_machine$use_missing_data,
+				use_missing_data_dummies_as_covars = bart_machine$use_missing_data_dummies_as_covars,
+				num_rand_samps_in_library = bart_machine$num_rand_samps_in_library,
+				replace_missing_data_with_x_j_bar = bart_machine$replace_missing_data_with_x_j_bar,
+				impute_missingness_with_rf_impute = bart_machine$impute_missingness_with_rf_impute,
+				impute_missingness_with_x_j_bar_for_lm = bart_machine$impute_missingness_with_x_j_bar_for_lm,
 				verbose = FALSE)			
 			var_props[i, ] = get_var_props_over_chain(bart_machine_dup, type)
 			destroy_bart_machine(bart_machine_dup)						
@@ -394,7 +393,7 @@ shapiro_wilk_p_val = function(vec){
 	tryCatch(shapiro.test(vec)$p.value, error = function(e){})
 }
 
-interaction_investigator = function(bart_machine, plot = TRUE, num_replicates_for_avg = 5, num_trees_bottleneck = 20, num_var_plot = Inf, cut_bottom = NULL, bottom_margin = 10){
+interaction_investigator = function(bart_machine, plot = TRUE, num_replicates_for_avg = 5, num_trees_bottleneck = 20, num_var_plot = 50, cut_bottom = NULL, bottom_margin = 10){
 	
 	interaction_counts = array(NA, c(bart_machine$p, bart_machine$p, num_replicates_for_avg))
 	
@@ -488,15 +487,19 @@ interaction_investigator = function(bart_machine, plot = TRUE, num_replicates_fo
 	))
 }
 
-pd_plot = function(bart_machine, j, levs = c(0.05, seq(from = 0.10, to = 0.90, by = 0.10), 0.95), lower_ci = 0.05, upper_ci = 0.95){
+pd_plot = function(bart_machine, j, levs = c(0.05, seq(from = 0.10, to = 0.90, by = 0.10), 0.95), lower_ci = 0.025, upper_ci = 0.975){
 	if (bart_machine$bart_destroyed){
 		stop("This BART machine has been destroyed. Please recreate.")
 	}
-	if (j < 1 || j > bart_machine$p){
+	if (class(j) == "numeric" && (j < 1 || j > bart_machine$p)){
 		stop(paste("You must set j to a number between 1 and p =", bart_machine$p))
+	} else if (class(j) == "character" && !(j %in% bart_machine$training_data_features)){
+		stop("j must be the name of one of the training features (see \"<bart_model>$training_data_features\")")
+	} else if (!(class(j) == "numeric" || class(j) == "character")){
+		stop("j must be a column number or column name")
 	}
 	
-	x_j = bart_machine$X[, j]
+	x_j = bart_machine$model_matrix_training_data[, j]
 	x_j_quants = quantile(x_j, levs)
 	bart_predictions_by_quantile = array(NA, c(length(levs), bart_machine$n, bart_machine$num_iterations_after_burn_in))
 	
@@ -524,12 +527,13 @@ pd_plot = function(bart_machine, j, levs = c(0.05, seq(from = 0.10, to = 0.90, b
 	bart_avg_predictions_lower = apply(bart_avg_predictions_by_quantile_by_gibbs, 1, quantile, probs = lower_ci)
 	bart_avg_predictions_upper = apply(bart_avg_predictions_by_quantile_by_gibbs, 1, quantile, probs = upper_ci)
 	
+	var_name = ifelse(class(j) == "character", j, bart_machine$training_data_features[j])
 	plot(x_j_quants, bart_avg_predictions_by_quantile, 
 			type = "o", 
 			main = "Partial Dependence Plot",
 			ylim = c(min(bart_avg_predictions_lower, bart_avg_predictions_upper), max(bart_avg_predictions_lower, bart_avg_predictions_upper)),
 			ylab = "Partial Effect",
-			xlab = paste("Quantiles for Variable", bart_machine$training_data_features[j]))
+			xlab = paste("Quantiles for Variable", var_name))
 	lines(x_j_quants, bart_avg_predictions_lower, type = "o", col = "blue")
 	lines(x_j_quants, bart_avg_predictions_upper, type = "o", col = "blue")
 	
@@ -538,7 +542,7 @@ pd_plot = function(bart_machine, j, levs = c(0.05, seq(from = 0.10, to = 0.90, b
 #	pdbart(x.train = bart_machine$X, y.train = bart_machine$y, xind = 6, ndpost = 200, nskip = 500)
 }
 
-rmse_by_num_trees = function(bart_machine, tree_list = c(1, seq(5, 50, 5), 100, 150, 200, 300), in_sample = FALSE, plot = TRUE, holdout_pctg = 0.3, num_replicates = 4){
+rmse_by_num_trees = function(bart_machine, tree_list = c(5, seq(10, 50, 10), 100, 150, 200, 300), in_sample = FALSE, plot = TRUE, holdout_pctg = 0.3, num_replicates = 4){
 	if (bart_machine$bart_destroyed){
 		stop("This BART machine has been destroyed. Please recreate.")
 	}
@@ -584,11 +588,13 @@ rmse_by_num_trees = function(bart_machine, tree_list = c(1, seq(5, 50, 5), 100, 
 			type = "o", 
 			xlab = "Number of Trees", 
 			ylab = paste(ifelse(in_sample, "In-Sample", "Out-Of-Sample"), "RMSE"), 
-			main = paste("Fit by Number of Trees", ifelse(in_sample, "In-Sample", "Out-Of-Sample")), 
+			main = paste(ifelse(in_sample, "In-Sample", "Out-Of-Sample"), "RMSE by Number of Trees"), 
 			ylim = c(min(y_mins), max(y_maxs)))
 		if (num_replicates > 1){
 			for (t in 1 : length(tree_list)){
-				segments(tree_list[t], rmse_means[t] - 1.96 * rmse_sds[t], tree_list[t], rmse_means[t] + 1.96 * rmse_sds[t], col = "grey", lwd = 0.1)
+				lowers = rmse_means[t] - 1.96 * rmse_sds[t] / sqrt(num_replicates)
+				uppers = rmse_means[t] + 1.96 * rmse_sds[t] / sqrt(num_replicates)
+				segments(tree_list[t], lowers, tree_list[t], uppers, col = "grey", lwd = 0.1)
 			}
 		}
 	}

@@ -1,11 +1,5 @@
 
-#var_selection_by_permute_response_three_methods = function(X, y, num_reps_for_avg = 5, num_permute_samples = 100, num_trees_for_permute = 20, alpha = 0.05, plot = TRUE, num_var_plot = Inf){
-#	bart_machine_temp = 
-#	var_selection_by_permute_response_three_methods(bart_machine_temp, num_reps_for_avg, num_permute_samples, num_trees_for_permute, alpha, plot, num_var_plot)
-#	destroy_bart_machine(bart_machine_temp)
-#}	
-
-var_selection_by_permute_response_three_methods = function(bart_machine, num_reps_for_avg = 5, num_permute_samples = 100, num_trees_for_permute = 20, alpha = 0.05, plot = TRUE, num_var_plot = Inf){
+var_selection_by_permute_response_three_methods = function(bart_machine, num_reps_for_avg = 10, num_permute_samples = 100, num_trees_for_permute = 20, alpha = 0.05, plot = TRUE, num_var_plot = Inf, bottom_margin = 10){
 	if (bart_machine$bart_destroyed){
 		stop("This BART machine has been destroyed. Please recreate.")
 	}	
@@ -29,22 +23,23 @@ var_selection_by_permute_response_three_methods = function(bart_machine, num_rep
 	permute_mat = permute_mat[, names(var_true_props_avg)]
 	
 	pointwise_cutoffs = apply(permute_mat, 2, quantile, probs = 1 - alpha)
-	important_vars_pointwise = names(var_true_props_avg[var_true_props_avg > pointwise_cutoffs])		
-
+	important_vars_pointwise_names = names(var_true_props_avg[var_true_props_avg > pointwise_cutoffs & var_true_props_avg > 0])
+	important_vars_pointwise_col_nums = sapply(1 : length(important_vars_pointwise_names), function(x){which(important_vars_pointwise_names[x] == bart_machine$training_data_features)})
+	
 	max_cut = quantile(apply(permute_mat, 1 ,max), 1 - alpha)
-	important_vars_simul_max = names(var_true_props_avg[var_true_props_avg >= max_cut])		
-
+	important_vars_simul_max_names = names(var_true_props_avg[var_true_props_avg >= max_cut & var_true_props_avg > 0])	
+	important_vars_simul_max_col_nums = sapply(1 : length(important_vars_simul_max_names), function(x){which(important_vars_simul_max_names[x] == bart_machine$training_data_features)})
+	
+	
 	perm_se = apply(permute_mat, 2, sd)
 	perm_mean = apply(permute_mat, 2, mean)
 	cover_constant = bisectK(tol = .01 , coverage = 1 - alpha, permute_mat = permute_mat, x_left = 1, x_right = 20, countLimit = 100, perm_mean = perm_mean, perm_se = perm_se)
-	important_vars_simul_se = names(var_true_props_avg[which(var_true_props_avg >= perm_mean + cover_constant * perm_se)])	
+	important_vars_simul_se_names = names(var_true_props_avg[which(var_true_props_avg >= perm_mean + cover_constant * perm_se & var_true_props_avg > 0)])	
+	important_vars_simul_se_col_nums = sapply(1 : length(important_vars_simul_se_names), function(x){which(important_vars_simul_se_names[x] == bart_machine$training_data_features)})
 	
 	
-
 	if (plot){
-		#sort attributes by most important
-		
-		
+		par(mar = c(bottom_margin, 6, 3, 0))
 		if (num_var_plot == Inf | num_var_plot > bart_machine$p){
 			num_var_plot = bart_machine$p
 		}
@@ -74,9 +69,12 @@ var_selection_by_permute_response_three_methods = function(bart_machine, num_rep
 	}
 	
 	invisible(list(
-		important_vars_pointwise = as.numeric(important_vars_pointwise),
-		important_vars_simul_max = as.numeric(important_vars_simul_max),
-		important_vars_simul_se = as.numeric(important_vars_simul_se),
+		important_vars_pointwise_names = important_vars_pointwise_names,
+		important_vars_simul_max_names = important_vars_simul_max_names,
+		important_vars_simul_se_names = important_vars_simul_se_names,
+		important_vars_pointwise_col_nums = as.numeric(important_vars_pointwise_col_nums),
+		important_vars_simul_max_col_nums = as.numeric(important_vars_simul_max_col_nums),
+		important_vars_simul_se_col_nums = as.numeric(important_vars_simul_se_col_nums),		
 		var_true_props_avg = var_true_props_avg,
 		permute_mat = permute_mat
 	))
@@ -106,8 +104,14 @@ get_null_permute_var_importances = function(bart_machine, num_trees_for_permute)
 			num_burn_in = bart_machine$num_burn_in, 
 			num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in,
 			run_in_sample = FALSE,
+			use_missing_data = bart_machine$use_missing_data,
+			use_missing_data_dummies_as_covars = bart_machine$use_missing_data_dummies_as_covars,
+			num_rand_samps_in_library = bart_machine$num_rand_samps_in_library,
+			replace_missing_data_with_x_j_bar = bart_machine$replace_missing_data_with_x_j_bar,
+			impute_missingness_with_rf_impute = bart_machine$impute_missingness_with_rf_impute,
+			impute_missingness_with_x_j_bar_for_lm = bart_machine$impute_missingness_with_x_j_bar_for_lm,					
 			verbose = FALSE)
-#	#just return the variable proportions	
+	#just return the variable proportions	
 	var_props = get_var_props_over_chain(bart_machine_with_permuted_y)
 	destroy_bart_machine(bart_machine_with_permuted_y)
 	cat(".")
@@ -274,6 +278,12 @@ var_selection_by_permute_response_cv = function(bart_machine, k_folds = 5, num_r
 				num_burn_in = bart_machine$num_burn_in,
 				cov_prior_vec = bart_machine$cov_prior_vec,
 				run_in_sample = FALSE,
+				use_missing_data = bart_machine$use_missing_data,
+				use_missing_data_dummies_as_covars = bart_machine$use_missing_data_dummies_as_covars,
+				num_rand_samps_in_library = bart_machine$num_rand_samps_in_library,
+				replace_missing_data_with_x_j_bar = bart_machine$replace_missing_data_with_x_j_bar,
+				impute_missingness_with_rf_impute = bart_machine$impute_missingness_with_rf_impute,
+				impute_missingness_with_x_j_bar_for_lm = bart_machine$impute_missingness_with_x_j_bar_for_lm,	
 				verbose = FALSE)
 		bart_variables_select_obj_k = var_selection_by_permute_response_three_methods(bart_machine_temp, 
 				num_permute_samples = num_permute_samples, 

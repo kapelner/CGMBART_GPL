@@ -324,7 +324,7 @@ for (i_knockout in 1 : length(KnockoutPROP)){
 		ytest = y[test_indices]
 		Xtrain = X[-test_indices, ]
 		ytrain = y[-test_indices]
-		bart_machine = build_bart_machine(Xtrain, ytrain, verbose = FALSE, run_in_sample = FALSE, add_imputations = TRUE, debug_log = TRUE)
+		bart_machine = build_bart_machine(Xtrain, ytrain, verbose = FALSE, run_in_sample = FALSE, impute_missingness_with_rf_impute = TRUE, debug_log = TRUE)
 		predict_obj = bart_predict_for_test_data(bart_machine, Xtest, ytest)
 		destroy_bart_machine(bart_machine)
 		oos_rmse_crazy_model_bart_with_imp[i_knockout, nsim] = predict_obj$rmse

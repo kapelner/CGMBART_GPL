@@ -3,7 +3,8 @@ setwd("C:\\Users\\Kapelner\\workspace\\CGMBART_GPL")
 library(bartMachine)
 
 Xy = read.csv("datasets/r_automobile.csv")
-Xy = Xy[!is.na(Xy$price), ]
+Xy = Xy[!is.na(Xy$price), ] #kill rows without a response
+Xy = na.omit(Xy) #kill any rows with missing data (we illustrate missing data features further in this file)
 y = Xy$price
 X = Xy
 X$price = NULL
@@ -15,24 +16,132 @@ X$num_cylinders = ifelse(X$num_cylinders == "twelve", 12, ifelse(X$num_cylinders
 
 
 
-head(X)
-dim(X)
-summary(X)
-hist(y, br = 30)
-hist(log(y), br = 30)
+#head(X)
+#dim(X)
+#summary(X)
+#hist(y, br = 30)
+#hist(log(y), br = 30)
 
 set_bart_machine_num_cores(4)
-init_java_for_bart_machine_with_mem_in_mb(3000)
+init_java_for_bart_machine_with_mem_in_mb(5000)
 
-bart_machine = build_bart_machine(X, log(y), verbose = T)
+bart_machine = build_bart_machine(X, log(y), verbose = T, debug_log = T)
 bart_machine
 
 plot_y_vs_yhat(bart_machine)
 check_bart_error_assumptions(bart_machine)
 plot_convergence_diagnostics(bart_machine)
-plot_mh_acceptance_reject(bart_machine)
+
 
 investigate_var_importance(bart_machine, num_replicates_for_avg = 25)
+ints = interaction_investigator(bart_machine, num_replicates_for_avg = 200, bottom_margin = 20)
+
+pd_plot(bart_machine, j="horsepower")
+rmse_by_num_trees(bart_machine, num_replicates = 20)
+
+bart_machine = build_bart_machine_cv(X, log(y), verbose = T)
+#BART CV win: k 2 nu_q 10, 0.75 m 200
+bart_machine
+
+#what is oosRMSE?
+oos_stats = k_fold_cv(X, log(y), k_folds = 10, k = 2, nu = 10, q = 0.75, num_trees = 200)
+oos_stats
+
+cov_importance_test(bart_machine, covariates = c("symboling"))
+cov_importance_test(bart_machine, covariates = c("symboling"))
+
+
+
+
+
+#################################
+
+
+
+
+
+
+
+
+
+
+
+
+#now let's play with missing data
+setwd("C:\\Users\\Kapelner\\workspace\\CGMBART_GPL")
+
+library(bartMachine)
+
+Xy = read.csv("datasets/r_automobile.csv")
+Xy = Xy[!is.na(Xy$price), ]
+y = Xy$price
+X = Xy
+X$price = NULL
+
+#now remove some variables and coerce some to numeric
+X$make = NULL
+X$num_doors = ifelse(X$num_doors == "two", 2, 4)
+X$num_cylinders = ifelse(X$num_cylinders == "twelve", 12, ifelse(X$num_cylinders == "eight", 8, ifelse(X$num_cylinders == "six", 6, ifelse(X$num_cylinders == "five", 5, ifelse(X$num_cylinders == "four", 4, ifelse(X$num_cylinders == "three", 3, 2))))))
+
+set_bart_machine_num_cores(4)
+init_java_for_bart_machine_with_mem_in_mb(5000)
+
+#bart_machine = build_bart_machine(X, log(y), verbose = T, debug_log = T, use_missing_data = TRUE, use_missing_data_dummies_as_covars = TRUE)
+#bart_machine
+#bart_machine$training_data_features_with_missing_features
+
+#we ask the question: does missingness itself matter?
+#cov_importance_test(bart_machine, covariates = 47 : 92, num_permutations = 100)
+#p-val = 0.47
+
+#doesn't seem to matter so let's not use the extra missing covariates
+bart_machine = build_bart_machine(X, log(y), verbose = T, debug_log = T, use_missing_data = TRUE)
+bart_machine
+bart_machine$training_data_features_with_missing_features
+
+oos_stats = k_fold_cv(X, log(y), use_missing_data = TRUE, k_folds = 20)
+oos_stats
+
+investigate_var_importance(bart_machine, num_replicates_for_avg = 100)
+
+#now let's do some variable selection
+windows()
+vars_selected = var_selection_by_permute_response_three_methods(bart_machine, bottom_margin = 10)
+vars_selected$important_vars_pointwise_names
+vars_selected$important_vars_simul_max_names
+vars_selected$important_vars_simul_se_names
+
+vars_selected_cv = var_selection_by_permute_response_cv(bart_machine)
+
+#build model on just the vars selected by ptwise
+X_dummified = dummify_data(X)
+
+bart_machine_ptwise_vars = build_bart_machine(X_dummified[, vars_selected$important_vars_pointwise_names], log(y), verbose = T, debug_log = T, use_missing_data = TRUE)
+bart_machine_ptwise_vars
+bart_machine_ptwise_vars$training_data_features_with_missing_features
+
+oos_stats_red_mod = k_fold_cv(X_dummified[, vars_selected$important_vars_pointwise_names], log(y), use_missing_data = TRUE, k_folds = 20)
+oos_stats_red_mod
+
+bart_machine_simul_max_vars = build_bart_machine(X_dummified[, vars_selected$important_vars_simul_max_names], log(y), verbose = T, debug_log = T, use_missing_data = TRUE)
+bart_machine_simul_max_vars
+bart_machine_simul_max_vars$training_data_features_with_missing_features
+
+oos_stats_red_mod = k_fold_cv(X_dummified[, vars_selected$important_vars_simul_max_names], log(y), use_missing_data = TRUE, k_folds = 20)
+oos_stats_red_mod
+
+interactions = interaction_investigator(bart_machine_simul_max_vars)
+
+#conclusion: did better than original model by cutting out crap
+
+mod = lm(as.formula(paste("log(y) ~ (", paste(vars_selected$important_vars_simul_max_names, collapse = "+"), ")^2")), data = X_dummified)
+summary(mod)
+
+#conclusion: can build a pretty damn good parametric model with first order interactions
+
+
+
+
 
 
 
@@ -173,6 +282,4 @@ investigate_var_importance(bart_machine, num_replicates_for_avg = 25)
 #		23.            2
 #		26.            4
 #		
-		
-		
-		
+# http://archive.ics.uci.edu/ml/datasets/Automobile

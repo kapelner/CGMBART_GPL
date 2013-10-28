@@ -10,8 +10,6 @@ for (i in 1 : 500){
 	COLORS[i] = rgb(runif(1, 0, 0.7), runif(1, 0, 0.7), runif(1, 0, 0.7))
 }
 
-BART_NUM_CORES = 1
-
 set_bart_machine_num_cores = function(num_cores){
 	assign("BART_NUM_CORES", num_cores, ".GlobalEnv")
 }
@@ -22,10 +20,13 @@ bart_machine_num_cores = function(){
 
 init_java_for_bart_machine_with_mem_in_mb = function(bart_max_mem){
 	jinit_params = paste("-Xmx", bart_max_mem, "m", sep = "")
+#	cat("initializing java with parameters", jinit_params, "from directory", getwd(), "\n")
 	.jinit(parameters = jinit_params)
 	for (dependency in JAR_DEPENDENCIES){
-		.jaddClassPath(paste("../inst/java/", dependency, sep = ""))
+		.jaddClassPath(paste("bartMachine/inst/java/", dependency, sep = ""))
+#		cat("  with dependency", dependency, "\n")
 	} 
+#	print(.jclassPath())
 }
 
 get_var_counts_over_chain = function(bart_machine, type = "splits"){

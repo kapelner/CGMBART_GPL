@@ -1,19 +1,25 @@
 
-cov_importance_test = function(bart_machine, covariates = NULL, num_permutations = 200, num_trees = NULL, plot = TRUE){
+cov_importance_test = function(bart_machine, covariates = NULL, num_permutations = 100, num_trees = NULL, plot = TRUE){
 	if (is.null(covariates)){
 		title = "BART omnibus test for covariate importance\n"
+	} else if (length(covariates) <= 3){
+		title = paste("BART test for importance of covariate(s):", paste(bart_machine$training_data_features_with_missing_features[covariates], collapse = ", "), "\n")
 	} else {
-		title = paste("BART test for importance of covariate(s):", paste(bart_machine$training_data_features[covariates], collapse = ", "), "\n")
+		title = paste("BART test for importance of", length(covariates), "covariates", "\n")
 	}
 	cat(title)
 	sd_y = sd(bart_machine$y)
 	
 	if (is.null(num_trees)){
 		num_trees = bart_machine$num_trees
-		pseudoRsq_obs = bart_machine$PseudoRsq
+		observed_pseudo_Rsq = bart_machine$PseudoRsq
 	} else {
-		bart_machine_copy = build_bart_machine(X = bart_machine$X, y = bart_machine$y, num_trees = num_trees, verbose = FALSE)
-		pseudoRsq_obs = bart_machine_copy$PseudoRsq
+		bart_machine_copy = build_bart_machine(X = bart_machine$X, y = bart_machine$y, 
+				use_missing_data = bart_machine$use_missing_data,
+				use_missing_data_dummies_as_covars = bart_machine$use_missing_data_dummies_as_covars, 
+				num_trees = num_trees, 
+				verbose = FALSE) #we have to turn verbose off otherwise there would be too many outputs
+		observed_pseudo_Rsq = bart_machine_copy$PseudoRsq
 		destroy_bart_machine(bart_machine_copy)	
 	}
 	
@@ -25,14 +31,21 @@ cov_importance_test = function(bart_machine, covariates = NULL, num_permutations
 		}	
 		#omnibus F-like test - just permute y (same as permuting ALL the columns of X and it's faster)
 		if (is.null(covariates)){
-			bart_machine_samp = build_bart_machine(X = bart_machine$X, y = sample(bart_machine$y), num_trees = num_trees, verbose = FALSE)
+			bart_machine_samp = build_bart_machine(X = bart_machine$X, y = sample(bart_machine$y), 
+					use_missing_data = bart_machine$use_missing_data,
+					use_missing_data_dummies_as_covars = bart_machine$use_missing_data_dummies_as_covars,
+					num_trees = num_trees, 
+					verbose = FALSE) #we have to turn verbose off otherwise there would be too many outputs
 		#partial F-like test - permute the columns that we're interested in seeing if they matter
 		} else {
 			X_samp = bart_machine$X #copy original design matrix
-			for (j in covariates){
-				X_samp[, j] = sample(X_samp[, j])
-			}
-			bart_machine_samp = build_bart_machine(X = X_samp, y = bart_machine$y, num_trees = num_trees, verbose = FALSE)
+
+			bart_machine_samp = build_bart_machine(X = X_samp, y = bart_machine$y, 
+					covariates_to_permute = covariates,
+					use_missing_data = bart_machine$use_missing_data,
+					use_missing_data_dummies_as_covars = bart_machine$use_missing_data_dummies_as_covars,
+					num_trees = num_trees, 
+					verbose = FALSE) #we have to turn verbose off otherwise there would be too many outputs
 		}
 		#record permutation result
 		pseudoRsq_perm_samples[nsim] = bart_machine_samp$PseudoRsq
@@ -40,17 +53,17 @@ cov_importance_test = function(bart_machine, covariates = NULL, num_permutations
 	}
 	cat("\n")
 	
-	pval = sum(pseudoRsq_obs < pseudoRsq_perm_samples) / num_permutations
+	pval = sum(observed_pseudo_Rsq < pseudoRsq_perm_samples) / num_permutations
 	
 	if (plot){
 		hist(pseudoRsq_perm_samples, 
-				xlim = c(min(pseudoRsq_perm_samples, 0.99 * pseudoRsq_obs), max(pseudoRsq_perm_samples, 1.01 * pseudoRsq_obs)),
+				xlim = c(min(pseudoRsq_perm_samples, 0.99 * observed_pseudo_Rsq), max(pseudoRsq_perm_samples, 1.01 * observed_pseudo_Rsq)),
 				xlab = paste("permutation samples\n pval = ", pval),
 				br = num_permutations / 5,
 				main = paste(title, "Null Samples of Pseudo-R^2's"))
-		abline(v = pseudoRsq_obs, col = "blue")
+		abline(v = observed_pseudo_Rsq, col = "blue")
 	}
 	cat("p_val = ", pval, "\n")
-	invisible(list(scaled_rmse_perm_samples = pseudoRsq_perm_samples, scaled_rmse_obs = pseudoRsq_obs, pval = pval))
+	invisible(list(scaled_rmse_perm_samples = pseudoRsq_perm_samples, scaled_rmse_obs = observed_pseudo_Rsq, pval = pval))
 }
 

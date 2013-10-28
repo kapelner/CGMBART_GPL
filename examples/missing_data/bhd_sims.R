@@ -226,7 +226,7 @@ if (iter_num == 5){
 			ytest = y[test_indices]
 			Xtrain = Xm[-test_indices, ]
 			ytrain = y[-test_indices]
-			bart_machine = build_bart_machine(Xtrain, ytrain, verbose = FALSE, run_in_sample = FALSE, add_imputations = TRUE, debug_log = TRUE, num_burn_in = BURN_IN)
+			bart_machine = build_bart_machine(Xtrain, ytrain, verbose = FALSE, run_in_sample = FALSE, impute_missingness_with_rf_impute = TRUE, debug_log = TRUE, num_burn_in = BURN_IN)
 			
 			print(bart_machine)
 			predict_obj = bart_predict_for_test_data(bart_machine, Xtest, ytest)
@@ -420,7 +420,7 @@ if (iter_num == 10){
 			ytest = y[test_indices]
 			Xtrain = Xm[-test_indices, ]
 			ytrain = y[-test_indices]
-			bart_machine = build_bart_machine(Xtrain, ytrain, verbose = FALSE, run_in_sample = FALSE, add_imputations = TRUE, debug_log = TRUE, num_burn_in = BURN_IN)
+			bart_machine = build_bart_machine(Xtrain, ytrain, verbose = FALSE, run_in_sample = FALSE, impute_missingness_with_rf_impute = TRUE, debug_log = TRUE, num_burn_in = BURN_IN)
 			predict_obj = bart_predict_for_test_data(bart_machine, Xtest, ytest)
 			destroy_bart_machine(bart_machine)
 			oos_rmse_bhd_bart_with_imp_mar[i_knockout, nsim] = predict_obj$rmse
@@ -600,7 +600,7 @@ if (iter_num == 15){
 			ytest = y[test_indices]
 			Xtrain = Xm[-test_indices, ]
 			ytrain = y[-test_indices]
-			bart_machine = build_bart_machine(Xtrain, ytrain, verbose = FALSE, run_in_sample = FALSE, add_imputations = TRUE, debug_log = TRUE, num_burn_in = BURN_IN)
+			bart_machine = build_bart_machine(Xtrain, ytrain, verbose = FALSE, run_in_sample = FALSE, impute_missingness_with_rf_impute = TRUE, debug_log = TRUE, num_burn_in = BURN_IN)
 			predict_obj = bart_predict_for_test_data(bart_machine, Xtest, ytest)
 			destroy_bart_machine(bart_machine)
 			oos_rmse_bhd_bart_with_imp_nmar[i_knockout, nsim] = predict_obj$rmse
