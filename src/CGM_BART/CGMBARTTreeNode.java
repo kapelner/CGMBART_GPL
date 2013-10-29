@@ -48,7 +48,7 @@ import OpenSourceExtensions.UnorderedPair;
  */
 public class CGMBARTTreeNode implements Cloneable {
 	
-	public static final boolean DEBUG_NODES = true;
+	public static final boolean DEBUG_NODES = false;
 	
 	/** a link back to the overall bart model */
 	private CGMBART_02_hyperparams cgmbart;	

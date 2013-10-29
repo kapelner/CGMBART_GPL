@@ -2,6 +2,7 @@ package CGM_BART;
 
 public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init {
 
+	public static final boolean ON_WINDOWS = System.getProperty("os.name").toLowerCase().indexOf("win") >= 0;
 	@Override
 	public void Build() {
 		SetupGibbsSampling();
@@ -47,16 +48,18 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init {
 	}
 
 	protected void GibbsSampleDebugMessage(int t) {
-//		if (t == 0 && gibbs_sample_num % 100 == 0){//&& gibbs_sample_num % 100 == 0
+		if (t == 0 && gibbs_sample_num % 100 == 0){//&& gibbs_sample_num % 100 == 0
 			String message = "Sampling M_" + (t + 1) + "/" + num_trees + " iter " + gibbs_sample_num + "/" + num_gibbs_total_iterations;
 			if (num_cores > 1){
 				message += "  thread: " + (threadNum + 1);
 			}
-//			long mem_used = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
-//			long max_mem = Runtime.getRuntime().maxMemory();
-//			message += "  mem: " + TreeIllustration.one_digit_format.format(mem_used / 1000000.0) + "/" + TreeIllustration.one_digit_format.format(max_mem / 1000000.0) + "MB";
+			if (ON_WINDOWS){
+				long mem_used = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+				long max_mem = Runtime.getRuntime().maxMemory();
+				message += "  mem: " + TreeIllustration.one_digit_format.format(mem_used / 1000000.0) + "/" + TreeIllustration.one_digit_format.format(max_mem / 1000000.0) + "MB";
+			}
 			System.out.println(message);
-//		}
+		}
 	}
 
 	protected void SampleMusWrapper(int sample_num, int t) {
