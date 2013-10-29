@@ -542,7 +542,7 @@ pd_plot = function(bart_machine, j, levs = c(0.05, seq(from = 0.10, to = 0.90, b
 #	pdbart(x.train = bart_machine$X, y.train = bart_machine$y, xind = 6, ndpost = 200, nskip = 500)
 }
 
-rmse_by_num_trees = function(bart_machine, tree_list = c(5, seq(10, 50, 10), 100, 150, 200, 300), in_sample = FALSE, plot = TRUE, holdout_pctg = 0.3, num_replicates = 4){
+rmse_by_num_trees = function(bart_machine, tree_list = c(5, seq(10, 50, 10), 100, 150, 200), in_sample = FALSE, plot = TRUE, holdout_pctg = 0.3, num_replicates = 4){
 	if (bart_machine$bart_destroyed){
 		stop("This BART machine has been destroyed. Please recreate.")
 	}

@@ -32,25 +32,33 @@ plot_y_vs_yhat(bart_machine)
 check_bart_error_assumptions(bart_machine)
 plot_convergence_diagnostics(bart_machine)
 
+#build another model with alpha beta to show depth of trees
+
 
 investigate_var_importance(bart_machine, num_replicates_for_avg = 25)
 ints = interaction_investigator(bart_machine, num_replicates_for_avg = 200, bottom_margin = 20)
 
 pd_plot(bart_machine, j="horsepower")
+#pd_plot(bart_machine, j="width")
+#pd_plot(bart_machine, j="stroke")
+#pd_plot(bart_machine, j="horsepower")
+
+
 rmse_by_num_trees(bart_machine, num_replicates = 20)
 
 bart_machine = build_bart_machine_cv(X, log(y), verbose = T)
-#BART CV win: k 2 nu_q 10, 0.75 m 200
+# BART CV win: k: 2 nu, q: 3, 0.9 m: 200
 bart_machine
 
 #what is oosRMSE?
-oos_stats = k_fold_cv(X, log(y), k_folds = 10, k = 2, nu = 10, q = 0.75, num_trees = 200)
+oos_stats = k_fold_cv(X, log(y), k_folds = 10, k = 2, nu = 3, q = 0.9, num_trees = 200)
 oos_stats
 
 cov_importance_test(bart_machine, covariates = c("symboling"))
-cov_importance_test(bart_machine, covariates = c("symboling"))
+cov_importance_test(bart_machine, covariates = c("width"))
+cov_importance_test(bart_machine, covariates = c("horsepower"))
 
-
+#symboling,normalized_losses,make,fuel_type,aspiration,num_doors,body_style,wheel_drive,engine_location,wheel_base,length,width,height,curb_weight,engine_type,num_cylinders,engine_size,fuel_system,bore,stroke,compression_ratio,horsepower,peak_rpm,city_mpg,highway_mpg,price
 
 
 
@@ -86,12 +94,12 @@ X$num_cylinders = ifelse(X$num_cylinders == "twelve", 12, ifelse(X$num_cylinders
 set_bart_machine_num_cores(4)
 init_java_for_bart_machine_with_mem_in_mb(5000)
 
-#bart_machine = build_bart_machine(X, log(y), verbose = T, debug_log = T, use_missing_data = TRUE, use_missing_data_dummies_as_covars = TRUE)
-#bart_machine
-#bart_machine$training_data_features_with_missing_features
+bart_machine = build_bart_machine(X, log(y), verbose = T, debug_log = T, use_missing_data = TRUE, use_missing_data_dummies_as_covars = TRUE)
+bart_machine
+bart_machine$training_data_features_with_missing_features
 
 #we ask the question: does missingness itself matter?
-#cov_importance_test(bart_machine, covariates = 47 : 92, num_permutations = 100)
+cov_importance_test(bart_machine, covariates = 47 : 92, num_permutations = 100)
 #p-val = 0.47
 
 #doesn't seem to matter so let's not use the extra missing covariates
@@ -135,6 +143,10 @@ interactions = interaction_investigator(bart_machine_simul_max_vars)
 #conclusion: did better than original model by cutting out crap
 
 mod = lm(as.formula(paste("log(y) ~ (", paste(vars_selected$important_vars_simul_max_names, collapse = "+"), ")^2")), data = X_dummified)
+summary(mod)
+
+
+mod = lm(log(y) ~ ., data = X)
 summary(mod)
 
 #conclusion: can build a pretty damn good parametric model with first order interactions

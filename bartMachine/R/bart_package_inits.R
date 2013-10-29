@@ -28,6 +28,7 @@ init_java_for_bart_machine_with_mem_in_mb = function(bart_max_mem){
 	} 
 #	print(.jclassPath())
 }
+#http://r.789695.n4.nabble.com/Referencing-inst-directory-in-installed-package-td3749659.html
 
 get_var_counts_over_chain = function(bart_machine, type = "splits"){
 	C = t(sapply(.jcall(bart_machine$java_bart_machine, "[[I", "getCountsForAllAttribute", as.integer(BART_NUM_CORES), type), .jevalArray))
