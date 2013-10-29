@@ -5,7 +5,7 @@ library(bartMachine)
 Xy = read.csv("datasets/r_automobile.csv")
 Xy = Xy[!is.na(Xy$price), ] #kill rows without a response
 Xy = na.omit(Xy) #kill any rows with missing data (we illustrate missing data features further in this file)
-y = Xy$price
+y = y = as.numeric(Xy$price)
 X = Xy
 X$price = NULL
 
@@ -82,7 +82,7 @@ library(bartMachine)
 
 Xy = read.csv("datasets/r_automobile.csv")
 Xy = Xy[!is.na(Xy$price), ]
-y = Xy$price
+y = as.numeric(Xy$price)
 X = Xy
 X$price = NULL
 
@@ -107,10 +107,10 @@ bart_machine = build_bart_machine(X, log(y), verbose = T, debug_log = T, use_mis
 bart_machine
 bart_machine$training_data_features_with_missing_features
 
-oos_stats = k_fold_cv(X, log(y), use_missing_data = TRUE, k_folds = 20)
+oos_stats = k_fold_cv(X, log(y), use_missing_data = TRUE, k_folds = 10)
 oos_stats
 
-investigate_var_importance(bart_machine, num_replicates_for_avg = 100)
+investigate_var_importance(bart_machine, num_replicates_for_avg = 25)
 
 #now let's do some variable selection
 windows()
