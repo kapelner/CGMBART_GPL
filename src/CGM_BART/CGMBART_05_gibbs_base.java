@@ -52,9 +52,9 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init {
 			if (num_cores > 1){
 				message += "  thread: " + (threadNum + 1);
 			}
-			long mem_used = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
-			long max_mem = Runtime.getRuntime().maxMemory();
-			message += "  mem: " + TreeIllustration.one_digit_format.format(mem_used / 1000000.0) + "/" + TreeIllustration.one_digit_format.format(max_mem / 1000000.0) + "MB";
+//			long mem_used = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+//			long max_mem = Runtime.getRuntime().maxMemory();
+//			message += "  mem: " + TreeIllustration.one_digit_format.format(mem_used / 1000000.0) + "/" + TreeIllustration.one_digit_format.format(max_mem / 1000000.0) + "MB";
 			System.out.println(message);
 //		}
 	}

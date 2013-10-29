@@ -23,7 +23,7 @@ init_java_for_bart_machine_with_mem_in_mb = function(bart_max_mem){
 #	cat("initializing java with parameters", jinit_params, "from directory", getwd(), "\n")
 	.jinit(parameters = jinit_params)
 	for (dependency in JAR_DEPENDENCIES){
-		.jaddClassPath(paste("bartMachine/inst/java/", dependency, sep = ""))
+		.jaddClassPath(paste(.libPaths(), "/bartMachine/inst/java/", dependency, sep = ""))
 #		cat("  with dependency", dependency, "\n")
 	} 
 #	print(.jclassPath())
