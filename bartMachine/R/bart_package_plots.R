@@ -151,10 +151,13 @@ get_mh_acceptance_reject = function(bart_machine){
 	)
 }
 
-plot_y_vs_yhat = function(bart_machine, X = NULL, y = NULL, ppis = FALSE, ppi_conf = 0.95){
+plot_y_vs_yhat = function(bart_machine, X = NULL, y = NULL, credible_intervals = FALSE, prediction_intervals = FALSE, interval_confidence_level = 0.95){
 	if (bart_machine$bart_destroyed){
 		stop("This BART machine has been destroyed. Please recreate.")
 	}	
+	if (credible_intervals && prediction_intervals){
+		stop("You cannot plot both credibility intervals and prediction intervals simultaneously.")
+	}
 	
 	if (is.null(X) & is.null(y)){
 		X = bart_machine$X
@@ -167,15 +170,15 @@ plot_y_vs_yhat = function(bart_machine, X = NULL, y = NULL, ppis = FALSE, ppi_co
 		in_sample = FALSE
 	}
 	
-	if (ppis){
-		ppis = calc_ppis_from_prediction(bart_machine, X, ppi_conf)
-		ppi_a = ppis[, 1]
-		ppi_b = ppis[, 2]
-		y_in_ppi = y >= ppi_a & y <= ppi_b
+	if (credible_intervals){
+		credible_intervals = calc_credible_intervals_from_prediction(bart_machine, X, interval_confidence_level)
+		ci_a = credible_intervals[, 1]
+		ci_b = credible_intervals[, 2]
+		y_in_ppi = y >= ci_a & y <= ci_b
 		prop_ys_in_ppi = sum(y_in_ppi) / length(y_in_ppi)
 		
 		plot(y, y_hat, 
-			main = paste(ifelse(in_sample, "In-Sample", "Out-of-Sample"), " Fitted vs. Actual Values with ", round(ppi_conf * 100), "% PPIs (", round(prop_ys_in_ppi * 100, 2), "% coverage)", sep = ""), 
+			main = paste(ifelse(in_sample, "In-Sample", "Out-of-Sample"), " Fitted vs. Actual Values\nwith ", round(interval_confidence_level * 100), "% Cred. Int.'s (", round(prop_ys_in_ppi * 100, 2), "% coverage)", sep = ""), 
 			xlab = paste("Actual Values", sep = ""), 
 			ylab = "Fitted Values", 
 			xlim = c(min(min(y), min(y_hat)), max(max(y), max(y_hat))),
@@ -183,7 +186,29 @@ plot_y_vs_yhat = function(bart_machine, X = NULL, y = NULL, ppis = FALSE, ppi_co
 			cex = 0)
 		#draw PPI's
 		for (i in 1 : bart_machine$n){
-			segments(y[i], ppi_a[i], y[i], ppi_b[i], col = "grey", lwd = 0.1)	
+			segments(y[i], ci_a[i], y[i], ci_b[i], col = "grey", lwd = 0.1)	
+		}
+		#draw green dots or red dots depending upon inclusion in the PPI
+		for (i in 1 : bart_machine$n){
+			points(y[i], y_hat[i], col = ifelse(y_in_ppi[i], "darkgreen", "red"), cex = 0.6, pch = 16)	
+		}		
+	} else if (prediction_intervals){
+		credible_intervals = calc_prediction_intervals_from_prediction(bart_machine, X, interval_confidence_level)
+		ci_a = credible_intervals[, 1]
+		ci_b = credible_intervals[, 2]
+		y_in_ppi = y >= ci_a & y <= ci_b
+		prop_ys_in_ppi = sum(y_in_ppi) / length(y_in_ppi)
+		
+		plot(y, y_hat, 
+				main = paste(ifelse(in_sample, "In-Sample", "Out-of-Sample"), " Fitted vs. Actual Values\nwith ", round(interval_confidence_level * 100), "% Pred. Int.'s (", round(prop_ys_in_ppi * 100, 2), "% coverage)", sep = ""), 
+				xlab = paste("Actual Values", sep = ""), 
+				ylab = "Fitted Values", 
+				xlim = c(min(min(y), min(y_hat)), max(max(y), max(y_hat))),
+				ylim = c(min(min(y), min(y_hat)), max(max(y), max(y_hat))),
+				cex = 0)
+		#draw PPI's
+		for (i in 1 : bart_machine$n){
+			segments(y[i], ci_a[i], y[i], ci_b[i], col = "grey", lwd = 0.1)	
 		}
 		#draw green dots or red dots depending upon inclusion in the PPI
 		for (i in 1 : bart_machine$n){
@@ -519,8 +544,7 @@ pd_plot = function(bart_machine, j, levs = c(0.05, seq(from = 0.10, to = 0.90, b
 	for (q in 1 : length(levs)){
 		for (g in 1 : bart_machine$num_iterations_after_burn_in){
 			bart_avg_predictions_by_quantile_by_gibbs[q, g] = mean(bart_predictions_by_quantile[q, , g])
-		}
-		
+		}		
 	}
 	
 	bart_avg_predictions_by_quantile = apply(bart_avg_predictions_by_quantile_by_gibbs, 1, mean)
@@ -533,7 +557,7 @@ pd_plot = function(bart_machine, j, levs = c(0.05, seq(from = 0.10, to = 0.90, b
 			main = "Partial Dependence Plot",
 			ylim = c(min(bart_avg_predictions_lower, bart_avg_predictions_upper), max(bart_avg_predictions_lower, bart_avg_predictions_upper)),
 			ylab = "Partial Effect",
-			xlab = paste("Quantiles for Variable", var_name))
+			xlab = paste(var_name, "plotted at specified quantiles"))
 	lines(x_j_quants, bart_avg_predictions_lower, type = "o", col = "blue")
 	lines(x_j_quants, bart_avg_predictions_upper, type = "o", col = "blue")
 	

@@ -179,7 +179,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	
 	#if the user hasn't set a number of cores, set it here
 	if (!exists("BART_NUM_CORES")){
-		BART_NUM_CORES = BART_NUM_CORES_DEFAULT
+		assign("BART_NUM_CORES", BART_NUM_CORES_DEFAULT, .GlobalEnv)
 	}
 	
 	

@@ -146,7 +146,7 @@ summary(lm(rmses ~ k))
 
 
 #get PPIs for test data
-ppi_obj = calc_ppis_from_prediction(bart_machine, Xtest)
+ppi_obj = calc_credible_intervals_from_prediction(bart_machine, Xtest)
 
 
 

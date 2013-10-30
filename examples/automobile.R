@@ -1,5 +1,5 @@
 setwd("C:\\Users\\Kapelner\\workspace\\CGMBART_GPL")
-setwd("C:\\Users\\jbleich\\workspace\\CGMBART_GPL")
+#setwd("C:\\Users\\jbleich\\workspace\\CGMBART_GPL")
 
 library(bartMachine)
 
@@ -12,8 +12,8 @@ Xy$price = log(Xy$price)
 
 #now remove some variables and coerce some to numeric
 Xy$make = NULL
-Xy$num_doors = ifelse(X$num_doors == "two", 2, 4)
-Xy$num_cylinders = ifelse(X$num_cylinders == "twelve", 12, ifelse(X$num_cylinders == "eight", 8, ifelse(X$num_cylinders == "six", 6, ifelse(X$num_cylinders == "five", 5, ifelse(X$num_cylinders == "four", 4, ifelse(X$num_cylinders == "three", 3, 2))))))
+Xy$num_doors = ifelse(Xy$num_doors == "two", 2, 4)
+Xy$num_cylinders = ifelse(Xy$num_cylinders == "twelve", 12, ifelse(Xy$num_cylinders == "eight", 8, ifelse(Xy$num_cylinders == "six", 6, ifelse(Xy$num_cylinders == "five", 5, ifelse(Xy$num_cylinders == "four", 4, ifelse(Xy$num_cylinders == "three", 3, 2))))))
 
 X = Xy
 X$price = NULL
@@ -24,13 +24,14 @@ X$price = NULL
 #hist(y, br = 30)
 #hist(y, br = 30)
 
-set_bart_machine_num_cores(1)
+set_bart_machine_num_cores(4)
 init_java_for_bart_machine_with_mem_in_mb(2500)
 
 bart_machine = build_bart_machine(X, y)
 bart_machine
 
-plot_y_vs_yhat(bart_machine)
+plot_y_vs_yhat(bart_machine, credible_intervals = TRUE)
+plot_y_vs_yhat(bart_machine, prediction_intervals = TRUE)
 
 
 oos_stats = k_fold_cv(X, y, k_folds = 10)
@@ -41,17 +42,6 @@ oos_stats
 vars_selected = var_selection_by_permute_response_three_methods(bart_machine, bottom_margin = 10, num_permute_samples=10) ##fix dot printing
 names(vars_selected)
 cv_vars = var_selection_by_permute_response_cv(bart_machine, k_folds = 2, num_reps_for_avg = 5, num_permute_samples = 20, num_trees_pred_cv = 50)
-
-
-
-vars_selected$permute_mat[, 45] == 0
-vars_selected$var_true_props_avg[45] == 0
-
-pd_plot(bart_machine, j="horsepower")
-#pd_plot(bart_machine, j="width")
-#pd_plot(bart_machine, j="stroke")
-#pd_plot(bart_machine, j="horsepower")
-
 
 rmse_by_num_trees(bart_machine, num_replicates = 20)
 
@@ -82,8 +72,7 @@ cov_importance_test(bart_machine_cv)
 
 pd_plot(bart_machine_cv, j = "horsepower")
 pd_plot(bart_machine_cv, j = "width")
-#pd_plot(bart_machine, j="stroke")
-#pd_plot(bart_machine, j="horsepower")
+pd_plot(bart_machine_cv, j="stroke")
 
 #################################
 

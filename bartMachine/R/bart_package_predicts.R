@@ -78,13 +78,13 @@ bart_machine_get_posterior = function(bart_machine, new_data, ppi = 0.95){
 }
 
 
-calc_ppis_from_prediction = function(bart_machine, new_data, ppi_conf = 0.95){
+calc_credible_intervals_from_prediction = function(bart_machine, new_data, ci_conf = 0.95){
 	#first convert the rows to the correct dummies etc
 	new_data = pre_process_new_data(new_data, bart_machine)
 	n_test = nrow(new_data)
 	
-	ppi_lower_bd = array(NA, n_test)
-	ppi_upper_bd = array(NA, n_test)	
+	ci_lower_bd = array(NA, n_test)
+	ci_upper_bd = array(NA, n_test)	
 	
 	y_hat_posterior_samples = 
 			t(sapply(.jcall(bart_machine$java_bart_machine, "[[D", "getGibbsSamplesForPrediction",  .jarray(new_data, dispatch = TRUE), as.integer(BART_NUM_CORES)), .jevalArray))
@@ -93,9 +93,41 @@ calc_ppis_from_prediction = function(bart_machine, new_data, ppi_conf = 0.95){
 	y_hat = rowMeans(y_hat_posterior_samples)
 	
 	for (i in 1 : n_test){		
-		ppi_lower_bd[i] = quantile(sort(y_hat_posterior_samples[i, ]), (1 - ppi_conf) / 2)
-		ppi_upper_bd[i] = quantile(sort(y_hat_posterior_samples[i, ]), (1 + ppi_conf) / 2)
+		ci_lower_bd[i] = quantile(sort(y_hat_posterior_samples[i, ]), (1 - ci_conf) / 2)
+		ci_upper_bd[i] = quantile(sort(y_hat_posterior_samples[i, ]), (1 + ci_conf) / 2)
 	}
 	#put them together and return
-	cbind(ppi_lower_bd, ppi_upper_bd)
+	cbind(ci_lower_bd, ci_upper_bd)
+}
+
+calc_prediction_intervals_from_prediction = function(bart_machine, new_data, pi_conf = 0.95, normal_samples_per_gibbs_sample = 100){
+	#first convert the rows to the correct dummies etc
+	new_data = pre_process_new_data(new_data, bart_machine)
+	n_test = nrow(new_data)
+	
+	pi_lower_bd = array(NA, n_test)
+	pi_upper_bd = array(NA, n_test)	
+	
+	y_hat_posterior_samples = 
+			t(sapply(.jcall(bart_machine$java_bart_machine, "[[D", "getGibbsSamplesForPrediction",  .jarray(new_data, dispatch = TRUE), as.integer(BART_NUM_CORES)), .jevalArray))
+	sigsqs = .jcall(bart_machine$java_bart_machine, "[D", "getGibbsSamplesSigsqs")
+	
+	
+	#for each row in new_data we have to get a B x n_G matrix of draws from the normal
+	
+	all_prediction_samples = array(NA, c(n_test, bart_machine$num_iterations_after_burn_in, normal_samples_per_gibbs_sample))
+	for (i in 1 : n_test){		
+		for (n_g in 1 : bart_machine$num_iterations_after_burn_in){
+			y_hat_draw = y_hat_posterior_samples[i, n_g] 
+			sigsq_draw = sigsqs[n_g]
+			all_prediction_samples[i, n_g, ] = rnorm(n = normal_samples_per_gibbs_sample, mean = y_hat_draw, sd = sqrt(sigsq_draw))			
+		}
+	}
+	
+	for (i in 1 : n_test){		
+		pi_lower_bd[i] = quantile(c(all_prediction_samples[i,, ]), (1 - pi_conf) / 2) #fun fact: the "c" function is overloaded to vectorize an array
+		pi_upper_bd[i] = quantile(c(all_prediction_samples[i,, ]), (1 + pi_conf) / 2)
+	}
+	#put them together and return
+	cbind(pi_lower_bd, pi_upper_bd)
 }
