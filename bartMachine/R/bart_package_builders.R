@@ -15,11 +15,10 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		debug_log = FALSE,
 		run_in_sample = TRUE,
 		s_sq_y = "mse", # "mse" or "var"
-		unique_name = "unnamed",
-		print_tree_illustrations = FALSE,
+#		print_tree_illustrations = FALSE,
 		cov_prior_vec = NULL,
 		use_missing_data = FALSE,
-		covariates_to_permute = NULL,
+		covariates_to_permute = NULL, #PRIVATE
 		num_rand_samps_in_library = 10000, #give the user the option to make a bigger library of random samples of normals and inv-gammas
 		use_missing_data_dummies_as_covars = FALSE,
 		replace_missing_data_with_x_j_bar = FALSE,
@@ -135,18 +134,16 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		}		
 	}
 	
-	#first set the name
-	.jcall(java_bart_machine, "V", "setUniqueName", unique_name)
 	#now set whether we want the program to log to a file
 	if (debug_log & verbose){
 		cat("warning: printing out the log file will slow down the runtime significantly\n")
 		.jcall(java_bart_machine, "V", "writeStdOutToLogFile")
 	}
 	#set whether we want there to be tree illustrations
-	if (print_tree_illustrations & verbose){
-		cat("warning: we have disabled printing tree illustrations. If you need this feature, you can turn it on in the code by uncommenting the next line after this message.\n")
-#		.jcall(java_bart_machine, "V", "printTreeIllustations")
-	}
+#	if (print_tree_illustrations & verbose){
+#		cat("warning: we have disabled printing tree illustrations. If you need this feature, you can turn it on in the code by uncommenting the next line after this message.\n")
+##		.jcall(java_bart_machine, "V", "printTreeIllustations")
+#	}
 	
 	#set the std deviation of y to use
 	if (ncol(model_matrix_training_data) - 1 >= nrow(model_matrix_training_data)){

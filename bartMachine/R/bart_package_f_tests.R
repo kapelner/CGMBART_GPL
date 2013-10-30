@@ -3,7 +3,12 @@ cov_importance_test = function(bart_machine, covariates = NULL, num_permutations
 	if (is.null(covariates)){
 		title = "BART omnibus test for covariate importance\n"
 	} else if (length(covariates) <= 3){
-		title = paste("BART test for importance of covariate(s):", paste(bart_machine$training_data_features_with_missing_features[covariates], collapse = ", "), "\n")
+		if (class(covariates[1]) == "numeric"){
+			cov_names = paste(bart_machine$training_data_features_with_missing_features[covariates], collapse = ", ")
+		} else {
+			cov_names = paste(covariates, collapse = ", ")
+		}
+		title = paste("BART test for importance of covariate(s):", cov_names, "\n")
 	} else {
 		title = paste("BART test for importance of", length(covariates), "covariates", "\n")
 	}
@@ -59,9 +64,9 @@ cov_importance_test = function(bart_machine, covariates = NULL, num_permutations
 		hist(pseudoRsq_perm_samples, 
 				xlim = c(min(pseudoRsq_perm_samples, 0.99 * observed_pseudo_Rsq), max(pseudoRsq_perm_samples, 1.01 * observed_pseudo_Rsq)),
 				xlab = paste("permutation samples\n pval = ", pval),
-				br = num_permutations / 5,
+				br = num_permutations / 10,
 				main = paste(title, "Null Samples of Pseudo-R^2's"))
-		abline(v = observed_pseudo_Rsq, col = "blue")
+		abline(v = observed_pseudo_Rsq, col = "blue", lwd = 3)
 	}
 	cat("p_val = ", pval, "\n")
 	invisible(list(scaled_rmse_perm_samples = pseudoRsq_perm_samples, scaled_rmse_obs = observed_pseudo_Rsq, pval = pval))
