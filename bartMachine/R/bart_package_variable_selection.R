@@ -17,7 +17,7 @@ var_selection_by_permute_response_three_methods = function(bart_machine, num_rep
 	for (b in 1 : num_permute_samples){
 		permute_mat[b, ] = get_null_permute_var_importances(bart_machine, num_trees_for_permute)
 	}
-	#cat("\n")
+	cat("\n")
 	
 	#sort permute mat
 	permute_mat = permute_mat[, names(var_true_props_avg)]
@@ -260,7 +260,7 @@ var_selection_by_permute_response_cv = function(bart_machine, k_folds = 5, num_r
 	split_points = seq(from = 1, to = bart_machine$n, by = holdout_size)[1 : k_folds]
 	
 	L2_err_mat = matrix(NA, nrow = k_folds, ncol = 3)
-	colnames(L2_err_mat) = c("important_vars_pointwise", "important_vars_simul_max", "important_vars_simul_se")
+	colnames(L2_err_mat) = c("important_vars_pointwise_names", "important_vars_simul_max_names", "important_vars_simul_se_names")
 	
 	for (k in 1 : k_folds){
 		cat("cv #", k, "\n", sep = "")
@@ -269,7 +269,7 @@ var_selection_by_permute_response_cv = function(bart_machine, k_folds = 5, num_r
 		holdout_index_f = ifelse(k == k_folds, bart_machine$n, split_points[k + 1] - 1)
 		
 		#pull out training data
-		training_X_k = bart_machine$X[-c(holdout_index_i : holdout_index_f), ]
+		training_X_k = bart_machine$model_matrix_training_data[-c(holdout_index_i : holdout_index_f), ]
 		training_y_k = y[-c(holdout_index_i : holdout_index_f)]		
 		
 		#make a temporary bart machine just so we can run the var selection for all three methods
@@ -293,7 +293,7 @@ var_selection_by_permute_response_cv = function(bart_machine, k_folds = 5, num_r
 		destroy_bart_machine(bart_machine_temp)
 		
 		#pull out test data
-		test_X_k = bart_machine$X[holdout_index_i : holdout_index_f, ]
+		test_X_k = bart_machine$model_matrix_training_data[holdout_index_i : holdout_index_f, ]
 		text_y_k = y[holdout_index_i : holdout_index_f]
 		
 		cat("method")

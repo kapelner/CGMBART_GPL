@@ -16,7 +16,6 @@ X$num_doors = ifelse(X$num_doors == "two", 2, 4)
 X$num_cylinders = ifelse(X$num_cylinders == "twelve", 12, ifelse(X$num_cylinders == "eight", 8, ifelse(X$num_cylinders == "six", 6, ifelse(X$num_cylinders == "five", 5, ifelse(X$num_cylinders == "four", 4, ifelse(X$num_cylinders == "three", 3, 2))))))
 
 
-
 #head(X)
 #dim(X)
 #summary(X)
@@ -39,7 +38,12 @@ plot_convergence_diagnostics(bart_machine)
 investigate_var_importance(bart_machine, num_replicates_for_avg = 25)
 ints = interaction_investigator(bart_machine, num_replicates_for_avg = 200, bottom_margin = 20)
 
-vars_selected = var_selection_by_permute_response_three_methods(bart_machine, bottom_margin = 10) ##fix dot printing
+
+vars_selected = var_selection_by_permute_response_three_methods(bart_machine, bottom_margin = 10, num_permute_samples=10) ##fix dot printing
+names(vars_selected)
+cv_vars = var_selection_by_permute_response_cv(bart_machine, k_folds = 2, num_reps_for_avg = 5, num_permute_samples = 20, num_trees_pred_cv = 50)
+
+
 
 vars_selected$permute_mat[, 45] == 0
 vars_selected$var_true_props_avg[45] == 0
