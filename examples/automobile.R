@@ -1,4 +1,5 @@
 setwd("C:\\Users\\Kapelner\\workspace\\CGMBART_GPL")
+setwd("C:\\Users\\jbleich\\workspace\\CGMBART_GPL")
 
 library(bartMachine)
 
@@ -17,15 +18,14 @@ Xy$num_cylinders = ifelse(X$num_cylinders == "twelve", 12, ifelse(X$num_cylinder
 X = Xy
 X$price = NULL
 
-
 #head(X)
 #dim(X)
 #summary(X)
 #hist(y, br = 30)
 #hist(y, br = 30)
 
-set_bart_machine_num_cores(4)
-init_java_for_bart_machine_with_mem_in_mb(5000)
+set_bart_machine_num_cores(1)
+init_java_for_bart_machine_with_mem_in_mb(2500)
 
 bart_machine = build_bart_machine(X, y)
 bart_machine
@@ -38,7 +38,19 @@ oos_stats
 
 #build another model with alpha beta to show depth of trees
 
+vars_selected = var_selection_by_permute_response_three_methods(bart_machine, bottom_margin = 10, num_permute_samples=10) ##fix dot printing
+names(vars_selected)
+cv_vars = var_selection_by_permute_response_cv(bart_machine, k_folds = 2, num_reps_for_avg = 5, num_permute_samples = 20, num_trees_pred_cv = 50)
 
+
+
+vars_selected$permute_mat[, 45] == 0
+vars_selected$var_true_props_avg[45] == 0
+
+pd_plot(bart_machine, j="horsepower")
+#pd_plot(bart_machine, j="width")
+#pd_plot(bart_machine, j="stroke")
+#pd_plot(bart_machine, j="horsepower")
 
 
 rmse_by_num_trees(bart_machine, num_replicates = 20)
