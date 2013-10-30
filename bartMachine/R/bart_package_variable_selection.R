@@ -17,7 +17,7 @@ var_selection_by_permute_response_three_methods = function(bart_machine, num_rep
 	for (b in 1 : num_permute_samples){
 		permute_mat[b, ] = get_null_permute_var_importances(bart_machine, num_trees_for_permute)
 	}
-	cat("\n")
+	#cat("\n")
 	
 	#sort permute mat
 	permute_mat = permute_mat[, names(var_true_props_avg)]
@@ -50,7 +50,7 @@ var_selection_by_permute_response_three_methods = function(bart_machine, num_rep
 				main = "Variable Selection by Pointwise Method", ylab = "proportion included")
 		axis(1, at = 1 : num_var_plot, labels = names(var_true_props_avg[1 : num_var_plot]), las = 2)
 		for (j in 1 : num_var_plot){
-			points(j, var_true_props_avg[j], pch = ifelse(var_true_props_avg[j] < quantile(permute_mat[, j], 1 - alpha), 1, 16))
+			points(j, var_true_props_avg[j], pch = ifelse(var_true_props_avg[j] <= quantile(permute_mat[, j], 1 - alpha), 1, 16))
 		}
 		
 		sapply(1 : num_var_plot, function(s){segments(s, 0, x1 = s, quantile(permute_mat[, s], 1 - alpha), col = "forestgreen")})
@@ -138,57 +138,57 @@ bisectK = function(tol, coverage, permute_mat, x_left, x_right, countLimit, perm
 }
 
 
-#not theoretically sound; not recommended
-var_importance_by_dropping_variable = function(bart_machine, list_of_vars = NULL, holdout_pctg = 0.2, plot = TRUE, num_var_plot = Inf){
-	if (bart_machine$bart_destroyed){
-		stop("This BART machine has been destroyed. Please recreate.")
-	}
-	
-	if (is.null(list_of_vars)){
-		list_of_vars = 1 : bart_machine$p
-	}
-	prev_cov_prior_vec = bart_machine$cov_prior_vec
-	if (is.null(prev_cov_prior_vec)){
-		prev_cov_prior_vec = rep(1, bart_machine$p)
-	}
-	out_of_sample_indices = sort(sample(1 : bart_machine$n, round(bart_machine$n * holdout_pctg)))
-	training_data_X = bart_machine$X[setdiff(1 : bart_machine$n, out_of_sample_indices), ]
-	training_data_y = bart_machine$y[setdiff(1 : bart_machine$n, out_of_sample_indices)]
-	test_data_X = bart_machine$X[out_of_sample_indices, ]
-	test_data_y = bart_machine$y[out_of_sample_indices]
-	
-	rmse_pct_change = array(NA, length(list_of_vars))
-	names(rmse_pct_change) = bart_machine$training_data_features[list_of_vars]
-	
-	#first run one bart out of sample
-	bart_machine_dup = bart_machine_duplicate(bart_machine, X = training_data_X, y = training_data_y)
-	predict_obj = bart_predict_for_test_data(bart_machine_dup, test_data_X, test_data_y)
-	full_rmse = predict_obj$rmse
-	destroy_bart_machine(bart_machine_dup)
-	
-	for (j in 1 : length(list_of_vars)){
-		var = list_of_vars[j]
-		cov_prior_vec = prev_cov_prior_vec
-		cov_prior_vec[var] = 1 / 1000000000000 #effectively zero
-		bart_machine_dup = bart_machine_duplicate(bart_machine, X = training_data_X, y = training_data_y, cov_prior_vec = cov_prior_vec)
-		predict_obj = bart_predict_for_test_data(bart_machine_dup, test_data_X, test_data_y)		
-		rmse_pct_change[j] = (predict_obj$rmse - full_rmse) / full_rmse * 100
-		destroy_bart_machine(bart_machine_dup)
-		cat(".")
-		
-	}
-	cat("\n")
-	
-	if (plot){
-		if (num_var_plot == Inf){
-			num_var_plot = length(list_of_vars)
-		}	
-		rmse_pct_change_to_plot = sort(rmse_pct_change, decr = T)[1 : num_var_plot]
-		barplot(rmse_pct_change_to_plot, ylab = "RMSE Degradation (%)", xlab = "Variable", main = "Variable Importance by Dropping Variable", las = 2)
-	}
-	
-	invisible(rmse_pct_change)
-}
+# #not theoretically sound; not recommended
+# var_importance_by_dropping_variable = function(bart_machine, list_of_vars = NULL, holdout_pctg = 0.2, plot = TRUE, num_var_plot = Inf){
+# 	if (bart_machine$bart_destroyed){
+# 		stop("This BART machine has been destroyed. Please recreate.")
+# 	}
+# 	
+# 	if (is.null(list_of_vars)){
+# 		list_of_vars = 1 : bart_machine$p
+# 	}
+# 	prev_cov_prior_vec = bart_machine$cov_prior_vec
+# 	if (is.null(prev_cov_prior_vec)){
+# 		prev_cov_prior_vec = rep(1, bart_machine$p)
+# 	}
+# 	out_of_sample_indices = sort(sample(1 : bart_machine$n, round(bart_machine$n * holdout_pctg)))
+# 	training_data_X = bart_machine$X[setdiff(1 : bart_machine$n, out_of_sample_indices), ]
+# 	training_data_y = bart_machine$y[setdiff(1 : bart_machine$n, out_of_sample_indices)]
+# 	test_data_X = bart_machine$X[out_of_sample_indices, ]
+# 	test_data_y = bart_machine$y[out_of_sample_indices]
+# 	
+# 	rmse_pct_change = array(NA, length(list_of_vars))
+# 	names(rmse_pct_change) = bart_machine$training_data_features[list_of_vars]
+# 	
+# 	#first run one bart out of sample
+# 	bart_machine_dup = bart_machine_duplicate(bart_machine, X = training_data_X, y = training_data_y)
+# 	predict_obj = bart_predict_for_test_data(bart_machine_dup, test_data_X, test_data_y)
+# 	full_rmse = predict_obj$rmse
+# 	destroy_bart_machine(bart_machine_dup)
+# 	
+# 	for (j in 1 : length(list_of_vars)){
+# 		var = list_of_vars[j]
+# 		cov_prior_vec = prev_cov_prior_vec
+# 		cov_prior_vec[var] = 1 / 1000000000000 #effectively zero
+# 		bart_machine_dup = bart_machine_duplicate(bart_machine, X = training_data_X, y = training_data_y, cov_prior_vec = cov_prior_vec)
+# 		predict_obj = bart_predict_for_test_data(bart_machine_dup, test_data_X, test_data_y)		
+# 		rmse_pct_change[j] = (predict_obj$rmse - full_rmse) / full_rmse * 100
+# 		destroy_bart_machine(bart_machine_dup)
+# 		cat(".")
+# 		
+# 	}
+# 	cat("\n")
+# 	
+# 	if (plot){
+# 		if (num_var_plot == Inf){
+# 			num_var_plot = length(list_of_vars)
+# 		}	
+# 		rmse_pct_change_to_plot = sort(rmse_pct_change, decr = T)[1 : num_var_plot]
+# 		barplot(rmse_pct_change_to_plot, ylab = "RMSE Degradation (%)", xlab = "Variable", main = "Variable Importance by Dropping Variable", las = 2)
+# 	}
+# 	
+# 	invisible(rmse_pct_change)
+# }
 
 #not theoretically sounds; not recommended
 var_importance_by_shuffling = function(bart_machine, list_of_vars = NULL, holdout_pctg = 0.2, plot = TRUE, num_var_plot = Inf){

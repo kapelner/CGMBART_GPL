@@ -1,4 +1,5 @@
 setwd("C:\\Users\\Kapelner\\workspace\\CGMBART_GPL")
+setwd("C:\\Users\\jbleich\\workspace\\CGMBART_GPL")
 
 library(bartMachine)
 
@@ -22,10 +23,10 @@ X$num_cylinders = ifelse(X$num_cylinders == "twelve", 12, ifelse(X$num_cylinders
 #hist(y, br = 30)
 #hist(log(y), br = 30)
 
-set_bart_machine_num_cores(4)
-init_java_for_bart_machine_with_mem_in_mb(5000)
+set_bart_machine_num_cores(1)
+init_java_for_bart_machine_with_mem_in_mb(2500)
 
-bart_machine = build_bart_machine(X, log(y), verbose = T, debug_log = T)
+bart_machine = build_bart_machine(X, log(y), verbose = T, debug_log = F)
 bart_machine
 
 plot_y_vs_yhat(bart_machine)
@@ -37,6 +38,11 @@ plot_convergence_diagnostics(bart_machine)
 
 investigate_var_importance(bart_machine, num_replicates_for_avg = 25)
 ints = interaction_investigator(bart_machine, num_replicates_for_avg = 200, bottom_margin = 20)
+
+vars_selected = var_selection_by_permute_response_three_methods(bart_machine, bottom_margin = 10) ##fix dot printing
+
+vars_selected$permute_mat[, 45] == 0
+vars_selected$var_true_props_avg[45] == 0
 
 pd_plot(bart_machine, j="horsepower")
 #pd_plot(bart_machine, j="width")
