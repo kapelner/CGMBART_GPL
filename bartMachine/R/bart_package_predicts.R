@@ -78,7 +78,7 @@ bart_machine_get_posterior = function(bart_machine, new_data, ppi = 0.95){
 }
 
 
-calc_credible_intervals_from_prediction = function(bart_machine, new_data, ci_conf = 0.95){
+calc_credible_intervals = function(bart_machine, new_data, ci_conf = 0.95){
 	#first convert the rows to the correct dummies etc
 	new_data = pre_process_new_data(new_data, bart_machine)
 	n_test = nrow(new_data)
@@ -100,7 +100,7 @@ calc_credible_intervals_from_prediction = function(bart_machine, new_data, ci_co
 	cbind(ci_lower_bd, ci_upper_bd)
 }
 
-calc_prediction_intervals_from_prediction = function(bart_machine, new_data, pi_conf = 0.95, normal_samples_per_gibbs_sample = 100){
+calc_prediction_intervals = function(bart_machine, new_data, pi_conf = 0.95, normal_samples_per_gibbs_sample = 100){
 	#first convert the rows to the correct dummies etc
 	new_data = pre_process_new_data(new_data, bart_machine)
 	n_test = nrow(new_data)

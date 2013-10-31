@@ -171,7 +171,7 @@ plot_y_vs_yhat = function(bart_machine, X = NULL, y = NULL, credible_intervals =
 	}
 	
 	if (credible_intervals){
-		credible_intervals = calc_credible_intervals_from_prediction(bart_machine, X, interval_confidence_level)
+		credible_intervals = calc_credible_intervals(bart_machine, X, interval_confidence_level)
 		ci_a = credible_intervals[, 1]
 		ci_b = credible_intervals[, 2]
 		y_in_ppi = y >= ci_a & y <= ci_b
@@ -193,7 +193,7 @@ plot_y_vs_yhat = function(bart_machine, X = NULL, y = NULL, credible_intervals =
 			points(y[i], y_hat[i], col = ifelse(y_in_ppi[i], "darkgreen", "red"), cex = 0.6, pch = 16)	
 		}		
 	} else if (prediction_intervals){
-		credible_intervals = calc_prediction_intervals_from_prediction(bart_machine, X, interval_confidence_level)
+		credible_intervals = calc_prediction_intervals(bart_machine, X, interval_confidence_level)
 		ci_a = credible_intervals[, 1]
 		ci_b = credible_intervals[, 2]
 		y_in_ppi = y >= ci_a & y <= ci_b

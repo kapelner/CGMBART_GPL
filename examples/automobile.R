@@ -31,6 +31,7 @@ bart_machine = build_bart_machine(X, y)
 bart_machine
 
 plot_y_vs_yhat(bart_machine, credible_intervals = TRUE)
+windows()
 plot_y_vs_yhat(bart_machine, prediction_intervals = TRUE)
 
 
@@ -57,6 +58,10 @@ oos_stats
 check_bart_error_assumptions(bart_machine_cv)
 plot_convergence_diagnostics(bart_machine_cv)
 
+
+calc_credible_intervals(bart_machine_cv, new_data = X[100, ], ci_conf = 0.95)
+calc_prediction_intervals(bart_machine_cv, new_data = X[100, ], pi_conf = 0.95)
+
 investigate_var_importance(bart_machine_cv, num_replicates_for_avg = 100)
 ints = interaction_investigator(bart_machine_cv, num_replicates_for_avg = 200, bottom_margin = 20)
 
@@ -72,7 +77,7 @@ cov_importance_test(bart_machine_cv)
 
 pd_plot(bart_machine_cv, j = "horsepower")
 pd_plot(bart_machine_cv, j = "width")
-pd_plot(bart_machine_cv, j="stroke")
+pd_plot(bart_machine_cv, j = "stroke")
 
 #################################
 

@@ -29,6 +29,8 @@ export(plot_tree_num_nodes)
 export(plot_mh_acceptance_reject)
 
 export(bart_predict_for_test_data)
+export(calc_credible_intervals)
+export(calc_prediction_intervals)
 
 export(build_bart_machine_cv)
 export(k_fold_cv)
