@@ -394,16 +394,16 @@ public class StatToolbox {
 		return index;
 	}
 
-	public static double sample_median(double[] gibbsSamplesForPrediction) {
-		int n = gibbsSamplesForPrediction.length;
-		Arrays.sort(gibbsSamplesForPrediction);
+	public static double sample_median(double[] arr) {
+		int n = arr.length;
+		Arrays.sort(arr);
 		if (n % 2 == 0){
-			double a = gibbsSamplesForPrediction[n / 2];
-			double b = gibbsSamplesForPrediction[n / 2 - 1];
+			double a = arr[n / 2];
+			double b = arr[n / 2 - 1];
 			return (a + b) / 2;
 		}
 		else {
-			return gibbsSamplesForPrediction[(n - 1) / 2];
+			return arr[(n - 1) / 2];
 		}
 		
 	}

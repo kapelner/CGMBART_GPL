@@ -369,7 +369,6 @@ bart_machine_duplicate = function(bart_machine, X = NULL, y = NULL, cov_prior_ve
 			debug_log = FALSE,
 			s_sq_y = bart_machine$s_sq_y,
 			cov_prior_vec = cov_prior_vec,
-			print_tree_illustrations = FALSE,
 			run_in_sample = run_in_sample,
 			use_missing_data = bart_machine$use_missing_data,
 			use_missing_data_dummies_as_covars = bart_machine$use_missing_data_dummies_as_covars,
@@ -386,7 +385,7 @@ build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL,
 		num_burn_in = 250, 
 		num_iterations_after_burn_in = 1000,
 		cov_prior_vec = NULL,
-		num_tree_cvs = c(200),
+		num_tree_cvs = c(50, 200),
 		k_cvs = c(2, 3, 5),
 		nu_q_cvs = list(c(3, 0.9), c(3, 0.99), c(10, 0.75)),
 		k_folds = 5, ...){
@@ -397,7 +396,7 @@ build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL,
 		y = Xy$y
 		Xy$y = NULL
 		X = Xy
-	}	
+	}
 	
 	min_rmse_num_tree = NULL
 	min_rmse_k = NULL
@@ -407,7 +406,7 @@ build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL,
 	for (k in k_cvs){
 		for (nu_q in nu_q_cvs){
 			for (num_trees in num_tree_cvs){
-				cat(paste("  BART CV try: k", k, "nu_q", paste(as.numeric(nu_q), collapse = ", "), "m", num_trees, "\n"))
+				cat(paste("  BART CV try: k:", k, "nu, q:", paste(as.numeric(nu_q), collapse = ", "), "m:", num_trees, "\n"))
 				rmse = k_fold_cv(X, y, 
 						k_folds = k_folds,
 						num_burn_in = num_burn_in,
@@ -439,7 +438,7 @@ build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL,
 			num_trees = min_rmse_num_tree,
 			k = min_rmse_k,
 			nu = min_rmse_nu_q[1],
-			q = min_rmse_nu_q[2])
+			q = min_rmse_nu_q[2], ...)
 }
 
 destroy_bart_machine = function(bart_machine){
