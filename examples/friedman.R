@@ -1,4 +1,5 @@
 ##Generate Friedman data
+library(bartMachine)
 
 gen_friedman_data = function(n, p, sigma){
   if(p < 5) stop("p must be greater than or equal to 5")
@@ -12,10 +13,8 @@ fr_data = gen_friedman_data(500, 10, 1)
 y = fr_data$y
 X = fr_data[, 2: 11]
 
-library(bartMachine)
 set_bart_machine_num_cores(1)
 init_java_for_bart_machine_with_mem_in_mb(2500)
-
 
 
 interaction_investigator(bart_machine, num_replicates_for_avg = 20, num_var_plot = 20) 
