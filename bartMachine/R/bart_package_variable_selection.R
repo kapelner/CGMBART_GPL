@@ -69,12 +69,12 @@ var_selection_by_permute_response_three_methods = function(bart_machine, num_rep
 	}
 	
 	invisible(list(
-		important_vars_pointwise_names = important_vars_pointwise_names,
-		important_vars_simul_max_names = important_vars_simul_max_names,
-		important_vars_simul_se_names = important_vars_simul_se_names,
-		important_vars_pointwise_col_nums = as.numeric(important_vars_pointwise_col_nums),
-		important_vars_simul_max_col_nums = as.numeric(important_vars_simul_max_col_nums),
-		important_vars_simul_se_col_nums = as.numeric(important_vars_simul_se_col_nums),		
+		important_vars_local_names = important_vars_pointwise_names,
+		important_vars_global_max_names = important_vars_simul_max_names,
+		important_vars_global_se_names = important_vars_simul_se_names,
+		important_vars_local_col_nums = as.numeric(important_vars_pointwise_col_nums),
+		important_vars_global_max_col_nums = as.numeric(important_vars_simul_max_col_nums),
+		important_vars_global_se_col_nums = as.numeric(important_vars_simul_se_col_nums),		
 		var_true_props_avg = var_true_props_avg,
 		permute_mat = permute_mat
 	))
@@ -152,7 +152,7 @@ var_selection_by_permute_response_cv = function(bart_machine, k_folds = 5, num_r
 	split_points = seq(from = 1, to = bart_machine$n, by = holdout_size)[1 : k_folds]
 	
 	L2_err_mat = matrix(NA, nrow = k_folds, ncol = 3)
-	colnames(L2_err_mat) = c("important_vars_pointwise_names", "important_vars_simul_max_names", "important_vars_simul_se_names")
+	colnames(L2_err_mat) = c("important_vars_local_names", "important_vars_global_max_names", "important_vars_global_se_names")
 	
 	for (k in 1 : k_folds){
 		cat("cv #", k, "\n", sep = "")
