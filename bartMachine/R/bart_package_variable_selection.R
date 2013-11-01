@@ -47,7 +47,7 @@ var_selection_by_permute_response_three_methods = function(bart_machine, num_rep
 		par(mfrow = c(2, 1))
 		##pointwise plot
 		plot(1 : num_var_plot, var_true_props_avg[1 : num_var_plot], type = "n", xlab = NA, xaxt = "n", ylim = c(0, max(max(var_true_props_avg), max_cut * 1.1)),
-				main = "Variable Selection by Pointwise Method", ylab = "proportion included")
+				main = "Variable Selection by Local Procedure", ylab = "proportion included")
 		axis(1, at = 1 : num_var_plot, labels = names(var_true_props_avg[1 : num_var_plot]), las = 2)
 		for (j in 1 : num_var_plot){
 			points(j, var_true_props_avg[j], pch = ifelse(var_true_props_avg[j] <= quantile(permute_mat[, j], 1 - alpha), 1, 16))
@@ -57,7 +57,7 @@ var_selection_by_permute_response_three_methods = function(bart_machine, num_rep
 		
 		##simul plots
 		plot(1 : num_var_plot, var_true_props_avg[1 : num_var_plot], type = "n", xlab = NA, xaxt = "n", ylim = c(0, max(max(var_true_props_avg), max_cut * 1.1)), 
-				main = "Variable Selection by Simultaneous Max and SE Methods", ylab = "proportion included")
+				main = "Variable Selection by Simultaneous Max and SE Procedures", ylab = "proportion included")
 		axis(1, at = 1 : num_var_plot, labels = names(var_true_props_avg[1 : num_var_plot]), las = 2)
 		
 		abline(h = max_cut, col = "red")		
