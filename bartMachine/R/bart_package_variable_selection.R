@@ -46,25 +46,29 @@ var_selection_by_permute_response_three_methods = function(bart_machine, num_rep
 		
 		par(mfrow = c(2, 1))
 		##pointwise plot
-		plot(1 : num_var_plot, var_true_props_avg[1 : num_var_plot], type = "n", xlab = NA, xaxt = "n", ylim = c(0, max(max(var_true_props_avg), max_cut * 1.1)),
+    non_zero_idx = which(var_true_props_avg > 0)[1: min(num_var_plot, length(which(var_true_props_avg > 0)))]
+    plot_n = length(non_zero_idx)
+    if(length(non_zero_idx) < length(var_true_props_avg)) warning("Covariates with inclusion proportions of 0 omitted from plots.")
+    
+		plot(1 : plot_n, var_true_props_avg[non_zero_idx], type = "n", xlab = NA, xaxt = "n", ylim = c(0, max(max(var_true_props_avg), max_cut * 1.1)),
 				main = "Local Procedure", ylab = "proportion included")
-		axis(1, at = 1 : num_var_plot, labels = names(var_true_props_avg[1 : num_var_plot]), las = 2)
-		for (j in 1 : num_var_plot){
+		axis(1, at = 1 : plot_n, labels = names(var_true_props_avg[non_zero_idx]), las = 2)
+		for (j in non_zero_idx){
 			points(j, var_true_props_avg[j], pch = ifelse(var_true_props_avg[j] <= quantile(permute_mat[, j], 1 - alpha), 1, 16))
 		}
 		
-		sapply(1 : num_var_plot, function(s){segments(s, 0, x1 = s, quantile(permute_mat[, s], 1 - alpha), col = "forestgreen")})
+		sapply(non_zero_idx, function(s){segments(s, 0, x1 = s, quantile(permute_mat[, s], 1 - alpha), col = "forestgreen")})
 		
 		##simul plots
-		plot(1 : num_var_plot, var_true_props_avg[1 : num_var_plot], type = "n", xlab = NA, xaxt = "n", ylim = c(0, max(max(var_true_props_avg), max_cut * 1.1)), 
+		plot(1 : plot_n, var_true_props_avg[non_zero_idx], type = "n", xlab = NA, xaxt = "n", ylim = c(0, max(max(var_true_props_avg), max_cut * 1.1)), 
 				main = "Simul. Max and SE Procedures", ylab = "proportion included")
-		axis(1, at = 1 : num_var_plot, labels = names(var_true_props_avg[1 : num_var_plot]), las = 2)
+		axis(1, at = 1 : plot_n, labels = names(var_true_props_avg[non_zero_idx]), las = 2)
 		
 		abline(h = max_cut, col = "red")		
-		for (j in 1 : num_var_plot){
+		for (j in non_zero_idx){
 			points(j, var_true_props_avg[j], pch = ifelse(var_true_props_avg[j] < max_cut, ifelse(var_true_props_avg[j] > perm_mean[j] + cover_constant * perm_se[j], 8, 1), 16))
 		}		
-		sapply(1 : num_var_plot, function(s){segments(s,0, x1 = s, perm_mean[s] + cover_constant * perm_se[s], col = "blue")})
+		sapply(non_zero_idx, function(s){segments(s,0, x1 = s, perm_mean[s] + cover_constant * perm_se[s], col = "blue")})
 		par(mar = c(5.1, 4.1, 4.1, 2.1))
 		par(mfrow = c(1, 1))
 	}

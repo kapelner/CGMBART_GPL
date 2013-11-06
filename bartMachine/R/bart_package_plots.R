@@ -548,6 +548,10 @@ pd_plot = function(bart_machine, j, levs = c(0.05, seq(from = 0.10, to = 0.90, b
 	}
 	cat("\n")
 	
+  if(bart_machine$pred_type == "classification"){ ##convert to probits
+    bart_predictions_by_quantile = qnorm(bart_predictions_by_quantile)
+  }
+  
 	bart_avg_predictions_by_quantile_by_gibbs = array(NA, c(length(levs), bart_machine$num_iterations_after_burn_in))
 	for (q in 1 : length(levs)){
 		for (g in 1 : bart_machine$num_iterations_after_burn_in){
@@ -560,11 +564,12 @@ pd_plot = function(bart_machine, j, levs = c(0.05, seq(from = 0.10, to = 0.90, b
 	bart_avg_predictions_upper = apply(bart_avg_predictions_by_quantile_by_gibbs, 1, quantile, probs = upper_ci)
 	
 	var_name = ifelse(class(j) == "character", j, bart_machine$training_data_features[j])
+  ylab_name = ifelse(bart_machine$pred_type == "classification", "Partial Effect (Probits)", "Partial Effect")
 	plot(x_j_quants, bart_avg_predictions_by_quantile, 
 			type = "o", 
 			main = "Partial Dependence Plot",
 			ylim = c(min(bart_avg_predictions_lower, bart_avg_predictions_upper), max(bart_avg_predictions_lower, bart_avg_predictions_upper)),
-			ylab = "Partial Effect",
+			ylab = ylab_name,
 			xlab = paste(var_name, "plotted at specified quantiles"))
 	lines(x_j_quants, bart_avg_predictions_lower, type = "o", col = "blue")
 	lines(x_j_quants, bart_avg_predictions_upper, type = "o", col = "blue")

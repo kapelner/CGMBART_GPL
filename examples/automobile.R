@@ -1,5 +1,6 @@
 setwd("C:\\Users\\Kapelner\\workspace\\CGMBART_GPL")
 setwd("C:\\Users\\jbleich\\workspace\\CGMBART_GPL")
+setwd("~/workspace//CGMBART_GPL")
 
 library(bartMachine)
 
@@ -12,8 +13,8 @@ Xy$price = log(Xy$price)
 
 #now remove some variables and coerce some to numeric
 Xy$make = NULL
-Xy$num_doors = ifelse(X$num_doors == "two", 2, 4)
-Xy$num_cylinders = ifelse(X$num_cylinders == "twelve", 12, ifelse(X$num_cylinders == "eight", 8, ifelse(X$num_cylinders == "six", 6, ifelse(X$num_cylinders == "five", 5, ifelse(X$num_cylinders == "four", 4, ifelse(X$num_cylinders == "three", 3, 2))))))
+Xy$num_doors = ifelse(Xy$num_doors == "two", 2, 4)
+Xy$num_cylinders = ifelse(Xy$num_cylinders == "twelve", 12, ifelse(Xy$num_cylinders == "eight", 8, ifelse(Xy$num_cylinders == "six", 6, ifelse(Xy$num_cylinders == "five", 5, ifelse(Xy$num_cylinders == "four", 4, ifelse(Xy$num_cylinders == "three", 3, 2))))))
 
 X = Xy
 X$price = NULL
