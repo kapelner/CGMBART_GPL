@@ -141,7 +141,7 @@ bart_machine = build_bart_machine(X, y, verbose = T, debug_log = T, replace_miss
 bart_machine
 
 #we ask the question: does missingness itself matter?
-cov_importance_test(bart_machine, covariates = 47 : 92, num_permutations = 100)
+cov_importance_test(bart_machine, covariates = 47 : 51, num_permutations = 100)
 #p-val = 0.47
 
 #doesn't seem to matter so let's not use the extra missing covariates

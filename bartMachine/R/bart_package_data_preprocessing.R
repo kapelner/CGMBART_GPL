@@ -30,17 +30,17 @@ pre_process_training_data = function(data, use_missing_data_dummies_as_covars = 
 	
 	if (use_missing_data_dummies_as_covars){		
 		#now take care of missing data - add each column as a missingness dummy
-		predictor_colnums_with_missingness = names(which(colSums(is.na(data)) > 0))
+		predictor_colnums_with_missingness = as.numeric(which(colSums(is.na(data)) > 0))
 		
 		M = matrix(0, nrow = nrow(data), ncol = length(predictor_colnums_with_missingness))
-		for (i_name in predictor_colnums_with_missingness){
+		for (i in predictor_colnums_with_missingness){
 			for (j in 1 : ncol(data)){
 				if (is.missing(data[i, j])){
 					M[i, j] = 1
 				}
 			}
 		}
-		colnames(M) = paste("M_", predictor_colnums_with_missingness, sep = "")
+		colnames(M) = paste("M_", colnames(data)[predictor_colnums_with_missingness], sep = "")
 		
 		#now we may want to add imputations before the missingness dummies
 		if (!is.null(imputations)){
