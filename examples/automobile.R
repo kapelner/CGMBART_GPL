@@ -4,6 +4,9 @@ setwd("~/workspace//CGMBART_GPL")
 
 library(bartMachine)
 
+#setwd("~/workspace//CGMBART_GPL/bartMachine/man/")
+#prompt(bart_machine_num_cores)
+
 Xy = read.csv("datasets/r_automobile.csv")
 Xy = Xy[!is.na(Xy$price), ] #kill rows without a response
 Xy = na.omit(Xy) #kill any rows with missing data (we illustrate missing data features further in this file)
