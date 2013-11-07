@@ -48,7 +48,7 @@ var_selection_by_permute_response_three_methods = function(bart_machine, num_rep
 		##pointwise plot
     non_zero_idx = which(var_true_props_avg > 0)[1: min(num_var_plot, length(which(var_true_props_avg > 0)))]
     plot_n = length(non_zero_idx)
-    if(length(non_zero_idx) < length(var_true_props_avg)) warning("Covariates with inclusion proportions of 0 omitted from plots.")
+    if(length(non_zero_idx) < length(var_true_props_avg)) warning(paste(length(which(var_true_props_avg == 0)), "covariates with inclusion proportions of 0 omitted from plots."))
     
 		plot(1 : plot_n, var_true_props_avg[non_zero_idx], type = "n", xlab = NA, xaxt = "n", ylim = c(0, max(max(var_true_props_avg), max_cut * 1.1)),
 				main = "Local Procedure", ylab = "proportion included")
