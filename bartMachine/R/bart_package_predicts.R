@@ -1,5 +1,16 @@
-predict.bartMachine = function(bart_machine, new_data){
-	bart_machine_get_posterior(bart_machine, new_data)$y_hat
+predict.bartMachine = function(bart_machine, new_data, prob_rule_class = NULL){
+	if (bart_machine$pred_type == "regression"){	
+		bart_machine_get_posterior(bart_machine, new_data)$y_hat
+	} else {
+		#classification
+		labels = bart_machine_get_posterior(bart_machine, new_data)$y_hat > ifelse(is.null(prob_rule_class), bart_machine$prob_rule_class, prob_rule_class)
+		#return whatever the raw y_levels were
+		labels_to_y_levels(bart_machine, labels)
+	}	
+}
+
+labels_to_y_levels = function(bart_machine, labels){
+	ifelse(labels == 0, bart_machine$y_levels[1], bart_machine$y_levels[2])
 }
 
 bart_predict_for_test_data = function(bart_machine, Xtest, ytest){
@@ -7,19 +18,35 @@ bart_predict_for_test_data = function(bart_machine, Xtest, ytest){
 		stop("This BART machine has been destroyed. Please recreate.")
 	}	
 	ytest_hat = predict(bart_machine, Xtest)
-	n = nrow(Xtest)
-	L2_err = sum((ytest - ytest_hat)^2)
 	
-	list(
-		y_hat = ytest_hat,
-		L1_err = sum(abs(ytest - ytest_hat)),
-		L2_err = L2_err,
-		rmse = sqrt(L2_err / n),
-		e = ytest - ytest_hat
-	)
+	if (bart_machine$pred_type == "regression"){
+		n = nrow(Xtest)
+		L2_err = sum((ytest - ytest_hat)^2)
+		
+		list(
+				y_hat = ytest_hat,
+				L1_err = sum(abs(ytest - ytest_hat)),
+				L2_err = L2_err,
+				rmse = sqrt(L2_err / n),
+				e = ytest - ytest_hat
+		)
+	} else {
+		confusion_matrix = as.data.frame(matrix(NA, nrow = 3, ncol = 3))
+		rownames(confusion_matrix) = c(paste("actual", bart_machine$y_levels), "use errors")
+		colnames(confusion_matrix) = c(paste("predicted", bart_machine$y_levels), "model errors")		
+		confusion_matrix[1 : 2, 1 : 2] = as.integer(table(ytest, ytest_hat)) 
+		confusion_matrix[3, 1] = round(confusion_matrix[2, 1] / (confusion_matrix[1, 1] + confusion_matrix[2, 1]), 3)
+		confusion_matrix[3, 2] = round(confusion_matrix[1, 2] / (confusion_matrix[1, 2] + confusion_matrix[2, 2]), 3)
+		confusion_matrix[1, 3] = round(confusion_matrix[1, 2] / (confusion_matrix[1, 1] + confusion_matrix[1, 2]), 3)
+		confusion_matrix[2, 3] = round(confusion_matrix[2, 1] / (confusion_matrix[2, 1] + confusion_matrix[2, 2]), 3)
+		confusion_matrix[3, 3] = round((confusion_matrix[1, 2] + confusion_matrix[2, 1]) / sum(confusion_matrix[1 : 2, 1 : 2]), 3)
+		
+		list(y_hat = ytest_hat, confusion_matrix = confusion_matrix)
+	}
+
 }
 
-bart_machine_get_posterior = function(bart_machine, new_data, ppi = 0.95){
+bart_machine_get_posterior = function(bart_machine, new_data){
 	if (bart_machine$bart_destroyed){
 		stop("This BART machine has been destroyed. Please recreate.")
 	}	
@@ -69,12 +96,9 @@ bart_machine_get_posterior = function(bart_machine, new_data, ppi = 0.95){
 		t(sapply(.jcall(bart_machine$java_bart_machine, "[[D", "getGibbsSamplesForPrediction", .jarray(new_data, dispatch = TRUE), as.integer(BART_NUM_CORES)), .jevalArray))
 	
 	#to get y_hat.. just take straight mean of posterior samples, alternatively, we can let java do it if we want more bells and whistles
-	y_hat = rowMeans(y_hat_posterior_samples)	
+	y_hat = rowMeans(y_hat_posterior_samples)
 	
-	ppi_a = apply(y_hat_posterior_samples, 1, quantile, probs = (1 - ppi) / 2)
-	ppi_b = apply(y_hat_posterior_samples, 1, quantile, probs = ppi + (1 - ppi) / 2)
-	
-	list(y_hat = y_hat, X = new_data, y_hat_posterior_samples = y_hat_posterior_samples, ppi_a = ppi_a, ppi_b = ppi_b)
+	list(y_hat = y_hat, X = new_data, y_hat_posterior_samples = y_hat_posterior_samples)
 }
 
 

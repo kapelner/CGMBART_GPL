@@ -1,5 +1,5 @@
 setwd("C:\\Users\\Kapelner\\workspace\\CGMBART_GPL")
-#setwd("C:\\Users\\jbleich\\workspace\\CGMBART_GPL")
+setwd("C:\\Users\\jbleich\\workspace\\CGMBART_GPL")
 
 library(bartMachine)
 
@@ -12,8 +12,8 @@ Xy$price = log(Xy$price)
 
 #now remove some variables and coerce some to numeric
 Xy$make = NULL
-Xy$num_doors = ifelse(Xy$num_doors == "two", 2, 4)
-Xy$num_cylinders = ifelse(Xy$num_cylinders == "twelve", 12, ifelse(Xy$num_cylinders == "eight", 8, ifelse(Xy$num_cylinders == "six", 6, ifelse(Xy$num_cylinders == "five", 5, ifelse(Xy$num_cylinders == "four", 4, ifelse(Xy$num_cylinders == "three", 3, 2))))))
+Xy$num_doors = ifelse(X$num_doors == "two", 2, 4)
+Xy$num_cylinders = ifelse(X$num_cylinders == "twelve", 12, ifelse(X$num_cylinders == "eight", 8, ifelse(X$num_cylinders == "six", 6, ifelse(X$num_cylinders == "five", 5, ifelse(X$num_cylinders == "four", 4, ifelse(X$num_cylinders == "three", 3, 2))))))
 
 X = Xy
 X$price = NULL
@@ -24,25 +24,37 @@ X$price = NULL
 #hist(y, br = 30)
 #hist(y, br = 30)
 
-set_bart_machine_num_cores(4)
+set_bart_machine_num_cores(1)
 init_java_for_bart_machine_with_mem_in_mb(2500)
 
 bart_machine = build_bart_machine(X, y)
 bart_machine
 
-plot_y_vs_yhat(bart_machine, credible_intervals = TRUE)
-windows()
-plot_y_vs_yhat(bart_machine, prediction_intervals = TRUE)
+plot_y_vs_yhat(bart_machine)
 
 
 oos_stats = k_fold_cv(X, y, k_folds = 10)
 oos_stats
+
+
+
 
 #build another model with alpha beta to show depth of trees
 
 vs = var_selection_by_permute_response_three_methods(bart_machine, bottom_margin = 10, num_permute_samples=10) ##fix dot printing
 names(vs)
 cv_vars = var_selection_by_permute_response_cv(bart_machine, k_folds = 2, num_reps_for_avg = 5, num_permute_samples = 20, num_trees_pred_cv = 50)
+
+
+
+vars_selected$permute_mat[, 45] == 0
+vars_selected$var_true_props_avg[45] == 0
+
+pd_plot(bart_machine, j="horsepower")
+#pd_plot(bart_machine, j="width")
+#pd_plot(bart_machine, j="stroke")
+#pd_plot(bart_machine, j="horsepower")
+
 
 rmse_by_num_trees(bart_machine, num_replicates = 20)
 
@@ -63,6 +75,7 @@ calc_credible_intervals(bart_machine_cv, new_data = X[100, ], ci_conf = 0.95)
 calc_prediction_intervals(bart_machine_cv, new_data = X[100, ], pi_conf = 0.95)
 
 investigate_var_importance(bart_machine_cv, num_replicates_for_avg = 20)
+
 ints = interaction_investigator(bart_machine_cv, num_replicates_for_avg = 200, bottom_margin = 20)
 
 
@@ -77,14 +90,9 @@ cov_importance_test(bart_machine_cv)
 
 pd_plot(bart_machine_cv, j = "horsepower")
 pd_plot(bart_machine_cv, j = "width")
-pd_plot(bart_machine_cv, j = "stroke")
+#pd_plot(bart_machine, j="stroke")
+#pd_plot(bart_machine, j="horsepower")
 
-
-
-
-
-
-#MISSING
 #################################
 
 
@@ -105,14 +113,15 @@ library(bartMachine)
 
 Xy = read.csv("datasets/r_automobile.csv")
 Xy = Xy[!is.na(Xy$price), ] #kill rows without a response
+Xy = na.omit(Xy) #kill any rows with missing data (we illustrate missing data features further in this file)
 y = log(as.numeric(Xy$price))
 Xy$price = log(Xy$price)
 
 
 #now remove some variables and coerce some to numeric
 Xy$make = NULL
-Xy$num_doors = ifelse(Xy$num_doors == "two", 2, 4)
-Xy$num_cylinders = ifelse(Xy$num_cylinders == "twelve", 12, ifelse(Xy$num_cylinders == "eight", 8, ifelse(Xy$num_cylinders == "six", 6, ifelse(Xy$num_cylinders == "five", 5, ifelse(Xy$num_cylinders == "four", 4, ifelse(Xy$num_cylinders == "three", 3, 2))))))
+Xy$num_doors = ifelse(X$num_doors == "two", 2, 4)
+Xy$num_cylinders = ifelse(X$num_cylinders == "twelve", 12, ifelse(X$num_cylinders == "eight", 8, ifelse(X$num_cylinders == "six", 6, ifelse(X$num_cylinders == "five", 5, ifelse(X$num_cylinders == "four", 4, ifelse(X$num_cylinders == "three", 3, 2))))))
 
 X = Xy
 X$price = NULL
@@ -121,7 +130,7 @@ X$price = NULL
 set_bart_machine_num_cores(4)
 init_java_for_bart_machine_with_mem_in_mb(5000)
 
-bart_machine = build_bart_machine(X, y, use_missing_data = TRUE, use_missing_data_dummies_as_covars = TRUE)
+bart_machine = build_bart_machine(X, y, verbose = T, debug_log = T, use_missing_data = TRUE, use_missing_data_dummies_as_covars = TRUE)
 bart_machine
 bart_machine$training_data_features_with_missing_features
 
@@ -130,9 +139,9 @@ cov_importance_test(bart_machine, covariates = 47 : 92, num_permutations = 100)
 #p-val = 0.47
 
 #doesn't seem to matter so let's not use the extra missing covariates
-bart_machine_cv = build_bart_machine_cv(X, y, use_missing_data = TRUE)
-bart_machine_cv
-bart_machine_cv$training_data_features_with_missing_features
+bart_machine = build_bart_machine(X, y, verbose = T, debug_log = T, use_missing_data = TRUE)
+bart_machine
+bart_machine$training_data_features_with_missing_features
 
 oos_stats = k_fold_cv(X, y, use_missing_data = TRUE, k_folds = 10)
 oos_stats
@@ -141,12 +150,12 @@ investigate_var_importance(bart_machine_cv, num_replicates_for_avg = 25)
 
 #now let's do some variable selection
 windows()
-vs = var_selection_by_permute_response_three_methods(bart_machine_cv, bottom_margin = 10)
-vs$important_vars_pointwise_names
-vs$important_vars_simul_max_names
-vs$important_vars_simul_se_names
+vars_selected = var_selection_by_permute_response_three_methods(bart_machine, bottom_margin = 10)
+vars_selected$important_vars_pointwise_names
+vars_selected$important_vars_simul_max_names
+vars_selected$important_vars_simul_se_names
 
-vs_cv = var_selection_by_permute_response_cv(bart_machine_cv)
+vars_selected_cv = var_selection_by_permute_response_cv(bart_machine)
 
 #build model on just the vars selected by ptwise
 X_dummified = dummify_data(X)
@@ -360,6 +369,7 @@ list(L1_err = L1_err, L2_err = L2_err, rmse = sqrt(L2_err / n), PseudoRsq = 1 - 
 #		23.            2
 #		26.            4
 #		
+
 # http://archive.ics.uci.edu/ml/datasets/Automobile
 
 
@@ -481,4 +491,6 @@ pd_plot(bart_machine_cv, j = "horsepower")
 pd_plot(bart_machine_cv, j = "width")
 pd_plot(bart_machine_cv, j = "stroke")
 
+
+# http://archive.ics.uci.edu/ml/datasets/Automobile
 

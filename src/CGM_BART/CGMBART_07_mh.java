@@ -52,7 +52,7 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal {
 		if (DEBUG_MH){
 			System.out.println("ln u = " + ln_u_0_1 + 
 					" <? ln(r) = " + 
-					(log_r < -99999 ? "damn small" : log_r));
+					(log_r < -99999 ? "very small" : log_r));
 		}
 //		}
 		//ACCEPT/REJECT,STEP_name,log_prop_lik_o,log_prop_lik_f,log_r 
@@ -126,11 +126,11 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal {
 				" < " + TreeIllustration.two_digit_format.format(grow_node.splitValue) + " & " + (grow_node.sendMissingDataRight ? "M -> R" : "M -> L")+ 
 				"\n  ln trans ratio: " + ln_transition_ratio_grow + " ln lik ratio: " + ln_likelihood_ratio_grow + " ln structure ratio: " + ln_tree_structure_ratio_grow +			
 				"\n  trans ratio: " + 
-				(Math.exp(ln_transition_ratio_grow) < 0.00001 ? "damn small" : Math.exp(ln_transition_ratio_grow)) +
+				(Math.exp(ln_transition_ratio_grow) < 0.00001 ? "very small" : Math.exp(ln_transition_ratio_grow)) +
 				"  lik ratio: " + 
-				(Math.exp(ln_likelihood_ratio_grow) < 0.00001 ? "damn small" : Math.exp(ln_likelihood_ratio_grow)) +
+				(Math.exp(ln_likelihood_ratio_grow) < 0.00001 ? "very small" : Math.exp(ln_likelihood_ratio_grow)) +
 				"  structure ratio: " + 
-				(Math.exp(ln_tree_structure_ratio_grow) < 0.00001 ? "damn small" : Math.exp(ln_tree_structure_ratio_grow)));
+				(Math.exp(ln_tree_structure_ratio_grow) < 0.00001 ? "very small" : Math.exp(ln_tree_structure_ratio_grow)));
 		}
 		return ln_transition_ratio_grow + ln_likelihood_ratio_grow + ln_tree_structure_ratio_grow;
 	}
@@ -152,11 +152,11 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal {
 					">> ---- X_" + (prune_node.splitAttributeM == CGMBARTTreeNode.BAD_FLAG_int ? "null" : (prune_node.splitAttributeM + 1)) + " < " + TreeIllustration.two_digit_format.format(prune_node.splitValue == CGMBARTTreeNode.BAD_FLAG_double ? Double.NaN : prune_node.splitValue) + 
 				"\n  ln trans ratio: " + ln_transition_ratio_prune + " ln lik ratio: " + ln_likelihood_ratio_prune + " ln structure ratio: " + ln_tree_structure_ratio_prune +
 				"\n  trans ratio: " + 
-				(Math.exp(ln_transition_ratio_prune) < 0.00001 ? "damn small" : Math.exp(ln_transition_ratio_prune)) +
+				(Math.exp(ln_transition_ratio_prune) < 0.00001 ? "very small" : Math.exp(ln_transition_ratio_prune)) +
 				"  lik ratio: " + 
-				(Math.exp(ln_likelihood_ratio_prune) < 0.00001 ? "damn small" : Math.exp(ln_likelihood_ratio_prune)) +
+				(Math.exp(ln_likelihood_ratio_prune) < 0.00001 ? "very small" : Math.exp(ln_likelihood_ratio_prune)) +
 				"  structure ratio: " + 
-				(Math.exp(ln_tree_structure_ratio_prune) < 0.00001 ? "damn small" : Math.exp(ln_tree_structure_ratio_prune)));
+				(Math.exp(ln_tree_structure_ratio_prune) < 0.00001 ? "very small" : Math.exp(ln_tree_structure_ratio_prune)));
 		}
 		CGMBARTTreeNode.pruneTreeAt(prune_node);
 		return ln_transition_ratio_prune + ln_likelihood_ratio_prune + ln_tree_structure_ratio_prune;
@@ -305,7 +305,7 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal {
 				" < " + TreeIllustration.two_digit_format.format(eta_just_for_calculation.splitValue) + " & " + (eta_just_for_calculation.sendMissingDataRight ? "M -> R" : "M -> L") + 	
 				"\n  ln lik ratio: " + ln_tree_structure_ratio_change  +			
 				"  lik ratio: " + 
-				(Math.exp(ln_tree_structure_ratio_change) < 0.00001 ? "damn small" : Math.exp(ln_tree_structure_ratio_change)));
+				(Math.exp(ln_tree_structure_ratio_change) < 0.00001 ? "very small" : Math.exp(ln_tree_structure_ratio_change)));
 		}		
 		return ln_tree_structure_ratio_change; //the transition ratio cancels out the tree structure ratio
 	}
@@ -338,8 +338,7 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal {
 			eta.right.printNodeDebugInfo("RIGHT BEFORE");
 			eta_star.left.printNodeDebugInfo("LEFT AFTER");
 			eta_star.right.printNodeDebugInfo("RIGHT AFTER");
-//			System.exit(0);
-			return Double.NEGATIVE_INFINITY;			
+			return Double.NEGATIVE_INFINITY;
 		}
 
 		//do simplified calculation if the n's remain the same

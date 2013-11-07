@@ -29,7 +29,7 @@ pre_process_training_data = function(data, use_missing_data_dummies_as_covars = 
 	}
 	
 	if (use_missing_data_dummies_as_covars){		
-		#now take care of missing data
+		#now take care of missing data - add each column as a missingness dummy
 		M = matrix(0, nrow = nrow(data), ncol = ncol(data))
 		for (i in 1 : nrow(data)){
 			for (j in 1 : ncol(data)){
@@ -67,7 +67,7 @@ pre_process_new_data = function(new_data, bart_machine){
 		imputations = imputations[1 : nrow(new_data), ]
 		colnames(imputations) = paste(colnames(imputations), "_imp", sep = "")
 	}
-	new_data = pre_process_training_data(new_data, bart_machine$use_missing_data, imputations, bart_machine$verbose)
+	new_data = pre_process_training_data(new_data, bart_machine$use_missing_data_dummies_as_covars, imputations, bart_machine$verbose)
 	n = nrow(new_data)
 	new_data_features = colnames(new_data)
 	
@@ -77,6 +77,10 @@ pre_process_new_data = function(new_data, bart_machine){
 		training_data_features = bart_machine$training_data_features
 	}
 	if (!all(colnames(new_data) == training_data_features)){
+		print("colnames(new_data)")
+		print(colnames(new_data))
+		print("training_data_features")
+		print(training_data_features)
 		warning("Are you sure you have the same feature names in the new record(s) as the training data?", call. = FALSE)
 	}
 	

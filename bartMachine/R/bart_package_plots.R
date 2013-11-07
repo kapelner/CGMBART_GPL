@@ -158,6 +158,9 @@ plot_y_vs_yhat = function(bart_machine, X = NULL, y = NULL, credible_intervals =
 	if (credible_intervals && prediction_intervals){
 		stop("You cannot plot both credibility intervals and prediction intervals simultaneously.")
 	}
+	if (bart_machine$pred_type == "classification"){
+		stop("You cannot plot y vs y_hat for classification.")
+	}
 	
 	if (is.null(X) & is.null(y)){
 		X = bart_machine$X
@@ -233,7 +236,7 @@ hist_sigsqs = function(bart_machine, extra_text = NULL, data_title = "data_model
 		stop("This BART machine has been destroyed. Please recreate.")
 	}	
 	if (bart_machine$pred_type == "classification"){
-		stop("There are no convergence diagnostics for classification.")
+		stop("There are no sigsq's for classification.")
 	}
 	
 	sigsqs = .jcall(bart_machine$java_bart_machine, "[D", "getGibbsSamplesSigsqs")
@@ -275,6 +278,9 @@ get_sigsqs = function(bart_machine, after_burn_in = TRUE){
 	if (bart_machine$bart_destroyed){
 		stop("This BART machine has been destroyed. Please recreate.")
 	}	
+	if (bart_machine$pred_type == "classification"){
+		stop("There are no sigsq's for classification.")
+	}
 	sigsqs = .jcall(bart_machine$java_bart_machine, "[D", "getGibbsSamplesSigsqs")
 	
 	if (after_burn_in){
@@ -512,6 +518,7 @@ interaction_investigator = function(bart_machine, plot = TRUE, num_replicates_fo
 	))
 }
 
+#JUSTIN TO-DO for classification
 pd_plot = function(bart_machine, j, levs = c(0.05, seq(from = 0.10, to = 0.90, by = 0.10), 0.95), lower_ci = 0.025, upper_ci = 0.975){
 	if (bart_machine$bart_destroyed){
 		stop("This BART machine has been destroyed. Please recreate.")
@@ -571,7 +578,7 @@ rmse_by_num_trees = function(bart_machine, tree_list = c(5, seq(10, 50, 10), 100
 		stop("This BART machine has been destroyed. Please recreate.")
 	}
 	if (bart_machine$pred_type == "classification"){
-		stop("This function does not work for classification. Please use ")
+		stop("This function does not work for classification.")
 	}		
 	X = bart_machine$X
 	y = bart_machine$y

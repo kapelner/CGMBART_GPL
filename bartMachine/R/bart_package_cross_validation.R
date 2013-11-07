@@ -1,6 +1,13 @@
 
 k_fold_cv = function(X, y, k_folds = 5, ...){
 	
+	y_levels = levels(y)
+	if (class(y) == "numeric" || class(y) == "integer"){ #if y is numeric, then it's a regression problem
+		pred_type = "regression"
+	} else if (class(y) == "factor" & length(y_levels) == 2){ #if y is a factor and and binary, then it's a classification problem
+		pred_type = "classification"
+	}
+	
 	n = nrow(X)
 	Xpreprocess = pre_process_training_data(X)
 	
@@ -18,10 +25,16 @@ k_fold_cv = function(X, y, k_folds = 5, ...){
 	holdout_size = round(n / k_folds)
 	split_points = seq(from = 1, to = n, by = holdout_size)[1 : k_folds]
 	
-	L1_err = 0
-	L2_err = 0
+	if (pred_type == "regression"){
+		L1_err = 0
+		L2_err = 0
+	} else {
+		confusion_matrix = matrix(0, nrow = 3, ncol = 3)
+		rownames(confusion_matrix) = c(paste("actual", y_levels), "use errors")
+		colnames(confusion_matrix) = c(paste("predicted", y_levels), "model errors")
+	}
 	
-	Xy = as.data.frame(cbind(Xpreprocess, y))
+	Xy = data.frame(Xpreprocess, y)
 	
 	for (k in 1 : k_folds){
 		cat(".")
@@ -36,11 +49,25 @@ k_fold_cv = function(X, y, k_folds = 5, ...){
 		destroy_bart_machine(bart_machine_cv)
 		
 		#tabulate errors
-		L1_err = L1_err + predict_obj$L1_err
-		L2_err = L2_err + predict_obj$L2_err
+		if (pred_type == "regression"){
+			L1_err = L1_err + predict_obj$L1_err
+			L2_err = L2_err + predict_obj$L2_err
+		} else {
+			confusion_matrix[1 : 2, 1 : 2] = confusion_matrix[1 : 2, 1 : 2] + table(test_data_k$y, predict_obj$y_hat)
+		}
 	}
 	cat("\n")
+	if (pred_type == "regression"){
+		list(L1_err = L1_err, L2_err = L2_err, rmse = sqrt(L2_err / n), PseudoRsq = 1 - L2_err / sum((y - mean(y))^2))
+	} else {			
+		#calculate the rest of the confusion matrix and return it plus the errors
+		confusion_matrix[3, 1] = round(confusion_matrix[2, 1] / (confusion_matrix[1, 1] + confusion_matrix[2, 1]), 3)
+		confusion_matrix[3, 2] = round(confusion_matrix[1, 2] / (confusion_matrix[1, 2] + confusion_matrix[2, 2]), 3)
+		confusion_matrix[1, 3] = round(confusion_matrix[1, 2] / (confusion_matrix[1, 1] + confusion_matrix[1, 2]), 3)
+		confusion_matrix[2, 3] = round(confusion_matrix[2, 1] / (confusion_matrix[2, 1] + confusion_matrix[2, 2]), 3)
+		confusion_matrix[3, 3] = round((confusion_matrix[1, 2] + confusion_matrix[2, 1]) / sum(confusion_matrix[1 : 2, 1 : 2]), 3)
+		list(confusion_matrix = confusion_matrix, misclassification_error = confusion_matrix[3, 3])
+	}
 	
-	list(L1_err = L1_err, L2_err = L2_err, rmse = sqrt(L2_err / n), PseudoRsq = 1 - L2_err / sum((y - mean(y))^2))
 }
 

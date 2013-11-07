@@ -328,6 +328,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 			confusion_matrix[3, 3] = round((confusion_matrix[1, 2] + confusion_matrix[2, 1]) / sum(confusion_matrix[1 : 2, 1 : 2]), 3)
 			
 			bart_machine$confusion_matrix = confusion_matrix
+#			bart_machine$num_classification_errors = confusion_matrix[1, 2] + confusion_matrix[2, 1]
 			bart_machine$misclassification_error = confusion_matrix[3, 3]
 		}
 		if (verbose){
@@ -380,15 +381,24 @@ bart_machine_duplicate = function(bart_machine, X = NULL, y = NULL, cov_prior_ve
 			...)
 }
 
-
+#TO-DO: expand this for cov_priors, alpha, beta, n_B, n_G, etc...
 build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL, 
-		num_burn_in = 250, 
-		num_iterations_after_burn_in = 1000,
-		cov_prior_vec = NULL,
 		num_tree_cvs = c(50, 200),
 		k_cvs = c(2, 3, 5),
 		nu_q_cvs = list(c(3, 0.9), c(3, 0.99), c(10, 0.75)),
 		k_folds = 5, ...){
+	
+	y_levels = levels(y)
+	if (class(y) == "numeric" || class(y) == "integer"){ #if y is numeric, then it's a regression problem
+		pred_type = "regression"
+	} else if (class(y) == "factor" & length(y_levels) == 2){ #if y is a factor and and binary, then it's a classification problem
+		pred_type = "classification"
+	}
+	
+	if (pred_type == "classification"){
+		nu_q_cvs = list(c(3, 0.9)) #ensure we only do this once, the 3 and the 0.9 don't actually matter, they just need to be valid numbers for the hyperparameters
+	}
+	
 	
 	if ((is.null(X) && is.null(Xy)) || is.null(y) && is.null(Xy)){
 		stop("You need to give BART a training set either by specifying X and y or by specifying a matrix Xy which contains the response named \"y.\"\n")
@@ -402,39 +412,38 @@ build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL,
 	min_rmse_k = NULL
 	min_rmse_nu_q = NULL
 	min_oos_rmse = Inf
+	min_oos_misclassification_error = Inf
 	
 	for (k in k_cvs){
 		for (nu_q in nu_q_cvs){
 			for (num_trees in num_tree_cvs){
 				cat(paste("  BART CV try: k:", k, "nu, q:", paste(as.numeric(nu_q), collapse = ", "), "m:", num_trees, "\n"))
-				rmse = k_fold_cv(X, y, 
+				k_fold_results = k_fold_cv(X, y, 
 						k_folds = k_folds,
-						num_burn_in = num_burn_in,
-						num_iterations_after_burn_in = num_iterations_after_burn_in,
-						cov_prior_vec = cov_prior_vec,
 						num_trees = num_trees,
 						k = k,
 						nu = nu_q[1],
-						q = nu_q[2], ...)$rmse
-#				print(paste("rmse:", rmse))
-				if (rmse < min_oos_rmse){
-#					print(paste("new winner!"))
-					min_oos_rmse = rmse					
+						q = nu_q[2], ...)
+				
+				if (pred_type == "regression" && k_fold_results$rmse < min_oos_rmse){
+					min_oos_rmse = k_fold_results$rmse					
 					min_rmse_k = k
 					min_rmse_nu_q = nu_q
 					min_rmse_num_tree = num_trees
-				}				
+				} else if (pred_type == "classification" && k_fold_results$misclassification_error < min_oos_misclassification_error){
+					min_oos_misclassification_error = k_fold_results$misclassification_error					
+					min_rmse_k = k
+					min_rmse_nu_q = nu_q
+					min_rmse_num_tree = num_trees					
+				}			
 			}
 		}
 	}
 	
 	cat(paste("  BART CV win: k:", min_rmse_k, "nu, q:", paste(as.numeric(min_rmse_nu_q), collapse = ", "), "m:", min_rmse_num_tree, "\n"))
 	
-	#now that we've found the best settings, return that bart machine
+	#now that we've found the best settings, return that bart machine. It would be faster to have kept this around, but doing it this way saves RAM for speed.
 	build_bart_machine(X, y,
-			num_burn_in = num_burn_in,
-			num_iterations_after_burn_in = num_iterations_after_burn_in,
-			cov_prior_vec = cov_prior_vec,
 			num_trees = min_rmse_num_tree,
 			k = min_rmse_k,
 			nu = min_rmse_nu_q[1],
@@ -444,7 +453,7 @@ build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL,
 destroy_bart_machine = function(bart_machine){
 	.jcall(bart_machine$java_bart_machine, "V", "destroy")
 	bart_machine$bart_destroyed = TRUE
-	#explicitly ask the JVM to give use the RAM back right now
+	#explicitly ask the JVM to give us the RAM back right now (probably not really necessary, but why not?)
 	.jcall("java/lang/System", "V", "gc")
 }
 
