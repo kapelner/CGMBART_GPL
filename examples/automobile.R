@@ -113,15 +113,14 @@ library(bartMachine)
 
 Xy = read.csv("datasets/r_automobile.csv")
 Xy = Xy[!is.na(Xy$price), ] #kill rows without a response
-Xy = na.omit(Xy) #kill any rows with missing data (we illustrate missing data features further in this file)
 y = log(as.numeric(Xy$price))
 Xy$price = log(Xy$price)
 
 
 #now remove some variables and coerce some to numeric
 Xy$make = NULL
-Xy$num_doors = ifelse(X$num_doors == "two", 2, 4)
-Xy$num_cylinders = ifelse(X$num_cylinders == "twelve", 12, ifelse(X$num_cylinders == "eight", 8, ifelse(X$num_cylinders == "six", 6, ifelse(X$num_cylinders == "five", 5, ifelse(X$num_cylinders == "four", 4, ifelse(X$num_cylinders == "three", 3, 2))))))
+Xy$num_doors = ifelse(Xy$num_doors == "two", 2, 4)
+Xy$num_cylinders = ifelse(Xy$num_cylinders == "twelve", 12, ifelse(Xy$num_cylinders == "eight", 8, ifelse(Xy$num_cylinders == "six", 6, ifelse(Xy$num_cylinders == "five", 5, ifelse(Xy$num_cylinders == "four", 4, ifelse(Xy$num_cylinders == "three", 3, 2))))))
 
 X = Xy
 X$price = NULL
@@ -207,13 +206,10 @@ for (k in 1 : k_folds){
 	test_data_k = Xy[holdout_index_i : holdout_index_f, ]
 	training_data_k = Xy[-c(holdout_index_i : holdout_index_f), ]
 	
- 
 	training_data_k$engine_location = NULL
 	ols_mod = lm(price ~ ., training_data_k)
 	
 	y_hat = predict(ols_mod, test_data_k[, 1 : p])
-	
-	
 	
 	#tabulate errors
 	L1_err = L1_err + sum(abs(y_hat - test_data_k[, (p + 1)]))

@@ -399,9 +399,9 @@ investigate_var_importance = function(bart_machine, type = "splits", plot = TRUE
 		conf_upper = avg_var_props + 1.96 * sd_var_props / sqrt(num_replicates_for_avg)
 		conf_lower = avg_var_props - 1.96 * sd_var_props / sqrt(num_replicates_for_avg)
 		segments(bars, avg_var_props, bars, conf_upper, col = rgb(0.59, 0.39, 0.39), lwd = 3) # Draw error bars
-		segments(bars, avg_var_props, bars, conf_lower, col = rgb(0.59, 0.39, 0.39), lwd = 3)		
-	}
-	
+		segments(bars, avg_var_props, bars, conf_lower, col = rgb(0.59, 0.39, 0.39), lwd = 3)
+		par(mar = c(5.1, 4.1, 4.1, 2.1))
+	}	
 	invisible(list(avg_var_props = avg_var_props, sd_var_props = sd_var_props))	
 }
 
@@ -508,7 +508,8 @@ interaction_investigator = function(bart_machine, plot = TRUE, num_replicates_fo
 			conf_lower = avg_counts - 1.96 * sd_counts / sqrt(num_replicates_for_avg)
 			segments(bars, avg_counts, bars, conf_upper, col = rgb(0.59, 0.39, 0.39), lwd = 3) # Draw error bars
 			segments(bars, avg_counts, bars, conf_lower, col = rgb(0.59, 0.39, 0.39), lwd = 3)			
-		}		
+		}
+		par(mar = c(5.1, 4.1, 4.1, 2.1))		
 	}
 	
 	invisible(list(

@@ -5,7 +5,7 @@ var_selection_by_permute_response_three_methods = function(bart_machine, num_rep
 	}	
 	
 	permute_mat = matrix(NA, nrow = num_permute_samples, ncol = bart_machine$p)
-	colnames(permute_mat) = bart_machine$training_data_features
+	colnames(permute_mat) = bart_machine$training_data_features_with_missing_features
 	
 	cat("avg")
 	var_true_props_avg = get_averaged_true_var_props(bart_machine, num_reps_for_avg, num_trees_for_permute)
@@ -24,18 +24,18 @@ var_selection_by_permute_response_three_methods = function(bart_machine, num_rep
 	
 	pointwise_cutoffs = apply(permute_mat, 2, quantile, probs = 1 - alpha)
 	important_vars_pointwise_names = names(var_true_props_avg[var_true_props_avg > pointwise_cutoffs & var_true_props_avg > 0])
-	important_vars_pointwise_col_nums = sapply(1 : length(important_vars_pointwise_names), function(x){which(important_vars_pointwise_names[x] == bart_machine$training_data_features)})
+	important_vars_pointwise_col_nums = sapply(1 : length(important_vars_pointwise_names), function(x){which(important_vars_pointwise_names[x] == bart_machine$training_data_features_with_missing_features)})
 	
 	max_cut = quantile(apply(permute_mat, 1 ,max), 1 - alpha)
 	important_vars_simul_max_names = names(var_true_props_avg[var_true_props_avg >= max_cut & var_true_props_avg > 0])	
-	important_vars_simul_max_col_nums = sapply(1 : length(important_vars_simul_max_names), function(x){which(important_vars_simul_max_names[x] == bart_machine$training_data_features)})
+	important_vars_simul_max_col_nums = sapply(1 : length(important_vars_simul_max_names), function(x){which(important_vars_simul_max_names[x] == bart_machine$training_data_features_with_missing_features)})
 	
 	
 	perm_se = apply(permute_mat, 2, sd)
 	perm_mean = apply(permute_mat, 2, mean)
 	cover_constant = bisectK(tol = .01 , coverage = 1 - alpha, permute_mat = permute_mat, x_left = 1, x_right = 20, countLimit = 100, perm_mean = perm_mean, perm_se = perm_se)
 	important_vars_simul_se_names = names(var_true_props_avg[which(var_true_props_avg >= perm_mean + cover_constant * perm_se & var_true_props_avg > 0)])	
-	important_vars_simul_se_col_nums = sapply(1 : length(important_vars_simul_se_names), function(x){which(important_vars_simul_se_names[x] == bart_machine$training_data_features)})
+	important_vars_simul_se_col_nums = sapply(1 : length(important_vars_simul_se_names), function(x){which(important_vars_simul_se_names[x] == bart_machine$training_data_features_with_missing_features)})
 	
 	
 	if (plot){
@@ -47,7 +47,7 @@ var_selection_by_permute_response_three_methods = function(bart_machine, num_rep
 		par(mfrow = c(2, 1))
 		##pointwise plot
 		plot(1 : num_var_plot, var_true_props_avg[1 : num_var_plot], type = "n", xlab = NA, xaxt = "n", ylim = c(0, max(max(var_true_props_avg), max_cut * 1.1)),
-				main = "Variable Selection by Local Procedure", ylab = "proportion included")
+				main = "Local Procedure", ylab = "proportion included")
 		axis(1, at = 1 : num_var_plot, labels = names(var_true_props_avg[1 : num_var_plot]), las = 2)
 		for (j in 1 : num_var_plot){
 			points(j, var_true_props_avg[j], pch = ifelse(var_true_props_avg[j] <= quantile(permute_mat[, j], 1 - alpha), 1, 16))
@@ -57,7 +57,7 @@ var_selection_by_permute_response_three_methods = function(bart_machine, num_rep
 		
 		##simul plots
 		plot(1 : num_var_plot, var_true_props_avg[1 : num_var_plot], type = "n", xlab = NA, xaxt = "n", ylim = c(0, max(max(var_true_props_avg), max_cut * 1.1)), 
-				main = "Variable Selection by Simultaneous Max and SE Procedures", ylab = "proportion included")
+				main = "Simul. Max and SE Procedures", ylab = "proportion included")
 		axis(1, at = 1 : num_var_plot, labels = names(var_true_props_avg[1 : num_var_plot]), las = 2)
 		
 		abline(h = max_cut, col = "red")		
@@ -65,7 +65,8 @@ var_selection_by_permute_response_three_methods = function(bart_machine, num_rep
 			points(j, var_true_props_avg[j], pch = ifelse(var_true_props_avg[j] < max_cut, ifelse(var_true_props_avg[j] > perm_mean[j] + cover_constant * perm_se[j], 8, 1), 16))
 		}		
 		sapply(1 : num_var_plot, function(s){segments(s,0, x1 = s, perm_mean[s] + cover_constant * perm_se[s], col = "blue")})
-		
+		par(mar = c(5.1, 4.1, 4.1, 2.1))
+		par(mfrow = c(1, 1))
 	}
 	
 	invisible(list(
