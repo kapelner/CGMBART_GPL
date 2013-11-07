@@ -48,8 +48,8 @@ cv_vars = var_selection_by_permute_response_cv(bart_machine, k_folds = 2, num_re
 
 
 
-vars_selected$permute_mat[, 45] == 0
-vars_selected$var_true_props_avg[45] == 0
+vs$permute_mat[, 45] == 0
+vs$var_true_props_avg[45] == 0
 
 pd_plot(bart_machine, j="horsepower")
 #pd_plot(bart_machine, j="width")
@@ -130,9 +130,15 @@ X$price = NULL
 set_bart_machine_num_cores(4)
 init_java_for_bart_machine_with_mem_in_mb(5000)
 
+bart_machine = build_bart_machine(X, y, verbose = T, debug_log = T, use_missing_data = TRUE, use_missing_data_dummies_as_covars = TRUE, impute_missingness_with_rf_impute = TRUE)
+bart_machine
+
 bart_machine = build_bart_machine(X, y, verbose = T, debug_log = T, use_missing_data = TRUE, use_missing_data_dummies_as_covars = TRUE)
 bart_machine
 bart_machine$training_data_features_with_missing_features
+
+bart_machine = build_bart_machine(X, y, verbose = T, debug_log = T, replace_missing_data_with_x_j_bar = TRUE)
+bart_machine
 
 #we ask the question: does missingness itself matter?
 cov_importance_test(bart_machine, covariates = 47 : 92, num_permutations = 100)
@@ -150,35 +156,35 @@ investigate_var_importance(bart_machine_cv, num_replicates_for_avg = 25)
 
 #now let's do some variable selection
 windows()
-vars_selected = var_selection_by_permute_response_three_methods(bart_machine, bottom_margin = 10)
-vars_selected$important_vars_pointwise_names
-vars_selected$important_vars_simul_max_names
-vars_selected$important_vars_simul_se_names
+vs = var_selection_by_permute_response_three_methods(bart_machine, bottom_margin = 10)
+vs$important_vars_local_names
+vs$important_vars_global_max_names
+vs$important_vars_global_se_names
 
 vars_selected_cv = var_selection_by_permute_response_cv(bart_machine)
 
 #build model on just the vars selected by ptwise
 X_dummified = dummify_data(X)
 
-bart_machine_ptwise_vars = build_bart_machine(X_dummified[, vs$important_vars_pointwise_names], y, verbose = T, debug_log = T, use_missing_data = TRUE)
+bart_machine_ptwise_vars = build_bart_machine(X_dummified[, vs$important_vars_local_names], y, verbose = T, debug_log = T, use_missing_data = TRUE)
 bart_machine_ptwise_vars
 bart_machine_ptwise_vars$training_data_features_with_missing_features
 
-oos_stats_red_mod = k_fold_cv(X_dummified[, vs$important_vars_pointwise_names], y, use_missing_data = TRUE, k_folds = 20)
+oos_stats_red_mod = k_fold_cv(X_dummified[, vs$important_vars_local_names], y, use_missing_data = TRUE, k_folds = 20)
 oos_stats_red_mod
 
-bart_machine_simul_max_vars = build_bart_machine(X_dummified[, vs$important_vars_simul_max_names], y, verbose = T, debug_log = T, use_missing_data = TRUE)
+bart_machine_simul_max_vars = build_bart_machine(X_dummified[, vs$important_vars_global_max_names], y, verbose = T, debug_log = T, use_missing_data = TRUE)
 bart_machine_simul_max_vars
 bart_machine_simul_max_vars$training_data_features_with_missing_features
 
-oos_stats_red_mod = k_fold_cv(X_dummified[, vs$important_vars_simul_max_names], y, use_missing_data = TRUE, k_folds = 20)
+oos_stats_red_mod = k_fold_cv(X_dummified[, vs$important_vars_global_max_names], y, use_missing_data = TRUE, k_folds = 20)
 oos_stats_red_mod
 
 interactions = interaction_investigator(bart_machine_simul_max_vars)
 
 #conclusion: did better than original model by cutting out crap
 
-mod = lm(as.formula(paste("y ~ (", paste(vs$important_vars_simul_max_names, collapse = "+"), ")^2")), data = X_dummified)
+mod = lm(as.formula(paste("y ~ (", paste(vs$important_vars_global_max_names, collapse = "+"), ")^2")), data = X_dummified)
 summary(mod)
 
 

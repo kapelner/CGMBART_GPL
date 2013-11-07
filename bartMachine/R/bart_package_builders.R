@@ -33,7 +33,9 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	#if it has already been initialized, running this function has no effect so no need for an if (initialized?) statement
 	init_java_for_bart_machine_with_mem_in_mb(BART_MAX_MEM_MB_DEFAULT)
 	
-	
+	if (use_missing_data_dummies_as_covars && replace_missing_data_with_x_j_bar){
+		stop("You cannot impute by averages and use missing data as dummies simultaneously.")
+	}
 	
 	if ((is.null(X) && is.null(Xy)) || is.null(y) && is.null(Xy)){
 		stop("You need to give BART a training set either by specifying X and y or by specifying a matrix Xy which contains the response named \"y.\"\n")
@@ -103,30 +105,33 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 			warning("No missing entries in the training data to impute.")
 			rf_imputations_for_missing = X
 		} else {
+			#just use cols that HAVE missing data
+			predictor_colnums_with_missingness = names(which(colSums(is.na(X)) > 0))
+			
 			rf_imputations_for_missing = rfImpute(X, y)
-			rf_imputations_for_missing = rf_imputations_for_missing[, 2 : ncol(rf_imputations_for_missing)]	
+			rf_imputations_for_missing = rf_imputations_for_missing[, 2 : ncol(rf_imputations_for_missing)]
+			rf_imputations_for_missing = rf_imputations_for_missing[, predictor_colnums_with_missingness]
 		}
 		colnames(rf_imputations_for_missing) = paste(colnames(rf_imputations_for_missing), "_imp", sep = "")
 	}
-
-	model_matrix_training_data = cbind(pre_process_training_data(X, use_missing_data_dummies_as_covars, rf_imputations_for_missing, verbose), y_remaining)
-
 	
 	#if we're not using missing data, go on and nuke it
 	if (!use_missing_data && !replace_missing_data_with_x_j_bar){
-		rows_before = nrow(model_matrix_training_data)
-		model_matrix_training_data = na.omit(model_matrix_training_data)
-		rows_after = nrow(model_matrix_training_data)
+		rows_before = nrow(X)
+		X = na.omit(X)
+		rows_after = nrow(X)
 		if (rows_before - rows_after > 0){
 			stop("You have ", rows_before - rows_after, " observations with missing data. \nYou must either omit your missing data using \"na.omit()\" or turn on the\n\"use_missing_data\" or \"replace_missing_data_with_x_j_bar\" feature in order to use bartMachine.\n")
 		}
 	} else if (replace_missing_data_with_x_j_bar){
-		model_matrix_training_data = imputeMatrixByXbarj(model_matrix_training_data, model_matrix_training_data)
+		X = imputeMatrixByXbarjContinuousOrModalForBinary(X, X)
 		if (verbose){
 			cat("Imputed missing data using attribute averages. ")
 		}
-	}
-	
+	}	
+
+	model_matrix_training_data = cbind(pre_process_training_data(X, use_missing_data_dummies_as_covars, rf_imputations_for_missing, verbose), y_remaining)
+
 	#this is a private parameter ONLY called by cov_importance_test
 	if (!is.null(covariates_to_permute)){
 		for (j in covariates_to_permute){
@@ -161,7 +166,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		if (s_sq_y == "mse"){
 			X_for_lm = as.data.frame(model_matrix_training_data)[1 : (ncol(model_matrix_training_data) - 1)]
 			if (impute_missingness_with_x_j_bar_for_lm){
-				X_for_lm = imputeMatrixByXbarj(X_for_lm, X_for_lm)
+				X_for_lm = imputeMatrixByXbarjContinuousOrModalForBinary(X_for_lm, X_for_lm)
 			}
 			mod = lm(y_trans ~ ., X_for_lm)
 			mse = var(mod$residuals)
@@ -368,6 +373,7 @@ bart_machine_duplicate = function(bart_machine, X = NULL, y = NULL, cov_prior_ve
 			alpha = bart_machine$alpha,
 			beta = bart_machine$beta,
 			debug_log = FALSE,
+			prob_rule_class = bart_machine$prob_rule_class,
 			s_sq_y = bart_machine$s_sq_y,
 			cov_prior_vec = cov_prior_vec,
 			run_in_sample = run_in_sample,
@@ -457,11 +463,16 @@ destroy_bart_machine = function(bart_machine){
 	.jcall("java/lang/System", "V", "gc")
 }
 
-imputeMatrixByXbarj = function(X_with_missing, X_for_calculating_avgs){
+imputeMatrixByXbarjContinuousOrModalForBinary = function(X_with_missing, X_for_calculating_avgs){
 	for (i in 1 : nrow(X_with_missing)){
 		for (j in 1 : ncol(X_with_missing)){
 			if (is.na(X_with_missing[i, j])){
-				X_with_missing[i, j] = mean(X_for_calculating_avgs[, j], na.rm = TRUE)
+				#mode for factors, otherwise average
+				if (class(X_with_missing[, j]) == "factor"){
+					X_with_missing[i, j] = names(which.max(table(X_for_calculating_avgs[, j])))
+				} else {
+					X_with_missing[i, j] = mean(X_for_calculating_avgs[, j], na.rm = TRUE)
+				}
 			}
 		}
 	}

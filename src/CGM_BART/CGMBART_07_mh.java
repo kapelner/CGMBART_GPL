@@ -139,7 +139,7 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal {
 		CGMBARTTreeNode prune_node = pickPruneNodeOrChangeNode(T_star, "prune");
 		//if we can't grow, reject offhand
 		if (prune_node == null){
-			System.err.println("proposal ln(r) = -oo DUE TO CANNOT PRUNE");
+//			System.err.println("proposal ln(r) = -oo DUE TO CANNOT PRUNE");
 			return Double.NEGATIVE_INFINITY;
 		}		
 		T_star.decrement_variable_count(prune_node.splitAttributeM);
@@ -169,13 +169,13 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal {
 		//b) If there are no prunable nodes (not sure how that could happen), return null as well
 		
 		if (T.isStump()){
-			System.err.println("ERROR!!! cannot " + change_or_prune + " a stump!");
+//			System.err.println("ERROR!!! cannot " + change_or_prune + " a stump!");
 			return null;			
 		}
 		
 		ArrayList<CGMBARTTreeNode> prunable_and_changeable_nodes = T.getPrunableAndChangeableNodes();
 		if (prunable_and_changeable_nodes.size() == 0){
-			System.err.println("ERROR!!! no prune nodes in " + change_or_prune + " step!  T parent: " + T.parent + " T left: " + T.left + " T right: " + T.right);
+//			System.err.println("ERROR!!! no prune nodes in " + change_or_prune + " step!  T parent: " + T.parent + " T left: " + T.left + " T right: " + T.right);
 			return null;
 		}		
 		
@@ -254,7 +254,7 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal {
 		
 		//do check a
 		if (growth_nodes.size() == 0){
-			System.err.println("ERROR!!! no growth nodes in GROW step!");
+//			System.err.println("ERROR!!! no growth nodes in GROW step!");
 			return null;
 		}		
 		
@@ -263,7 +263,7 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal {
 
 		//do check b
 		if (pAdj(growth_node) == 0){
-			System.err.println("ERROR!!! no attributes available in GROW step!");
+//			System.err.println("ERROR!!! no attributes available in GROW step!");
 			return null;			
 		}
 		//if we passed, we can use this node
@@ -330,7 +330,7 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal {
 		
 		//couple checks
 		if (n_1_star == 0 || n_2_star == 0){
-			System.err.println("ERROR!!! CHANGE picked an invalid split rule and we ended up with a blank node  proposal ln(r) = -oo DUE TO NO SPLIT VALUES");
+//			System.err.println("ERROR!!! CHANGE picked an invalid split rule and we ended up with a blank node  proposal ln(r) = -oo DUE TO NO SPLIT VALUES");
 
 			eta.printNodeDebugInfo("PARENT BEFORE");
 			eta_star.printNodeDebugInfo("PARENT AFTER");
