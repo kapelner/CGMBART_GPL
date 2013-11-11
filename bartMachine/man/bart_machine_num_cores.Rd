@@ -2,7 +2,7 @@
 \alias{bart_machine_num_cores}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-%%  ~~function to do ... ~~
+Return number of cores being used
 }
 \description{
 %%  ~~ A concise (1-5 lines) description of what the function does. ~~
