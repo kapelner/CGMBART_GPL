@@ -5,7 +5,7 @@
 Estimate Out-of-sample Error with K-fold Cross validation
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+Builds a BART model using a specified set of parameters and estimates the out-of-sample performance by using k-fold cross validation.
 }
 \usage{
 k_fold_cv(X, y, k_folds = 5, ...)
@@ -13,20 +13,20 @@ k_fold_cv(X, y, k_folds = 5, ...)
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{X}{
-%%     ~~Describe \code{X} here~~
+Dataframe or matrix of predictors. Factors are automatically converted to dummies interally. 
 }
   \item{y}{
-%%     ~~Describe \code{y} here~~
+Vector of response variable. If \code{y} is \code{numeric} or \code{integer}, a BART model for regression is built. If \code{y} is a factor with two levels, a BART model for classification is built.
 }
   \item{k_folds}{
-%%     ~~Describe \code{k_folds} here~~
+Number of folds to cross-validate over.
 }
   \item{\dots}{
-%%     ~~Describe \code{\dots} here~~
+Additional arguments to be passed to \code{build_bart_machine}.
 }
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
+For each fold, a new BART model is trained (using the same set of arguments) and its performance is evaluated on the holdout piece of that fold.
 }
 \value{
 %%  ~Describe the value returned
@@ -39,7 +39,7 @@ k_fold_cv(X, y, k_folds = 5, ...)
 %% ~put references to the literature/web site here ~
 }
 \author{
-%%  ~~who you are~~
+Adam Kapelner and Justin Bleich
 }
 \note{
 %%  ~~further notes~~
@@ -48,7 +48,7 @@ k_fold_cv(X, y, k_folds = 5, ...)
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+\code{\link{build_bart_machine}}
 }
 \examples{
 ##---- Should be DIRECTLY executable !! ----

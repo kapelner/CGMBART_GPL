@@ -5,7 +5,7 @@
 Predict for test data
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+Utility wrapper function for computing out-of-sample metrics for a BART model when the test set results are known.
 }
 \usage{
 bart_predict_for_test_data(bart_machine, Xtest, ytest)
@@ -13,13 +13,13 @@ bart_predict_for_test_data(bart_machine, Xtest, ytest)
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{bart_machine}{
-%%     ~~Describe \code{bart_machine} here~~
+An object of class ``bartMachine''.
 }
   \item{Xtest}{
-%%     ~~Describe \code{Xtest} here~~
+Design matrix for test data containing rows at which predictions are to be made.
 }
   \item{ytest}{
-%%     ~~Describe \code{ytest} here~~
+Actual outcomes for test data.
 }
 }
 \details{
@@ -45,7 +45,7 @@ bart_predict_for_test_data(bart_machine, Xtest, ytest)
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+Add predict
 }
 \examples{
 ##---- Should be DIRECTLY executable !! ----

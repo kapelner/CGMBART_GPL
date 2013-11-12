@@ -5,7 +5,7 @@
 Partial Dependence Plot
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+Creates a partial dependence plot for a BART model for regression or classification.
 }
 \usage{
 pd_plot(bart_machine, j, levs = c(0.05, seq(from = 0.1, to = 0.9, by = 0.1), 0.95), lower_ci = 0.025, upper_ci = 0.975)
@@ -13,19 +13,19 @@ pd_plot(bart_machine, j, levs = c(0.05, seq(from = 0.1, to = 0.9, by = 0.1), 0.9
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{bart_machine}{
-%%     ~~Describe \code{bart_machine} here~~
+An object of class ``bartMachine''.
 }
   \item{j}{
-%%     ~~Describe \code{j} here~~
+The number or name of the column in the design matrix for which the partial dependence plot is to be created. 
 }
   \item{levs}{
-%%     ~~Describe \code{levs} here~~
+Quantiles at which the partial dependence function should be evaluated. Linear extrapolation is performed between these points.
 }
   \item{lower_ci}{
-%%     ~~Describe \code{lower_ci} here~~
+Lower limit for credible interval
 }
   \item{upper_ci}{
-%%     ~~Describe \code{upper_ci} here~~
+Upper limit for credible interval
 }
 }
 \details{
@@ -42,7 +42,7 @@ pd_plot(bart_machine, j, levs = c(0.05, seq(from = 0.1, to = 0.9, by = 0.1), 0.9
 %% ~put references to the literature/web site here ~
 }
 \author{
-%%  ~~who you are~~
+Adam Kapelner and Justin Bleich
 }
 \note{
 %%  ~~further notes~~

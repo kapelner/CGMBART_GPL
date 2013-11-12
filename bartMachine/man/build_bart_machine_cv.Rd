@@ -5,7 +5,7 @@
 Build BART-CV
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+Builds a BART-CV model by cross-validating over a grid of hyperparameter choices.
 }
 \usage{
 build_bart_machine_cv(X = NULL, y = NULL, Xy = NULL, num_tree_cvs = c(50, 200), k_cvs = c(2, 3, 5), nu_q_cvs = list(c(3, 0.9), c(3, 0.99), c(10, 0.75)), k_folds = 5, ...)
@@ -13,28 +13,28 @@ build_bart_machine_cv(X = NULL, y = NULL, Xy = NULL, num_tree_cvs = c(50, 200), 
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{X}{
-%%     ~~Describe \code{X} here~~
+Dataframe or matrix of predictors. Factors are automatically converted to dummies interally. 
 }
   \item{y}{
-%%     ~~Describe \code{y} here~~
+Vector of response variable. If \code{y} is \code{numeric} or \code{integer}, a BART model for regression is built. If \code{y} is a factor with two levels, a BART model for classification is built.
 }
   \item{Xy}{
-%%     ~~Describe \code{Xy} here~~
+A dataframe or matrix of predictors and the response. The response column must be named ``y''. 
 }
   \item{num_tree_cvs}{
-%%     ~~Describe \code{num_tree_cvs} here~~
+List of sizes for the sum-of-trees models to cross-validate over.
 }
   \item{k_cvs}{
-%%     ~~Describe \code{k_cvs} here~~
+List of choices for the hyperparameter \code{k} to cross-validate over.
 }
   \item{nu_q_cvs}{
-%%     ~~Describe \code{nu_q_cvs} here~~
+List of vectors containing (\code{nu}, \code{q}) ordered pair choices to cross-validate over.
 }
   \item{k_folds}{
-%%     ~~Describe \code{k_folds} here~~
+Number of folds for cross-validation
 }
   \item{\dots}{
-%%     ~~Describe \code{\dots} here~~
+Additional arguments to be passed to \code{build_bart_machine}.
 }
 }
 \details{
@@ -48,10 +48,10 @@ build_bart_machine_cv(X = NULL, y = NULL, Xy = NULL, num_tree_cvs = c(50, 200), 
 %% ...
 }
 \references{
-%% ~put references to the literature/web site here ~
+Chipman et al. (2010)
 }
 \author{
-%%  ~~who you are~~
+Adam Kapelner and Justin Bleich
 }
 \note{
 %%  ~~further notes~~
@@ -60,7 +60,7 @@ build_bart_machine_cv(X = NULL, y = NULL, Xy = NULL, num_tree_cvs = c(50, 200), 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+\code{\link{build_bart_machine}}
 }
 \examples{
 ##---- Should be DIRECTLY executable !! ----

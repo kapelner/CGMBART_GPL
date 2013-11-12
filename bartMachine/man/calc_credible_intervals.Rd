@@ -5,7 +5,7 @@
 Calculate Credible Intervals
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+Generates credible intervals for \eqn{\hat{f}(x)} for a specified set of observations.
 }
 \usage{
 calc_credible_intervals(bart_machine, new_data, ci_conf = 0.95)
@@ -13,13 +13,13 @@ calc_credible_intervals(bart_machine, new_data, ci_conf = 0.95)
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{bart_machine}{
-%%     ~~Describe \code{bart_machine} here~~
+An object of class ``bartMachine''.
 }
   \item{new_data}{
-%%     ~~Describe \code{new_data} here~~
+A data frame containing observations at which credible intervals for \eqn{\hat{f}(x)} are to be computed.
 }
   \item{ci_conf}{
-%%     ~~Describe \code{ci_conf} here~~
+Confidence level for credible intervals.
 }
 }
 \details{
@@ -36,7 +36,7 @@ calc_credible_intervals(bart_machine, new_data, ci_conf = 0.95)
 %% ~put references to the literature/web site here ~
 }
 \author{
-%%  ~~who you are~~
+Adam Kapelner and Justin Bleich
 }
 \note{
 %%  ~~further notes~~
@@ -45,7 +45,7 @@ calc_credible_intervals(bart_machine, new_data, ci_conf = 0.95)
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+\code{\link{calc_prediction_intervals}}, \code{\link{bart_machine_get_posterior}}
 }
 \examples{
 ##---- Should be DIRECTLY executable !! ----

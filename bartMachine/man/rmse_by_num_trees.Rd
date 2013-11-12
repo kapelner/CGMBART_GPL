@@ -2,10 +2,10 @@
 \alias{rmse_by_num_trees}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-Plot the Out-of-sample RMSE by Number of Trees
+Assess the Out-of-sample RMSE by Number of Trees
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+Assess out-of-sample RMSE of a BART model for varying numbers of trees in the sum-of-trees model.
 }
 \usage{
 rmse_by_num_trees(bart_machine, tree_list = c(5, seq(10, 50, 10), 100, 150, 200), in_sample = FALSE, plot = TRUE, holdout_pctg = 0.3, num_replicates = 4)
@@ -13,22 +13,22 @@ rmse_by_num_trees(bart_machine, tree_list = c(5, seq(10, 50, 10), 100, 150, 200)
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{bart_machine}{
-%%     ~~Describe \code{bart_machine} here~~
+An object of class ``bartMachine''.
 }
   \item{tree_list}{
-%%     ~~Describe \code{tree_list} here~~
+List of sizes for the sum-of-trees models
 }
   \item{in_sample}{
-%%     ~~Describe \code{in_sample} here~~
+If TRUE, the RMSE is computed on in-sample data rather than an out-of-sample holdout. 
 }
   \item{plot}{
-%%     ~~Describe \code{plot} here~~
+If TRUE, a plot of the RMSE by the number of trees in the ensemble is created.
 }
   \item{holdout_pctg}{
-%%     ~~Describe \code{holdout_pctg} here~~
+Percentage of the data to be treated as an out-of-sample holdout. 
 }
   \item{num_replicates}{
-%%     ~~Describe \code{num_replicates} here~~
+Number of replicates to average the results over. Each replicate uses a randomly sampled holdout of the data, (which could have overlap).
 }
 }
 \details{
@@ -48,7 +48,7 @@ rmse_by_num_trees(bart_machine, tree_list = c(5, seq(10, 50, 10), 100, 150, 200)
 %%  ~~who you are~~
 }
 \note{
-%%  ~~further notes~~
+Since using a large number of trees can substantially increase computation time, this plot can help assess whether a smaller ensemble size is sufficient to obtain desirable predictive performance.
 }
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~

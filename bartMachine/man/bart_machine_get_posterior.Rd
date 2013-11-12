@@ -2,10 +2,10 @@
 \alias{bart_machine_get_posterior}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-Get Posterior
+Get Full Posterior Distribution
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+Generates draws posterior distribution of \eqn{\hat{f}(x)} for a specified set of observations.
 }
 \usage{
 bart_machine_get_posterior(bart_machine, new_data)
@@ -13,10 +13,10 @@ bart_machine_get_posterior(bart_machine, new_data)
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{bart_machine}{
-%%     ~~Describe \code{bart_machine} here~~
+An object of class ``bartMachine''.
 }
   \item{new_data}{
-%%     ~~Describe \code{new_data} here~~
+A data frame containing observations at which draws from posterior distribution of \eqn{\hat{f}(x)} are to be obtained.
 }
 }
 \details{
@@ -33,16 +33,16 @@ bart_machine_get_posterior(bart_machine, new_data)
 %% ~put references to the literature/web site here ~
 }
 \author{
-%%  ~~who you are~~
+Adam Kapelner and Justin Bleich
 }
 \note{
-%%  ~~further notes~~
+This function, although applicable to training data, is primarily meant for test data. To obtain the full posterior of the training data, set the \"run_in_sample\" option to TRUE when building a BART model. 
 }
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+\code{\link{calc_credible_intervals}},\code{\link{calc_prediction_intervals}}
 }
 \examples{
 ##---- Should be DIRECTLY executable !! ----

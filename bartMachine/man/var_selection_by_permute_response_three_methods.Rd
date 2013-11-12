@@ -2,10 +2,10 @@
 \alias{var_selection_by_permute_response_three_methods}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-Perform Variable Selection 
+Perform Variable Selection using Three Threshold-based Procedures
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+Performs variable selection using the three thresholding methods introduced in Bleich et al. (2013). 
 }
 \usage{
 var_selection_by_permute_response_three_methods(bart_machine, num_reps_for_avg = 10, num_permute_samples = 100, num_trees_for_permute = 20, alpha = 0.05, plot = TRUE, num_var_plot = Inf, bottom_margin = 10)
@@ -13,32 +13,33 @@ var_selection_by_permute_response_three_methods(bart_machine, num_reps_for_avg =
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{bart_machine}{
-%%     ~~Describe \code{bart_machine} here~~
+An object of class ``bartMachine''.
 }
   \item{num_reps_for_avg}{
-%%     ~~Describe \code{num_reps_for_avg} here~~
+Number of replicates to over over to for the BART model's variable inclusion proportions.
 }
   \item{num_permute_samples}{
-%%     ~~Describe \code{num_permute_samples} here~~
+Number of permutations of the response to be made to generate the ``null'' permutation distribution.
 }
   \item{num_trees_for_permute}{
-%%     ~~Describe \code{num_trees_for_permute} here~~
+Number of trees to use in the variable selection procedure. As with \code{\link{investigate_var_importance}}, a small number of trees should be used to force variables to compete for entry into the model. Note that this number is used to estimate both the ``true'' and ``null'' variable inclusion proportions.
 }
   \item{alpha}{
-%%     ~~Describe \code{alpha} here~~
+Cut-off level for the thresholds.
 }
   \item{plot}{
-%%     ~~Describe \code{plot} here~~
+If TRUE, a plot showing which variables are selected by each of the procedures is generated.
 }
   \item{num_var_plot}{
-%%     ~~Describe \code{num_var_plot} here~~
+Number of variables (in order of decreasing variable inclusion proportion) to be plotted.
 }
   \item{bottom_margin}{
-%%     ~~Describe \code{bottom_margin} here~~
+Parameter to adjust the bottom margin of the graph if labels are clipped. ADAM: How does it work? Which gives more space?
+
 }
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
+TO DO. 
 }
 \value{
 %%  ~Describe the value returned
@@ -48,19 +49,19 @@ var_selection_by_permute_response_three_methods(bart_machine, num_reps_for_avg =
 %% ...
 }
 \references{
-%% ~put references to the literature/web site here ~
+Bleich et al. (2013)
 }
 \author{
-%%  ~~who you are~~
+Adam Kapelner and Justin Bleich
 }
 \note{
-%%  ~~further notes~~
+Although the reference only explores regression settings, this procedure is applicable to both regression and classification problems. 
 }
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+\code{\link{var_selection_by_permute_response_cv}}, \code{\link{investigate_var_importance}}
 }
 \examples{
 ##---- Should be DIRECTLY executable !! ----

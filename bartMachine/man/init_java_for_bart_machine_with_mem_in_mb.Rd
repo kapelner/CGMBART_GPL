@@ -13,7 +13,7 @@ init_java_for_bart_machine_with_mem_in_mb(bart_max_mem)
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{bart_max_mem}{
-%%     ~~Describe \code{bart_max_mem} here~~
+Java Virtual Machine heap size in MB
 }
 }
 \details{

@@ -2,10 +2,10 @@
 \alias{var_selection_by_permute_response_cv}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-Perform Variable Selection Using Cross-validation Method
+Perform Variable Selection Using Cross-validation Procedure
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+Performs variable selection by cross-validating over the three threshold-based procedures outlined in Bleich et al. (2013) and selecting the single procedure that returns the lowest cross-validation RMSE. 
 }
 \usage{
 var_selection_by_permute_response_cv(bart_machine, k_folds = 5, num_reps_for_avg = 5, num_permute_samples = 100, num_trees_for_permute = 20, alpha = 0.05, num_trees_pred_cv = 200)
@@ -13,25 +13,25 @@ var_selection_by_permute_response_cv(bart_machine, k_folds = 5, num_reps_for_avg
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{bart_machine}{
-%%     ~~Describe \code{bart_machine} here~~
+An object of class ``bartMachine''.
 }
   \item{k_folds}{
-%%     ~~Describe \code{k_folds} here~~
+Number of folds to be used in cross-validation.
 }
   \item{num_reps_for_avg}{
-%%     ~~Describe \code{num_reps_for_avg} here~~
+Number of replicates to over over to for the BART model's variable inclusion proportions.
 }
   \item{num_permute_samples}{
-%%     ~~Describe \code{num_permute_samples} here~~
+Number of permutations of the response to be made to generate the ``null'' permutation distribution.
 }
   \item{num_trees_for_permute}{
-%%     ~~Describe \code{num_trees_for_permute} here~~
+Number of trees to use in the variable selection procedure. As with \code{\link{investigate_var_importance}}, a small number of trees should be used to force variables to compete for entry into the model. Note that this number is used to estimate both the ``true'' and ``null'' variable inclusion proportions.
 }
   \item{alpha}{
-%%     ~~Describe \code{alpha} here~~
+Cut-off level for the thresholds.
 }
   \item{num_trees_pred_cv}{
-%%     ~~Describe \code{num_trees_pred_cv} here~~
+Number of trees to use for prediction on the hold-out portion of each fold. Once variables have been selected using the training portion of each fold, a new model is built using only those variables with \code{num_trees_pred_cv} trees in the sum-of-trees model. Forecasts for the holdout sample are made using this model. A larger number of trees is recommended to exploit the full forecasting power of BART. 
 }
 }
 \details{
@@ -45,10 +45,10 @@ var_selection_by_permute_response_cv(bart_machine, k_folds = 5, num_reps_for_avg
 %% ...
 }
 \references{
-%% ~put references to the literature/web site here ~
+Bleich et al. (2013)
 }
 \author{
-%%  ~~who you are~~
+Adam Kapelner and Justin Bleich
 }
 \note{
 %%  ~~further notes~~
@@ -57,7 +57,7 @@ var_selection_by_permute_response_cv(bart_machine, k_folds = 5, num_reps_for_avg
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+\code{\link{var_selection_by_permute_response_three_methods}}, \code{\link{investigate_var_importance}}
 }
 \examples{
 ##---- Should be DIRECTLY executable !! ----

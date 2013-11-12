@@ -5,7 +5,7 @@
 Calculate Prediction Intervals
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+Generates prediction intervals for \eqn{\hat{y}} for a specified set of observations.
 }
 \usage{
 calc_prediction_intervals(bart_machine, new_data, pi_conf = 0.95, normal_samples_per_gibbs_sample = 100)
@@ -13,16 +13,16 @@ calc_prediction_intervals(bart_machine, new_data, pi_conf = 0.95, normal_samples
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{bart_machine}{
-%%     ~~Describe \code{bart_machine} here~~
+An object of class ``bartMachine''.
 }
   \item{new_data}{
-%%     ~~Describe \code{new_data} here~~
+A data frame containing observations at which prediction intervals for \eqn{\hat{y}} are to be computed.
 }
   \item{pi_conf}{
-%%     ~~Describe \code{pi_conf} here~~
+Confidence level for prediction intervals.
 }
   \item{normal_samples_per_gibbs_sample}{
-%%     ~~Describe \code{normal_samples_per_gibbs_sample} here~~
+ADAM FILL IN
 }
 }
 \details{
@@ -39,7 +39,7 @@ calc_prediction_intervals(bart_machine, new_data, pi_conf = 0.95, normal_samples
 %% ~put references to the literature/web site here ~
 }
 \author{
-%%  ~~who you are~~
+Adam Kapelner and Justin Bleich
 }
 \note{
 %%  ~~further notes~~
@@ -48,7 +48,7 @@ calc_prediction_intervals(bart_machine, new_data, pi_conf = 0.95, normal_samples
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+\code{\link{calc_credible_intervals}}, \code{\link{bart_machine_get_posterior}}
 }
 \examples{
 ##---- Should be DIRECTLY executable !! ----
