@@ -65,7 +65,7 @@ Vector assigning relative weights to how often a particular variable should be p
 If TRUE, the missing data feature is used to automatically handle missing data without imputation. See Kapelner and Bleich (2013) for details. 
 }
   \item{covariates_to_permute}{
-??
+Private argument for \code{\link{cov_importance_test}}. Not needed by user. 
 }
   \item{num_rand_samps_in_library}{
 Before building a BART model, samples from the Standard Normal and \eqn{\chi-squared(\nu)} are drawn to be used in the MCMC steps. This parameter determines the number of samples to be taken.  
@@ -84,14 +84,14 @@ If TRUE, missing entries are filled in using the rf.impute() function from the \
 If TRUE, when computing the data-based estimate of \eqn{\sigma^2}, missing entries are imputed with average value or modal category.
 }
   \item{mem_cache_for_speed}{
-??
+?? ADAM
 }
   \item{verbose}{
 Prints information about progress of the algorithm to the screen. 
 }
 }
 \details{
-Returns an object of class ``bart_machine''. Note that this object persists in the Java heap until code{\link{destroy_bart_machine}} is called or the R session is terminated. 
+Returns an object of class ``bartMachine''. Note that this object persists in the Java heap until code{\link{destroy_bart_machine}} is called or the R session is terminated. 
 }
 \value{
 %%  ~Describe the value returned
@@ -101,7 +101,7 @@ Returns an object of class ``bart_machine''. Note that this object persists in t
 %% ...
 }
 \references{
-%% ~put references to the literature/web site here ~
+Chipman et al. (2010)
 }
 \author{
 Adam Kapelner and Justin Bleich
@@ -113,8 +113,8 @@ This function is parallelized and each core will create an independent MCMC chai
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-\code{link{destroy_bart_machine}}
-\code{link{bart_machine_cv}}
+\code{\link{destroy_bart_machine}}
+\code{\link{bart_machine_cv}}
 }
 \examples{
 ##---- Should be DIRECTLY executable !! ----

@@ -5,7 +5,7 @@
 Check BART Error Assumptions
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+Diagnostic tools to assess whether the errors of the BART model for regression are normally distributed and homoskedastic, as assumed by the model. This function generates a normal quantile plot of the residuals with a Shapiro-Wilks p-value as well as a residual plot.
 }
 \usage{
 check_bart_error_assumptions(bart_machine, alpha_normal_test = 0.05, alpha_hetero_test = 0.05, hetero_plot = "yhats")
@@ -13,20 +13,20 @@ check_bart_error_assumptions(bart_machine, alpha_normal_test = 0.05, alpha_heter
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{bart_machine}{
-%%     ~~Describe \code{bart_machine} here~~
+An object of class ``bartMachine''.
 }
   \item{alpha_normal_test}{
-%%     ~~Describe \code{alpha_normal_test} here~~
+Significance level for Shapiro-Wilks test for normality. 
 }
   \item{alpha_hetero_test}{
-%%     ~~Describe \code{alpha_hetero_test} here~~
+KILL
 }
   \item{hetero_plot}{
-%%     ~~Describe \code{hetero_plot} here~~
+If ``yhats'', the residuals are plotted against the fitted values of the response. If ``ys'', the residuals are plotted against the actual values of the response.
 }
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
+ 
 }
 \value{
 %%  ~Describe the value returned
@@ -39,7 +39,7 @@ check_bart_error_assumptions(bart_machine, alpha_normal_test = 0.05, alpha_heter
 %% ~put references to the literature/web site here ~
 }
 \author{
-%%  ~~who you are~~
+Adam Kapelner and Justin Bleich
 }
 \note{
 %%  ~~further notes~~
@@ -48,7 +48,7 @@ check_bart_error_assumptions(bart_machine, alpha_normal_test = 0.05, alpha_heter
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+\code{\link{plot_sigsqs_convergence_diagnostics}}, \code{\link{plot_convergence_diagnostics}}
 }
 \examples{
 ##---- Should be DIRECTLY executable !! ----

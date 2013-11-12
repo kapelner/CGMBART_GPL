@@ -5,24 +5,18 @@
 Create a Histogram of the Posterior Error Variance Estimates
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+Creates a histogram of the posterior estimates of the error variance with a credible interval overlaid.
 }
 \usage{
-hist_sigsqs(bart_machine, extra_text = NULL, data_title = "data_model", save_plot = FALSE)
+hist_sigsqs(bart_machine, confidence_level = .95)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{bart_machine}{
-%%     ~~Describe \code{bart_machine} here~~
+An object of class ``bartMachine''.
 }
-  \item{extra_text}{
-%%     ~~Describe \code{extra_text} here~~
-}
-  \item{data_title}{
-%%     ~~Describe \code{data_title} here~~
-}
-  \item{save_plot}{
-%%     ~~Describe \code{save_plot} here~~
+  \item{confidence_level}{
+Confidence level for credible interval
 }
 }
 \details{
@@ -39,7 +33,7 @@ hist_sigsqs(bart_machine, extra_text = NULL, data_title = "data_model", save_plo
 %% ~put references to the literature/web site here ~
 }
 \author{
-%%  ~~who you are~~
+Adam Kapelner and Justin Bleich
 }
 \note{
 %%  ~~further notes~~
@@ -48,7 +42,7 @@ hist_sigsqs(bart_machine, extra_text = NULL, data_title = "data_model", save_plo
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+\code{\link{get_sigsqs}}
 }
 \examples{
 ##---- Should be DIRECTLY executable !! ----

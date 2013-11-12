@@ -2,10 +2,10 @@
 \alias{interaction_investigator}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-Explore Interactions within BART Model
+Explore Pairwise Interactions in BART Model
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+Explore the pairwise interaction counts for a BART model to learn about interactions fit by the model. This function includes an option to generate a plot of the pairwise interaction counts.
 }
 \usage{
 interaction_investigator(bart_machine, plot = TRUE, num_replicates_for_avg = 5, num_trees_bottleneck = 20, num_var_plot = 50, cut_bottom = NULL, bottom_margin = 10)
@@ -13,29 +13,29 @@ interaction_investigator(bart_machine, plot = TRUE, num_replicates_for_avg = 5, 
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{bart_machine}{
-%%     ~~Describe \code{bart_machine} here~~
+An object of class ``bartMachine''.
 }
   \item{plot}{
-%%     ~~Describe \code{plot} here~~
+If TRUE, a plot of the pairwise interaction counts is generated. 
 }
   \item{num_replicates_for_avg}{
-%%     ~~Describe \code{num_replicates_for_avg} here~~
+The number of replicates of BART to be used to generate variable inclusion proportions. Averaging across multiple BART models improves stability of the estimates.
 }
   \item{num_trees_bottleneck}{
-%%     ~~Describe \code{num_trees_bottleneck} here~~
+Number of trees to be used in the sum-of-trees model for computing pairwise interactions. A small number of trees should be used to force the variables to compete for entry into the model.
 }
   \item{num_var_plot}{
-%%     ~~Describe \code{num_var_plot} here~~
+Number of variables to be shown on the plot. If ``Inf'', all variables are plotted.
 }
   \item{cut_bottom}{
-%%     ~~Describe \code{cut_bottom} here~~
+ADAM ??
 }
   \item{bottom_margin}{
-%%     ~~Describe \code{bottom_margin} here~~
+Parameter to adjust the bottom margin of the graph if labels are clipped. ADAM: How does it work? Which gives more space?
 }
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
+An interaction between two variables is considered to occur whenever a path from the root node of a tree to any terminal node contains splits using those two variables.
 }
 \value{
 %%  ~Describe the value returned
@@ -45,19 +45,20 @@ interaction_investigator(bart_machine, plot = TRUE, num_replicates_for_avg = 5, 
 %% ...
 }
 \references{
-%% ~put references to the literature/web site here ~
+Ed Reference? 
+JSS Paper?
 }
 \author{
 %%  ~~who you are~~
 }
 \note{
-%%  ~~further notes~~
+In the plot, the red bars correspond to the standard error of the variable inclusion proportion estimates (since multiple replicates were used).
 }
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+\code{\link{investigate_var_importance}}
 }
 \examples{
 ##---- Should be DIRECTLY executable !! ----

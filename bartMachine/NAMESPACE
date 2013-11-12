@@ -17,16 +17,12 @@ export(plot_y_vs_yhat)
 export(check_bart_error_assumptions)
 export(hist_sigsqs)
 export(get_sigsqs)
-export(plot_sigsqs_convergence_diagnostics)
+
 export(investigate_var_importance)
 export(plot_convergence_diagnostics) #possibly do all four with a switch, thus making others private
 export(interaction_investigator)
 export(pd_plot) #make sure classification works
 export(rmse_by_num_trees)
-export(plot_tree_depths)
-export(get_tree_depths)
-export(plot_tree_num_nodes)
-export(plot_mh_acceptance_reject)
 
 export(bart_predict_for_test_data)
 export(bart_machine_get_posterior)
@@ -39,7 +35,16 @@ export(k_fold_cv)
 export(var_selection_by_permute_response_three_methods)
 export(var_selection_by_permute_response_cv)
 
+
+##Make documentation
 S3method(predict, bartMachine)
-S3method(plot, bartMachine) #alias for plot_convergence_diagnostics
 S3method(print, bartMachine)
 S3method(summary, bartMachine) #alias for print
+
+#Defunct
+#export(plot_tree_depths) #part of convergence diags
+#export(get_tree_depths) #why? 
+#export(plot_sigsqs_convergence_diagnostics) #part of convergence diags
+#export(plot_tree_num_nodes) #part of convergence diags
+#export(plot_mh_acceptance_reject) #part of convergence diags
+#S3method(plot, bartMachine) #don't make s3method

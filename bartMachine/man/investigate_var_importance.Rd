@@ -5,7 +5,7 @@
 Explore Variable Inclusion Proportions in BART Model
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+Explore the variable inclusion proportions for a BART model to learn about the relative influence of the different covariates. This function includes an option to generate a plot of the variable inclusion proportions.
 }
 \usage{
 investigate_var_importance(bart_machine, type = "splits", plot = TRUE, num_replicates_for_avg = 5, num_trees_bottleneck = 20, num_var_plot = Inf, bottom_margin = 10)
@@ -13,29 +13,29 @@ investigate_var_importance(bart_machine, type = "splits", plot = TRUE, num_repli
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{bart_machine}{
-%%     ~~Describe \code{bart_machine} here~~
+An object of class ``bartMachine''.
 }
   \item{type}{
-%%     ~~Describe \code{type} here~~
+If ``splits'', then the proportion of times each variable is chosen for a splitting rule is computed. If ``trees'', then the proportion of times each variable appears in a tree is computed.
 }
   \item{plot}{
-%%     ~~Describe \code{plot} here~~
+If TRUE, a plot of the variable inclusion proportions is generated. 
 }
   \item{num_replicates_for_avg}{
-%%     ~~Describe \code{num_replicates_for_avg} here~~
+The number of replicates of BART to be used to generate variable inclusion proportions. Averaging across multiple BART models improves stability of the estimates. See Bleich et al. (2013) for more details. 
 }
   \item{num_trees_bottleneck}{
-%%     ~~Describe \code{num_trees_bottleneck} here~~
+Number of trees to be used in the sum-of-trees for computing the variable inclusion proportions. A small number of trees should be used to force the variables to compete for entry into the model. Chipman et al. (2010) recommend 20. See this reference for more details. 
 }
   \item{num_var_plot}{
-%%     ~~Describe \code{num_var_plot} here~~
+Number of variables to be shown on the plot. If ``Inf'', all variables are plotted.
 }
   \item{bottom_margin}{
-%%     ~~Describe \code{bottom_margin} here~~
+Parameter to adjust the bottom margin of the graph if labels are clipped. ADAM: How does it work? Which gives more space?
 }
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
+
 }
 \value{
 %%  ~Describe the value returned
@@ -45,19 +45,20 @@ investigate_var_importance(bart_machine, type = "splits", plot = TRUE, num_repli
 %% ...
 }
 \references{
-%% ~put references to the literature/web site here ~
+Bleich et al. (2013)
+Chipman et al. (2010)
 }
 \author{
-%%  ~~who you are~~
+Adam Kapelner and Justin Bleich
 }
 \note{
-%%  ~~further notes~~
+In the plot, the red bars correspond to the standard error of the variable inclusion proportion estimates (since multiple replicates were used).
 }
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+\code{\link{interaction_investigator}}
 }
 \examples{
 ##---- Should be DIRECTLY executable !! ----

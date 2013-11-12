@@ -5,7 +5,7 @@
 Covariance Importance Test
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+TO DO BY ADAM
 }
 \usage{
 cov_importance_test(bart_machine, covariates = NULL, num_permutations = 100, num_trees = NULL, plot = TRUE)
@@ -13,7 +13,7 @@ cov_importance_test(bart_machine, covariates = NULL, num_permutations = 100, num
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{bart_machine}{
-%%     ~~Describe \code{bart_machine} here~~
+  An object of class ``bart_machine''.
 }
   \item{covariates}{
 %%     ~~Describe \code{covariates} here~~
@@ -42,7 +42,7 @@ cov_importance_test(bart_machine, covariates = NULL, num_permutations = 100, num
 %% ~put references to the literature/web site here ~
 }
 \author{
-%%  ~~who you are~~
+Adam Kapelner and Justin Bleich
 }
 \note{
 %%  ~~further notes~~

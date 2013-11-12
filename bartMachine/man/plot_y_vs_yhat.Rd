@@ -5,7 +5,7 @@
 Plot the fitted Versus Actual Response
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+Generates a plot actual versus fitted values and corresponding credible intervals or prediction intervals for the fitted values.
 }
 \usage{
 plot_y_vs_yhat(bart_machine, X = NULL, y = NULL, credible_intervals = FALSE, prediction_intervals = FALSE, interval_confidence_level = 0.95)
@@ -13,26 +13,26 @@ plot_y_vs_yhat(bart_machine, X = NULL, y = NULL, credible_intervals = FALSE, pre
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{bart_machine}{
-%%     ~~Describe \code{bart_machine} here~~
+  An object of class ``bartMachine''. 
 }
   \item{X}{
-%%     ~~Describe \code{X} here~~
+Optional argument for test data. If included, BART computes fitted values at the rows of \code{X}. Else, the fitted values from the training data are used.
 }
   \item{y}{
-%%     ~~Describe \code{y} here~~
+Optional argument for test data. Vector of observed values corresponding to the rows of \code{X}.
 }
   \item{credible_intervals}{
-%%     ~~Describe \code{credible_intervals} here~~
+If TRUE, Bayesian credible intervals are computed using the quantiles of the posterior distribution of \eqn{\hat{f}(x)}.
 }
   \item{prediction_intervals}{
-%%     ~~Describe \code{prediction_intervals} here~~
+If TRUE, Bayesian posterior intervals are computed using the a draw of from \eqn{\hat{f}(x)} and ... ADAM DESCRIBE WHAT YOU DO. 
 }
   \item{interval_confidence_level}{
-%%     ~~Describe \code{interval_confidence_level} here~~
+Desired level of confidence for credible or prediction intervals. 
 }
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
+ 
 }
 \value{
 %%  ~Describe the value returned
@@ -45,7 +45,7 @@ plot_y_vs_yhat(bart_machine, X = NULL, y = NULL, credible_intervals = FALSE, pre
 %% ~put references to the literature/web site here ~
 }
 \author{
-%%  ~~who you are~~
+Adam Kapelner and Justin Bleich
 }
 \note{
 %%  ~~further notes~~
@@ -54,7 +54,7 @@ plot_y_vs_yhat(bart_machine, X = NULL, y = NULL, credible_intervals = FALSE, pre
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+\code{\link{bart_machine_get_posterior}}, \code{\link{calc_credible_intervals}}, \code{\link{calc_prediction_intervals}}
 }
 \examples{
 ##---- Should be DIRECTLY executable !! ----

@@ -5,7 +5,7 @@
 Get the Variable Inclusion Counts
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+Computes the variable inclusion counts for a BART model. 
 }
 \usage{
 get_var_counts_over_chain(bart_machine, type = "splits")
@@ -13,10 +13,10 @@ get_var_counts_over_chain(bart_machine, type = "splits")
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{bart_machine}{
-%%     ~~Describe \code{bart_machine} here~~
+An object of class ``bartMachine''.
 }
   \item{type}{
-%%     ~~Describe \code{type} here~~
+If ``splits'', then the number of times each variable is chosen for a splitting rule is computed. If ``trees'', then the number of times each variable appears in a tree is computed.
 }
 }
 \details{
@@ -33,7 +33,7 @@ get_var_counts_over_chain(bart_machine, type = "splits")
 %% ~put references to the literature/web site here ~
 }
 \author{
-%%  ~~who you are~~
+Adam Kapelner and Justin Bleich
 }
 \note{
 %%  ~~further notes~~
@@ -42,7 +42,7 @@ get_var_counts_over_chain(bart_machine, type = "splits")
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+\code{\link{get_var_props_over_chain}}
 }
 \examples{
 ##---- Should be DIRECTLY executable !! ----

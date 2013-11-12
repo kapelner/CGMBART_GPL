@@ -2,10 +2,10 @@
 \alias{dummify_data}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-Dummify Data
+Dummify Design Matrix
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+Create a dataframe with factors converted to dummies. 
 }
 \usage{
 dummify_data(data, ...)
@@ -13,10 +13,10 @@ dummify_data(data, ...)
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{data}{
-%%     ~~Describe \code{data} here~~
+Data frame to be dummified. 
 }
   \item{\dots}{
-%%     ~~Describe \code{\dots} here~~
+Additional parameters. For internal processing only. 
 }
 }
 \details{
@@ -33,10 +33,10 @@ dummify_data(data, ...)
 %% ~put references to the literature/web site here ~
 }
 \author{
-%%  ~~who you are~~
+Adam Kapelner and Justin Bleich
 }
 \note{
-%%  ~~further notes~~
+BART handles dummification internally. This function is provided as a utility function. 
 }
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~

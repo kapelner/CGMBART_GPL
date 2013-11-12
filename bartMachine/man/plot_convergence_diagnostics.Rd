@@ -5,19 +5,30 @@
 Plot Convergence Diagnostics
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+A suite of plots to assess convergence diagonstics and features of the BART model. 
 }
 \usage{
-plot_convergence_diagnostics(bart_machine)
+plot_convergence_diagnostics(bart_machine,  plots = c("sigsqs", "mh_acceptance", "num_nodes", "tree_depths"))
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{bart_machine}{
-%%     ~~Describe \code{bart_machine} here~~
+An object of class ``bartMachine''.
+}
+\item{plots}{
+The list of plots to be displayed. The four options are: "sigsqs", "mh_acceptance", "num_nodes", "tree_depths".
 }
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
+The ``sigsqs'' option plots the posterior error variance estimates by the Gibbs sample number. This is a standard tool to assess convergence of MCMC algorithms. This option is not applicable to classification settings.
+
+The ''mh_acceptance'' option plots the proportion of Metropolis-Hastings steps accepted ?? WHAT DOES THIS DO AGAIN 
+
+The ``num_nodes'' option plots the average number of nodes across each tree in the sum-of-trees model by the Gibbs sample number.
+
+The ``num_nodes'' option plots the average tree depth across each tree in the sum-of-trees model by the Gibbs sample number.\\newline
+
+
 }
 \value{
 %%  ~Describe the value returned
@@ -27,10 +38,10 @@ plot_convergence_diagnostics(bart_machine)
 %% ...
 }
 \references{
-%% ~put references to the literature/web site here ~
+
 }
 \author{
-%%  ~~who you are~~
+Adam Kapelner and Justin Bleich
 }
 \note{
 %%  ~~further notes~~
@@ -46,19 +57,7 @@ plot_convergence_diagnostics(bart_machine)
 ##-- ==>  Define data, use random,
 ##--	or do  help(data=index)  for the standard data sets.
 
-## The function is currently defined as
-function (bart_machine) 
-{
-    par(mfrow = c(2, 2))
-    if (bart_machine$pred_type == "regression") {
-        plot_sigsqs_convergence_diagnostics(bart_machine)
-    }
-    plot_mh_acceptance_reject(bart_machine)
-    plot_tree_num_nodes(bart_machine)
-    plot_tree_depths(bart_machine)
-    par(mfrow = c(1, 1))
-  }
-}
+
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
 \keyword{ ~kwd1 }

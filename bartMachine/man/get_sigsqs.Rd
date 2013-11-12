@@ -5,7 +5,7 @@
 Get Posterior Error Variance Estimates 
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+Returns the posterior estimates of the error variance from the Gibbs samples.
 }
 \usage{
 get_sigsqs(bart_machine, after_burn_in = TRUE)
@@ -13,10 +13,10 @@ get_sigsqs(bart_machine, after_burn_in = TRUE)
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{bart_machine}{
-%%     ~~Describe \code{bart_machine} here~~
+An object of class ``bartMachine''.
 }
   \item{after_burn_in}{
-%%     ~~Describe \code{after_burn_in} here~~
+If TRUE, only samples from after the burn-in period are returned.
 }
 }
 \details{
@@ -33,7 +33,7 @@ get_sigsqs(bart_machine, after_burn_in = TRUE)
 %% ~put references to the literature/web site here ~
 }
 \author{
-%%  ~~who you are~~
+Adam Kapelner and Justin Bleich
 }
 \note{
 %%  ~~further notes~~
@@ -42,7 +42,7 @@ get_sigsqs(bart_machine, after_burn_in = TRUE)
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+\code{\link{hist_sigsqs}}
 }
 \examples{
 ##---- Should be DIRECTLY executable !! ----

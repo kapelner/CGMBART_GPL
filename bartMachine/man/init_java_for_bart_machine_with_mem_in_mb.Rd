@@ -2,10 +2,10 @@
 \alias{init_java_for_bart_machine_with_mem_in_mb}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-Initialize a JVM with a specified heap size
+Initialize a JVM with a pre-specified heap size
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+Initialize a Java virtual Machine (JVM) with a pre-specified heap size in MB.  
 }
 \usage{
 init_java_for_bart_machine_with_mem_in_mb(bart_max_mem)
@@ -30,10 +30,10 @@ init_java_for_bart_machine_with_mem_in_mb(bart_max_mem)
 %% ~put references to the literature/web site here ~
 }
 \author{
-%%  ~~who you are~~
+Adam Kapelner and Justin Bleich
 }
 \note{
-%%  ~~further notes~~
+This function can only be called once per \code{R} session and must be called before \code{\link{build_bart_machine}}, else the default heap size will be used (TK: what is default?).
 }
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
