@@ -400,21 +400,23 @@ y_hat = predict(bart_machine, X)
 bart_machine_cv = build_bart_machine_cv(X, y)
 bart_machine_cv
 
+bart_machine = build_bart_machine(X, y, prob_rule_class = 0.3)
+bart_machine
+
 #doesn't work
 plot_y_vs_yhat(bart_machine_cv, credible_intervals = TRUE)
-windows()
 plot_y_vs_yhat(bart_machine_cv, prediction_intervals = TRUE)
 
 
 oos_stats = k_fold_cv(X, y, k_folds = 10)
-oos_stats
+oos_stats$confusion_matrix
 
 
 get_var_counts_over_chain(bart_machine_cv)
 
 get_var_props_over_chain(bart_machine_cv)
 
-cov_importance_test(bart_machine_cv, covariates = c("glu"))
+cov_importance_test(bart_machine_cv, covariates = c("age"))
 
 check_bart_error_assumptions(bart_machine_cv)
 hist_sigsqs(bart_machine_cv)
@@ -440,8 +442,8 @@ rmse_by_num_trees(bart_machine_cv)
 bart_predict_for_test_data(bart_machine_cv, X[1 : 50, ], y[1 : 50])
 
 bart_machine_get_posterior(bart_machine_cv, X[1 : 5, ])
-calc_credible_intervals(bart_machine_cv, X[1 : 5, ])
-calc_prediction_intervals(bart_machine_cv, X[1 : 5, ])
+calc_credible_intervals(bart_machine_cv, X[1 : 2, ])
+calc_prediction_intervals(bart_machine_cv, X[1 : 2, ])
 
 vs = var_selection_by_permute_response_three_methods(bart_machine_cv, bottom_margin = 10, num_permute_samples=10) ##fix dot printing
 names(vs)

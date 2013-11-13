@@ -125,6 +125,10 @@ calc_credible_intervals = function(bart_machine, new_data, ci_conf = 0.95){
 }
 
 calc_prediction_intervals = function(bart_machine, new_data, pi_conf = 0.95, normal_samples_per_gibbs_sample = 100){
+	if (bart_machine$pred_type == "classification"){
+		stop("Prediction intervals are not possible for classification.")
+	}
+	
 	#first convert the rows to the correct dummies etc
 	new_data = pre_process_new_data(new_data, bart_machine)
 	n_test = nrow(new_data)

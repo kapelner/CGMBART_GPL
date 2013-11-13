@@ -40,6 +40,5 @@ export(var_selection_by_permute_response_three_methods)
 export(var_selection_by_permute_response_cv)
 
 S3method(predict, bartMachine)
-S3method(plot, bartMachine) #alias for plot_convergence_diagnostics
 S3method(print, bartMachine)
 S3method(summary, bartMachine) #alias for print
