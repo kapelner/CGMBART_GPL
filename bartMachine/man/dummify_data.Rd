@@ -5,7 +5,7 @@
 Dummify Design Matrix
 }
 \description{
-Create a dataframe with factors converted to dummies. 
+Create a data frame with factors converted to dummies. 
 }
 \usage{
 dummify_data(data, ...)
@@ -20,14 +20,10 @@ Additional parameters. For internal processing only.
 }
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
+The column names of the dummy variables are given by the ``FactorName_LevelName''. See the example below.
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
+Returns a data frame with factors converted to dummy indicator variables.
 }
 \references{
 %% ~put references to the literature/web site here ~
@@ -45,15 +41,15 @@ BART handles dummification internally. This function is provided as a utility fu
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
-
-## The function is currently defined as
-function (data, ...) 
-{
-    as.data.frame(pre_process_training_data(data, ...))
-  }
+#generate data
+set.seed(11)
+x1 = rnorm(20)
+x2 = runif(20)
+x3 = as.factor(ifelse(x1 > 0, "A", "B"))
+X = data.frame(x1,x2,x3)
+#dummify data
+X_dummified = dummify_data(X)
+print(X_dummified)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

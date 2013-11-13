@@ -23,11 +23,7 @@ If ``splits'', then the number of times each variable is chosen for a splitting 
 %%  ~~ If necessary, more details than the description above ~~
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
+Returns a matrix of dimension \code{num_interations_after_burn_in} by code{p} (dimensionality of dummified design matrix) ??RIGHT where each entry in the matrix denotes how many times in a particular Gibbs Sample a particular variable was used.
 }
 \references{
 %% ~put references to the literature/web site here ~
@@ -45,19 +41,22 @@ Adam Kapelner and Justin Bleich
 \code{\link{get_var_props_over_chain}}
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+#generate Friedman data
+set.seed(11)
+n  = 200 
+p = 10
+X = data.frame(matrix(runif(n * p), ncol = p))
+y = 10 * sin(pi* X[ ,1] * X[,2]) +20 * (X[,3] -.5)^2 + 10 * X[ ,4] + 5 * X[,5] + rnorm(n)
 
-## The function is currently defined as
-function (bart_machine, type = "splits") 
-{
-    C = t(sapply(.jcall(bart_machine$java_bart_machine, "[[I", 
-        "getCountsForAllAttribute", as.integer(BART_NUM_CORES), 
-        type), .jevalArray))
-    colnames(C) = colnames(bart_machine$model_matrix_training_data)[1:bart_machine$p]
-    C
-  }
+##build BART regression model
+bart_machine = build_bart_machine(X, y, num_trees = 20)
+
+#get variable inclusion counts
+var_counts = get_var_counts_over_chain(bart_machine)
+print(var_counts)
+
+#destroy BART model
+destory(bart_machine)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

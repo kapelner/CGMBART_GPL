@@ -11,13 +11,13 @@ build_bart_machine(X = NULL, y = NULL, Xy = NULL, num_trees = 50, num_burn_in = 
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{X}{
-Dataframe or matrix of predictors. Factors are automatically converted to dummies interally. 
+Data frame of predictors. Factors are automatically converted to dummies interally. 
 }
   \item{y}{
 Vector of response variable. If \code{y} is \code{numeric} or \code{integer}, a BART model for regression is built. If \code{y} is a factor with two levels, a BART model for classification is built.
 }
   \item{Xy}{
-A dataframe or matrix of predictors and the response. The response column must be named ``y''. 
+A data frame of predictors and the response. The response column must be named ``y''. 
 }
   \item{num_trees}{
 The number of trees to be grown in the sum-of-trees model.
@@ -68,7 +68,7 @@ If TRUE, the missing data feature is used to automatically handle missing data w
 Private argument for \code{\link{cov_importance_test}}. Not needed by user. 
 }
   \item{num_rand_samps_in_library}{
-Before building a BART model, samples from the Standard Normal and \eqn{\chi-squared(\nu)} are drawn to be used in the MCMC steps. This parameter determines the number of samples to be taken.  
+Before building a BART model, samples from the Standard Normal and \eqn{\chi^2(\nu)} are drawn to be used in the MCMC steps. This parameter determines the number of samples to be taken.  
 }
   \item{use_missing_data_dummies_as_covars}{
 If TRUE, additional indicator variables for whether or not an observation in a particular column is missing are included. See Kapelner and Bleich (2013) for details.
@@ -91,14 +91,31 @@ Prints information about progress of the algorithm to the screen.
 }
 }
 \details{
-Returns an object of class ``bartMachine''. Note that this object persists in the Java heap until code{\link{destroy_bart_machine}} is called or the R session is terminated. 
+Returns an object of class ``bartMachine''. Note that this object persists in the Java heap until \code{\link{destroy_bart_machine}} is called or the R session is terminated. The ``bartMachine'' object contains a list of the following components:
 }
 \value{
 %%  ~Describe the value returned
 %%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
+  \item{java_bart_machine}{A pointer to the BART Java object.}
+  \item{train_data_features}{The names of the variables used in the training data.}
+  \item{training_data_features_with_missing_features}{??}
+  \item{y}{The values of the response for the training data.}
+  \item{y_levels}{The levels of the response (for classification only).}
+  \item{pred_type}{Whether the model was build for regression of classification.}
+  \item{model_matrix_training_data}{The training data with factors converted to dummies.}
+  \item{num_cores}{The number of cores used to build the BART model.}
+  \item{sig_sq_est}{The data-based estimate of \eqn{\sigma^2} used to create the prior on the error variance for the BART model.}
+  \item{time_to_build}{Total time to build the BART model.}
+  \item{y_hat_train}{The posterior means of \eqn{\hat{f}(x)} for each observation. Only returned if ``run_in_sample = T''}
+  \item{residuals}{The model residuals given by \code{y} - \code{y_hat_train}. Only returned if ``run_in_sample = T''}
+  \item{L1_err_train}{L1 error on the training set. Only returned if ``run_in_sample = T''.}
+  \item{L2_err_train}{L2 error on the training set. Only returned if ``run_in_sample = T''.}
+  \item{PseudoRsq}{What exactly is computation ADAM?. Only returned if ``run_in_sample = T''.}
+  \item{rmse_train}{Root mean square error on the training set. Only returned if ``run_in_sample = T''.}
+  \item{bart_machine_destroyed}{Returns TRUE if \code{destroy_bart_machine} is called on this object. This removes all pointers associated with the BART object in the JVM and frees up additional RAM on the heap.}
+  
+        
+Additionally, the arguments passed to the function \code{build_bart_machine} are also components of the list. 
 }
 \references{
 Chipman et al. (2010)
@@ -113,15 +130,28 @@ This function is parallelized and each core will create an independent MCMC chai
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-\code{\link{destroy_bart_machine}}
+\code{\link{destroy_bart_machine}},
 \code{\link{bart_machine_cv}}
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+##generate Friedman data
+set.seed(11)
+n  = 200 
+p = 5
+X = data.frame(matrix(runif(n * p), ncol = p))
+y = 10 * sin(pi* X[ ,1] * X[,2]) +20 * (X[,3] -.5)^2 + 10 * X[ ,4] + 5 * X[,5] + rnorm(n)
 
+##build BART regression model
+bart_machine = build_bart_machine(X, y)
+summary(bart_machine)
 
+#destroy BART model
+destory(bart_machine)
+
+##Build another BART regression model
+bart_machine = build_bart_machine(X,y, num_trees = 200, num_burn_in = 500, num_iterations_after_burn_in =1000)
+#Destroy BART model
+destroy(bart_machine)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

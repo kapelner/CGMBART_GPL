@@ -11,7 +11,7 @@ export(dummify_data)
 export(get_var_counts_over_chain)
 export(get_var_props_over_chain)
 
-export(cov_importance_test)
+export(cov_importance_test) ##MAN FOR ADAM
 
 export(plot_y_vs_yhat)
 export(check_bart_error_assumptions)
@@ -21,7 +21,7 @@ export(get_sigsqs)
 export(investigate_var_importance)
 export(plot_convergence_diagnostics) #possibly do all four with a switch, thus making others private
 export(interaction_investigator)
-export(pd_plot) #make sure classification works
+export(pd_plot) 
 export(rmse_by_num_trees)
 
 export(bart_predict_for_test_data)

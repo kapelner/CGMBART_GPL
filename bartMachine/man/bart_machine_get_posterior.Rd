@@ -36,13 +36,13 @@ A data frame containing observations at which draws from posterior distribution 
 Adam Kapelner and Justin Bleich
 }
 \note{
-This function, although applicable to training data, is primarily meant for test data. To obtain the full posterior of the training data, set the \"run_in_sample\" option to TRUE when building a BART model. 
+ 
 }
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-\code{\link{calc_credible_intervals}},\code{\link{calc_prediction_intervals}}
+\code{\link{calc_credible_intervals}}, \code{\link{calc_prediction_intervals}}
 }
 \examples{
 ##---- Should be DIRECTLY executable !! ----

@@ -16,24 +16,20 @@ get_var_props_over_chain(bart_machine, type = "splits")
 An object of class ``bartMachine''.
 }
   \item{type}{
-If ``splits'', then the proportion of times each variable is chosen for a splitting rule is computed. If ``trees'', then the proportion of times each variable appears in a tree is computed.
+If ``splits'', then the proportion of times each variable is chosen for a splitting rule versus all splitting rules is computed. If ``trees'', then the proportion of times each variable appears in a tree versus all appearances of variables in trees is computed.
 }
 }
 \details{
 %%  ~~ If necessary, more details than the description above ~~
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
+Returns a vector of the variable inclusion proportions.
 }
 \references{
 %% ~put references to the literature/web site here ~
 }
 \author{
-%%  ~~who you are~~
+Adam Kapelner and Justin Bleich
 }
 \note{
 %%  ~~further notes~~
@@ -45,19 +41,21 @@ If ``splits'', then the proportion of times each variable is chosen for a splitt
 \code{\link{get_var_counts_over_chain}}
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+#generate Friedman data
+set.seed(11)
+n  = 200 
+p = 10
+X = data.frame(matrix(runif(n * p), ncol = p))
+y = 10 * sin(pi* X[ ,1] * X[,2]) +20 * (X[,3] -.5)^2 + 10 * X[ ,4] + 5 * X[,5] + rnorm(n)
 
-## The function is currently defined as
-function (bart_machine, type = "splits") 
-{
-    attribute_props = .jcall(bart_machine$java_bart_machine, 
-        "[D", "getAttributeProps", as.integer(BART_NUM_CORES), 
-        type)
-    names(attribute_props) = colnames(bart_machine$model_matrix_training_data)[1:bart_machine$p]
-    attribute_props
-  }
+##build BART regression model
+bart_machine = build_bart_machine(X, y, num_trees = 20)
+
+#Get variable inclusion proportions
+var_props = get_var_props_over_chain(bart_machine)
+print(var_props)
+
+destory(bart_machine)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
