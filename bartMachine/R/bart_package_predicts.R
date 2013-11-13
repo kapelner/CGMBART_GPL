@@ -1,4 +1,8 @@
 predict.bartMachine = function(bart_machine, new_data, prob_rule_class = NULL){
+  if (bart_machine$bart_destroyed){
+    stop("This BART machine has been destroyed. Please recreate.")
+  }
+  
 	if (bart_machine$pred_type == "regression"){	
 		bart_machine_get_posterior(bart_machine, new_data)$y_hat
 	} else {
@@ -103,6 +107,10 @@ bart_machine_get_posterior = function(bart_machine, new_data){
 
 
 calc_credible_intervals = function(bart_machine, new_data, ci_conf = 0.95){
+  if (bart_machine$bart_destroyed){
+    stop("This BART machine has been destroyed. Please recreate.")
+  }
+  
 	#first convert the rows to the correct dummies etc
 	new_data = pre_process_new_data(new_data, bart_machine)
 	n_test = nrow(new_data)
@@ -125,10 +133,14 @@ calc_credible_intervals = function(bart_machine, new_data, ci_conf = 0.95){
 }
 
 calc_prediction_intervals = function(bart_machine, new_data, pi_conf = 0.95, normal_samples_per_gibbs_sample = 100){
+
 	if (bart_machine$pred_type == "classification"){
 		stop("Prediction intervals are not possible for classification.")
 	}
-	
+    if (bart_machine$bart_destroyed){
+    	stop("This BART machine has been destroyed. Please recreate.")
+  	}
+  
 	#first convert the rows to the correct dummies etc
 	new_data = pre_process_new_data(new_data, bart_machine)
 	n_test = nrow(new_data)

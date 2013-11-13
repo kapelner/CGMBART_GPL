@@ -2,7 +2,11 @@
 \alias{set_bart_machine_num_cores}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
+<<<<<<< HEAD
 none
+=======
+Set the Number of Cores for BART
+>>>>>>> f7cead5a9f020fc2d95b93677abde13b6bd1944d
 }
 \description{
 Sets the number of cores to be used for all parallelized BART functions.
@@ -20,11 +24,7 @@ Number of cores to use
 %%  ~~ If necessary, more details than the description above ~~
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
+None.
 }
 \references{
 %% ~put references to the literature/web site here ~
@@ -39,18 +39,11 @@ Adam Kapelner and Justin Bleich
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+\code{\link{bart_machine_num_cores}}
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
-
-## The function is currently defined as
-function (num_cores) 
-{
-    assign("BART_NUM_CORES", num_cores, ".GlobalEnv")
-  }
+## set all parallelized functions to use 4 cores
+## set_bart_machine_num_cores(4) ##not run
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

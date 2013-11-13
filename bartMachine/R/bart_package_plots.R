@@ -1,6 +1,10 @@
 
 
-check_bart_error_assumptions = function(bart_machine, alpha_normal_test = 0.05, alpha_hetero_test = 0.05, hetero_plot = "yhats"){
+check_bart_error_assumptions = function(bart_machine, hetero_plot = "yhats"){
+  if (bart_machine$bart_destroyed){
+    stop("This BART machine has been destroyed. Please recreate.")
+  }
+  
 	if (!(hetero_plot %in% c("ys", "yhats"))){
 		stop("You must specify the parameter \"hetero_plot\" as \"ys\" or \"yhats\"")
 	}
@@ -154,13 +158,21 @@ get_mh_acceptance_reject = function(bart_machine){
 plot_y_vs_yhat = function(bart_machine, X = NULL, y = NULL, credible_intervals = FALSE, prediction_intervals = FALSE, interval_confidence_level = 0.95){
 	if (bart_machine$bart_destroyed){
 		stop("This BART machine has been destroyed. Please recreate.")
-	}	
+	}
+  
+	if( (!bart_machine$run_in_sample) & (is.null(X) | is.null(y)) ){
+	  stop("To run on training data, must set \"run_in_sample\" option to TRUE in \"build_bart_machine\"")
+	}
+  
 	if (credible_intervals && prediction_intervals){
-		stop("You cannot plot both credibility intervals and prediction intervals simultaneously.")
+		stop("Cannot plot both credibility intervals and prediction intervals simultaneously.")
 	}
 	if (bart_machine$pred_type == "classification"){
-		stop("You cannot plot y vs y_hat for classification.")
+		stop("Cannot plot y vs y_hat for classification.")
 	}
+  if( (is.null(X) & !is.null(y)) | (!is.null(X) & is.null(y)) ){
+    stop("Must pass both X and y to use on test data")
+  }
 	
 	if (is.null(X) & is.null(y)){
 		X = bart_machine$X
@@ -231,7 +243,7 @@ plot_y_vs_yhat = function(bart_machine, X = NULL, y = NULL, credible_intervals =
 
 
 
-hist_sigsqs = function(bart_machine, extra_text = NULL, data_title = "data_model", save_plot = FALSE){
+hist_sigsqs = function(bart_machine, confidence_level = .95){
 	if (bart_machine$bart_destroyed){
 		stop("This BART machine has been destroyed. Please recreate.")
 	}	
@@ -250,26 +262,16 @@ hist_sigsqs = function(bart_machine, extra_text = NULL, data_title = "data_model
 	assign("sigsqs_after_burnin", sigsqs_after_burnin, .GlobalEnv)
 	avg_sigsqs = mean(sigsqs_after_burnin, na.rm = TRUE)
 	
-	if (save_plot){
-		save_plot_function(bart_machine, "sigsqs_hist", data_title)
-	}	
-	else {
-		dev.new()
-	}
 	
-	ppi_a = quantile(sigsqs_after_burnin, 0.025)
-	ppi_b = quantile(sigsqs_after_burnin, 0.975)
+	ppi_a = quantile(sigsqs_after_burnin, (.5 - confidence_level/2))
+	ppi_b = quantile(sigsqs_after_burnin, (.5 + confidence_level/2))
 	hist(sigsqs_after_burnin, 
 			br = 100, 
 			main = "Histogram of sigsqs after burn-in", 
-			xlab = paste("sigsq  avg = ", round(avg_sigsqs, 1), ",  95% PPI = [", round(ppi_a, 1), ", ", round(ppi_b, 1), "]", sep = ""))
+			xlab = paste("sigsq  avg = ", round(avg_sigsqs, 1), ", " , confidence_level, "% Credible Interval = [", round(ppi_a, 1), ", ", round(ppi_b, 1), "]", sep = ""))
 	abline(v = avg_sigsqs, col = "blue")
 	abline(v = ppi_a, col = "yellow")
 	abline(v = ppi_b, col = "yellow")
-	
-	if (save_plot){	
-		dev.off()
-	}
 	
 	invisible(sigsqs_after_burnin)
 }
@@ -405,20 +407,41 @@ investigate_var_importance = function(bart_machine, type = "splits", plot = TRUE
 	invisible(list(avg_var_props = avg_var_props, sd_var_props = sd_var_props))	
 }
 
-plot_convergence_diagnostics = function(bart_machine){
-	par(mfrow = c(2, 2))
-	if (bart_machine$pred_type == "regression"){
-		plot_sigsqs_convergence_diagnostics(bart_machine)
-	}	
-	plot_mh_acceptance_reject(bart_machine)
-	plot_tree_num_nodes(bart_machine)
-	plot_tree_depths(bart_machine)	
+plot_convergence_diagnostics = function(bart_machine, plots = c("sigsqs", "mh_acceptance", "num_nodes", "tree_depths")){
+  if (bart_machine$bart_destroyed){
+    stop("This BART machine has been destroyed. Please recreate.")
+  }
+  
+  if(length(plots) > 2){
+    par(mfrow = c(2, 2))	  
+	}else if(length(plots) == 2){
+	  par(mfrow = c(1, 2))
+	}else{
+	  par(mfrow = c(1, 1))
+	}    
+
+  if("sigsqs" %in% plots){
+    if (bart_machine$pred_type == "regression"){
+      plot_sigsqs_convergence_diagnostics(bart_machine)
+    }
+  }
+	if("mh_acceptance" %in% plots){
+	  plot_mh_acceptance_reject(bart_machine)
+	}
+	if("num_nodes" %in% plots){
+	  plot_tree_num_nodes(bart_machine)
+	}
+	if("tree_depths" %in% plots){
+	  plot_tree_depths(bart_machine)
+	}
+	
 	par(mfrow = c(1, 1))
 }
 
-plot.bartMachine = function(bart_machine){
-	plot_convergence_diagnostics(bart_machine)
-}
+#defunct
+#plot.bartMachine = function(bart_machine){
+#	plot_convergence_diagnostics(bart_machine)
+#}
 
 shapiro_wilk_p_val = function(vec){
 	tryCatch(shapiro.test(vec)$p.value, error = function(e){})
@@ -483,9 +506,6 @@ interaction_investigator = function(bart_machine, plot = TRUE, num_replicates_fo
 	} else {
 		ylim_bottom = cut_bottom * min(avg_counts)
 	}
-	
-	##TO-DO: kill zeroes from the plots
-	
 	if (plot){
 		#now create the bar plot
 		par(mar = c(bottom_margin, 6, 3, 0))
@@ -519,7 +539,7 @@ interaction_investigator = function(bart_machine, plot = TRUE, num_replicates_fo
 	))
 }
 
-#JUSTIN TO-DO for classification
+
 pd_plot = function(bart_machine, j, levs = c(0.05, seq(from = 0.10, to = 0.90, by = 0.10), 0.95), lower_ci = 0.025, upper_ci = 0.975){
 	if (bart_machine$bart_destroyed){
 		stop("This BART machine has been destroyed. Please recreate.")
@@ -575,8 +595,7 @@ pd_plot = function(bart_machine, j, levs = c(0.05, seq(from = 0.10, to = 0.90, b
 	lines(x_j_quants, bart_avg_predictions_upper, type = "o", col = "blue")
 	
 	invisible(list(x_j_quants = x_j_quants, bart_avg_predictions_by_quantile = bart_avg_predictions_by_quantile))
-#	rob = bart(x.train = bart_machine$X, y.train = bart_machine$y, ndpost = 100, nskip = 500, keepevery = 10)
-#	pdbart(x.train = bart_machine$X, y.train = bart_machine$y, xind = 6, ndpost = 200, nskip = 500)
+
 }
 
 rmse_by_num_trees = function(bart_machine, tree_list = c(5, seq(10, 50, 10), 100, 150, 200), in_sample = FALSE, plot = TRUE, holdout_pctg = 0.3, num_replicates = 4){

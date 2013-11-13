@@ -1,21 +1,57 @@
 \name{dummify_data}
 \alias{dummify_data}
-\title{no title}
+%- Also NEED an '\alias' for EACH other topic documented here.
+\title{
+Dummify Design Matrix
+}
 \description{
-  no description
+Create a data frame with factors converted to dummies. 
 }
 \usage{
- dummify_data()
+dummify_data(data, ...)
+}
+%- maybe also 'usage' for other objects documented here.
+\arguments{
+  \item{data}{
+Data frame to be dummified. 
+}
+  \item{\dots}{
+Additional parameters. For internal processing only. 
+}
 }
 \details{
-  no details
+The column names of the dummy variables are given by the ``FactorName_LevelName''. See the example below.
 }
 \value{
-	no value
+Returns a data frame with factors converted to dummy indicator variables.
+}
+\references{
+%% ~put references to the literature/web site here ~
 }
 \author{
-	Adam Kapelner and Justin Bleich
+Adam Kapelner and Justin Bleich
+}
+\note{
+BART handles dummification internally. This function is provided as a utility function. 
+}
+
+%% ~Make other sections like Warning with \section{Warning }{....} ~
+
+\seealso{
+%% ~~objects to See Also as \code{\link{help}}, ~~~
 }
 \examples{
-  dummify_data()
+#generate data
+set.seed(11)
+x1 = rnorm(20)
+x2 = runif(20)
+x3 = as.factor(ifelse(x1 > 0, "A", "B"))
+X = data.frame(x1,x2,x3)
+#dummify data
+X_dummified = dummify_data(X)
+print(X_dummified)
 }
+% Add one or more standard keywords, see file 'KEYWORDS' in the
+% R documentation directory.
+\keyword{ ~kwd1 }
+\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line

@@ -1,21 +1,58 @@
 \name{destroy_bart_machine}
 \alias{destroy_bart_machine}
-\title{no title}
+%- Also NEED an '\alias' for EACH other topic documented here.
+\title{
+Destroy BART Model
+}
 \description{
-  no description
+This function destroys a BART model by setting all Java pointers to null. (ADAM: CORRECT?)
 }
 \usage{
-  destroy_bart_machine()
+destroy_bart_machine(bart_machine)
+}
+%- maybe also 'usage' for other objects documented here.
+\arguments{
+  \item{bart_machine}{
+%%     ~~Describe \code{bart_machine} here~~
+}
 }
 \details{
-  no details
+Removing a ``bart_machine'' object from \code{R} does not free heap space from Java. Since BART objects can consume a large amount of RAM, it is important to remove these objects by calling this function if they are no longer needed or many BART objects are being created.
 }
 \value{
-	no value
+None.
+}
+\references{
+%% ~put references to the literature/web site here ~
 }
 \author{
-	Adam Kapelner and Justin Bleich
+Adam Kapelner and Justin Bleich
+}
+\note{
+%%  ~~further notes~~
+}
+
+%% ~Make other sections like Warning with \section{Warning }{....} ~
+
+\seealso{
+%% ~~objects to See Also as \code{\link{help}}, ~~~
 }
 \examples{
-  destroy_bart_machine()
+##Generate Friedman Data
+set.seed(11)
+n  = 200 
+p = 5
+X = data.frame(matrix(runif(n * p), ncol = p))
+y = 10 * sin(pi* X[ ,1] * X[,2]) +20 * (X[,3] -.5)^2 + 10 * X[ ,4] + 5 * X[,5] + rnorm(n)
+
+##build BART regression model and destroy it 
+bart_machine = build_bart_machine(X, y)
+##should be called when object is no longer needed 
+##and before potentially removing the object from R
+destory(bart_machine) 
+
 }
+% Add one or more standard keywords, see file 'KEYWORDS' in the
+% R documentation directory.
+\keyword{ ~kwd1 }
+\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line

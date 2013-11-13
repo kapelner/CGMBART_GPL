@@ -1,0 +1,54 @@
+bart_machine_get_posterior
+                        Get Posterior
+bart_machine_num_cores
+                        Return number of cores being used
+bart_predict_for_test_data
+                        Predict for test data
+build_bart_machine      Build a BART Model
+build_bart_machine_cv   Build BART-CV
+calc_credible_intervals
+                        Calculate Credible Intervals
+calc_prediction_intervals
+                        Calculate Prediction Intervals
+check_bart_error_assumptions
+                        Check BART Error Assumptions
+cov_importance_test     Covariance Importance Test
+destroy_bart_machine    Destroy BART Model
+dummify_data            Dummify Data
+get_sigsqs              Get Posterior Error Variance Estimates
+get_tree_depths         Get the Posterior Tree Depths
+get_var_counts_over_chain
+                        Get the Variable Inclusion Counts
+get_var_props_over_chain
+                        Get the Variable Inclusion Proportions
+hist_sigsqs             Create a Histogram of the Posterior Error
+                        Variance Estimates
+init_java_for_bart_machine_with_mem_in_mb
+                        Initialize a JVM with a specified heap size
+interaction_investigator
+                        Explore Interactions within BART Model
+investigate_var_importance
+                        Explore Variable Inclusion Proportions in BART
+                        Model
+k_fold_cv               Estimate Out-of-sample Error with K-fold Cross
+                        validation
+pd_plot                 Partial Dependence Plot
+plot_convergence_diagnostics
+                        Plot Convergence Diagnostics
+plot_mh_acceptance_reject
+                        Plot the proportion of Metropolis-Hastings
+                        Acceptances
+plot_sigsqs_convergence_diagnostics
+                        Plot Error Variance Estimates to Assess
+                        Convergence
+plot_tree_depths        Plot Tree Depths
+plot_tree_num_nodes     Plot the Average Number of Nodes in the Trees
+plot_y_vs_yhat          Plot the fitted Versus Actual Response
+rmse_by_num_trees       Plot the Out-of-sample RMSE by Number of Trees
+set_bart_machine_num_cores
+                        Set the number of cores for BART
+var_selection_by_permute_response_cv
+                        Perform Variable Selection Using
+                        Cross-validation Method
+var_selection_by_permute_response_three_methods
+                        Perform Variable Selection
