@@ -56,10 +56,12 @@ Adam Kapelner and Justin Bleich
 \examples{
 #generate linear data
 set.seed(11)
-n  = 2000 
-p = 3
+n  = 500 
+p = 1
 X = data.frame(matrix(runif(n * p), ncol = p))
-y = 3*X[ ,1] + 2*X[ ,2] +X[ ,3] + rnorm(n)
+#y = 3*X[ ,1] + 2*X[ ,2] +X[ ,3] + rnorm(n,0,1)
+y = X[ ,1] + rnorm(n,0,1)
+
 
 ##build BART regression model
 bart_machine = build_bart_machine(X, y)

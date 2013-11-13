@@ -207,7 +207,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	#now we need to set random samples
 	.jcall(java_bart_machine, "V", "setNormSamples", rnorm(num_rand_samps_in_library))
 	n_plus_hyper_nu = nrow(model_matrix_training_data) + nu	
-	.jcall(java_bart_machine, "V", "setGammaSamples", rgamma(num_rand_samps_in_library, n_plus_hyper_nu, 2))
+	.jcall(java_bart_machine, "V", "setGammaSamples", rchisq(num_rand_samps_in_library, n_plus_hyper_nu))
 	
 	if (length(cov_prior_vec) != 0){
 		#put in checks here for user to make sure the covariate prior vec is the correct length
