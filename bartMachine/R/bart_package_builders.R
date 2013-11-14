@@ -458,10 +458,14 @@ build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL,
 
 destroy_bart_machine = function(bart_machine){
 	.jcall(bart_machine$java_bart_machine, "V", "destroy")
-	bart_machine$bart_destroyed = TRUE
 	#explicitly ask the JVM to give us the RAM back right now (probably not really necessary, but why not?)
-	.jcall("java/lang/System", "V", "gc")
+	.jcall("java/lang/System", "V", "gc")  
 }
+
+is_bart_destroyed = function(bart_machine){
+  .jcall(bart_machine$java_bart_machine, "Z", "isDestroyed")
+}
+
 
 imputeMatrixByXbarjContinuousOrModalForBinary = function(X_with_missing, X_for_calculating_avgs){
 	for (i in 1 : nrow(X_with_missing)){

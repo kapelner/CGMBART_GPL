@@ -1,33 +1,35 @@
-\name{hist_sigsqs}
-\alias{hist_sigsqs}
+\name{get_sigsqs}
+\alias{get_sigsqs}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-Create a Histogram of the Posterior Error Variance Estimates
+Get Posterior Error Variance Estimates 
 }
 \description{
-Creates a histogram of the posterior estimates of the error variance with a credible interval overlaid.
+Returns the posterior estimates of the error variance from the Gibbs samples with an option to crease a histogram of the posterior estimates of the error variance with a credible interval overlaid.
 }
 \usage{
-hist_sigsqs(bart_machine, confidence_level = .95)
+hist_sigsqs(bart_machine, after_burn_in = T, plot_hist = F, plot_CI = .95)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{bart_machine}{
 An object of class ``bartMachine''.
 }
-  \item{confidence_level}{
-Confidence level for credible interval
+  \item{after_burn_in}{
+If TRUE, only the \eqn{\sigma^2} draws after the burn-in period are returned.
+}
+  \item{bart_machine}{
+If TRUE, a histogram of the posterior \eqn{\sigma^2} draws is generated.
+}
+  \item{plot_CI}{
+Confidence level for credible interval on histogram.
 }
 }
 \details{
 %%  ~~ If necessary, more details than the description above ~~
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
+Returns a vector of posterior \eqn{\sigma^2} draws (with or without the burn-in samples).
 }
 \references{
 %% ~put references to the literature/web site here ~
@@ -45,47 +47,20 @@ Adam Kapelner and Justin Bleich
 \code{\link{get_sigsqs}}
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+#generate Friedman data
+set.seed(11)
+n  = 300 
+p = 5
+X = data.frame(matrix(runif(n * p), ncol = p))
+y = 10 * sin(pi* X[ ,1] * X[,2]) +20 * (X[,3] -.5)^2 + 10 * X[ ,4] + 5 * X[,5] + rnorm(n)
 
-## The function is currently defined as
-function (bart_machine, extra_text = NULL, data_title = "data_model", 
-    save_plot = FALSE) 
-{
-    if (bart_machine$bart_destroyed) {
-        stop("This BART machine has been destroyed. Please recreate.")
-    }
-    if (bart_machine$pred_type == "classification") {
-        stop("There are no sigsq's for classification.")
-    }
-    sigsqs = .jcall(bart_machine$java_bart_machine, "[D", "getGibbsSamplesSigsqs")
-    num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in
-    num_burn_in = bart_machine$num_burn_in
-    num_gibbs = bart_machine$num_gibbs
-    num_trees = bart_machine$num_trees
-    sigsqs_after_burnin = sigsqs[(length(sigsqs) - num_iterations_after_burn_in):length(sigsqs)]
-    assign("sigsqs_after_burnin", sigsqs_after_burnin, .GlobalEnv)
-    avg_sigsqs = mean(sigsqs_after_burnin, na.rm = TRUE)
-    if (save_plot) {
-        save_plot_function(bart_machine, "sigsqs_hist", data_title)
-    }
-    else {
-        dev.new()
-    }
-    ppi_a = quantile(sigsqs_after_burnin, 0.025)
-    ppi_b = quantile(sigsqs_after_burnin, 0.975)
-    hist(sigsqs_after_burnin, br = 100, main = "Histogram of sigsqs after burn-in", 
-        xlab = paste("sigsq  avg = ", round(avg_sigsqs, 1), ",  95\% PPI = [", 
-            round(ppi_a, 1), ", ", round(ppi_b, 1), "]", sep = ""))
-    abline(v = avg_sigsqs, col = "blue")
-    abline(v = ppi_a, col = "yellow")
-    abline(v = ppi_b, col = "yellow")
-    if (save_plot) {
-        dev.off()
-    }
-    invisible(sigsqs_after_burnin)
-  }
+##build BART regression model
+bart_machine = build_bart_machine(X, y, num_trees = 20)
+
+#get posterior sigma^2's after burn-in and plot
+sigsqs = get_sigsqs(bart_machine)
+
+destory(bart_machine)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
