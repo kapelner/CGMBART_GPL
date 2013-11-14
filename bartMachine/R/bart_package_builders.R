@@ -287,8 +287,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 			impute_missingness_with_rf_impute = impute_missingness_with_rf_impute,
 			impute_missingness_with_x_j_bar_for_lm = impute_missingness_with_x_j_bar_for_lm,			
 			verbose = verbose,
-			num_rand_samps_in_library = num_rand_samps_in_library,
-			bart_destroyed = FALSE
+			num_rand_samps_in_library = num_rand_samps_in_library
 	)
 	
 	#once its done gibbs sampling, see how the training data does if user wants
@@ -470,7 +469,7 @@ destroy_bart_machine = function(bart_machine){
 }
 
 is_bart_destroyed = function(bart_machine){
-  .jcall(bart_machine$java_bart_machine, "Z", "isDestroyed")
+	.jcall(bart_machine$java_bart_machine, "Z", "isDestroyed")
 }
 
 

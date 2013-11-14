@@ -1,6 +1,6 @@
 
 var_selection_by_permute_response_three_methods = function(bart_machine, num_reps_for_avg = 10, num_permute_samples = 100, num_trees_for_permute = 20, alpha = 0.05, plot = TRUE, num_var_plot = Inf, bottom_margin = 10){
-	if (bart_machine$bart_destroyed){
+	if (is_bart_destroyed(bart_machine)){
 		stop("This BART machine has been destroyed. Please recreate.")
 	}	
 	
@@ -144,9 +144,9 @@ bisectK = function(tol, coverage, permute_mat, x_left, x_right, countLimit, perm
 
 
 var_selection_by_permute_response_cv = function(bart_machine, k_folds = 5, num_reps_for_avg = 5, num_permute_samples = 100, num_trees_for_permute = 20, alpha = 0.05, num_trees_pred_cv = 200){
-  if (bart_machine$bart_destroyed){
-    stop("This BART machine has been destroyed. Please recreate.")
-  }
+  	if (is_bart_destroyed(bart_machine)){
+    	stop("This BART machine has been destroyed. Please recreate.")
+  	}
   
 	if (k_folds <= 1 || k_folds > bart_machine$n){
 		stop("The number of folds must be at least 2 and less than or equal to n, use \"Inf\" for leave one out")
