@@ -242,7 +242,7 @@ plot_y_vs_yhat = function(bart_machine, X = NULL, y = NULL, credible_intervals =
 }
 
 
-get_sigsqs = function(bart_machine, after_burn_in = F, plot_hist = F, plot_CI = .95){
+get_sigsqs = function(bart_machine, after_burn_in = T, plot_hist = F, plot_CI = .95, plot_sigma = F){
 	if (bart_machine$bart_destroyed){
 		stop("This BART machine has been destroyed. Please recreate.")
 	}	
@@ -262,18 +262,30 @@ get_sigsqs = function(bart_machine, after_burn_in = F, plot_hist = F, plot_CI = 
 	avg_sigsqs = mean(sigsqs_after_burnin, na.rm = TRUE)
 	
 	if(plot_hist){
-	  ppi_a = quantile(sigsqs_after_burnin, (.5 - plot_CI/2))
-	  ppi_b = quantile(sigsqs_after_burnin, (.5 + plot_CI/2))
-	  hist(sigsqs_after_burnin, 
+    if(plot_sigma){
+      var_est_to_plot = sqrt(sigsqs_after_burnin)
+    }
+    else{
+      var_est_to_plot = sigsqs_after_burnin
+    }
+
+	  ppi_a = quantile(var_est_to_plot, (.5 - plot_CI/2))
+	  ppi_b = quantile(var_est_to_plot, (.5 + plot_CI/2))
+	  hist(var_est_to_plot, 
 	       br = 100, 
-	       main = "Histogram of sigsqs after burn-in", 
-	       xlab = paste("sigsq  avg = ", round(avg_sigsqs, 1), ", " , confidence_level, "% Credible Interval = [", round(ppi_a, 1), ", ", round(ppi_b, 1), "]", sep = ""))
-	  abline(v = avg_sigsqs, col = "blue")
-	  abline(v = ppi_a, col = "yellow")
-	  abline(v = ppi_b, col = "yellow")
+	       main = paste("Histogram of ", ifelse(plot_sigma ==T, "Sigmas", "Sigma^2s"),  " After Burn-in", sep = ""), 
+	       xlab = paste("Avg = ", round(mean(var_est_to_plot, na.rm = T), 2), ", " , 100*plot_CI, "% Credible Interval = [", round(ppi_a, 2), ", ", round(ppi_b, 2), "]", sep = ""))
+	  abline(v = mean(var_est_to_plot, na.rm = T), col = "blue")
+	  abline(v = ppi_a, col = "red")
+	  abline(v = ppi_b, col = "red")
 	}
   
-	ifelse(after_burn_in == T, sigsqs_after_burnin, sigsqs)
+	if(after_burn_in == T){
+    return(sigsqs_after_burnin)
+	}else{
+    return(sigsqs)
+	}
+
 }
 # 
 # get_sigsqs = function(bart_machine, after_burn_in = TRUE){

@@ -5,10 +5,10 @@
 Get Posterior Error Variance Estimates 
 }
 \description{
-Returns the posterior estimates of the error variance from the Gibbs samples.
+Returns the posterior estimates of the error variance from the Gibbs samples with an option to crease a histogram of the posterior estimates of the error variance with a credible interval overlaid.
 }
 \usage{
-get_sigsqs(bart_machine, after_burn_in = TRUE)
+hist_sigsqs(bart_machine, after_burn_in = T, plot_hist = F, plot_CI = .95)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -16,18 +16,23 @@ get_sigsqs(bart_machine, after_burn_in = TRUE)
 An object of class ``bartMachine''.
 }
   \item{after_burn_in}{
-If TRUE, only samples from after the burn-in period are returned.
+If TRUE, only the \eqn{\sigma^2} draws after the burn-in period are returned.
+}
+  \item{bart_machine}{
+If TRUE, a histogram of the posterior \eqn{\sigma^2} draws is generated.
+}
+  \item{plot_CI}{
+Confidence level for credible interval on histogram.
+}
+  \item{plot_sigma}{
+If TRUE, plots \eqn{\sigma} instead of \eqn{\sigma^2}.
 }
 }
 \details{
 %%  ~~ If necessary, more details than the description above ~~
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
+Returns a vector of posterior \eqn{\sigma^2} draws (with or without the burn-in samples).
 }
 \references{
 %% ~put references to the literature/web site here ~
@@ -42,34 +47,24 @@ Adam Kapelner and Justin Bleich
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-\code{\link{hist_sigsqs}}
+\code{\link{get_sigsqs}}
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+#generate Friedman data
+set.seed(11)
+n  = 300 
+p = 5
+X = data.frame(matrix(runif(n * p), ncol = p))
+y = 10 * sin(pi* X[ ,1] * X[,2]) +20 * (X[,3] -.5)^2 + 10 * X[ ,4] + 5 * X[,5] + rnorm(n)
 
-## The function is currently defined as
-function (bart_machine, after_burn_in = TRUE) 
-{
-    if (bart_machine$bart_destroyed) {
-        stop("This BART machine has been destroyed. Please recreate.")
-    }
-    if (bart_machine$pred_type == "classification") {
-        stop("There are no sigsq's for classification.")
-    }
-    sigsqs = .jcall(bart_machine$java_bart_machine, "[D", "getGibbsSamplesSigsqs")
-    if (after_burn_in) {
-        num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in
-        num_burn_in = bart_machine$num_burn_in
-        num_gibbs = bart_machine$num_gibbs
-        num_trees = bart_machine$num_trees
-        sigsqs[(length(sigsqs) - num_iterations_after_burn_in):length(sigsqs)]
-    }
-    else {
-        sigsqs
-    }
-  }
+##build BART regression model
+bart_machine = build_bart_machine(X, y)
+
+#get posterior sigma^2's after burn-in and plot
+sigsqs = get_sigsqs(bart_machine, plot_hist = T)
+
+#destroy BART model
+destroy_bart_machine(bart_machine)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
