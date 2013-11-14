@@ -26,16 +26,12 @@ The ''mh_acceptance'' option plots the proportion of Metropolis-Hastings steps a
 
 The ``num_nodes'' option plots the average number of nodes across each tree in the sum-of-trees model by the Gibbs sample number.
 
-The ``num_nodes'' option plots the average tree depth across each tree in the sum-of-trees model by the Gibbs sample number.\\newline
+The ``num_nodes'' option plots the average tree depth across each tree in the sum-of-trees model by the Gibbs sample number.
 
 
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
+None.
 }
 \references{
 
@@ -44,7 +40,7 @@ The ``num_nodes'' option plots the average tree depth across each tree in the su
 Adam Kapelner and Justin Bleich
 }
 \note{
-%%  ~~further notes~~
+ADAM: NOTES ABOUT multicore plots?
 }
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
@@ -53,10 +49,21 @@ Adam Kapelner and Justin Bleich
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+#generate Friedman data
+set.seed(11)
+n  = 200 
+p = 5
+X = data.frame(matrix(runif(n * p), ncol = p))
+y = 10 * sin(pi* X[ ,1] * X[,2]) +20 * (X[,3] -.5)^2 + 10 * X[ ,4] + 5 * X[,5] + rnorm(n)
 
+##build BART regression model
+bart_machine = build_bart_machine(X, y)
+
+#plot convergence diagnostics
+plot_convergence_diagnostics(bart_machine)
+
+#destroy BART model
+destroy_bart_machine(bart_machine)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

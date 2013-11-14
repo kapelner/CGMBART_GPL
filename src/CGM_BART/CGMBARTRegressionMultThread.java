@@ -55,7 +55,7 @@ public class CGMBARTRegressionMultThread extends Classifier {
 
 	protected transient boolean use_heteroskedasticity;
 
-	
+	protected boolean destroyed;
 
 	
 	public CGMBARTRegressionMultThread(){
@@ -530,6 +530,7 @@ public class CGMBARTRegressionMultThread extends Classifier {
 		bart_gibbs_chain_threads = null;
 		gibbs_samples_of_cgm_trees_after_burn_in = null;
 		cov_split_prior = null;
+		destroyed = true; 
 	}
 	
 
@@ -574,4 +575,10 @@ public class CGMBARTRegressionMultThread extends Classifier {
 //	for (int j1 = 0; j1 < p; j1++){
 //		System.out.println(Tools.StringJoin(ics[j1], "\t"));
 //	}
+	
+	public boolean isDestroyed(){
+		
+		return destroyed;
+	}
+	
 }

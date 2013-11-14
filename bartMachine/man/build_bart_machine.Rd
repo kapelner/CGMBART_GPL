@@ -112,7 +112,7 @@ Returns an object of class ``bartMachine''. Note that this object persists in th
   \item{L2_err_train}{L2 error on the training set. Only returned if ``run_in_sample = T''.}
   \item{PseudoRsq}{What exactly is computation ADAM?. Only returned if ``run_in_sample = T''.}
   \item{rmse_train}{Root mean square error on the training set. Only returned if ``run_in_sample = T''.}
-  \item{bart_machine_destroyed}{Returns TRUE if \code{destroy_bart_machine} is called on this object. This removes all pointers associated with the BART object in the JVM and frees up additional RAM on the heap.}
+  %\item{bart_machine_destroyed}{Returns TRUE if \code{destroy_bart_machine} is called on this object. This removes all pointers associated with the BART object in the JVM and frees up additional RAM on the heap.}
   
         
 Additionally, the arguments passed to the function \code{build_bart_machine} are also components of the list. 
@@ -134,6 +134,8 @@ This function is parallelized and each core will create an independent MCMC chai
 \code{\link{bart_machine_cv}}
 }
 \examples{
+##regression example
+
 ##generate Friedman data
 set.seed(11)
 n  = 200 
@@ -152,6 +154,26 @@ destory(bart_machine)
 bart_machine = build_bart_machine(X,y, num_trees = 200, num_burn_in = 500, num_iterations_after_burn_in =1000)
 #Destroy BART model
 destroy(bart_machine)
+
+##Classification example
+
+#get data and only use 2 factors
+data(iris)
+iris2 = iris[51:150,]
+iris2$Species = factor(iris2$Species)
+
+#build BART classification model
+bart_machine = build_bart_machine(iris2[ ,1:4], iris2$Species)
+
+##get estimated probabilities
+phat = bart_machine$p_hat_train
+##look at in-sample confusion matrix
+bart_machine$confusion_matrix
+
+#destroy BART model 
+destroy_bart_machine(bart_machine)
+
+
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
