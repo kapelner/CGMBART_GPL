@@ -112,7 +112,7 @@ Returns an object of class ``bartMachine''. Note that this object persists in th
   \item{L2_err_train}{L2 error on the training set. Only returned if ``run_in_sample = T''.}
   \item{PseudoRsq}{What exactly is computation ADAM?. Only returned if ``run_in_sample = T''.}
   \item{rmse_train}{Root mean square error on the training set. Only returned if ``run_in_sample = T''.}
-  \item{bart_machine_destroyed}{Returns TRUE if \code{destroy_bart_machine} is called on this object. This removes all pointers associated with the BART object in the JVM and frees up additional RAM on the heap.}
+  %\item{bart_machine_destroyed}{Returns TRUE if \code{destroy_bart_machine} is called on this object. This removes all pointers associated with the BART object in the JVM and frees up additional RAM on the heap.}
   
         
 Additionally, the arguments passed to the function \code{build_bart_machine} are also components of the list. 

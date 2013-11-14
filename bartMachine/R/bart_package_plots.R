@@ -285,30 +285,7 @@ get_sigsqs = function(bart_machine, after_burn_in = T, plot_hist = F, plot_CI = 
 	}else{
     return(sigsqs)
 	}
-
 }
-# 
-# get_sigsqs = function(bart_machine, after_burn_in = TRUE){
-# 	if (bart_machine$bart_destroyed){
-# 		stop("This BART machine has been destroyed. Please recreate.")
-# 	}	
-# 	if (bart_machine$pred_type == "classification"){
-# 		stop("There are no sigsq's for classification.")
-# 	}
-# 	sigsqs = .jcall(bart_machine$java_bart_machine, "[D", "getGibbsSamplesSigsqs")
-# 	
-# 	if (after_burn_in){
-# 		num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in
-# 		num_burn_in = bart_machine$num_burn_in
-# 		num_gibbs = bart_machine$num_gibbs
-# 		num_trees = bart_machine$num_trees
-# 		
-# 		sigsqs[(length(sigsqs) - num_iterations_after_burn_in) : length(sigsqs)]
-# 	} else {
-# 		sigsqs
-# 	}
-# 	
-# }
 
 plot_sigsqs_convergence_diagnostics = function(bart_machine){
 	if (bart_machine$bart_destroyed){

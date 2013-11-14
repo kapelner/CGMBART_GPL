@@ -5,7 +5,7 @@
 Destroy BART Model
 }
 \description{
-This function destroys a BART model by setting all Java pointers to null. (ADAM: CORRECT?)
+This function destroys a BART model by setting all Java pointers to null.
 }
 \usage{
 destroy_bart_machine(bart_machine)
@@ -47,6 +47,7 @@ y = 10 * sin(pi* X[ ,1] * X[,2]) +20 * (X[,3] -.5)^2 + 10 * X[ ,4] + 5 * X[,5] +
 
 ##build BART regression model and destroy it 
 bart_machine = build_bart_machine(X, y)
+
 ##should be called when object is no longer needed 
 ##and before potentially removing the object from R
 destory(bart_machine) 
