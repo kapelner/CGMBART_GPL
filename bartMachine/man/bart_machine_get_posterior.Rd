@@ -23,10 +23,11 @@ A data frame containing observations at which draws from posterior distribution 
 %%  ~~ If necessary, more details than the description above ~~
 }
 \value{
-%%  ~Describe the value returned
+Returns a list with the following components:
 %%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
+  \item{y_hat}{Posterior mean estimates. For regression, the estimates have the same units as the response. For classification, the estimates are probabilities.}
+  \item{X}{The \code{new_data} passed into the function.}
+  \item{y_hat_posterior_samples}{The full set of posterior samples of size \code{num_iterations_after_burn_in} for each observation. For regression, the estimates have the same units as the response. For classification, the estimates are probabilities.}
 %% ...
 }
 \references{
@@ -45,52 +46,43 @@ Adam Kapelner and Justin Bleich
 \code{\link{calc_credible_intervals}}, \code{\link{calc_prediction_intervals}}
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+#Regression example
 
-## The function is currently defined as
-function (bart_machine, new_data) 
-{
-    if (bart_machine$bart_destroyed) {
-        stop("This BART machine has been destroyed. Please recreate.")
-    }
-    if (class(new_data) != "matrix" && class(new_data) != "data.frame") {
-        stop("X needs to be a matrix or data frame with the same column names as the training data.")
-    }
-    if (!bart_machine$use_missing_data) {
-        nrow_before = nrow(new_data)
-        new_data = na.omit(new_data)
-        if (nrow_before > nrow(new_data)) {
-            cat(nrow_before - nrow(new_data), "rows omitted due to missing data\n")
-        }
-    }
-    if (nrow(new_data) == 0) {
-        stop("No rows to predict.\n")
-    }
-    java_bart_machine = bart_machine$java_bart_machine
-    num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in
-    n = nrow(new_data)
-    new_data = pre_process_new_data(new_data, bart_machine)
-    if (!bart_machine$use_missing_data) {
-        M = matrix(0, nrow = nrow(new_data), ncol = ncol(new_data))
-        for (i in 1:nrow(new_data)) {
-            for (j in 1:ncol(new_data)) {
-                if (is.missing(new_data[i, j])) {
-                  M[i, j] = 1
-                }
-            }
-        }
-        if (sum(M) > 0) {
-            cat("WARNING: missing data found in test data and BART was not built with missing data feature!\n")
-        }
-    }
-    y_hat_posterior_samples = t(sapply(.jcall(bart_machine$java_bart_machine, 
-        "[[D", "getGibbsSamplesForPrediction", .jarray(new_data, 
-            dispatch = TRUE), as.integer(BART_NUM_CORES)), .jevalArray))
-    y_hat = rowMeans(y_hat_posterior_samples)
-    list(y_hat = y_hat, X = new_data, y_hat_posterior_samples = y_hat_posterior_samples)
-  }
+#generate Friedman data
+set.seed(11)
+n  = 200 
+p = 5
+X = data.frame(matrix(runif(n * p), ncol = p))
+y = 10 * sin(pi* X[ ,1] * X[,2]) +20 * (X[,3] -.5)^2 + 10 * X[ ,4] + 5 * X[,5] + rnorm(n)
+
+##build BART regression model
+bart_machine = build_bart_machine(X, y)
+
+#get posterior distribution
+posterior = bart_machine_get_posterior(bart_machine, X)
+print(posterior$y_hat)
+
+#destroy BART model
+destroy_bart_machine(bart_machine)
+
+
+#Classification example
+
+#get data and only use 2 factors
+data(iris)
+iris2 = iris[51:150,]
+iris2$Species = factor(iris2$Species)
+
+#build BART classification model
+bart_machine = build_bart_machine(iris2[ ,1 : 4], iris2$Species)
+
+#get posterior distribution
+posterior = bart_machine_get_posterior(bart_machine, iris2[ ,1 : 4])
+print(posterior$y_hat)
+
+#destroy BART model
+destroy_bart_machine(bart_machine)
+
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

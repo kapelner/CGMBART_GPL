@@ -308,7 +308,7 @@ plot_sigsqs_convergence_diagnostics = function(bart_machine){
 	
 	plot(sigsqs, 
 		main = paste("Sigsq Estimates over Gibbs Samples"), 
-		xlab = "Gibbs sample (yellow lines: after burn-in 95% PPI)", 
+		xlab = "Gibbs sample (yellow lines: after burn-in 95% CI)", 
 		ylab = paste("Sigsq by iteration, avg after burn-in =", round(avg_sigsqs_after_burn_in, 3)),
 		ylim = c(quantile(sigsqs, 0.01), quantile(sigsqs, 0.99)),
 		pch = ".", 

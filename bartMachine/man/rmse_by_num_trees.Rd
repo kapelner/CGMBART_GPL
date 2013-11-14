@@ -35,11 +35,7 @@ Number of replicates to average the results over. Each replicate uses a randomly
 %%  ~~ If necessary, more details than the description above ~~
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
+Invisibly, returns the out-of-sample average RMSEs for each tree size. 
 }
 \references{
 %% ~put references to the literature/web site here ~
@@ -57,73 +53,21 @@ Since using a large number of trees can substantially increase computation time,
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+#generate Friedman data
+set.seed(11)
+n  = 200 
+p = 10
+X = data.frame(matrix(runif(n * p), ncol = p))
+y = 10 * sin(pi* X[ ,1] * X[,2]) +20 * (X[,3] -.5)^2 + 10 * X[ ,4] + 5 * X[,5] + rnorm(n)
 
-## The function is currently defined as
-function (bart_machine, tree_list = c(5, seq(10, 50, 10), 100, 
-    150, 200), in_sample = FALSE, plot = TRUE, holdout_pctg = 0.3, 
-    num_replicates = 4) 
-{
-    if (bart_machine$bart_destroyed) {
-        stop("This BART machine has been destroyed. Please recreate.")
-    }
-    if (bart_machine$pred_type == "classification") {
-        stop("This function does not work for classification.")
-    }
-    X = bart_machine$X
-    y = bart_machine$y
-    n = bart_machine$n
-    rmses = array(NA, c(num_replicates, length(tree_list)))
-    cat("num_trees = ")
-    for (t in 1:length(tree_list)) {
-        for (r in 1:num_replicates) {
-            if (in_sample) {
-                bart_machine_dup = bart_machine_duplicate(bart_machine, 
-                  num_trees = tree_list[t], run_in_sample = TRUE)
-                rmses[r, t] = bart_machine_dup$rmse_train
-            }
-            else {
-                holdout_indicies = sample(1:n, holdout_pctg * 
-                  n)
-                Xtrain = X[setdiff(1:n, holdout_indicies), ]
-                ytrain = y[setdiff(1:n, holdout_indicies)]
-                Xtest = X[holdout_indicies, ]
-                ytest = y[holdout_indicies]
-                bart_machine_dup = bart_machine_duplicate(bart_machine, 
-                  Xtrain, ytrain, num_trees = tree_list[t])
-                predict_obj = bart_predict_for_test_data(bart_machine_dup, 
-                  Xtest, ytest)
-                rmses[r, t] = predict_obj$rmse
-            }
-            destroy_bart_machine(bart_machine_dup)
-            cat("..")
-            cat(tree_list[t])
-        }
-    }
-    cat("\n")
-    rmse_means = colMeans(rmses)
-    if (plot) {
-        rmse_sds = apply(rmses, 2, sd)
-        y_mins = rmse_means - 2 * rmse_sds
-        y_maxs = rmse_means + 2 * rmse_sds
-        plot(tree_list, rmse_means, type = "o", xlab = "Number of Trees", 
-            ylab = paste(ifelse(in_sample, "In-Sample", "Out-Of-Sample"), 
-                "RMSE"), main = paste(ifelse(in_sample, "In-Sample", 
-                "Out-Of-Sample"), "RMSE by Number of Trees"), 
-            ylim = c(min(y_mins), max(y_maxs)))
-        if (num_replicates > 1) {
-            for (t in 1:length(tree_list)) {
-                lowers = rmse_means[t] - 1.96 * rmse_sds[t]/sqrt(num_replicates)
-                uppers = rmse_means[t] + 1.96 * rmse_sds[t]/sqrt(num_replicates)
-                segments(tree_list[t], lowers, tree_list[t], 
-                  uppers, col = "grey", lwd = 0.1)
-            }
-        }
-    }
-    invisible(rmse_means)
-  }
+##build BART regression model
+bart_machine = build_bart_machine(X, y, num_trees = 20)
+
+#explore RMSE by number of trees
+rmse_by_num_trees(bart_machine)
+
+#destroy BART model
+destroy_bart_machine(bart_machine)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

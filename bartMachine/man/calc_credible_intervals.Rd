@@ -26,11 +26,7 @@ Confidence level for credible intervals.
 %%  ~~ If necessary, more details than the description above ~~
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
+Returns a matrix of the lower and upper bounds of the credible intervals for each observation in \code{new_data}.
 }
 \references{
 %% ~put references to the literature/web site here ~
@@ -48,29 +44,22 @@ Adam Kapelner and Justin Bleich
 \code{\link{calc_prediction_intervals}}, \code{\link{bart_machine_get_posterior}}
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+#generate Friedman data
+set.seed(11)
+n  = 200 
+p = 5
+X = data.frame(matrix(runif(n * p), ncol = p))
+y = 10 * sin(pi* X[ ,1] * X[,2]) +20 * (X[,3] -.5)^2 + 10 * X[ ,4] + 5 * X[,5] + rnorm(n)
 
-## The function is currently defined as
-function (bart_machine, new_data, ci_conf = 0.95) 
-{
-    new_data = pre_process_new_data(new_data, bart_machine)
-    n_test = nrow(new_data)
-    ci_lower_bd = array(NA, n_test)
-    ci_upper_bd = array(NA, n_test)
-    y_hat_posterior_samples = t(sapply(.jcall(bart_machine$java_bart_machine, 
-        "[[D", "getGibbsSamplesForPrediction", .jarray(new_data, 
-            dispatch = TRUE), as.integer(BART_NUM_CORES)), .jevalArray))
-    y_hat = rowMeans(y_hat_posterior_samples)
-    for (i in 1:n_test) {
-        ci_lower_bd[i] = quantile(sort(y_hat_posterior_samples[i, 
-            ]), (1 - ci_conf)/2)
-        ci_upper_bd[i] = quantile(sort(y_hat_posterior_samples[i, 
-            ]), (1 + ci_conf)/2)
-    }
-    cbind(ci_lower_bd, ci_upper_bd)
-  }
+##build BART regression model
+bart_machine = build_bart_machine(X, y)
+
+#get credible interval
+cred_int = calc_credible_intervals(bart_machine, X)
+print(head(cred_int))
+
+#destroy BART model
+destroy_bart_machine(bart_machine)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

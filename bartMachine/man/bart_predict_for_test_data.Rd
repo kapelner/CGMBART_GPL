@@ -2,7 +2,7 @@
 \alias{bart_predict_for_test_data}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-Predict for test data
+Predict for Test Data with Known Outcomes
 }
 \description{
 Utility wrapper function for computing out-of-sample metrics for a BART model when the test set results are known.
@@ -26,17 +26,25 @@ Actual outcomes for test data.
 %%  ~~ If necessary, more details than the description above ~~
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
+For regression models, a list with the following components is returned:
+
+  \item{y_hat}{Predictions (as posterior means) for the test observations.}
+  \item{L1_err}{L1 error for predictions.}
+  \item{L2_err}{L2 error for predictions.}
+  \item{rmse}{RMSE for predictions.}
+
+For classification models, a list with the following components is returned: 
+
+  \item{y_hat}{Class predictions for the test observations.}
+  \item{confusion_matrix}{A confusion matrix for the test observations.}
+
 %% ...
 }
 \references{
 %% ~put references to the literature/web site here ~
 }
 \author{
-%%  ~~who you are~~
+Adam Kapelner and Justin Bleich
 }
 \note{
 %%  ~~further notes~~
@@ -48,47 +56,28 @@ Actual outcomes for test data.
 Add predict
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+set.seed(11)
+n  = 400 
+p = 5
+X = data.frame(matrix(runif(n * p), ncol = p))
+y = 10 * sin(pi* X[ ,1] * X[,2]) +20 * (X[,3] -.5)^2 + 10 * X[ ,4] + 5 * X[,5] + rnorm(n)
 
-## The function is currently defined as
-function (bart_machine, Xtest, ytest) 
-{
-    if (bart_machine$bart_destroyed) {
-        stop("This BART machine has been destroyed. Please recreate.")
-    }
-    ytest_hat = predict(bart_machine, Xtest)
-    if (bart_machine$pred_type == "regression") {
-        n = nrow(Xtest)
-        L2_err = sum((ytest - ytest_hat)^2)
-        list(y_hat = ytest_hat, L1_err = sum(abs(ytest - ytest_hat)), 
-            L2_err = L2_err, rmse = sqrt(L2_err/n), e = ytest - 
-                ytest_hat)
-    }
-    else {
-        confusion_matrix = as.data.frame(matrix(NA, nrow = 3, 
-            ncol = 3))
-        rownames(confusion_matrix) = c(paste("actual", bart_machine$y_levels), 
-            "use errors")
-        colnames(confusion_matrix) = c(paste("predicted", bart_machine$y_levels), 
-            "model errors")
-        confusion_matrix[1:2, 1:2] = as.integer(table(ytest, 
-            ytest_hat))
-        confusion_matrix[3, 1] = round(confusion_matrix[2, 1]/(confusion_matrix[1, 
-            1] + confusion_matrix[2, 1]), 3)
-        confusion_matrix[3, 2] = round(confusion_matrix[1, 2]/(confusion_matrix[1, 
-            2] + confusion_matrix[2, 2]), 3)
-        confusion_matrix[1, 3] = round(confusion_matrix[1, 2]/(confusion_matrix[1, 
-            1] + confusion_matrix[1, 2]), 3)
-        confusion_matrix[2, 3] = round(confusion_matrix[2, 1]/(confusion_matrix[2, 
-            1] + confusion_matrix[2, 2]), 3)
-        confusion_matrix[3, 3] = round((confusion_matrix[1, 2] + 
-            confusion_matrix[2, 1])/sum(confusion_matrix[1:2, 
-            1:2]), 3)
-        list(y_hat = ytest_hat, confusion_matrix = confusion_matrix)
-    }
-  }
+##split into train and test
+train_X = X[1 : 200, ]
+test_X = X[201 : 400, ]
+train_y = y[1 : 200]
+test_y = y[201 : 400]
+
+##build BART regression model
+bart_machine = build_bart_machine(train_X, train_y)
+
+#explore performance on test data
+oos_perf = bart_predict_for_test_data(bart_machine, test_X, test_y)
+print(oos_perf$rmse)
+
+#destroy BART model
+destroy_bart_machine(bart_machine)
+
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
