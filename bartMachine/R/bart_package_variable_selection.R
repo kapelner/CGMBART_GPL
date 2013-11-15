@@ -160,7 +160,7 @@ var_selection_by_permute_response_cv = function(bart_machine, k_folds = 5, num_r
 	split_points = seq(from = 1, to = bart_machine$n, by = holdout_size)[1 : k_folds]
 	
 	L2_err_mat = matrix(NA, nrow = k_folds, ncol = 3)
-	colnames(L2_err_mat) = c("important_vars_local_names", "important_vars_global_max_names", "important_vars_global _se_names")
+	colnames(L2_err_mat) = c("important_vars_local_names", "important_vars_global_max_names", "important_vars_global_se_names")
 	
 	for (k in 1 : k_folds){
 		cat("cv #", k, "\n", sep = "")

@@ -61,7 +61,7 @@ This function can have substantial run-time.
 \examples{
 #generate Friedman data
 set.seed(11)
-n  = 100 
+n  = 150 
 p = 100 ##95 useless predictors 
 X = data.frame(matrix(runif(n * p), ncol = p))
 y = 10 * sin(pi* X[ ,1] * X[,2]) +20 * (X[,3] -.5)^2 + 10 * X[ ,4] + 5 * X[,5] + rnorm(n)
