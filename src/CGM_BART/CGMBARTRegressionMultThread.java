@@ -576,8 +576,7 @@ public class CGMBARTRegressionMultThread extends Classifier {
 //		System.out.println(Tools.StringJoin(ics[j1], "\t"));
 //	}
 	
-	public boolean isDestroyed(){
-		
+	public boolean isDestroyed(){		
 		return destroyed;
 	}
 	

@@ -1,9 +1,9 @@
 
 
 check_bart_error_assumptions = function(bart_machine, hetero_plot = "yhats"){
-  if (bart_machine$bart_destroyed){
-    stop("This BART machine has been destroyed. Please recreate.")
-  }
+  	if (is_bart_destroyed(bart_machine)){
+    	stop("This BART machine has been destroyed. Please recreate.")
+  	}
   
 	if (!(hetero_plot %in% c("ys", "yhats"))){
 		stop("You must specify the parameter \"hetero_plot\" as \"ys\" or \"yhats\"")
@@ -34,7 +34,7 @@ check_bart_error_assumptions = function(bart_machine, hetero_plot = "yhats"){
 }
 
 plot_tree_depths = function(bart_machine){
-	if (bart_machine$bart_destroyed){
+	if (is_bart_destroyed(bart_machine)){
 		stop("This BART machine has been destroyed. Please recreate.")
 	}
 	
@@ -71,7 +71,7 @@ get_tree_depths = function(bart_machine){
 }
 
 plot_tree_num_nodes = function(bart_machine){
-	if (bart_machine$bart_destroyed){
+	if (is_bart_destroyed(bart_machine)){
 		stop("This BART machine has been destroyed. Please recreate.")
 	}
 	
@@ -108,7 +108,7 @@ get_tree_num_nodes_and_leaves = function(bart_machine){
 }
 
 plot_mh_acceptance_reject = function(bart_machine){
-	if (bart_machine$bart_destroyed){
+	if (is_bart_destroyed(bart_machine)){
 		stop("This BART machine has been destroyed. Please recreate.")
 	}
 	
@@ -156,12 +156,12 @@ get_mh_acceptance_reject = function(bart_machine){
 }
 
 plot_y_vs_yhat = function(bart_machine, X = NULL, y = NULL, credible_intervals = FALSE, prediction_intervals = FALSE, interval_confidence_level = 0.95){
-	if (bart_machine$bart_destroyed){
+	if (is_bart_destroyed(bart_machine)){
 		stop("This BART machine has been destroyed. Please recreate.")
 	}
   
 	if( (!bart_machine$run_in_sample) & (is.null(X) | is.null(y)) ){
-	  stop("To run on training data, must set \"run_in_sample\" option to TRUE in \"build_bart_machine\"")
+		stop("To run on training data, must set \"run_in_sample\" option to TRUE in \"build_bart_machine\"")
 	}
   
 	if (credible_intervals && prediction_intervals){
@@ -170,9 +170,9 @@ plot_y_vs_yhat = function(bart_machine, X = NULL, y = NULL, credible_intervals =
 	if (bart_machine$pred_type == "classification"){
 		stop("Cannot plot y vs y_hat for classification.")
 	}
-  if( (is.null(X) & !is.null(y)) | (!is.null(X) & is.null(y)) ){
-    stop("Must pass both X and y to use on test data")
-  }
+  	if( (is.null(X) & !is.null(y)) | (!is.null(X) & is.null(y)) ){
+    	stop("Must pass both X and y to use on test data")
+  	}
 	
 	if (is.null(X) & is.null(y)){
 		X = bart_machine$X
@@ -243,7 +243,7 @@ plot_y_vs_yhat = function(bart_machine, X = NULL, y = NULL, credible_intervals =
 
 
 get_sigsqs = function(bart_machine, after_burn_in = T, plot_hist = F, plot_CI = .95, plot_sigma = F){
-	if (bart_machine$bart_destroyed){
+	if (is_bart_destroyed(bart_machine)){
 		stop("This BART machine has been destroyed. Please recreate.")
 	}	
 	if (bart_machine$pred_type == "classification"){
@@ -288,7 +288,7 @@ get_sigsqs = function(bart_machine, after_burn_in = T, plot_hist = F, plot_CI = 
 }
 
 plot_sigsqs_convergence_diagnostics = function(bart_machine){
-	if (bart_machine$bart_destroyed){
+	if (is_bart_destroyed(bart_machine)){
 		stop("This BART machine has been destroyed. Please recreate.")
 	}	
 	if (bart_machine$pred_type == "classification"){
@@ -329,7 +329,7 @@ plot_sigsqs_convergence_diagnostics = function(bart_machine){
 }
 
 investigate_var_importance = function(bart_machine, type = "splits", plot = TRUE, num_replicates_for_avg = 5, num_trees_bottleneck = 20, num_var_plot = Inf, bottom_margin = 10){
-	if (bart_machine$bart_destroyed){
+	if (is_bart_destroyed(bart_machine)){
 		stop("This BART machine has been destroyed. Please recreate.")
 	}	
 
@@ -397,8 +397,8 @@ investigate_var_importance = function(bart_machine, type = "splits", plot = TRUE
 }
 
 plot_convergence_diagnostics = function(bart_machine, plots = c("sigsqs", "mh_acceptance", "num_nodes", "tree_depths")){
-  if (bart_machine$bart_destroyed){
-    stop("This BART machine has been destroyed. Please recreate.")
+  if (is_bart_destroyed(bart_machine)){
+  	stop("This BART machine has been destroyed. Please recreate.")
   }
   
   if(length(plots) > 2){
@@ -530,7 +530,7 @@ interaction_investigator = function(bart_machine, plot = TRUE, num_replicates_fo
 
 
 pd_plot = function(bart_machine, j, levs = c(0.05, seq(from = 0.10, to = 0.90, by = 0.10), 0.95), lower_ci = 0.025, upper_ci = 0.975){
-	if (bart_machine$bart_destroyed){
+	if (is_bart_destroyed(bart_machine)){
 		stop("This BART machine has been destroyed. Please recreate.")
 	}
 	if (class(j) == "numeric" && (j < 1 || j > bart_machine$p)){
@@ -588,7 +588,7 @@ pd_plot = function(bart_machine, j, levs = c(0.05, seq(from = 0.10, to = 0.90, b
 }
 
 rmse_by_num_trees = function(bart_machine, tree_list = c(5, seq(10, 50, 10), 100, 150, 200), in_sample = FALSE, plot = TRUE, holdout_pctg = 0.3, num_replicates = 4){
-	if (bart_machine$bart_destroyed){
+	if (is_bart_destroyed(bart_machine)){
 		stop("This BART machine has been destroyed. Please recreate.")
 	}
 	if (bart_machine$pred_type == "classification"){

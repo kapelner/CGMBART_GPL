@@ -287,8 +287,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 			impute_missingness_with_rf_impute = impute_missingness_with_rf_impute,
 			impute_missingness_with_x_j_bar_for_lm = impute_missingness_with_x_j_bar_for_lm,			
 			verbose = verbose,
-			num_rand_samps_in_library = num_rand_samps_in_library,
-			bart_destroyed = FALSE
+			num_rand_samps_in_library = num_rand_samps_in_library
 	)
 	
 	#once its done gibbs sampling, see how the training data does if user wants
@@ -423,7 +422,12 @@ build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL,
 	for (k in k_cvs){
 		for (nu_q in nu_q_cvs){
 			for (num_trees in num_tree_cvs){
-				cat(paste("  BART CV try: k:", k, "nu, q:", paste(as.numeric(nu_q), collapse = ", "), "m:", num_trees, "\n"))
+				if (pred_type == "regression"){
+					cat(paste("  BART CV try: k:", k, "nu, q:", paste(as.numeric(nu_q), collapse = ", "), "m:", num_trees, "\n"))	
+				} else {
+					cat(paste("  BART CV try: k:", k, "m:", num_trees, "\n"))
+				}
+				
 				k_fold_results = k_fold_cv(X, y, 
 						k_folds = k_folds,
 						num_trees = num_trees,
@@ -445,9 +449,11 @@ build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL,
 			}
 		}
 	}
-	
-	cat(paste("  BART CV win: k:", min_rmse_k, "nu, q:", paste(as.numeric(min_rmse_nu_q), collapse = ", "), "m:", min_rmse_num_tree, "\n"))
-	
+	if (pred_type == "regression"){
+		cat(paste("  BART CV win: k:", min_rmse_k, "nu, q:", paste(as.numeric(min_rmse_nu_q), collapse = ", "), "m:", min_rmse_num_tree, "\n"))
+	} else {
+		cat(paste("  BART CV win: k:", min_rmse_k, "m:", min_rmse_num_tree, "\n"))
+	}
 	#now that we've found the best settings, return that bart machine. It would be faster to have kept this around, but doing it this way saves RAM for speed.
 	build_bart_machine(X, y,
 			num_trees = min_rmse_num_tree,
@@ -463,7 +469,7 @@ destroy_bart_machine = function(bart_machine){
 }
 
 is_bart_destroyed = function(bart_machine){
-  .jcall(bart_machine$java_bart_machine, "Z", "isDestroyed")
+	.jcall(bart_machine$java_bart_machine, "Z", "isDestroyed")
 }
 
 

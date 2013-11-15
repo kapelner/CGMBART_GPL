@@ -1,6 +1,6 @@
 
 summary.bartMachine = function(bart_machine, show_details_for_trees = FALSE){
-	if (bart_machine$bart_destroyed){
+	if (is_bart_destroyed(bart_machine)){
 		stop("This BART machine has been destroyed. Please recreate.")
 	}	
 	cat(paste("Bart Machine v", VERSION, ifelse(bart_machine$pred_type == "regression", " for regression", " for classification"), "\n\n", sep = ""))

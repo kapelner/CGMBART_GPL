@@ -18,7 +18,7 @@ labels_to_y_levels = function(bart_machine, labels){
 }
 
 bart_predict_for_test_data = function(bart_machine, Xtest, ytest){
-	if (bart_machine$bart_destroyed){
+	if (is_bart_destroyed(bart_machine)){
 		stop("This BART machine has been destroyed. Please recreate.")
 	}	
 	ytest_hat = predict(bart_machine, Xtest)
@@ -51,7 +51,7 @@ bart_predict_for_test_data = function(bart_machine, Xtest, ytest){
 }
 
 bart_machine_get_posterior = function(bart_machine, new_data){
-	if (bart_machine$bart_destroyed){
+	if (is_bart_destroyed(bart_machine)){
 		stop("This BART machine has been destroyed. Please recreate.")
 	}	
 	if (class(new_data) != "matrix" && class(new_data) != "data.frame"){		
@@ -107,9 +107,9 @@ bart_machine_get_posterior = function(bart_machine, new_data){
 
 
 calc_credible_intervals = function(bart_machine, new_data, ci_conf = 0.95){
-  if (bart_machine$bart_destroyed){
-    stop("This BART machine has been destroyed. Please recreate.")
-  }
+  	if (is_bart_destroyed(bart_machine)){
+    	stop("This BART machine has been destroyed. Please recreate.")
+    }
   
 	#first convert the rows to the correct dummies etc
 	new_data = pre_process_new_data(new_data, bart_machine)
@@ -133,9 +133,13 @@ calc_credible_intervals = function(bart_machine, new_data, ci_conf = 0.95){
 }
 
 calc_prediction_intervals = function(bart_machine, new_data, pi_conf = 0.95, normal_samples_per_gibbs_sample = 100){
-  if (bart_machine$bart_destroyed){
-    stop("This BART machine has been destroyed. Please recreate.")
-  }
+
+	if (bart_machine$pred_type == "classification"){
+		stop("Prediction intervals are not possible for classification.")
+	}
+    if (is_bart_destroyed(bart_machine)){
+    	stop("This BART machine has been destroyed. Please recreate.")
+  	}
   
 	#first convert the rows to the correct dummies etc
 	new_data = pre_process_new_data(new_data, bart_machine)
