@@ -3,7 +3,7 @@ predict.bartMachine = function(bart_machine, new_data, type = "prob", prob_rule_
     stop("This BART machine has been destroyed. Please recreate.")
   }
   if(!(type %in% c("prob", "class"))){
-    stop("For classification, type must be either \"prob"\ or \"class\". ")
+    stop("For classification, type must be either \"prob\" or \"class\". ")
   }
   
 	if (bart_machine$pred_type == "regression"){	
