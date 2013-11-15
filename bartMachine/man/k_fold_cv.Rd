@@ -29,11 +29,17 @@ Additional arguments to be passed to \code{build_bart_machine}.
 For each fold, a new BART model is trained (using the same set of arguments) and its performance is evaluated on the holdout piece of that fold.
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
+For regression models, a list with the following components is returned:
+
+  \item{L1_err}{Aggregate L1 error across the folds.}
+  \item{L2_err}{Aggregate L1 error across the folds.}
+  \item{rmse}{Aggregate RMSE across the folds.}
+
+For classification models, a list with the following components is returned: 
+
+  \item{y_hat}{Class predictions for the test observations.}
+  \item{confusion_matrix}{Aggregate confusion matrix across the folds.}
+    \item{misclassification_error}{Total misclassification error across the folds.}
 }
 \references{
 %% ~put references to the literature/web site here ~
@@ -51,87 +57,16 @@ Adam Kapelner and Justin Bleich
 \code{\link{build_bart_machine}}
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+#generate Friedman data
+set.seed(11)
+n  = 200 
+p = 5
+X = data.frame(matrix(runif(n * p), ncol = p))
+y = 10 * sin(pi* X[ ,1] * X[,2]) +20 * (X[,3] -.5)^2 + 10 * X[ ,4] + 5 * X[,5] + rnorm(n)
 
-## The function is currently defined as
-function (X, y, k_folds = 5, ...) 
-{
-    y_levels = levels(y)
-    if (class(y) == "numeric" || class(y) == "integer") {
-        pred_type = "regression"
-    }
-    else if (class(y) == "factor" & length(y_levels) == 2) {
-        pred_type = "classification"
-    }
-    n = nrow(X)
-    Xpreprocess = pre_process_training_data(X)
-    p = ncol(Xpreprocess)
-    if (k_folds <= 1 || k_folds > n) {
-        stop("The number of folds must be at least 2 and less than or equal to n, use \"Inf\" for leave one out")
-    }
-    if (k_folds == Inf) {
-        k_folds = n
-    }
-    holdout_size = round(n/k_folds)
-    split_points = seq(from = 1, to = n, by = holdout_size)[1:k_folds]
-    if (pred_type == "regression") {
-        L1_err = 0
-        L2_err = 0
-    }
-    else {
-        confusion_matrix = matrix(0, nrow = 3, ncol = 3)
-        rownames(confusion_matrix) = c(paste("actual", y_levels), 
-            "use errors")
-        colnames(confusion_matrix) = c(paste("predicted", y_levels), 
-            "model errors")
-    }
-    Xy = data.frame(Xpreprocess, y)
-    for (k in 1:k_folds) {
-        cat(".")
-        holdout_index_i = split_points[k]
-        holdout_index_f = ifelse(k == k_folds, n, split_points[k + 
-            1] - 1)
-        test_data_k = Xy[holdout_index_i:holdout_index_f, ]
-        training_data_k = Xy[-c(holdout_index_i:holdout_index_f), 
-            ]
-        bart_machine_cv = build_bart_machine(training_data_k[, 
-            1:p], training_data_k[, (p + 1)], run_in_sample = FALSE, 
-            ...)
-        predict_obj = bart_predict_for_test_data(bart_machine_cv, 
-            test_data_k[, 1:p], test_data_k[, (p + 1)])
-        destroy_bart_machine(bart_machine_cv)
-        if (pred_type == "regression") {
-            L1_err = L1_err + predict_obj$L1_err
-            L2_err = L2_err + predict_obj$L2_err
-        }
-        else {
-            confusion_matrix[1:2, 1:2] = confusion_matrix[1:2, 
-                1:2] + table(test_data_k$y, predict_obj$y_hat)
-        }
-    }
-    cat("\n")
-    if (pred_type == "regression") {
-        list(L1_err = L1_err, L2_err = L2_err, rmse = sqrt(L2_err/n), 
-            PseudoRsq = 1 - L2_err/sum((y - mean(y))^2))
-    }
-    else {
-        confusion_matrix[3, 1] = round(confusion_matrix[2, 1]/(confusion_matrix[1, 
-            1] + confusion_matrix[2, 1]), 3)
-        confusion_matrix[3, 2] = round(confusion_matrix[1, 2]/(confusion_matrix[1, 
-            2] + confusion_matrix[2, 2]), 3)
-        confusion_matrix[1, 3] = round(confusion_matrix[1, 2]/(confusion_matrix[1, 
-            1] + confusion_matrix[1, 2]), 3)
-        confusion_matrix[2, 3] = round(confusion_matrix[2, 1]/(confusion_matrix[2, 
-            1] + confusion_matrix[2, 2]), 3)
-        confusion_matrix[3, 3] = round((confusion_matrix[1, 2] + 
-            confusion_matrix[2, 1])/sum(confusion_matrix[1:2, 
-            1:2]), 3)
-        list(confusion_matrix = confusion_matrix, misclassification_error = confusion_matrix[3, 
-            3])
-    }
-  }
+#evaluate default BART on 5 folds
+k_fold_val = k_fold_cv(X, y)
+print(k_fold_val$rmse)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
