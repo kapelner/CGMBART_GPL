@@ -66,7 +66,7 @@ p = 100 ##95 useless predictors
 X = data.frame(matrix(runif(n * p), ncol = p))
 y = 10 * sin(pi* X[ ,1] * X[,2]) +20 * (X[,3] -.5)^2 + 10 * X[ ,4] + 5 * X[,5] + rnorm(n)
 
-##build BART regression model (not actuall used in variable selection)
+##build BART regression model (not actually used in variable selection)
 bart_machine = build_bart_machine(X, y)
 
 #variable selection via cross-validation
