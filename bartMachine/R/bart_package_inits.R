@@ -1,9 +1,9 @@
 
 #constants -- these need to be moved into our own environmental variable soon
-VERSION = "1.0b"
+#VERSION = "1.0b"
 
-PLOTS_DIR = "output_plots"
-JAR_DEPENDENCIES = c("bart_java.jar", "commons-math-2.1.jar", "trove-3.0.3.jar", "junit-4.10.jar")
+#PLOTS_DIR = "output_plots"
+#JAR_DEPENDENCIES = c("bart_java.jar", "commons-math-2.1.jar", "trove-3.0.3.jar", "junit-4.10.jar")
 
 COLORS = array(NA, 500)
 for (i in 1 : 500){
@@ -11,14 +11,15 @@ for (i in 1 : 500){
 }
 
 set_bart_machine_num_cores = function(num_cores){
-	assign("BART_NUM_CORES", num_cores, ".GlobalEnv")
+	assign("BART_NUM_CORES", num_cores, pkg_globals)
 }
 
 bart_machine_num_cores = function(){
-	BART_NUM_CORES
+	get("BART_NUM_CORES", pkg_globals)
 }
 
 init_java_for_bart_machine_with_mem_in_mb = function(bart_max_mem){
+  JAR_DEPENDENCIES = get("JAR_DEPENDENCIES", pkg_globals)
 	jinit_params = paste("-Xmx", bart_max_mem, "m", sep = "")
 #	cat("initializing java with parameters", jinit_params, "from directory", getwd(), "\n")
 	.jinit(parameters = jinit_params)

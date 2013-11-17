@@ -185,10 +185,10 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	}
 	
 	#if the user hasn't set a number of cores, set it here
-	if (!exists("BART_NUM_CORES")){
-		assign("BART_NUM_CORES", BART_NUM_CORES_DEFAULT, .GlobalEnv)
+	if (!exists(get("BART_NUM_CORES", pkg_globals))){
+		assign("BART_NUM_CORES", BART_NUM_CORES_DEFAULT, pkg_globals)
 	}
-	
+	BART_NUM_CORES = get("BART_NUM_CORES", pkg_globals)
 	
 	#build bart to spec with what the user wants
 	.jcall(java_bart_machine, "V", "setNumCores", as.integer(BART_NUM_CORES)) #this must be set FIRST!!!
