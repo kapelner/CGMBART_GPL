@@ -8,7 +8,8 @@ Assess the Out-of-sample RMSE by Number of Trees
 Assess out-of-sample RMSE of a BART model for varying numbers of trees in the sum-of-trees model.
 }
 \usage{
-rmse_by_num_trees(bart_machine, tree_list = c(5, seq(10, 50, 10), 100, 150, 200), in_sample = FALSE, plot = TRUE, holdout_pctg = 0.3, num_replicates = 4)
+rmse_by_num_trees(bart_machine, tree_list = c(5, seq(10, 50, 10), 100, 150, 200),
+in_sample = FALSE, plot = TRUE, holdout_pctg = 0.3, num_replicates = 4)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{

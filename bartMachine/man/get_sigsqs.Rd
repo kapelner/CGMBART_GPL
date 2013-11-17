@@ -8,7 +8,8 @@ Get Posterior Error Variance Estimates
 Returns the posterior estimates of the error variance from the Gibbs samples with an option to crease a histogram of the posterior estimates of the error variance  with a credible interval overlaid.
 }
 \usage{
-hist_sigsqs(bart_machine, after_burn_in = T, plot_hist = F, plot_CI = .95)
+hist_sigsqs(bart_machine, after_burn_in = T, 
+plot_hist = F, plot_CI = .95)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{

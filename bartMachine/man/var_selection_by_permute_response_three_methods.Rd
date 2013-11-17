@@ -8,7 +8,10 @@ Perform Variable Selection using Three Threshold-based Procedures
 Performs variable selection using the three thresholding methods introduced in Bleich et al. (2013). 
 }
 \usage{
-var_selection_by_permute_response_three_methods(bart_machine, num_reps_for_avg = 10, num_permute_samples = 100, num_trees_for_permute = 20, alpha = 0.05, plot = TRUE, num_var_plot = Inf, bottom_margin = 10)
+var_selection_by_permute_response_three_methods(bart_machine, 
+num_reps_for_avg = 10, num_permute_samples = 100, 
+num_trees_for_permute = 20, alpha = 0.05, 
+plot = TRUE, num_var_plot = Inf, bottom_margin = 10)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -22,7 +25,7 @@ Number of replicates to over over to for the BART model's variable inclusion pro
 Number of permutations of the response to be made to generate the ``null'' permutation distribution.
 }
   \item{num_trees_for_permute}{
-Number of trees to use in the variable selection procedure. As with \code{\link{investigate_var_importance}}, a small number of trees should be used to force variables to compete for entry into the model. Note that this number is used to estimate both the ``true'' and ``null'' variable inclusion proportions.
+Number of trees to use in the variable selection procedure. As with \cr \code{\link{investigate_var_importance}}, a small number of trees should be used to force variables to compete for entry into the model. Note that this number is used to estimate both the ``true'' and ``null'' variable inclusion proportions.
 }
   \item{alpha}{
 Cut-off level for the thresholds.

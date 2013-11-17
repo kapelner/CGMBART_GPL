@@ -8,7 +8,9 @@ Partial Dependence Plot
 Creates a partial dependence plot for a BART model for regression or classification.
 }
 \usage{
-pd_plot(bart_machine, j, levs = c(0.05, seq(from = 0.1, to = 0.9, by = 0.1), 0.95), lower_ci = 0.025, upper_ci = 0.975)
+pd_plot(bart_machine, j, 
+levs = c(0.05, seq(from = 0.1, to = 0.9, by = 0.1), 0.95), 
+lower_ci = 0.025, upper_ci = 0.975)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{

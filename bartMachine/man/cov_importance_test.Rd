@@ -8,7 +8,8 @@ Covariance Importance Test
 TO DO BY ADAM
 }
 \usage{
-cov_importance_test(bart_machine, covariates = NULL, num_permutations = 100, num_trees = NULL, plot = TRUE)
+cov_importance_test(bart_machine, covariates = NULL, 
+num_permutations = 100, num_trees = NULL, plot = TRUE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{

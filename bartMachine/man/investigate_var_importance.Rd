@@ -8,7 +8,9 @@ Explore Variable Inclusion Proportions in BART Model
 Explore the variable inclusion proportions for a BART model to learn about the relative influence of the different covariates. This function includes an option to generate a plot of the variable inclusion proportions.
 }
 \usage{
-investigate_var_importance(bart_machine, type = "splits", plot = TRUE, num_replicates_for_avg = 5, num_trees_bottleneck = 20, num_var_plot = Inf, bottom_margin = 10)
+investigate_var_importance(bart_machine, type = "splits", 
+plot = TRUE, num_replicates_for_avg = 5, num_trees_bottleneck = 20, 
+num_var_plot = Inf, bottom_margin = 10)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -39,7 +41,7 @@ In the plot, the red bars correspond to the standard error of the variable inclu
 }
 \value{
 Invisibly, returns a list with the following components:
-\item{avg_var_props}{The average variable inclusion proportions for each variable (across \code{num_replicates_for_avg})}
+\item{avg_var_props}{The average variable inclusion proportions for each variable\cr (across \code{num_replicates_for_avg})}
 \item{sd_var_props}{The standard deviation of the variable inclusion proportions for each variable (across \code{num_replicates_for_avg})}
 
 }

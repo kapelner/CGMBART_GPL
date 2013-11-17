@@ -8,7 +8,8 @@ Calculate Prediction Intervals
 Generates prediction intervals for \eqn{\hat{y}} for a specified set of observations.
 }
 \usage{
-calc_prediction_intervals(bart_machine, new_data, pi_conf = 0.95, normal_samples_per_gibbs_sample = 100)
+calc_prediction_intervals(bart_machine, new_data, pi_conf = 0.95, 
+normal_samples_per_gibbs_sample = 100)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{

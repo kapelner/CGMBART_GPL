@@ -8,7 +8,9 @@ Plot the fitted Versus Actual Response
 Generates a plot actual versus fitted values and corresponding credible intervals or prediction intervals for the fitted values.
 }
 \usage{
-plot_y_vs_yhat(bart_machine, Xtest = NULL, ytest = NULL, credible_intervals = FALSE, prediction_intervals = FALSE, interval_confidence_level = 0.95)
+plot_y_vs_yhat(bart_machine, Xtest = NULL, ytest = NULL, 
+credible_intervals = FALSE, prediction_intervals = FALSE, 
+interval_confidence_level = 0.95)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{

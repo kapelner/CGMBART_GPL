@@ -6,7 +6,17 @@
 Builds a BART model for regression or classification
 }
 \usage{
-build_bart_machine(X = NULL, y = NULL, Xy = NULL, num_trees = 50, num_burn_in = 250, num_iterations_after_burn_in = 1000, alpha = 0.95, beta = 2, k = 2, q = 0.9, nu = 3, prob_rule_class = 0.5, mh_prob_steps = c(2.5, 2.5, 4)/9, debug_log = FALSE, run_in_sample = TRUE, s_sq_y = "mse", cov_prior_vec = NULL, use_missing_data = FALSE, covariates_to_permute = NULL, num_rand_samps_in_library = 10000, use_missing_data_dummies_as_covars = FALSE, replace_missing_data_with_x_j_bar = FALSE, impute_missingness_with_rf_impute = FALSE, impute_missingness_with_x_j_bar_for_lm = TRUE, mem_cache_for_speed = TRUE, verbose = TRUE)
+build_bart_machine(X = NULL, y = NULL, Xy = NULL, 
+num_trees = 50, num_burn_in = 250, num_iterations_after_burn_in = 1000, 
+alpha = 0.95, beta = 2, k = 2, q = 0.9, nu = 3, 
+prob_rule_class = 0.5, mh_prob_steps = c(2.5, 2.5, 4)/9,
+debug_log = FALSE, run_in_sample = TRUE, s_sq_y = "mse", 
+cov_prior_vec = NULL, use_missing_data = FALSE, covariates_to_permute = NULL,
+num_rand_samps_in_library = 10000, use_missing_data_dummies_as_covars = FALSE, 
+replace_missing_data_with_x_j_bar = FALSE,
+impute_missingness_with_rf_impute = FALSE,
+impute_missingness_with_x_j_bar_for_lm = TRUE, 
+mem_cache_for_speed = TRUE, verbose = TRUE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -125,7 +135,8 @@ Adam Kapelner and Justin Bleich
 }
 \note{
 This function is parallelized by the number of cores set by \code{\link{set_bart_machine_num_cores}}. Each core will create an 
-independent MCMC chain of size \code{num_burn_in} \eqn{+} \code{num_iterations_after_burn_in / bart_machine_num_cores}.
+independent MCMC chain of size \cr
+\code{num_burn_in} \eqn{+} \code{num_iterations_after_burn_in / bart_machine_num_cores}.
 }
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
@@ -152,7 +163,8 @@ summary(bart_machine)
 destory(bart_machine)
 
 ##Build another BART regression model
-bart_machine = build_bart_machine(X,y, num_trees = 200, num_burn_in = 500, num_iterations_after_burn_in =1000)
+bart_machine = build_bart_machine(X,y, num_trees = 200, num_burn_in = 500,
+num_iterations_after_burn_in =1000)
 #Destroy BART model
 destroy(bart_machine)
 

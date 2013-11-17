@@ -8,7 +8,9 @@ Explore Pairwise Interactions in BART Model
 Explore the pairwise interaction counts for a BART model to learn about interactions fit by the model. This function includes an option to generate a plot of the pairwise interaction counts.
 }
 \usage{
-interaction_investigator(bart_machine, plot = TRUE, num_replicates_for_avg = 5, num_trees_bottleneck = 20, num_var_plot = 50, cut_bottom = NULL, bottom_margin = 10)
+interaction_investigator(bart_machine, plot = TRUE, 
+num_replicates_for_avg = 5, num_trees_bottleneck = 20, 
+num_var_plot = 50, cut_bottom = NULL, bottom_margin = 10)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{

@@ -8,7 +8,8 @@ Plot Convergence Diagnostics
 A suite of plots to assess convergence diagonstics and features of the BART model. 
 }
 \usage{
-plot_convergence_diagnostics(bart_machine,  plots = c("sigsqs", "mh_acceptance", "num_nodes", "tree_depths"))
+plot_convergence_diagnostics(bart_machine,  
+plots = c("sigsqs", "mh_acceptance", "num_nodes", "tree_depths"))
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
