@@ -62,6 +62,21 @@ This function is parallelized by the number of cores set in \code{\link{set_bart
 \code{\link{investigate_var_importance}}
 }
 \examples{
+#generate Friedman data
+set.seed(11)
+n  = 200 
+p = 10
+X = data.frame(matrix(runif(n * p), ncol = p))
+y = 10 * sin(pi* X[ ,1] * X[,2]) +20 * (X[,3] -.5)^2 + 10 * X[ ,4] + 5 * X[,5] + rnorm(n)
+
+##build BART regression model
+bart_machine = build_bart_machine(X, y, num_trees = 20)
+
+#investigate interactions
+interaction_investigator(bart_machine)
+
+#destroy BART model
+destroy_bart_machine(bart_machine)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
