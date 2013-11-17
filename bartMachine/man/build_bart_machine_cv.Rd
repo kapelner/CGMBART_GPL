@@ -51,6 +51,7 @@ Adam Kapelner and Justin Bleich
 }
 \note{
 This function may require significant run-time.
+This function is parallelized by the number of cores set in \code{\link{set_bart_machine_num_cores}} via calling \code{\link{build_bart_machine}}.
 }
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~

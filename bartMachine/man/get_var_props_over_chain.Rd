@@ -32,7 +32,7 @@ Returns a vector of the variable inclusion proportions.
 Adam Kapelner and Justin Bleich
 }
 \note{
-%%  ~~further notes~~
+This function is parallelized by the number of cores set in \code{\link{set_bart_machine_num_cores}}.
 }
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~

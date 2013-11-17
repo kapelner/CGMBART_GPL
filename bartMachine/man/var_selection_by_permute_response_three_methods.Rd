@@ -60,7 +60,8 @@ Bleich et al. (2013)
 Adam Kapelner and Justin Bleich
 }
 \note{
-Although the reference only explores regression settings, this procedure is applicable to both regression and classification problems. 
+Although the reference only explores regression settings, this procedure is applicable to both regression and classification problems.
+This function is parallelized by the number of cores set in \code{\link{set_bart_machine_num_cores}}.
 }
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~

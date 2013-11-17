@@ -124,7 +124,8 @@ Chipman et al. (2010)
 Adam Kapelner and Justin Bleich
 }
 \note{
-This function is parallelized and each core will create an independent MCMC chain of size \code{num_burn_in} \eqn{+} \code{num_iterations_after_burn_in}/bart_machine_num_cores.
+This function is parallelized by the number of cores set by \code{\link{set_bart_machine_num_cores}}. Each core will create an 
+independent MCMC chain of size \code{num_burn_in} \eqn{+} \code{num_iterations_after_burn_in / bart_machine_num_cores}.
 }
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~

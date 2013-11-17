@@ -155,13 +155,13 @@ get_mh_acceptance_reject = function(bart_machine){
 	)
 }
 
-plot_y_vs_yhat = function(bart_machine, X = NULL, y = NULL, credible_intervals = FALSE, prediction_intervals = FALSE, interval_confidence_level = 0.95){
+plot_y_vs_yhat = function(bart_machine, Xtest = NULL, ytest = NULL, credible_intervals = FALSE, prediction_intervals = FALSE, interval_confidence_level = 0.95){
 	if (is_bart_destroyed(bart_machine)){
 		stop("This BART machine has been destroyed. Please recreate.")
 	}
   
-	if( (!bart_machine$run_in_sample) & (is.null(X) | is.null(y)) ){
-		stop("To run on training data, must set \"run_in_sample\" option to TRUE in \"build_bart_machine\"")
+	if( (!bart_machine$run_in_sample) & (is.null(Xtest) | is.null(ytest)) ){
+		stop("To run on training data, you must set \"run_in_sample\" option to TRUE in \"build_bart_machine\"")
 	}
   
 	if (credible_intervals && prediction_intervals){
@@ -170,73 +170,73 @@ plot_y_vs_yhat = function(bart_machine, X = NULL, y = NULL, credible_intervals =
 	if (bart_machine$pred_type == "classification"){
 		stop("Cannot plot y vs y_hat for classification.")
 	}
-  	if( (is.null(X) & !is.null(y)) | (!is.null(X) & is.null(y)) ){
+  	if( (is.null(Xtest) & !is.null(ytest)) | (!is.null(Xtest) & is.null(ytest)) ){
     	stop("Must pass both X and y to use on test data")
   	}
 	
-	if (is.null(X) & is.null(y)){
-		X = bart_machine$X
-		y = bart_machine$y
+	if (is.null(Xtest) & is.null(ytest)){
+		Xtest = bart_machine$X
+		ytest = bart_machine$y
 		y_hat = bart_machine$y_hat_train
 		in_sample = TRUE
 	} else {
-		predict_obj = bart_predict_for_test_data(bart_machine, X, y)
+		predict_obj = bart_predict_for_test_data(bart_machine, Xtest, ytest)
 		y_hat = predict_obj$y_hat
 		in_sample = FALSE
 	}
 	
 	if (credible_intervals){
-		credible_intervals = calc_credible_intervals(bart_machine, X, interval_confidence_level)
+		credible_intervals = calc_credible_intervals(bart_machine, Xtest, interval_confidence_level)
 		ci_a = credible_intervals[, 1]
 		ci_b = credible_intervals[, 2]
-		y_in_ppi = y >= ci_a & y <= ci_b
+		y_in_ppi = ytest >= ci_a & ytest <= ci_b
 		prop_ys_in_ppi = sum(y_in_ppi) / length(y_in_ppi)
 		
-		plot(y, y_hat, 
+		plot(ytest, y_hat, 
 			main = paste(ifelse(in_sample, "In-Sample", "Out-of-Sample"), " Fitted vs. Actual Values\nwith ", round(interval_confidence_level * 100), "% Cred. Int.'s (", round(prop_ys_in_ppi * 100, 2), "% coverage)", sep = ""), 
 			xlab = paste("Actual Values", sep = ""), 
 			ylab = "Fitted Values", 
-			xlim = c(min(min(y), min(y_hat)), max(max(y), max(y_hat))),
-			ylim = c(min(min(y), min(y_hat)), max(max(y), max(y_hat))),
+			xlim = c(min(min(ytest), min(y_hat)), max(max(ytest), max(y_hat))),
+			ylim = c(min(min(ytest), min(y_hat)), max(max(ytest), max(y_hat))),
 			cex = 0)
 		#draw PPI's
 		for (i in 1 : bart_machine$n){
-			segments(y[i], ci_a[i], y[i], ci_b[i], col = "grey", lwd = 0.1)	
+			segments(ytest[i], ci_a[i], ytest[i], ci_b[i], col = "grey", lwd = 0.1)	
 		}
 		#draw green dots or red dots depending upon inclusion in the PPI
 		for (i in 1 : bart_machine$n){
-			points(y[i], y_hat[i], col = ifelse(y_in_ppi[i], "darkgreen", "red"), cex = 0.6, pch = 16)	
+			points(ytest[i], y_hat[i], col = ifelse(y_in_ppi[i], "darkgreen", "red"), cex = 0.6, pch = 16)	
 		}		
 	} else if (prediction_intervals){
-		credible_intervals = calc_prediction_intervals(bart_machine, X, interval_confidence_level)
+		credible_intervals = calc_prediction_intervals(bart_machine, Xtest, interval_confidence_level)
 		ci_a = credible_intervals[, 1]
 		ci_b = credible_intervals[, 2]
-		y_in_ppi = y >= ci_a & y <= ci_b
+		y_in_ppi = ytest >= ci_a & ytest <= ci_b
 		prop_ys_in_ppi = sum(y_in_ppi) / length(y_in_ppi)
 		
-		plot(y, y_hat, 
+		plot(ytest, y_hat, 
 				main = paste(ifelse(in_sample, "In-Sample", "Out-of-Sample"), " Fitted vs. Actual Values\nwith ", round(interval_confidence_level * 100), "% Pred. Int.'s (", round(prop_ys_in_ppi * 100, 2), "% coverage)", sep = ""), 
 				xlab = paste("Actual Values", sep = ""), 
 				ylab = "Fitted Values", 
-				xlim = c(min(min(y), min(y_hat)), max(max(y), max(y_hat))),
-				ylim = c(min(min(y), min(y_hat)), max(max(y), max(y_hat))),
+				xlim = c(min(min(ytest), min(y_hat)), max(max(ytest), max(y_hat))),
+				ylim = c(min(min(ytest), min(y_hat)), max(max(ytest), max(y_hat))),
 				cex = 0)
 		#draw PPI's
 		for (i in 1 : bart_machine$n){
-			segments(y[i], ci_a[i], y[i], ci_b[i], col = "grey", lwd = 0.1)	
+			segments(ytest[i], ci_a[i], ytest[i], ci_b[i], col = "grey", lwd = 0.1)	
 		}
 		#draw green dots or red dots depending upon inclusion in the PPI
 		for (i in 1 : bart_machine$n){
-			points(y[i], y_hat[i], col = ifelse(y_in_ppi[i], "darkgreen", "red"), cex = 0.6, pch = 16)	
+			points(ytest[i], y_hat[i], col = ifelse(y_in_ppi[i], "darkgreen", "red"), cex = 0.6, pch = 16)	
 		}		
 	} else {
-		plot(y, y_hat, 
+		plot(ytest, y_hat, 
 			main = "Fitted vs. Actual Values", 
 			xlab = "Actual Values", 
 			ylab = "Fitted Values", 
 			col = "blue", 
-			xlim = c(min(min(y), min(y_hat)), max(max(y), max(y_hat))),
-			ylim = c(min(min(y), min(y_hat)), max(max(y), max(y_hat))),)
+			xlim = c(min(min(ytest), min(y_hat)), max(max(ytest), max(y_hat))),
+			ylim = c(min(min(ytest), min(y_hat)), max(max(ytest), max(y_hat))),)
 	}
 	abline(a = 0, b = 1, lty = 2)	
 }

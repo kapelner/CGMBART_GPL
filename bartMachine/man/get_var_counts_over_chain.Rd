@@ -32,7 +32,7 @@ Returns a matrix of dimension \code{num_interations_after_burn_in} by code{p} (d
 Adam Kapelner and Justin Bleich
 }
 \note{
-%%  ~~further notes~~
+This function is parallelized by the number of cores set in \code{\link{set_bart_machine_num_cores}}.
 }
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~

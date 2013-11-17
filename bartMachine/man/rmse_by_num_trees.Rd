@@ -45,6 +45,7 @@ Invisibly, returns the out-of-sample average RMSEs for each tree size.
 }
 \note{
 Since using a large number of trees can substantially increase computation time, this plot can help assess whether a smaller ensemble size is sufficient to obtain desirable predictive performance.
+This function is parallelized by the number of cores set in \code{\link{set_bart_machine_num_cores}}.
 }
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~

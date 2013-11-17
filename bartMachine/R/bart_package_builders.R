@@ -11,7 +11,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		q = 0.9,
 		nu = 3.0,
 		prob_rule_class = 0.5,
-		mh_prob_steps = c(2.5, 2.5, 4) / 9,
+		mh_prob_steps = c(2.5, 2.5, 4) / 9, #only the first two matter
 		debug_log = FALSE,
 		run_in_sample = TRUE,
 		s_sq_y = "mse", # "mse" or "var"
@@ -53,6 +53,10 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	#now take care of classification or regression
 	y_levels = levels(y)
 	if (class(y) == "numeric" || class(y) == "integer"){ #if y is numeric, then it's a regression problem
+		#java expects doubles, not ints, so we need to cast this now to avoid errors later
+		if (class(y) == "integer"){
+			y = as.numeric(y)
+		}		
 		java_bart_machine = .jnew("CGM_BART.CGMBARTRegressionMultThread")
 		y_remaining = y
 		pred_type = "regression"
@@ -70,11 +74,6 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	
 	num_gibbs = num_burn_in + num_iterations_after_burn_in
 	
-	#R loves to convert 1-column matrices into vectors, so just convert it on back
-	if (class(X) == "numeric"){
-		X = as.data.frame(as.matrix(X))
-	}
-	
 	if (ncol(X) == 0){
 		stop("Your data matrix must have at least one attribute.")
 	}
@@ -88,6 +87,10 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	#if no column names, make up names
 	if (is.null(colnames(X))){
 		colnames(X) = paste("V", seq(from = 1, to = ncol(X), by = 1), sep = "")
+	}
+	
+	if (any(mh_prob_steps < 0)){
+		stop("The grow, prune, change ratio parameter vector must all be greater than 0.")
 	}
 	
 	#check for errors in data
@@ -175,9 +178,8 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		} else if (s_sq_y == "var"){
 			sig_sq_est = as.numeric(var(y_trans))
 			.jcall(java_bart_machine, "V", "setSampleVarY", sig_sq_est)
-		} else {
-			stop("s_sq_y must be \"rmse\" or \"sd\"", call. = FALSE)
-			return(TRUE)
+		} else { #if it's not a valid flag, throw an error
+			stop("s_sq_y must be \"mse\" or \"var\"", call. = FALSE)
 		}
 		sig_sq_est = sig_sq_est * y_range^2		
 	}

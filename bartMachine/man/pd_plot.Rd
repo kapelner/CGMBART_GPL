@@ -45,7 +45,7 @@ Invisibly, returns a list with the following components:
 Adam Kapelner and Justin Bleich
 }
 \note{
-
+This function is parallelized by the number of cores set in \code{\link{set_bart_machine_num_cores}}.
 }
 
 \seealso{

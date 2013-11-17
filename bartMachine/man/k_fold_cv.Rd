@@ -48,7 +48,7 @@ For classification models, a list with the following components is returned:
 Adam Kapelner and Justin Bleich
 }
 \note{
-%%  ~~further notes~~
+This function is parallelized by the number of cores set in \code{\link{set_bart_machine_num_cores}}.
 }
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~

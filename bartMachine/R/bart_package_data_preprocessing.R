@@ -1,6 +1,6 @@
 check_for_errors_in_training_data = function(data){
 	if (class(data) != "data.frame"){
-		stop(paste("training data must be a data frame. It is currently a", class(data)), call. = FALSE)
+		stop(paste("The training data X must be a data frame."), call. = FALSE)
 		return(TRUE)		
 	}
 	FALSE

@@ -1,9 +1,15 @@
 
 
 library(bartMachine)
-print(.jclassPath())
-cl = .jclassLoader()
-cl$verbose = T
+#print(.jclassPath())
+#cl = .jclassLoader()
+#cl$verbose = T
+
+x = matrix(1 : 1000, ncol = 10)
+y = 2 : 101
+
+bart_machine = build_bart_machine(as.data.frame(x), y)
+plot_y_vs_yhat(bart_machine)
 
 #get some data
 library(MASS)

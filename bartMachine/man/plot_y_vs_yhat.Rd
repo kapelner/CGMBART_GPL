@@ -8,18 +8,18 @@ Plot the fitted Versus Actual Response
 Generates a plot actual versus fitted values and corresponding credible intervals or prediction intervals for the fitted values.
 }
 \usage{
-plot_y_vs_yhat(bart_machine, X = NULL, y = NULL, credible_intervals = FALSE, prediction_intervals = FALSE, interval_confidence_level = 0.95)
+plot_y_vs_yhat(bart_machine, Xtest = NULL, ytest = NULL, credible_intervals = FALSE, prediction_intervals = FALSE, interval_confidence_level = 0.95)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{bart_machine}{
   An object of class ``bartMachine''. 
 }
-  \item{X}{
-Optional argument for test data. If included, BART computes fitted values at the rows of \code{X}. Else, the fitted values from the training data are used.
+  \item{Xtest}{
+Optional argument for test data. If included, BART computes fitted values at the rows of \code{Xtest}. Else, the fitted values from the training data are used.
 }
-  \item{y}{
-Optional argument for test data. Vector of observed values corresponding to the rows of \code{X}.
+  \item{ytest}{
+Optional argument for test data. Vector of observed values corresponding to the rows of \code{Xtest}.
 }
   \item{credible_intervals}{
 If TRUE, Bayesian credible intervals are computed using the quantiles of the posterior distribution of \eqn{\hat{f}(x)}.
@@ -44,7 +44,7 @@ None.
 Adam Kapelner and Justin Bleich
 }
 \note{
-%%  ~~further notes~~
+This function is parallelized by the number of cores set in \code{\link{set_bart_machine_num_cores}}.
 }
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~

@@ -45,7 +45,7 @@ cov_importance_test(bart_machine, covariates = NULL, num_permutations = 100, num
 Adam Kapelner and Justin Bleich
 }
 \note{
-%%  ~~further notes~~
+This function is parallelized by the number of cores set in \code{\link{set_bart_machine_num_cores}}.
 }
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
