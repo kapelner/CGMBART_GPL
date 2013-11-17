@@ -2,7 +2,7 @@ BART_MAX_MEM_MB_DEFAULT = 3000
 BART_NUM_CORES_DEFAULT = 1
 
 build_bart_machine = function(X = NULL, y = NULL, Xy = NULL, 
-		num_trees = 50, #found many times to not get better after this value... so let it be the default 
+		num_trees = 50, #found many times to not get better after this value... so let it be the default, it's faster too 
 		num_burn_in = 250, 
 		num_iterations_after_burn_in = 1000, 
 		alpha = 0.95,
@@ -15,7 +15,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		debug_log = FALSE,
 		run_in_sample = TRUE,
 		s_sq_y = "mse", # "mse" or "var"
-#		print_tree_illustrations = FALSE,
+#		print_tree_illustrations = FALSE, #this feature is deprecated, but we're leaving it in the code commented out for the intrepid user
 		cov_prior_vec = NULL,
 		use_missing_data = FALSE,
 		covariates_to_permute = NULL, #PRIVATE
