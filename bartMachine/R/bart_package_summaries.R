@@ -1,5 +1,5 @@
 
-summary.bartMachine = function(bart_machine, show_details_for_trees = FALSE){
+summary.bartMachine = function(bart_machine){
 	if (is_bart_destroyed(bart_machine)){
 		stop("This BART machine has been destroyed. Please recreate.")
 	}	
@@ -46,19 +46,6 @@ summary.bartMachine = function(bart_machine, show_details_for_trees = FALSE){
 		} else {
 			cat("\nno in-sample information available (use option run_in_sample = TRUE next time)\n")
 		}		
-	}
-	
-	
-	if (show_details_for_trees){
-		cat("\nproportion M-H steps accepted:\n")	
-		cat(paste("  before burn-in:", round(0, 2), "after burn-in:", round(0, 2), "overall:", round(0, 2), "\n"))
-		
-		cat(paste("\nquantiles of tree depths after burn in:\n"))
-		tree_depths = rnorm(1000)
-		print(round(summary(tree_depths), 2))
-		cat(paste("quantiles of number of splits after burn in:\n"))
-		tree_splits = rnorm(1000)
-		print(round(summary(tree_splits), 2))		
 	}
 	cat("\n")
 }

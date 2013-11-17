@@ -28,7 +28,7 @@ X$price = NULL
 #hist(y, br = 30)
 #hist(y, br = 30)
 
-set_bart_machine_num_cores(1)
+set_bart_machine_num_cores(4)
 init_java_for_bart_machine_with_mem_in_mb(2500)
 
 bart_machine = build_bart_machine(X, y)

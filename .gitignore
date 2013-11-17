@@ -76,6 +76,7 @@ bin/*
 randsamps/chisq*
 RWeka/
 
+bartMachine.pdf
 bartMachine.Rcheck
 bartMachine.Rcheck/*
 old_mar/*

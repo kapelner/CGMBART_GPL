@@ -49,7 +49,7 @@ Ed Reference?
 JSS Paper?
 }
 \author{
-%%  ~~who you are~~
+Adam Kapelner and Justin Bleich
 }
 \note{
 In the plot, the red bars correspond to the standard error of the variable inclusion proportion estimates (since multiple replicates were used).

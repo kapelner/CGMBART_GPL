@@ -2,11 +2,7 @@
 \alias{set_bart_machine_num_cores}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-<<<<<<< HEAD
-none
-=======
 Set the Number of Cores for BART
->>>>>>> f7cead5a9f020fc2d95b93677abde13b6bd1944d
 }
 \description{
 Sets the number of cores to be used for all parallelized BART functions.

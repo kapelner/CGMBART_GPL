@@ -403,24 +403,24 @@ plot_convergence_diagnostics = function(bart_machine, plots = c("sigsqs", "mh_ac
   
   if(length(plots) > 2){
     par(mfrow = c(2, 2))	  
-	}else if(length(plots) == 2){
+	} else if (length(plots) == 2){
 	  par(mfrow = c(1, 2))
-	}else{
+	} else {
 	  par(mfrow = c(1, 1))
 	}    
 
-  if("sigsqs" %in% plots){
+  if ("sigsqs" %in% plots){
     if (bart_machine$pred_type == "regression"){
       plot_sigsqs_convergence_diagnostics(bart_machine)
     }
   }
-	if("mh_acceptance" %in% plots){
+	if ("mh_acceptance" %in% plots){
 	  plot_mh_acceptance_reject(bart_machine)
 	}
-	if("num_nodes" %in% plots){
+	if ("num_nodes" %in% plots){
 	  plot_tree_num_nodes(bart_machine)
 	}
-	if("tree_depths" %in% plots){
+	if ("tree_depths" %in% plots){
 	  plot_tree_depths(bart_machine)
 	}
 	
