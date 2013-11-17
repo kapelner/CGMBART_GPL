@@ -143,7 +143,7 @@ bisectK = function(tol, coverage, permute_mat, x_left, x_right, countLimit, perm
 }
 
 
-var_selection_by_permute_response_cv = function(bart_machine, k_folds = 5, num_reps_for_avg = 5, num_permute_samples = 100, num_trees_for_permute = 20, alpha = 0.05, num_trees_pred_cv = 200){
+var_selection_by_permute_response_cv = function(bart_machine, k_folds = 5, num_reps_for_avg = 5, num_permute_samples = 100, num_trees_for_permute = 20, alpha = 0.05, num_trees_pred_cv = 50){
   	if (is_bart_destroyed(bart_machine)){
     	stop("This BART machine has been destroyed. Please recreate.")
   	}
@@ -160,7 +160,7 @@ var_selection_by_permute_response_cv = function(bart_machine, k_folds = 5, num_r
 	split_points = seq(from = 1, to = bart_machine$n, by = holdout_size)[1 : k_folds]
 	
 	L2_err_mat = matrix(NA, nrow = k_folds, ncol = 3)
-	colnames(L2_err_mat) = c("important_vars_local_names", "important_vars_global_max_names", "important_vars_global _se_names")
+	colnames(L2_err_mat) = c("important_vars_local_names", "important_vars_global_max_names", "important_vars_global_se_names")
 	
 	for (k in 1 : k_folds){
 		cat("cv #", k, "\n", sep = "")
@@ -169,7 +169,7 @@ var_selection_by_permute_response_cv = function(bart_machine, k_folds = 5, num_r
 		holdout_index_f = ifelse(k == k_folds, bart_machine$n, split_points[k + 1] - 1)
 		
 		#pull out training data
-		training_X_k = bart_machine$model_matrix_training_data[-c(holdout_index_i : holdout_index_f), ]
+		training_X_k = bart_machine$model_matrix_training_data[-c(holdout_index_i : holdout_index_f), -ncol(bart_machine$model_matrix_training_data)] ##toss last col bc its response
 		training_y_k = y[-c(holdout_index_i : holdout_index_f)]		
 		
 		#make a temporary bart machine just so we can run the var selection for all three methods
@@ -185,16 +185,18 @@ var_selection_by_permute_response_cv = function(bart_machine, k_folds = 5, num_r
 				impute_missingness_with_rf_impute = bart_machine$impute_missingness_with_rf_impute,
 				impute_missingness_with_x_j_bar_for_lm = bart_machine$impute_missingness_with_x_j_bar_for_lm,	
 				verbose = FALSE)
+    
 		bart_variables_select_obj_k = var_selection_by_permute_response_three_methods(bart_machine_temp, 
 				num_permute_samples = num_permute_samples, 
-				num_trees_for_permute = num_trees_for_permute, 
+				num_trees_for_permute = num_trees_for_permute,
+        num_reps_for_avg = num_reps_for_avg,                                                                          
 				alpha = alpha, 
 				plot = FALSE)		
 		destroy_bart_machine(bart_machine_temp)
 		
 		#pull out test data
-		test_X_k = bart_machine$model_matrix_training_data[holdout_index_i : holdout_index_f, ]
-		text_y_k = y[holdout_index_i : holdout_index_f]
+		test_X_k = bart_machine$model_matrix_training_data[holdout_index_i : holdout_index_f, -ncol(bart_machine$model_matrix_training_data)]
+		test_y_k = y[holdout_index_i : holdout_index_f]
 		
 		cat("method")
 		for (method in colnames(L2_err_mat)){
@@ -205,9 +207,9 @@ var_selection_by_permute_response_cv = function(bart_machine, k_folds = 5, num_r
 				#we just predict ybar
 				ybar_est = mean(training_y_k)
 				#and we take L2 error against ybar
-				L2_err_mat[k, method] = sum((text_y_k - ybar_est)^2)
+				L2_err_mat[k, method] = sum((test_y_k - ybar_est)^2)
 			} else {
-				training_X_k_red_by_vars_picked_by_method = as.data.frame(training_X_k[, vars_selected_by_method])
+				training_X_k_red_by_vars_picked_by_method = data.frame(training_X_k[, vars_selected_by_method])
 				#now build the bart machine based on reduced model
 				bart_machine_temp = build_bart_machine(training_X_k_red_by_vars_picked_by_method, training_y_k,
 						num_burn_in = bart_machine$num_burn_in,
@@ -216,8 +218,8 @@ var_selection_by_permute_response_cv = function(bart_machine, k_folds = 5, num_r
 						run_in_sample = FALSE,
 						verbose = FALSE)
 				#and calculate oos-L2 and cleanup
-				test_X_k_red_by_vars_picked_by_method = as.data.frame(test_X_k[, bart_variables_select_obj_k[[method]]])
-				predict_obj = bart_predict_for_test_data(bart_machine_temp, test_X_k_red_by_vars_picked_by_method, text_y_k)
+				test_X_k_red_by_vars_picked_by_method = data.frame(test_X_k[, vars_selected_by_method])
+				predict_obj = bart_predict_for_test_data(bart_machine_temp, test_X_k_red_by_vars_picked_by_method, test_y_k)
 				destroy_bart_machine(bart_machine_temp)
 				#now record it
 				L2_err_mat[k, method] = predict_obj$L2_err
@@ -236,6 +238,7 @@ var_selection_by_permute_response_cv = function(bart_machine, k_folds = 5, num_r
 	bart_variables_select_obj = var_selection_by_permute_response_three_methods(bart_machine, 
 			num_permute_samples = num_permute_samples, 
 			num_trees_for_permute = num_trees_for_permute, 
+	    num_reps_for_avg = num_reps_for_avg,                                                                        
 			alpha = alpha, 
 			plot = FALSE)
 	

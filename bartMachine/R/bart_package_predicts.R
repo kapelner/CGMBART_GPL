@@ -1,15 +1,21 @@
-predict.bartMachine = function(bart_machine, new_data, prob_rule_class = NULL){
-  if (bart_machine$bart_destroyed){
+predict.bartMachine = function(bart_machine, new_data, type = "prob", prob_rule_class = NULL){
+  if (is_bart_destroyed(bart_machine)){
     stop("This BART machine has been destroyed. Please recreate.")
+  }
+  if(!(type %in% c("prob", "class"))){
+    stop("For classification, type must be either \"prob\" or \"class\". ")
   }
   
 	if (bart_machine$pred_type == "regression"){	
 		bart_machine_get_posterior(bart_machine, new_data)$y_hat
-	} else {
-		#classification
-		labels = bart_machine_get_posterior(bart_machine, new_data)$y_hat > ifelse(is.null(prob_rule_class), bart_machine$prob_rule_class, prob_rule_class)
-		#return whatever the raw y_levels were
-		labels_to_y_levels(bart_machine, labels)
+	} else { ##classification
+    if(type == "prob"){
+      bart_machine_get_posterior(bart_machine, new_data)$y_hat
+    }else{
+      labels = bart_machine_get_posterior(bart_machine, new_data)$y_hat > ifelse(is.null(prob_rule_class), bart_machine$prob_rule_class, prob_rule_class)
+      #return whatever the raw y_levels were
+      labels_to_y_levels(bart_machine, labels)      
+    }
 	}	
 }
 

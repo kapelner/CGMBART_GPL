@@ -56,6 +56,7 @@ Adam Kapelner and Justin Bleich
 Add predict
 }
 \examples{
+#generate Friedman data
 set.seed(11)
 n  = 400 
 p = 5

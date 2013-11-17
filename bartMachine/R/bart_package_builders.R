@@ -347,8 +347,8 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 
 
 bart_machine_duplicate = function(bart_machine, X = NULL, y = NULL, cov_prior_vec = NULL, num_trees = NULL, run_in_sample = NULL, ...){
-	if (bart_machine$bart_destroyed){
-		stop("This BART machine has been destroyed. Please recreate.")
+  if (is_bart_destroyed(bart_machine)){
+    stop("This BART machine has been destroyed. Please recreate.")
 	}	
 	if (is.null(X)){
 		X = bart_machine$X
