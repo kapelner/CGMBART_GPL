@@ -185,13 +185,14 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	}
 	
 	#if the user hasn't set a number of cores, set it here
-	if (!exists(get("BART_NUM_CORES", pkg_globals))){
-		assign("BART_NUM_CORES", BART_NUM_CORES_DEFAULT, pkg_globals)
+	if (!exists("BART_NUM_CORES", envir = bartMachine_globals)){
+		assign("BART_NUM_CORES", BART_NUM_CORES_DEFAULT, bartMachine_globals)
 	}
-	BART_NUM_CORES = get("BART_NUM_CORES", pkg_globals)
+	#load the number of cores the user set
+	num_cores = get("BART_NUM_CORES", bartMachine_globals)
 	
 	#build bart to spec with what the user wants
-	.jcall(java_bart_machine, "V", "setNumCores", as.integer(BART_NUM_CORES)) #this must be set FIRST!!!
+	.jcall(java_bart_machine, "V", "setNumCores", as.integer(num_cores)) #this must be set FIRST!!!
 	.jcall(java_bart_machine, "V", "setNumTrees", as.integer(num_trees))
 	.jcall(java_bart_machine, "V", "setNumGibbsBurnIn", as.integer(num_burn_in))
 	.jcall(java_bart_machine, "V", "setNumGibbsTotalIterations", as.integer(num_gibbs))
@@ -266,7 +267,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 			model_matrix_training_data = model_matrix_training_data,
 			n = nrow(model_matrix_training_data),
 			p = p,
-			num_cores = BART_NUM_CORES,
+			num_cores = num_cores,
 			num_trees = num_trees,
 			num_burn_in = num_burn_in,
 			num_iterations_after_burn_in = num_iterations_after_burn_in, 
@@ -299,7 +300,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		}
 		if (pred_type == "regression"){
 			y_hat_posterior_samples = 
-					t(sapply(.jcall(bart_machine$java_bart_machine, "[[D", "getGibbsSamplesForPrediction", .jarray(model_matrix_training_data, dispatch = TRUE), as.integer(BART_NUM_CORES)), .jevalArray))
+					t(sapply(.jcall(bart_machine$java_bart_machine, "[[D", "getGibbsSamplesForPrediction", .jarray(model_matrix_training_data, dispatch = TRUE), as.integer(num_cores)), .jevalArray))
 			
 			#to get y_hat.. just take straight mean of posterior samples
 			y_hat_train = rowMeans(y_hat_posterior_samples)
@@ -312,7 +313,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 			bart_machine$rmse_train = sqrt(bart_machine$L2_err_train / bart_machine$n)
 		} else if (pred_type == "classification"){
 			p_hat_posterior_samples = 
-					t(sapply(.jcall(bart_machine$java_bart_machine, "[[D", "getGibbsSamplesForPrediction", .jarray(model_matrix_training_data, dispatch = TRUE), as.integer(BART_NUM_CORES)), .jevalArray))
+					t(sapply(.jcall(bart_machine$java_bart_machine, "[[D", "getGibbsSamplesForPrediction", .jarray(model_matrix_training_data, dispatch = TRUE), as.integer(num_cores)), .jevalArray))
 			
 			#to get y_hat.. just take straight mean of posterior samples
 			p_hat_train = rowMeans(p_hat_posterior_samples)

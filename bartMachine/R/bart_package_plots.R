@@ -442,10 +442,10 @@ interaction_investigator = function(bart_machine, plot = TRUE, num_replicates_fo
 	
 	for (r in 1 : num_replicates_for_avg){
 		if (r == 1 & num_trees_bottleneck == bart_machine$num_trees){
-			interaction_counts[, , r] = sapply(.jcall(bart_machine$java_bart_machine, "[[I", "getInteractionCounts", as.integer(BART_NUM_CORES)), .jevalArray)
+			interaction_counts[, , r] = sapply(.jcall(bart_machine$java_bart_machine, "[[I", "getInteractionCounts", as.integer(bart_machine_num_cores())), .jevalArray)
 		} else {
 			bart_machine_dup = bart_machine_duplicate(bart_machine, num_trees = num_trees_bottleneck)			
-			interaction_counts[, , r] = sapply(.jcall(bart_machine_dup$java_bart_machine, "[[I", "getInteractionCounts", as.integer(BART_NUM_CORES)), .jevalArray)
+			interaction_counts[, , r] = sapply(.jcall(bart_machine_dup$java_bart_machine, "[[I", "getInteractionCounts", as.integer(bart_machine_num_cores())), .jevalArray)
 			destroy_bart_machine(bart_machine_dup)
 			cat(".")
 			if (r %% 40 == 0){

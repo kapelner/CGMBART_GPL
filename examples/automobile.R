@@ -8,6 +8,7 @@ library(bartMachine)
 #prompt(bart_machine_num_cores)
 
 Xy = read.csv("datasets/r_automobile.csv")
+Xy = rbind(Xy)
 Xy = Xy[!is.na(Xy$price), ] #kill rows without a response
 Xy = na.omit(Xy) #kill any rows with missing data (we illustrate missing data features further in this file)
 y = log(as.numeric(Xy$price))
@@ -34,7 +35,7 @@ init_java_for_bart_machine_with_mem_in_mb(2500)
 bart_machine = build_bart_machine(X, y)
 bart_machine
 
-plot_y_vs_yhat(bart_machine)
+plot_y_vs_yhat(bart_machine ,pred = T)
 
 
 oos_stats = k_fold_cv(X, y, k_folds = 10)

@@ -2,7 +2,7 @@
 \alias{predict}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-%%  ~~function to do ... ~~
+Use a BART object to make a prediction on data.
 }
 \description{
 %%  ~~ A concise (1-5 lines) description of what the function does. ~~
