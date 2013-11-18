@@ -33,7 +33,9 @@ Number of variables to be shown on the plot. If ``Inf,'' all variables are plott
 the number of predictors is large). Default is 50.
 }
   \item{cut_bottom}{
-A display parameter between 0 and 1 that controls where the y-axis begins as a percentage of the minimum of the average pairwise interaction inclusion count.
+A display parameter between 0 and 1 that controls where the y-axis is plotted. A value of 0 would begin the y-axis at 0; a value of 1 begins 
+the y-axis at the minimum of the average pairwise interaction inclusion count (the smallest bar in the bar plot). Values between 0 and 1 begin the 
+y-axis as a percentage of that minimum. 
 }
   \item{bottom_margin}{
 A display parameter that adjusts the bottom margin of the graph if labels are clipped. The scale of this parameter is the same as set with \code{par(mar = c(....))} in R.

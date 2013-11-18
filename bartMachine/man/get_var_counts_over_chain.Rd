@@ -23,7 +23,8 @@ If ``splits'', then the number of times each variable is chosen for a splitting 
 %%  ~~ If necessary, more details than the description above ~~
 }
 \value{
-Returns a matrix of dimension \code{num_interations_after_burn_in} by \code{p} (dimensionality of dummified design matrix) ??ADAM-RIGHT where each entry in the matrix denotes how many times in a particular Gibbs Sample a particular variable was used.
+Returns a matrix of counts of each predictor across all trees by Gibbs sample. Thus, the dimension is \code{num_interations_after_burn_in} 
+by \code{p} (where \code{p} is the number of predictors after dummifying factors and adding missingness dummies if specified by \code{use_missing_data_dummies_as_covars}).
 }
 \references{
 %% ~put references to the literature/web site here ~

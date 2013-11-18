@@ -60,12 +60,9 @@ bart_machine_get_posterior = function(bart_machine, new_data){
 	if (is_bart_destroyed(bart_machine)){
 		stop("This BART machine has been destroyed. Please recreate.")
 	}	
-	if (class(new_data) != "matrix" && class(new_data) != "data.frame"){		
-		stop("X needs to be a matrix or data frame with the same column names as the training data.")
+	if (class(new_data) != "data.frame"){		
+		stop("\"new_data\" needs to be a data frame with the same column names as the training data.")
 	}
-#	if (sum(is.na(X)) == length(X)){
-#		stop("Cannot predict on all missing data.\n")
-#	}
 	if (!bart_machine$use_missing_data){
 		nrow_before = nrow(new_data)
 		new_data = na.omit(new_data)

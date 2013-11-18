@@ -118,7 +118,7 @@ Returns an object of class ``bartMachine''. Note that this object persists in th
 %%  If it is a LIST, use
   \item{java_bart_machine}{A pointer to the BART Java object.}
   \item{train_data_features}{The names of the variables used in the training data.}
-  \item{training_data_features_with_missing_features.}{??ADAM}
+  \item{training_data_features_with_missing_features.}{The names of the variables used in the training data. If \code{use_missing_data_dummies_as_covars = TRUE}, this also includes dummies for any predictors that contain at least one missing entry (named ``M_<feature>'').}
   \item{y}{The values of the response for the training data.}
   \item{y_levels}{The levels of the response (for classification only).}
   \item{pred_type}{Whether the model was build for regression of classification.}
