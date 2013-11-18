@@ -85,6 +85,8 @@ bart_machine = build_bart_machine(X, y)
 cov_importance_test(bart_machine, covariates = c(1))
 ## note the plot and the printed p-value
 
+destroy_bart_machine(bart_machine)
+
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

@@ -32,7 +32,6 @@ public class CGMBARTRegression extends CGMBART_F1_prior_cov_spec {
 	 */
 	public CGMBARTRegression() {		
 		super();
-//		System.out.println("CGMBARTRegression init\n");
 	}
 
 }

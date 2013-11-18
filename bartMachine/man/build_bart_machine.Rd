@@ -24,6 +24,7 @@ use_missing_data_dummies_as_covars = FALSE,
 replace_missing_data_with_x_j_bar = FALSE,
 impute_missingness_with_rf_impute = FALSE,
 impute_missingness_with_x_j_bar_for_lm = TRUE, 
+mem_cache_for_speed = TRUE,
 verbose = TRUE)
 }
 %- maybe also 'usage' for other objects documented here.
@@ -100,6 +101,10 @@ If TRUE, missing entries are filled in using the rf.impute() function from the \
 }
   \item{impute_missingness_with_x_j_bar_for_lm}{
 If TRUE, when computing the data-based estimate of \eqn{\sigma^2}, missing entries are imputed with average value or modal category.
+}
+  \item{mem_cache_for_speed}{
+We use a speed enhancement that caches the predictors and the split values that are available at each node for selecting new rules. If the number
+of predictors is large, the memory requirements become large. We recommend keeping this on (default) and turning it off if you experience out-of-memory errors.  
 }
   \item{verbose}{
 Prints information about progress of the algorithm to the screen. 

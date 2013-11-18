@@ -51,8 +51,7 @@ public class CGMBARTRegressionMultThread extends Classifier {
 	protected Double prob_prune;
 	protected Double prob_change;
 	protected boolean verbose = true;
-
-	protected transient boolean use_heteroskedasticity;
+	protected boolean mem_cache_for_speed = true;
 
 	protected boolean destroyed;
 
@@ -102,7 +101,7 @@ public class CGMBARTRegressionMultThread extends Classifier {
 		//set thread num and data
 		bart.setThreadNum(t);
 		bart.setTotalNumThreads(num_cores);
-		bart.setMemCacheForSpeed(true);
+		bart.setMemCacheForSpeed(mem_cache_for_speed);
 		
 		//set features
 		if (cov_split_prior != null){
@@ -136,7 +135,7 @@ public class CGMBARTRegressionMultThread extends Classifier {
 		//run a build on all threads
 		long t0 = System.currentTimeMillis();
 		if (verbose){
-			System.out.println("building BART with mem-cache speedup");
+			System.out.println("building BART " + (mem_cache_for_speed ? "with" : "without") + " mem-cache speedup");
 		}
 		BuildOnAllThreads();
 		long t1 = System.currentTimeMillis();
@@ -257,6 +256,10 @@ public class CGMBARTRegressionMultThread extends Classifier {
 	public void setNumCores(int num_cores){
 //		System.out.print("setNumCores()");
 		this.num_cores = num_cores;
+	}
+	
+	public void setMemCacheForSpeed(boolean mem_cache_for_speed){
+		this.mem_cache_for_speed = mem_cache_for_speed;
 	}
 
 	@Override
@@ -502,11 +505,6 @@ public class CGMBARTRegressionMultThread extends Classifier {
 	
 	public void setCovSplitPrior(double[] cov_split_prior){
 		this.cov_split_prior = cov_split_prior;
-	}
-	
-	public void useHeteroskedasticity(){
-		use_heteroskedasticity = true;
-		System.out.println("using heteroskedastic BART");		
 	}
 
 	public double[] getSigsqsByGibbsSample(int g){

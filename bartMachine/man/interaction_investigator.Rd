@@ -45,8 +45,10 @@ An interaction between two variables is considered to occur whenever a path from
 any of its terminal node contains splits using those two variables. See Kapelner and Bleich, 2013, Section 4.11.
 }
 \value{
-	\item{interaction_counts_avg}{}
-	\item{interaction_counts_sd}{}
+	\item{interaction_counts_avg}{For each of the \eqn{p \times p}{p times p} interactions, what is the average count across all \code{num_replicates_for_avg}
+BART model replicates' post burn-in Gibbs samples in all trees.}
+	\item{interaction_counts_sd}{For each of the \eqn{p \times p}{p times p} interactions, what is the average sd of the interaction counts across the \code{num_replicates_for_avg}
+BART models replicates.}
 }
 \references{
 Kapelner, A and Bleich, J. bartMachine: A Powerful Tool for Machine Learning in R, arXiv preprints, 2013

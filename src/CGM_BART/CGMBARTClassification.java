@@ -36,10 +36,7 @@ public final class CGMBARTClassification extends CGMBARTRegression {
 	 */
 	public CGMBARTClassification() {
 		super();		
-	}	
-	
-	//nothing to cache since we don't have sigsq ~ inv gamma in the gibbs sampler --- major speedup
-	protected void tabulateSimulationDistributions(){}	
+	}
 
 	@Override
 	protected void DoOneGibbsSample(){
