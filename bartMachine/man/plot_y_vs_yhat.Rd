@@ -27,7 +27,7 @@ Optional argument for test data. Vector of observed values corresponding to the 
 If TRUE, Bayesian credible intervals are computed using the quantiles of the posterior distribution of \eqn{\hat{f}(x)}.
 }
   \item{prediction_intervals}{
-If TRUE, Bayesian posterior intervals are computed using the a draw of from \eqn{\hat{f}(x)} and ... ADAM DESCRIBE WHAT YOU DO. 
+If TRUE, Bayesian predictive intervals are computed using the a draw of from \eqn{\hat{f}(x)}. See \link{\code{calc_prediction_intervals}} for details.
 }
   \item{interval_confidence_level}{
 Desired level of confidence for credible or prediction intervals. 
@@ -40,7 +40,7 @@ Desired level of confidence for credible or prediction intervals.
 None.
 }
 \references{
-%% ~put references to the literature/web site here ~
+
 }
 \author{
 Adam Kapelner and Justin Bleich

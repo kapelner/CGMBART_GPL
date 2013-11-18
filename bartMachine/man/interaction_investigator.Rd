@@ -21,34 +21,35 @@ An object of class ``bartMachine''.
 If TRUE, a plot of the pairwise interaction counts is generated. 
 }
   \item{num_replicates_for_avg}{
-The number of replicates of BART to be used to generate variable inclusion proportions. Averaging across multiple BART models improves stability of the estimates.
+The number of replicates of BART to be used to generate pairwise interaction inclusion counts. 
+Averaging across multiple BART models improves stability of the estimates.
 }
   \item{num_trees_bottleneck}{
-Number of trees to be used in the sum-of-trees model for computing pairwise interactions. A small number of trees should be used to force the variables to compete for entry into the model.
+Number of trees to be used in the sum-of-trees model for computing pairwise interactions counts. 
+A small number of trees should be used to force the variables to compete for entry into the model.
 }
   \item{num_var_plot}{
-Number of variables to be shown on the plot. If ``Inf'', all variables are plotted.
+Number of variables to be shown on the plot. If ``Inf,'' all variables are plotted (not recommended if
+the number of predictors is large). Default is 50.
 }
   \item{cut_bottom}{
-ADAM ??
+A display parameter between 0 and 1 that controls where the y-axis begins as a percentage of the minimum of the average pairwise interaction inclusion count.
 }
   \item{bottom_margin}{
-Parameter to adjust the bottom margin of the graph if labels are clipped. ADAM: How does it work? Which gives more space?
+A display parameter that adjusts the bottom margin of the graph if labels are clipped. The scale of this parameter is the same as set with \code{par(mar = c(....))} in R.
+Higher values allow for more space if the crossed covariate names are long. Note that making this parameter too large will prevent plotting and the plot function in R will throw an error.
 }
 }
 \details{
-An interaction between two variables is considered to occur whenever a path from the root node of a tree to any terminal node contains splits using those two variables.
+An interaction between two variables is considered to occur whenever a path from any node of a tree to 
+any of its terminal node contains splits using those two variables. See Kapelner and Bleich, 2013, Section 4.11.
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
+	\item{interaction_counts_avg}{}
+	\item{interaction_counts_sd}{}
 }
 \references{
-Ed Reference? 
-JSS Paper?
+Kapelner, A and Bleich, J. bartMachine: A Powerful Tool for Machine Learning in R, arXiv preprints, 2013
 }
 \author{
 Adam Kapelner and Justin Bleich

@@ -21,15 +21,12 @@ The list of plots to be displayed. The four options are: "sigsqs", "mh_acceptanc
 }
 }
 \details{
-The ``sigsqs'' option plots the posterior error variance estimates by the Gibbs sample number. This is a standard tool to assess convergence of MCMC algorithms. This option is not applicable to classification settings.
-
-The ''mh_acceptance'' option plots the proportion of Metropolis-Hastings steps accepted ?? WHAT DOES THIS DO AGAIN 
-
-The ``num_nodes'' option plots the average number of nodes across each tree in the sum-of-trees model by the Gibbs sample number.
-
-The ``num_nodes'' option plots the average tree depth across each tree in the sum-of-trees model by the Gibbs sample number.
-
-
+The ``sigsqs'' option plots the posterior error variance estimates by the Gibbs sample number. This is a standard tool to assess convergence of MCMC algorithms. This option is not applicable to classification BART models.
+The ``mh_acceptance'' option plots the proportion of Metropolis-Hastings steps accepted for each Gibbs sample (number accepted divided by number of trees).
+The ``num_nodes'' option plots the average number of nodes across each tree in the sum-of-trees model by the Gibbs sample number (for post burn-in only). The blue line
+is the average number of nodes over all trees.
+The ``tree_depths'' option plots the average tree depth across each tree in the sum-of-trees model by the Gibbs sample number (for post burn-in only). The blue line
+is the average number of nodes over all trees.
 }
 \value{
 None.
@@ -41,7 +38,10 @@ None.
 Adam Kapelner and Justin Bleich
 }
 \note{
-ADAM: NOTES ABOUT multicore plots?
+The ``sigsqs'' plot separates the burn in \eqn{\sigma^2}'s for the first core by post burn-in \eqn{\sigma^2}'s estimates for all cores by grey vertical lines. 
+The ``mh_acceptance'' plot separates burn in from post-burn in by a grey vertical line. Post burn-in the different core proportions plot in different colors.
+The ``num_nodes'' plot separates different core estimates by vertical lines (post burn-in only).
+The `tree_depths'' plot separates different core estimates by vertical lines (post burn-in only).
 }
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~

@@ -69,6 +69,6 @@ cov_importance_test = function(bart_machine, covariates = NULL, num_permutations
 		abline(v = observed_error_estimate, col = "blue", lwd = 3)
 	}
 	cat("p_val = ", pval, "\n")
-	invisible(list(scaled_rmse_perm_samples = permutation_samples_of_error, scaled_rmse_obs = observed_error_estimate, pval = pval))
+	invisible(list(permutation_samples_of_error = permutation_samples_of_error, observed_error_estimate = observed_error_estimate, pval = pval))
 }
 

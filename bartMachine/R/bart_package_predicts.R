@@ -1,21 +1,21 @@
 predict.bartMachine = function(bart_machine, new_data, type = "prob", prob_rule_class = NULL){
-  if (is_bart_destroyed(bart_machine)){
-    stop("This BART machine has been destroyed. Please recreate.")
-  }
-  if(!(type %in% c("prob", "class"))){
-    stop("For classification, type must be either \"prob\" or \"class\". ")
-  }
+	if (is_bart_destroyed(bart_machine)){
+		stop("This BART machine has been destroyed. Please recreate.")
+	}
+	if(!(type %in% c("prob", "class"))){
+		stop("For classification, type must be either \"prob\" or \"class\". ")
+	}
   
 	if (bart_machine$pred_type == "regression"){	
 		bart_machine_get_posterior(bart_machine, new_data)$y_hat
 	} else { ##classification
-    if(type == "prob"){
-      bart_machine_get_posterior(bart_machine, new_data)$y_hat
-    }else{
-      labels = bart_machine_get_posterior(bart_machine, new_data)$y_hat > ifelse(is.null(prob_rule_class), bart_machine$prob_rule_class, prob_rule_class)
-      #return whatever the raw y_levels were
-      labels_to_y_levels(bart_machine, labels)      
-    }
+	    if (type == "prob"){
+	    	bart_machine_get_posterior(bart_machine, new_data)$y_hat
+	    } else {
+	    	labels = bart_machine_get_posterior(bart_machine, new_data)$y_hat > ifelse(is.null(prob_rule_class), bart_machine$prob_rule_class, prob_rule_class)
+	      	#return whatever the raw y_levels were
+	      	labels_to_y_levels(bart_machine, labels)      
+	    }
 	}	
 }
 
@@ -26,7 +26,7 @@ labels_to_y_levels = function(bart_machine, labels){
 bart_predict_for_test_data = function(bart_machine, Xtest, ytest){
 	if (is_bart_destroyed(bart_machine)){
 		stop("This BART machine has been destroyed. Please recreate.")
-	}	
+	}
 	ytest_hat = predict(bart_machine, Xtest)
 	
 	if (bart_machine$pred_type == "regression"){
@@ -70,7 +70,7 @@ bart_machine_get_posterior = function(bart_machine, new_data){
 		nrow_before = nrow(new_data)
 		new_data = na.omit(new_data)
 		if (nrow_before > nrow(new_data)){
-			cat(nrow_before - nrow(new_data), "rows omitted due to missing data\n")
+			cat(nrow_before - nrow(new_data), "rows omitted due to missing data. Try using the missing data feature in \"build_bart_machine\" to be able to predict on all observations.\n")
 		}
 	}
 	
@@ -98,7 +98,7 @@ bart_machine_get_posterior = function(bart_machine, new_data){
 			}
 		}
 		if (sum(M) > 0){
-			cat("WARNING: missing data found in test data and BART was not built with missing data feature!\n")
+			warning("missing data found in test data and BART was not built with missing data feature!\n")
 		}		
 	}
 	

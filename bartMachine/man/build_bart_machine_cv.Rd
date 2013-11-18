@@ -46,7 +46,8 @@ Additional arguments to be passed to \code{build_bart_machine}.
 Returns an object of class ``bartMachine'' with the set of hyperparameters chosen via cross-validation.
 }
 \references{
-Chipman et al. (2010)
+HA Chipman, EI George, and RE McCulloch. BART: Bayesian Additive Regressive Trees.
+The Annals of Applied Statistics, 4(1): 266--298, 2010.
 }
 \author{
 Adam Kapelner and Justin Bleich

@@ -1,4 +1,4 @@
-BART_MAX_MEM_MB_DEFAULT = 3000
+BART_MAX_MEM_MB_DEFAULT = 1500
 BART_NUM_CORES_DEFAULT = 1
 
 build_bart_machine = function(X = NULL, y = NULL, Xy = NULL, 
@@ -24,7 +24,6 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		replace_missing_data_with_x_j_bar = FALSE,
 		impute_missingness_with_rf_impute = FALSE,
 		impute_missingness_with_x_j_bar_for_lm = TRUE,
-		mem_cache_for_speed = TRUE,
 		verbose = TRUE){
 	
 	t0 = Sys.time()
@@ -205,7 +204,6 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	.jcall(java_bart_machine, "V", "setProbGrow", mh_prob_steps[1])
 	.jcall(java_bart_machine, "V", "setProbPrune", mh_prob_steps[2])
 	.jcall(java_bart_machine, "V", "setVerbose", verbose)
-	.jcall(java_bart_machine, "V", "setMemCacheForSpeed", mem_cache_for_speed)
 	
 	#now we need to set random samples
 	.jcall(java_bart_machine, "V", "setNormSamples", rnorm(num_rand_samps_in_library))

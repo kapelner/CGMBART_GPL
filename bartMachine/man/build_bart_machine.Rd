@@ -7,16 +7,24 @@ Builds a BART model for regression or classification
 }
 \usage{
 build_bart_machine(X = NULL, y = NULL, Xy = NULL, 
-num_trees = 50, num_burn_in = 250, num_iterations_after_burn_in = 1000, 
+num_trees = 50, 
+num_burn_in = 250, 
+num_iterations_after_burn_in = 1000, 
 alpha = 0.95, beta = 2, k = 2, q = 0.9, nu = 3, 
-prob_rule_class = 0.5, mh_prob_steps = c(2.5, 2.5, 4)/9,
-debug_log = FALSE, run_in_sample = TRUE, s_sq_y = "mse", 
-cov_prior_vec = NULL, use_missing_data = FALSE, covariates_to_permute = NULL,
-num_rand_samps_in_library = 10000, use_missing_data_dummies_as_covars = FALSE, 
+s_sq_y = "mse",
+prob_rule_class = 0.5, 
+mh_prob_steps = c(2.5, 2.5, 4)/9,
+debug_log = FALSE, 
+run_in_sample = TRUE,  
+cov_prior_vec = NULL, 
+use_missing_data = FALSE, 
+covariates_to_permute = NULL,
+num_rand_samps_in_library = 10000, 
+use_missing_data_dummies_as_covars = FALSE, 
 replace_missing_data_with_x_j_bar = FALSE,
 impute_missingness_with_rf_impute = FALSE,
 impute_missingness_with_x_j_bar_for_lm = TRUE, 
-mem_cache_for_speed = TRUE, verbose = TRUE)
+verbose = TRUE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -84,7 +92,7 @@ Before building a BART model, samples from the Standard Normal and \eqn{\chi^2(\
 If TRUE, additional indicator variables for whether or not an observation in a particular column is missing are included. See Kapelner and Bleich (2013) for details.
 }
   \item{replace_missing_data_with_x_j_bar}{
-  If TRUE,missing entries in \code{X} are imputed with average value or modal category.
+  If TRUE ,missing entries in \code{X} are imputed with average value or modal category.
 
 }
   \item{impute_missingness_with_rf_impute}{
@@ -92,9 +100,6 @@ If TRUE, missing entries are filled in using the rf.impute() function from the \
 }
   \item{impute_missingness_with_x_j_bar_for_lm}{
 If TRUE, when computing the data-based estimate of \eqn{\sigma^2}, missing entries are imputed with average value or modal category.
-}
-  \item{mem_cache_for_speed}{
-?? ADAM
 }
   \item{verbose}{
 Prints information about progress of the algorithm to the screen. 
@@ -120,15 +125,17 @@ Returns an object of class ``bartMachine''. Note that this object persists in th
   \item{residuals}{The model residuals given by \code{y} - \code{y_hat_train}. Only returned if ``run_in_sample = T''}
   \item{L1_err_train}{L1 error on the training set. Only returned if ``run_in_sample = T''.}
   \item{L2_err_train}{L2 error on the training set. Only returned if ``run_in_sample = T''.}
-  \item{PseudoRsq}{What exactly is computation ADAM?. Only returned if ``run_in_sample = T''.}
+  \item{PseudoRsq}{Calculated as 1 - SSE / SST where SSE is the sum of square errors in the training data and SST is the sample variance of the response times \eqn{n-1}. Only returned if ``run_in_sample = T''.}
   \item{rmse_train}{Root mean square error on the training set. Only returned if ``run_in_sample = T''.}
-  %\item{bart_machine_destroyed}{Returns TRUE if \code{destroy_bart_machine} is called on this object. This removes all pointers associated with the BART object in the JVM and frees up additional RAM on the heap.}
-  
         
-Additionally, the arguments passed to the function \code{build_bart_machine} are also components of the list. 
+Additionally, the parameters passed to the function \code{build_bart_machine} are also components of the list. 
 }
 \references{
-Chipman et al. (2010)
+HA Chipman, EI George, and RE McCulloch. BART: Bayesian Additive Regressive Trees.
+The Annals of Applied Statistics, 4(1): 266--298, 2010.
+
+A Kapelner and J Bleich. Prediction with missing data via bayesian additive regression
+trees. ArXiv e-prints, 2013.
 }
 \author{
 Adam Kapelner and Justin Bleich

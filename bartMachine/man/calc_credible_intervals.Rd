@@ -8,7 +8,8 @@ Calculate Credible Intervals
 Generates credible intervals for \eqn{\hat{f}(x)} for a specified set of observations.
 }
 \usage{
-calc_credible_intervals(bart_machine, new_data, ci_conf = 0.95)
+calc_credible_intervals(bart_machine, new_data, 
+ci_conf = 0.95)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -19,11 +20,12 @@ An object of class ``bartMachine''.
 A data frame containing observations at which credible intervals for \eqn{\hat{f}(x)} are to be computed.
 }
   \item{ci_conf}{
-Confidence level for credible intervals.
+Confidence level for the credible intervals. The default is 95\%.
 }
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
+This interval is the appropriate quantiles  based on the confidence level, \code{ci_conf}, of the predictions 
+for each of the Gibbs samples post-burn in.
 }
 \value{
 Returns a matrix of the lower and upper bounds of the credible intervals for each observation in \code{new_data}.

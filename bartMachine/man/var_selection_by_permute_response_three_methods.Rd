@@ -37,8 +37,8 @@ If TRUE, a plot showing which variables are selected by each of the procedures i
 Number of variables (in order of decreasing variable inclusion proportion) to be plotted.
 }
   \item{bottom_margin}{
-Parameter to adjust the bottom margin of the graph if labels are clipped. ADAM: How does it work? Which gives more space?
-
+A display parameter that adjusts the bottom margin of the graph if labels are clipped. The scale of this parameter is the same as set with \code{par(mar = c(....))} in R.
+Higher values allow for more space if the crossed covariate names are long. Note that making this parameter too large will prevent plotting and the plot function in R will throw an error.
 }
 }
 \details{

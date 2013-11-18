@@ -8,8 +8,8 @@ Calculate Prediction Intervals
 Generates prediction intervals for \eqn{\hat{y}} for a specified set of observations.
 }
 \usage{
-calc_prediction_intervals(bart_machine, new_data, pi_conf = 0.95, 
-normal_samples_per_gibbs_sample = 100)
+calc_prediction_intervals(bart_machine, new_data, 
+pi_conf = 0.95, normal_samples_per_gibbs_sample = 100)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -20,20 +20,27 @@ An object of class ``bartMachine''.
 A data frame containing observations at which prediction intervals for \eqn{\hat{y}} are to be computed.
 }
   \item{pi_conf}{
-Confidence level for prediction intervals.
+Confidence level for the prediction intervals. The default is 95\%.
 }
   \item{normal_samples_per_gibbs_sample}{
-ADAM FILL IN
+The number of samples taken from the putative error distribution for each Gibbs sample after burn-in (see details).
+The default is 100. 
 }
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
+Credible intervals (see \link{\code{calc_credible_intervals}}) are the appropriate quantiles of the prediction 
+for each of the Gibbs samples post-burn in. Prediction intervals also make use of the noise estimate at each Gibbs
+sample and hence are wider. For each Gibbs sample, we record the \eqn{\hat{y}} estimate of the response and the 
+\eqn{\hat{\sigma^2}} estimate of the noise variance. We then sample \code{normal_samples_per_gibbs_sample} times
+from a \eqn{N(\hat{y}, \hat{\sigma^2})} random variable to simulate many possible disturbances for that Gibbs sample.
+Then, all \code{normal_samples_per_gibbs_sample} times the number of Gibbs sample post burn-in are collected and the 
+appropriate quantiles are taken based on the confidence level, \code{pi_conf}.
 }
 \value{
 Returns a matrix of the lower and upper bounds of the prediction intervals for each observation in \code{new_data}.
 }
 \references{
-%% ~put references to the literature/web site here ~
+Kapelner, A and Bleich, J. bartMachine: A Powerful Tool for Machine Learning in R, arXiv preprints, 2013
 }
 \author{
 Adam Kapelner and Justin Bleich

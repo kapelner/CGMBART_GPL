@@ -51,7 +51,6 @@ public class CGMBARTRegressionMultThread extends Classifier {
 	protected Double prob_prune;
 	protected Double prob_change;
 	protected boolean verbose = true;
-	protected boolean mem_cache_for_speed = true;
 
 	protected transient boolean use_heteroskedasticity;
 
@@ -103,7 +102,7 @@ public class CGMBARTRegressionMultThread extends Classifier {
 		//set thread num and data
 		bart.setThreadNum(t);
 		bart.setTotalNumThreads(num_cores);
-		bart.setMemCacheForSpeed(mem_cache_for_speed);
+		bart.setMemCacheForSpeed(true);
 		
 		//set features
 		if (cov_split_prior != null){
@@ -137,7 +136,7 @@ public class CGMBARTRegressionMultThread extends Classifier {
 		//run a build on all threads
 		long t0 = System.currentTimeMillis();
 		if (verbose){
-			System.out.println("building BART " + (mem_cache_for_speed ? "with" : "without") + " mem-cache speedup");
+			System.out.println("building BART with mem-cache speedup");
 		}
 		BuildOnAllThreads();
 		long t1 = System.currentTimeMillis();
@@ -253,10 +252,6 @@ public class CGMBARTRegressionMultThread extends Classifier {
 	
 	public void setVerbose(boolean verbose){
 		this.verbose = verbose;
-	}
-	
-	public void setMemCacheForSpeed(boolean mem_cache_for_speed){
-		this.mem_cache_for_speed = mem_cache_for_speed;
 	}
 	
 	public void setNumCores(int num_cores){

@@ -2,32 +2,41 @@
 \alias{predict}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-Use a BART object to make a prediction on data.
+Make a prediction on data using a BART object
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+Makes a prediction on new data given a fitted BART model. The function is sensitive
+to regression and classification models.
 }
 \usage{
-predict(object, ...)
+predict(bart_machine, new_data, type, prob_rule_class)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{object}{
-%%     ~~Describe \code{object} here~~
+  \item{bart_machine}{
+	 An object of class ``bartMachine''.
 }
-  \item{\dots}{
-%%     ~~Describe \code{\dots} here~~
+  \item{new_data}{
+	A matrix or data frame where each row is an observation to predict. The column names
+	should be the same as the column names of the training data.
 }
+  \item{type}{
+	 Only relevant if the bartMachine model is classification. The type can be ``prob'' which will
+	 return the estimate of \eqn{P(Y = 1)} or ``class'' which will return the best guess as to the
+	 class of the object, in the original label, based on if the probability estimate is greater 
+	 than \code{prob_rule_class}. Default is ``prob.''
+}
+  \item{prob_rule_class}{
+	The rule to determine when the class estimate is \eqn{Y = 1} based on the probability estimate. This
+	defaults to what was originally specified in the \code{bart_machine} object. 
 }
 \details{
 %%  ~~ If necessary, more details than the description above ~~
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
+If regression, a numeric vector of \code{y_hat}, the best guess as to the response. If classification and \code{type = ``prob''}, 
+a numeric vector of \code{p_hat}, the best guess as to the probability of the response class being 1. If classification and 
+\code{type = ``class''}, a character vector of the best guess of the response's class labels. 
 }
 \references{
 %% ~put references to the literature/web site here ~
@@ -45,13 +54,35 @@ Adam Kapelner and Justin Bleich
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+#Regression example
 
-## The function is currently defined as
-function (object, ...) 
-UseMethod("predict")
+#generate Friedman data
+set.seed(11)
+n  = 200 
+p = 5
+X = data.frame(matrix(runif(n * p), ncol = p))
+y = 10 * sin(pi* X[ ,1] * X[,2]) +20 * (X[,3] -.5)^2 + 10 * X[ ,4] + 5 * X[,5] + rnorm(n)
+
+##build BART regression model
+bart_machine = build_bart_machine(X, y)
+
+##make predictions on the training data
+y_hat = predict(bart_machine, X)
+
+#Classification example
+data(iris)
+iris2 = iris[51 : 150, ] #do not include the third type of flower for this example
+iris2$Species = factor(iris2$Species)  
+bart_machine = build_bart_machine(iris2[ ,1:4], iris2$Species)
+
+##make probability predictions on the training data
+p_hat = predict(bart_machine, X)
+
+##make class predictions on test data
+y_hat_class = predict(bart_machine, X, type = "class")
+
+##make class predictions on test data conservatively for versicolor
+y_hat_class_conservative = predict(bart_machine, X, type = "class", prob_rule_class = 0.9)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

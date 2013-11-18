@@ -33,7 +33,8 @@ Number of trees to be used in the sum-of-trees for computing the variable inclus
 Number of variables to be shown on the plot. If ``Inf'', all variables are plotted.
 }
   \item{bottom_margin}{
-Parameter to adjust the bottom margin of the graph if labels are clipped. ADAM: How does it work? Which gives more space?
+A display parameter that adjusts the bottom margin of the graph if labels are clipped. The scale of this parameter is the same as set with \code{par(mar = c(....))} in R.
+Higher values allow for more space if the covariate names are long. Note that making this parameter too large will prevent plotting and the plot function in R will throw an error.
 }
 }
 \details{
@@ -46,8 +47,11 @@ Invisibly, returns a list with the following components:
 
 }
 \references{
-Bleich et al. (2013)
-Chipman et al. (2010)
+J Bleich, A Kapelner, ST Jensen, and EI George. Variable selection inference for bayesian
+additive regression trees. ArXiv e-prints, 2013.
+
+HA Chipman, EI George, and RE McCulloch. BART: Bayesian Additive Regressive Trees.
+The Annals of Applied Statistics, 4(1): 266--298, 2010.
 }
 \author{
 Adam Kapelner and Justin Bleich

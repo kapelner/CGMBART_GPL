@@ -17,7 +17,8 @@ Java Virtual Machine heap size in MB
 }
 }
 \details{
-This function can only be called once per \code{R} session and must be called before \code{\link{build_bart_machine}}, else the default heap size will be used (ADAM: what is default?).
+This function can only be called once per \code{R} session and must be called before \code{\link{build_bart_machine}}, else the 
+default heap size of 1.5GB will be used.
 }
 \value{
 None.

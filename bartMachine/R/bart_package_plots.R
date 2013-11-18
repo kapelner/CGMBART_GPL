@@ -456,16 +456,15 @@ interaction_investigator = function(bart_machine, plot = TRUE, num_replicates_fo
 	cat("\n")
 	
 	interaction_counts_avg = apply(interaction_counts, 1 : 2, mean)
-  if(bart_machine$use_missing_data == T){
-    rownames(interaction_counts_avg) = bart_machine$training_data_features_with_missing_features
-    colnames(interaction_counts_avg) = bart_machine$training_data_features_with_missing_features
-  }
-  else{
-	  rownames(interaction_counts_avg) = bart_machine$training_data_features
-	  colnames(interaction_counts_avg) = bart_machine$training_data_features	
-  }
-  interaction_counts_sd = apply(interaction_counts, 1 : 2, sd)
-	interaction_counts_s_w_test = apply(interaction_counts, 1 : 2, shapiro_wilk_p_val)
+	
+	if (bart_machine$use_missing_data == T){
+		rownames(interaction_counts_avg) = bart_machine$training_data_features_with_missing_features
+	    colnames(interaction_counts_avg) = bart_machine$training_data_features_with_missing_features
+	} else {
+	    rownames(interaction_counts_avg) = bart_machine$training_data_features
+	    colnames(interaction_counts_avg) = bart_machine$training_data_features	
+	}
+	interaction_counts_sd = apply(interaction_counts, 1 : 2, sd)
 	
 	#now vectorize the interaction counts
 	avg_counts = array(NA, bart_machine$p * (bart_machine$p - 1) / 2)
@@ -521,11 +520,7 @@ interaction_investigator = function(bart_machine, plot = TRUE, num_replicates_fo
 		par(mar = c(5.1, 4.1, 4.1, 2.1))		
 	}
 	
-	invisible(list(
-		interaction_counts_avg = interaction_counts_avg, 
-		interaction_counts_sd = interaction_counts_sd, 
-		interaction_counts_s_w_test = interaction_counts_s_w_test
-	))
+	invisible(list(interaction_counts_avg = interaction_counts_avg, interaction_counts_sd = interaction_counts_sd))
 }
 
 
@@ -557,9 +552,9 @@ pd_plot = function(bart_machine, j, levs = c(0.05, seq(from = 0.10, to = 0.90, b
 	}
 	cat("\n")
 	
-  if(bart_machine$pred_type == "classification"){ ##convert to probits
-    bart_predictions_by_quantile = qnorm(bart_predictions_by_quantile)
-  }
+  	if (bart_machine$pred_type == "classification"){ ##convert to probits
+    	bart_predictions_by_quantile = qnorm(bart_predictions_by_quantile)
+  	}
   
 	bart_avg_predictions_by_quantile_by_gibbs = array(NA, c(length(levs), bart_machine$num_iterations_after_burn_in))
 	for (q in 1 : length(levs)){
