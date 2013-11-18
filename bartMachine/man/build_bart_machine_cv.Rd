@@ -15,19 +15,19 @@ nu_q_cvs = list(c(3, 0.9), c(3, 0.99), c(10, 0.75)), k_folds = 5, ...)
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{X}{
-Dataframe or matrix of predictors. Factors are automatically converted to dummies interally. 
+Data frame of predictors. Factors are automatically converted to dummies interally. 
 }
   \item{y}{
 Vector of response variable. If \code{y} is \code{numeric} or \code{integer}, a BART model for regression is built. If \code{y} is a factor with two levels, a BART model for classification is built.
 }
   \item{Xy}{
-A dataframe or matrix of predictors and the response. The response column must be named ``y''. 
+A data frame of predictors and the response. The response column must be named ``y''. 
 }
   \item{num_tree_cvs}{
-List of sizes for the sum-of-trees models to cross-validate over.
+Vector of sizes for the sum-of-trees models to cross-validate over.
 }
   \item{k_cvs}{
-List of choices for the hyperparameter \code{k} to cross-validate over.
+Vector of choices for the hyperparameter \code{k} to cross-validate over.
 }
   \item{nu_q_cvs}{
 List of vectors containing (\code{nu}, \code{q}) ordered pair choices to cross-validate over.

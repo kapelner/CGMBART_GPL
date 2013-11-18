@@ -5,7 +5,7 @@
 Estimate Out-of-sample Error with K-fold Cross validation
 }
 \description{
-Builds a BART model using a specified set of parameters and estimates the out-of-sample performance by using k-fold cross validation.
+Builds a BART model using a specified set of arguments to \code{build_bart_machine} and estimates the out-of-sample performance by using k-fold cross validation.
 }
 \usage{
 k_fold_cv(X, y, k_folds = 5, ...)
@@ -13,7 +13,7 @@ k_fold_cv(X, y, k_folds = 5, ...)
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{X}{
-Dataframe or matrix of predictors. Factors are automatically converted to dummies interally. 
+Data frame of predictors. Factors are automatically converted to dummies interally. 
 }
   \item{y}{
 Vector of response variable. If \code{y} is \code{numeric} or \code{integer}, a BART model for regression is built. If \code{y} is a factor with two levels, a BART model for classification is built.

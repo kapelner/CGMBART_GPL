@@ -20,7 +20,7 @@ Additional parameters. For internal processing only.
 }
 }
 \details{
-The column names of the dummy variables are given by the ``FactorName_LevelName''. See the example below.
+The column names of the dummy variables are given by the ``FactorName_LevelName'' and are augmented to the end of the design matrix. See the example below.
 }
 \value{
 Returns a data frame with factors converted to dummy indicator variables.
@@ -44,8 +44,8 @@ BART handles dummification internally. This function is provided as a utility fu
 #generate data
 set.seed(11)
 x1 = rnorm(20)
-x2 = runif(20)
-x3 = as.factor(ifelse(x1 > 0, "A", "B"))
+x2 = as.factor(ifelse(x1 > 0, "A", "B"))
+x3 = runif(20)
 X = data.frame(x1,x2,x3)
 #dummify data
 X_dummified = dummify_data(X)

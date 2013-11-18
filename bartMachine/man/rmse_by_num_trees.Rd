@@ -17,7 +17,7 @@ in_sample = FALSE, plot = TRUE, holdout_pctg = 0.3, num_replicates = 4)
 An object of class ``bartMachine''.
 }
   \item{tree_list}{
-List of sizes for the sum-of-trees models
+List of sizes for the sum-of-trees models.
 }
   \item{in_sample}{
 If TRUE, the RMSE is computed on in-sample data rather than an out-of-sample holdout. 

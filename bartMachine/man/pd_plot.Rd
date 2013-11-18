@@ -41,7 +41,8 @@ Invisibly, returns a list with the following components:
 %% ...
 }
 \references{
-%% ~put references to the literature/web site here ~
+HA Chipman, EI George, and RE McCulloch. BART: Bayesian Additive Regressive Trees.
+The Annals of Applied Statistics, 4(1): 266--298, 2010.
 }
 \author{
 Adam Kapelner and Justin Bleich

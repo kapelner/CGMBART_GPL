@@ -51,7 +51,7 @@ BART model replicates' post burn-in Gibbs samples in all trees.}
 BART models replicates.}
 }
 \references{
-Kapelner, A and Bleich, J. bartMachine: A Powerful Tool for Machine Learning in R, arXiv preprints, 2013
+A Kapelner and J Bleich. bartMachine: A Powerful Tool for Machine Learning in R, arXiv preprints, 2013
 }
 \author{
 Adam Kapelner and Justin Bleich

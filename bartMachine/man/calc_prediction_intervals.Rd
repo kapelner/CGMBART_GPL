@@ -28,7 +28,7 @@ The default is 100.
 }
 }
 \details{
-Credible intervals (see \link{\code{calc_credible_intervals}}) are the appropriate quantiles of the prediction 
+Credible intervals (see \code{\link{calc_credible_intervals}}) are the appropriate quantiles of the prediction 
 for each of the Gibbs samples post-burn in. Prediction intervals also make use of the noise estimate at each Gibbs
 sample and hence are wider. For each Gibbs sample, we record the \eqn{\hat{y}} estimate of the response and the 
 \eqn{\hat{\sigma^2}} estimate of the noise variance. We then sample \code{normal_samples_per_gibbs_sample} times

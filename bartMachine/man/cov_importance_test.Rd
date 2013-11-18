@@ -5,7 +5,7 @@
 Importance Test for Covariate(s) of Interest
 }
 \description{
-This function tests \eqn{H_0}: These covariates of interest
+This function tests the null hypothesis \eqn{H_0}: These covariates of interest
 do not affect the response under the assumptions of the BART 
 model.
 }
@@ -19,10 +19,10 @@ num_permutations = 100, num_trees = NULL, plot = TRUE)
   An object of class ``bart_machine''.
 }
   \item{covariates}{
-	A vector indicating the covariates of interest you wish to test for affecting the response.
+	A vector indicating the covariates of interest to be tested for having an effect on the response.
 }
   \item{num_permutations}{
-	The number of times to permute the covariates of interest and create a new BART model (see details).
+	The number of times to permute the covariates of interest and create a corresponding new BART model (see details).
 }
   \item{num_trees}{
 	The number of trees to use during the permutations of the covariates of interest (see details). This
@@ -37,13 +37,14 @@ num_permutations = 100, num_trees = NULL, plot = TRUE)
 }
 }
 \details{
-To test the importance of a covariate or a set of covariates of interest on the response, we generate 
+To test the importance of a covariate or a set of covariates of interest on the response, this function generates 
 \code{num_permutations} BART models with the covariate(s) of interest permuted (differently each time). 
-On each run, we record a measure of fit. For regression we record Pseudo-Rsq; for classification we record
-total misclassification error. A p-value can then be generated as follows. For regression, this is the number of 
+On each run, a measure of fit is recorded. For regression, the metric is Pseudo-Rsq; for classification, it is
+total misclassification error.\cr A 
+p-value can then be generated as follows. For regression, the p-value is the number of 
 permutation-sampled Pseudo-Rsq's greater than the observed Pseudo-Rsq divided by 
-\code{num_permutations}. For classification, this is the number of permutation-sampled 
-total misclassification errors less than the observed total misclassification error divided by \code{num_permutations}.
+\code{num_permutations + 1}. For classification, the p-value is the number of permutation-sampled 
+total misclassification errors less than the observed total misclassification error divided by \code{num_permutations + 1}.
 }
 \value{
 \item{permutation_samples_of_error}{A vector which records the error metric of the BART models with the covariates permuted (see details).}
@@ -54,7 +55,7 @@ on the original training data set.}
 }
 }
 \references{
-%% ~put references to the literature/web site here ~
+A Kapelner and J Bleich. bartMachine: A Powerful Tool for Machine Learning in R, arXiv preprints, 2013
 }
 \author{
 Adam Kapelner and Justin Bleich
@@ -81,10 +82,11 @@ y = 10 * sin(pi* X[ ,1] * X[,2]) +20 * (X[,3] -.5)^2 + 10 * X[ ,4] + 5 * X[,5] +
 ##build BART regression model
 bart_machine = build_bart_machine(X, y)
 
-##now test if X[, 1] affects Y non parametrically under the BART assumptions and model
+##now test if X[, 1] affects Y nonparametrically under the BART model assumptions
 cov_importance_test(bart_machine, covariates = c(1))
 ## note the plot and the printed p-value
 
+##destroy BART model
 destroy_bart_machine(bart_machine)
 
 }

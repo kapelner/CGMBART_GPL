@@ -5,7 +5,7 @@
 Predict for Test Data with Known Outcomes
 }
 \description{
-Utility wrapper function for computing out-of-sample metrics for a BART model when the test set results are known.
+Utility wrapper function for computing out-of-sample metrics for a BART model when the test set outcomes are known.
 }
 \usage{
 bart_predict_for_test_data(bart_machine, Xtest, ytest)
@@ -16,7 +16,7 @@ bart_predict_for_test_data(bart_machine, Xtest, ytest)
 An object of class ``bartMachine''.
 }
   \item{Xtest}{
-Design matrix for test data containing rows at which predictions are to be made.
+Data frame for test data containing rows at which predictions are to be made. Colnames should match that of the training data.
 }
   \item{ytest}{
 Actual outcomes for test data.
@@ -53,7 +53,7 @@ Adam Kapelner and Justin Bleich
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-Add predict
+\code{\link{predict}}
 }
 \examples{
 #generate Friedman data

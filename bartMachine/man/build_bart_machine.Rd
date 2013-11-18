@@ -3,7 +3,7 @@
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{Build a BART Model}
 \description{
-Builds a BART model for regression or classification
+Builds a BART model for regression or classification.
 }
 \usage{
 build_bart_machine(X = NULL, y = NULL, Xy = NULL, 
@@ -60,7 +60,7 @@ For regression, \code{k} determines the prior probability that \eqn{E(Y|X)} is c
 Quantile of the prior on the error variance at which the data-based estimate is placed. Note that the larger the value of \code{q}, the more aggressive the fit as you are placing more prior weight on values lower than the data-based estimate. Not used for classification.
 }
   \item{nu}{
-Degrees of freedom for the inverse \eqn{\chi-squared} prior. Not used for classification.
+Degrees of freedom for the inverse \eqn{\chi^2} prior. Not used for classification.
 }
   \item{prob_rule_class}{
 Threshold for classification. Any observation with a conditional probability greater than \code{prob_class_rule} is assigned the ``positive'' outcome. Note that the first level of the response is treated as the ``negative'' outcome and the second is treated as the ``positive'' outcome.  
@@ -103,7 +103,7 @@ If TRUE, missing entries are filled in using the rf.impute() function from the \
 If TRUE, when computing the data-based estimate of \eqn{\sigma^2}, missing entries are imputed with average value or modal category.
 }
   \item{mem_cache_for_speed}{
-We use a speed enhancement that caches the predictors and the split values that are available at each node for selecting new rules. If the number
+Speed enhancement that caches the predictors and the split values that are available at each node for selecting new rules. If the number
 of predictors is large, the memory requirements become large. We recommend keeping this on (default) and turning it off if you experience out-of-memory errors.  
 }
   \item{verbose}{
@@ -118,7 +118,7 @@ Returns an object of class ``bartMachine''. Note that this object persists in th
 %%  If it is a LIST, use
   \item{java_bart_machine}{A pointer to the BART Java object.}
   \item{train_data_features}{The names of the variables used in the training data.}
-  \item{training_data_features_with_missing_features}{??}
+  \item{training_data_features_with_missing_features.}{??ADAM}
   \item{y}{The values of the response for the training data.}
   \item{y_levels}{The levels of the response (for classification only).}
   \item{pred_type}{Whether the model was build for regression of classification.}
@@ -126,12 +126,12 @@ Returns an object of class ``bartMachine''. Note that this object persists in th
   \item{num_cores}{The number of cores used to build the BART model.}
   \item{sig_sq_est}{The data-based estimate of \eqn{\sigma^2} used to create the prior on the error variance for the BART model.}
   \item{time_to_build}{Total time to build the BART model.}
-  \item{y_hat_train}{The posterior means of \eqn{\hat{f}(x)} for each observation. Only returned if ``run_in_sample = T''}
-  \item{residuals}{The model residuals given by \code{y} - \code{y_hat_train}. Only returned if ``run_in_sample = T''}
-  \item{L1_err_train}{L1 error on the training set. Only returned if ``run_in_sample = T''.}
-  \item{L2_err_train}{L2 error on the training set. Only returned if ``run_in_sample = T''.}
-  \item{PseudoRsq}{Calculated as 1 - SSE / SST where SSE is the sum of square errors in the training data and SST is the sample variance of the response times \eqn{n-1}. Only returned if ``run_in_sample = T''.}
-  \item{rmse_train}{Root mean square error on the training set. Only returned if ``run_in_sample = T''.}
+  \item{y_hat_train}{The posterior means of \eqn{\hat{f}(x)} for each observation. Only returned if \code{run_in_sample = TRUE}.}
+  \item{residuals}{The model residuals given by \code{y} - \code{y_hat_train}. Only returned if \code{run_in_sample = TRUE}.}
+  \item{L1_err_train}{L1 error on the training set. Only returned if \code{run_in_sample = TRUE}.}
+  \item{L2_err_train}{L2 error on the training set. Only returned if \code{run_in_sample = TRUE}.}
+  \item{PseudoRsq}{Calculated as 1 - SSE / SST where SSE is the sum of square errors in the training data and SST is the sample variance of the response times \eqn{n-1}. Only returned if \code{run_in_sample = TRUE}.}
+  \item{rmse_train}{Root mean square error on the training set. Only returned if \code{run_in_sample = TRUE}.}
         
 Additionally, the parameters passed to the function \code{build_bart_machine} are also components of the list. 
 }
@@ -139,8 +139,11 @@ Additionally, the parameters passed to the function \code{build_bart_machine} ar
 HA Chipman, EI George, and RE McCulloch. BART: Bayesian Additive Regressive Trees.
 The Annals of Applied Statistics, 4(1): 266--298, 2010.
 
-A Kapelner and J Bleich. Prediction with missing data via bayesian additive regression
-trees. ArXiv e-prints, 2013.
+A Kapelner and J Bleich. Prediction with Missing Data via Bayesian Additive Regression
+Trees. ArXiv e-prints, 2013.
+
+J Bleich, A Kapelner, ST Jensen, and EI George. Variable Selection Inference for Bayesian
+Additive Regression Trees. ArXiv e-prints, 2013.
 }
 \author{
 Adam Kapelner and Justin Bleich

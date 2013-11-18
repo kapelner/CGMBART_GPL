@@ -47,8 +47,8 @@ Invisibly, returns a list with the following components:
 
 }
 \references{
-J Bleich, A Kapelner, ST Jensen, and EI George. Variable selection inference for bayesian
-additive regression trees. ArXiv e-prints, 2013.
+J Bleich, A Kapelner, ST Jensen, and EI George. Variable Selection Inference for Bayesian
+Additive Regression Trees. ArXiv e-prints, 2013.
 
 HA Chipman, EI George, and RE McCulloch. BART: Bayesian Additive Regressive Trees.
 The Annals of Applied Statistics, 4(1): 266--298, 2010.

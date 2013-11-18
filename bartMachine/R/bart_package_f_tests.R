@@ -58,7 +58,7 @@ cov_importance_test = function(bart_machine, covariates = NULL, num_permutations
 	}
 	cat("\n")
 	
-	pval = ifelse(bart_machine$pred_type == "regression", sum(observed_error_estimate < permutation_samples_of_error), sum(observed_error_estimate > permutation_samples_of_error)) / num_permutations
+	pval = ifelse(bart_machine$pred_type == "regression", sum(observed_error_estimate < permutation_samples_of_error), sum(observed_error_estimate > permutation_samples_of_error)) / (num_permutations + 1)
 	
 	if (plot){
 		hist(permutation_samples_of_error, 

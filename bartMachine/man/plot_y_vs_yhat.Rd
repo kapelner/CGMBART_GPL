@@ -21,13 +21,13 @@ interval_confidence_level = 0.95)
 Optional argument for test data. If included, BART computes fitted values at the rows of \code{Xtest}. Else, the fitted values from the training data are used.
 }
   \item{ytest}{
-Optional argument for test data. Vector of observed values corresponding to the rows of \code{Xtest}.
+Optional argument for test data. Vector of observed values corresponding to the rows of \code{Xtest} to be plotted against the predictions for the rows of \code{Xtest}.
 }
   \item{credible_intervals}{
-If TRUE, Bayesian credible intervals are computed using the quantiles of the posterior distribution of \eqn{\hat{f}(x)}.
+If TRUE, Bayesian credible intervals are computed using the quantiles of the posterior distribution of \eqn{\hat{f}(x)}. See \code{\link{calc_credible_intervals}} for details.
 }
   \item{prediction_intervals}{
-If TRUE, Bayesian predictive intervals are computed using the a draw of from \eqn{\hat{f}(x)}. See \link{\code{calc_prediction_intervals}} for details.
+If TRUE, Bayesian predictive intervals are computed using the a draw of from \eqn{\hat{f}(x)}. See \code{\link{calc_prediction_intervals}} for details.
 }
   \item{interval_confidence_level}{
 Desired level of confidence for credible or prediction intervals. 

@@ -25,8 +25,8 @@ number of burn-in and posterior Gibbs samples were used.
 If the model is for regression, it prints the estimate of \eqn{\sigma^2} before the model was constructed as well as after so 
 the user can inspect how much variance was explained.
 
-If the model was built using the \code{run_in_sample = TRUE} parameter in \code{\link{build_bart_machine}} and is for regression, we print out summary L1,
-L2, rmse, Pseudo-\eqn{R^2} as well as the pval for the tests of normality and zero-mean noise. If the model is for classification, we print out a confusion matrix.
+If the model was built using the \code{run_in_sample = TRUE} parameter in \code{\link{build_bart_machine}} and is for regression, the summary L1,
+L2, rmse, Pseudo-\eqn{R^2} are printed as well as the p-value for the tests of normality and zero-mean noise. If the model is for classification, a confusion matrix is printed.
 }
 \value{
 None.
@@ -64,6 +64,9 @@ summary(bart_machine)
 
 ##Also, the default print works too
 bart_machine
+
+##destroy BART model
+destroy_bart_machine(bart_machine)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

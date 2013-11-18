@@ -5,7 +5,7 @@
 Get Full Posterior Distribution
 }
 \description{
-Generates draws posterior distribution of \eqn{\hat{f}(x)} for a specified set of observations.
+Generates draws from posterior distribution of \eqn{\hat{f}(x)} for a specified set of observations.
 }
 \usage{
 bart_machine_get_posterior(bart_machine, new_data)
@@ -26,7 +26,7 @@ A data frame containing observations at which draws from posterior distribution 
 Returns a list with the following components:
 %%  If it is a LIST, use
   \item{y_hat}{Posterior mean estimates. For regression, the estimates have the same units as the response. For classification, the estimates are probabilities.}
-  \item{X}{The \code{new_data} passed into the function.}
+  \item{new_data}{The data frame with rows at which the posterior draws are to be generated. Column names should match that of the training data.}
   \item{y_hat_posterior_samples}{The full set of posterior samples of size \code{num_iterations_after_burn_in} for each observation. For regression, the estimates have the same units as the response. For classification, the estimates are probabilities.}
 %% ...
 }

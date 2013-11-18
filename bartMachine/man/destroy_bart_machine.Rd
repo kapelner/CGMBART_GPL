@@ -2,10 +2,10 @@
 \alias{destroy_bart_machine}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-Destroy BART Model
+Destroy BART Model in Java
 }
 \description{
-This function destroys a BART model by setting all Java pointers to null.
+Destroys a BART model by setting all Java pointers to null.
 }
 \usage{
 destroy_bart_machine(bart_machine)

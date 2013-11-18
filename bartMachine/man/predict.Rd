@@ -5,8 +5,7 @@
 Make a prediction on data using a BART object
 }
 \description{
-Makes a prediction on new data given a fitted BART model. The function is sensitive
-to regression and classification models.
+Makes a prediction on new data given a fitted BART model for regression or classification.
 }
 \usage{
 predict(bart_machine, new_data, type, prob_rule_class)
@@ -17,26 +16,27 @@ predict(bart_machine, new_data, type, prob_rule_class)
 	 An object of class ``bartMachine''.
 }
   \item{new_data}{
-	A matrix or data frame where each row is an observation to predict. The column names
+	A data frame where each row is an observation to predict. The column names
 	should be the same as the column names of the training data.
 }
   \item{type}{
 	 Only relevant if the bartMachine model is classification. The type can be ``prob'' which will
-	 return the estimate of \eqn{P(Y = 1)} or ``class'' which will return the best guess as to the
+	 return the estimate of \eqn{P(Y = 1)}(the ``positive'' class) or ``class'' which will return the best guess as to the
 	 class of the object, in the original label, based on if the probability estimate is greater 
 	 than \code{prob_rule_class}. Default is ``prob.''
 }
-  \item{prob_rule_class}{
-	The rule to determine when the class estimate is \eqn{Y = 1} based on the probability estimate. This
+\item{prob_rule_class}{
+	The rule to determine when the class estimate is \eqn{Y = 1} (the ``positive'' class) based on the probability estimate. This
 	defaults to what was originally specified in the \code{bart_machine} object. 
+}
 }
 \details{
 %%  ~~ If necessary, more details than the description above ~~
 }
 \value{
 If regression, a numeric vector of \code{y_hat}, the best guess as to the response. If classification and \code{type = ``prob''}, 
-a numeric vector of \code{p_hat}, the best guess as to the probability of the response class being 1. If classification and 
-\code{type = ``class''}, a character vector of the best guess of the response's class labels. 
+a numeric vector of \code{p_hat}, the best guess as to the probability of the response class being  the ''positive'' class. If classification and 
+\code{type = ''class''}, a character vector of the best guess of the response's class labels. 
 }
 \references{
 %% ~put references to the literature/web site here ~
@@ -69,6 +69,9 @@ bart_machine = build_bart_machine(X, y)
 ##make predictions on the training data
 y_hat = predict(bart_machine, X)
 
+##destroy BART model
+destroy_bart_machine(bart_machine)
+
 #Classification example
 data(iris)
 iris2 = iris[51 : 150, ] #do not include the third type of flower for this example
@@ -81,8 +84,12 @@ p_hat = predict(bart_machine, X)
 ##make class predictions on test data
 y_hat_class = predict(bart_machine, X, type = "class")
 
-##make class predictions on test data conservatively for versicolor
+##make class predictions on test data conservatively for ''versicolor''
 y_hat_class_conservative = predict(bart_machine, X, type = "class", prob_rule_class = 0.9)
+
+##destroy BART model
+destroy_bart_machine(bart_machine)
+
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
