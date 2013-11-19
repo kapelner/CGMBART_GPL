@@ -5,10 +5,12 @@ library(BayesTree)
 
 init_java_for_bart_machine_with_mem_in_mb(10000)
 
-nlist = c(100, 200, 500, 1000, 2000, 5000, 10000, 20000)
+nlist = c(100, 200, 500, 1000, 2000, 5000, 10000, 20000, 40000)
 p = 20
 
 n = 20000
+ntree = 50
+
 time_mat = matrix(nrow = length(nlist), ncol = 3)
 colnames(time_mat) = c("Us", "Him", "Us_MC")
 
@@ -21,10 +23,10 @@ for(n in nlist){
   
   set_bart_machine_num_cores(4) ## 1 core
   t0 = Sys.time()
-  bart_machine = build_bart_machine(as.data.frame(x), y, num_trees = 200, mem_cache_for_speed = F, 
+  bart_machine = build_bart_machine(as.data.frame(x), y, num_trees = ntree, mem_cache_for_speed = T, 
                                     num_burn_in = 500, num_iterations_after_burn_in = 1000, verbose = T)
   t1 = Sys.time()
-#  rob_bart = bart(x.train = x, y.train = y, ntree = 200, nskip = 500, ndpost = 1000, verbose = F)
+  rob_bart = bart(x.train = x, y.train = y, ntree = ntree, nskip = 500, ndpost = 1000, verbose = T)
   t2 = Sys.time()
   
   our_time = t1 - t0; print(our_time)
