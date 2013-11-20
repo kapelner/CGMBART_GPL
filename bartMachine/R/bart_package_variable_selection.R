@@ -1,36 +1,38 @@
-
+##variable selection procedures from Bleich et al. (2013)
 var_selection_by_permute_response_three_methods = function(bart_machine, num_reps_for_avg = 10, num_permute_samples = 100, num_trees_for_permute = 20, alpha = 0.05, plot = TRUE, num_var_plot = Inf, bottom_margin = 10){
 	if (is_bart_destroyed(bart_machine)){
 		stop("This BART machine has been destroyed. Please recreate.")
 	}	
 	
-	permute_mat = matrix(NA, nrow = num_permute_samples, ncol = bart_machine$p)
+	permute_mat = matrix(NA, nrow = num_permute_samples, ncol = bart_machine$p) ##set up permute mat
 	colnames(permute_mat) = bart_machine$training_data_features_with_missing_features
 	
 	cat("avg")
-	var_true_props_avg = get_averaged_true_var_props(bart_machine, num_reps_for_avg, num_trees_for_permute)
+	var_true_props_avg = get_averaged_true_var_props(bart_machine, num_reps_for_avg, num_trees_for_permute) ##get props from actual data
 	
 	#now sort from high to low
-	var_true_props_avg = sort(var_true_props_avg, decreasing = TRUE)
+	var_true_props_avg = sort(var_true_props_avg, decreasing = TRUE) ##sort props
 	
 	cat("null")
 	for (b in 1 : num_permute_samples){
-		permute_mat[b, ] = get_null_permute_var_importances(bart_machine, num_trees_for_permute)
+		permute_mat[b, ] = get_null_permute_var_importances(bart_machine, num_trees_for_permute) ##build null permutation distribution
 	}
 	cat("\n")
 	
 	#sort permute mat
 	permute_mat = permute_mat[, names(var_true_props_avg)]
 	
+  ##use local cutoff
 	pointwise_cutoffs = apply(permute_mat, 2, quantile, probs = 1 - alpha)
 	important_vars_pointwise_names = names(var_true_props_avg[var_true_props_avg > pointwise_cutoffs & var_true_props_avg > 0])
 	important_vars_pointwise_col_nums = sapply(1 : length(important_vars_pointwise_names), function(x){which(important_vars_pointwise_names[x] == bart_machine$training_data_features_with_missing_features)})
 	
+  ##use global max cutoff
 	max_cut = quantile(apply(permute_mat, 1 ,max), 1 - alpha)
 	important_vars_simul_max_names = names(var_true_props_avg[var_true_props_avg >= max_cut & var_true_props_avg > 0])	
 	important_vars_simul_max_col_nums = sapply(1 : length(important_vars_simul_max_names), function(x){which(important_vars_simul_max_names[x] == bart_machine$training_data_features_with_missing_features)})
 	
-	
+  #use global se cutoff
 	perm_se = apply(permute_mat, 2, sd)
 	perm_mean = apply(permute_mat, 2, mean)
 	cover_constant = bisectK(tol = .01 , coverage = 1 - alpha, permute_mat = permute_mat, x_left = 1, x_right = 20, countLimit = 100, perm_mean = perm_mean, perm_se = perm_se)
@@ -73,6 +75,7 @@ var_selection_by_permute_response_three_methods = function(bart_machine, num_rep
 		par(mfrow = c(1, 1))
 	}
 	
+  #return an invisible list
 	invisible(list(
 		important_vars_local_names = important_vars_pointwise_names,
 		important_vars_global_max_names = important_vars_simul_max_names,
@@ -123,7 +126,7 @@ get_null_permute_var_importances = function(bart_machine, num_trees_for_permute)
 	var_props
 }
 
-##private
+##private - used to compute constant for global se method. simple bisection algo.
 bisectK = function(tol, coverage, permute_mat, x_left, x_right, countLimit, perm_mean, perm_se){
 	count = 0
 	guess = mean(c(x_left, x_right))
@@ -142,7 +145,7 @@ bisectK = function(tol, coverage, permute_mat, x_left, x_right, countLimit, perm
 	guess
 }
 
-
+##var selection -- choose best method via CV
 var_selection_by_permute_response_cv = function(bart_machine, k_folds = 5, num_reps_for_avg = 5, num_permute_samples = 100, num_trees_for_permute = 20, alpha = 0.05, num_trees_pred_cv = 50){
   	if (is_bart_destroyed(bart_machine)){
     	stop("This BART machine has been destroyed. Please recreate.")
@@ -186,6 +189,7 @@ var_selection_by_permute_response_cv = function(bart_machine, k_folds = 5, num_r
 				impute_missingness_with_x_j_bar_for_lm = bart_machine$impute_missingness_with_x_j_bar_for_lm,	
 				verbose = FALSE)
     
+    ##do variable selection
 		bart_variables_select_obj_k = var_selection_by_permute_response_three_methods(bart_machine_temp, 
 				num_permute_samples = num_permute_samples, 
 				num_trees_for_permute = num_trees_for_permute,
@@ -242,5 +246,6 @@ var_selection_by_permute_response_cv = function(bart_machine, k_folds = 5, num_r
 			alpha = alpha, 
 			plot = FALSE)
 	
+    #return vars from best method and method name
 	list(best_method = min_var_selection_method, important_vars_cv = sort(bart_variables_select_obj[[min_var_selection_method]]))
 }

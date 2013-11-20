@@ -1,3 +1,4 @@
+##private function
 check_for_errors_in_training_data = function(data){
 	if (class(data) != "data.frame"){
 		stop(paste("The training data X must be a data frame."), call. = FALSE)
@@ -10,7 +11,7 @@ dummify_data = function(data, ...){
 	as.data.frame(pre_process_training_data(data, ...))
 }
 
-
+##private function that handles all pre-processing (dummification, missing data, etc.)
 pre_process_training_data = function(data, use_missing_data_dummies_as_covars = FALSE, imputations = NULL, verbose = FALSE){
 
 	#first convert characters to factors

@@ -1,6 +1,7 @@
 BART_MAX_MEM_MB_DEFAULT = 1500
 BART_NUM_CORES_DEFAULT = 1
 
+##build a BART model
 build_bart_machine = function(X = NULL, y = NULL, Xy = NULL, 
 		num_trees = 50, #found many times to not get better after this value... so let it be the default, it's faster too 
 		num_burn_in = 250, 
@@ -118,7 +119,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		colnames(rf_imputations_for_missing) = paste(colnames(rf_imputations_for_missing), "_imp", sep = "")
 	}
 	
-	#if we're not using missing data, go on and nuke it
+	#if we're not using missing data, go on and get rid of it
 	if (!use_missing_data && !replace_missing_data_with_x_j_bar){
 		rows_before = nrow(X)
 		X = na.omit(X)
@@ -162,6 +163,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		
 	}
 	
+  ##estimate sigma^2 to be given to the BART model
 	sig_sq_est = NULL
 	if (pred_type == "regression"){		
 		y_range = max(y) - min(y)
@@ -348,7 +350,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	bart_machine
 }
 
-
+##private function that creates a duplicate of an existing bartMachine object.
 bart_machine_duplicate = function(bart_machine, X = NULL, y = NULL, cov_prior_vec = NULL, num_trees = NULL, run_in_sample = NULL, ...){
   if (is_bart_destroyed(bart_machine)){
     stop("This BART machine has been destroyed. Please recreate.")
@@ -389,7 +391,7 @@ bart_machine_duplicate = function(bart_machine, X = NULL, y = NULL, cov_prior_ve
 			...)
 }
 
-#TO-DO: expand this for cov_priors, alpha, beta, n_B, n_G, etc...
+#build a BART-cv model
 build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL, 
 		num_tree_cvs = c(50, 200),
 		k_cvs = c(2, 3, 5),
@@ -422,6 +424,7 @@ build_bart_machine_cv = function(X = NULL, y = NULL, Xy = NULL,
 	min_oos_rmse = Inf
 	min_oos_misclassification_error = Inf
 	
+  #cross-validate
 	for (k in k_cvs){
 		for (nu_q in nu_q_cvs){
 			for (num_trees in num_tree_cvs){
@@ -472,10 +475,10 @@ destroy_bart_machine = function(bart_machine){
 }
 
 is_bart_destroyed = function(bart_machine){
-	.jcall(bart_machine$java_bart_machine, "Z", "isDestroyed")
+	.jcall(bart_machine$java_bart_machine, "Z", "isDestroyed") #check java flag
 }
 
-
+##private function for filling in missing data with averages for cont. vars and modes for cat. vars
 imputeMatrixByXbarjContinuousOrModalForBinary = function(X_with_missing, X_for_calculating_avgs){
 	for (i in 1 : nrow(X_with_missing)){
 		for (j in 1 : ncol(X_with_missing)){
