@@ -1,3 +1,4 @@
+#S3 predict method
 predict.bartMachine = function(bart_machine, new_data, type = "prob", prob_rule_class = NULL){
 	if (is_bart_destroyed(bart_machine)){
 		stop("This BART machine has been destroyed. Please recreate.")
@@ -19,17 +20,20 @@ predict.bartMachine = function(bart_machine, new_data, type = "prob", prob_rule_
 	}	
 }
 
+##private function
 labels_to_y_levels = function(bart_machine, labels){
 	ifelse(labels == 0, bart_machine$y_levels[1], bart_machine$y_levels[2])
 }
 
+##utility function for predicting when test outcomes are known
 bart_predict_for_test_data = function(bart_machine, Xtest, ytest){
 	if (is_bart_destroyed(bart_machine)){
 		stop("This BART machine has been destroyed. Please recreate.")
 	}
-	ytest_hat = predict(bart_machine, Xtest)
 	
-	if (bart_machine$pred_type == "regression"){
+	
+	if (bart_machine$pred_type == "regression"){ #regression list
+	  ytest_hat = predict(bart_machine, Xtest)
 		n = nrow(Xtest)
 		L2_err = sum((ytest - ytest_hat)^2)
 		
@@ -40,7 +44,8 @@ bart_predict_for_test_data = function(bart_machine, Xtest, ytest){
 				rmse = sqrt(L2_err / n),
 				e = ytest - ytest_hat
 		)
-	} else {
+	} else { ##classification list
+	  ytest_hat = predict(bart_machine, Xtest, type = "class")
 		confusion_matrix = as.data.frame(matrix(NA, nrow = 3, ncol = 3))
 		rownames(confusion_matrix) = c(paste("actual", bart_machine$y_levels), "use errors")
 		colnames(confusion_matrix) = c(paste("predicted", bart_machine$y_levels), "model errors")		
@@ -53,9 +58,9 @@ bart_predict_for_test_data = function(bart_machine, Xtest, ytest){
 		
 		list(y_hat = ytest_hat, confusion_matrix = confusion_matrix)
 	}
-
 }
 
+##get full set of samples from posterior distribution of f(x)
 bart_machine_get_posterior = function(bart_machine, new_data){
 	if (is_bart_destroyed(bart_machine)){
 		stop("This BART machine has been destroyed. Please recreate.")
@@ -108,7 +113,7 @@ bart_machine_get_posterior = function(bart_machine, new_data){
 	list(y_hat = y_hat, X = new_data, y_hat_posterior_samples = y_hat_posterior_samples)
 }
 
-
+##compute credible intervals
 calc_credible_intervals = function(bart_machine, new_data, ci_conf = 0.95){
   	if (is_bart_destroyed(bart_machine)){
     	stop("This BART machine has been destroyed. Please recreate.")
@@ -121,7 +126,7 @@ calc_credible_intervals = function(bart_machine, new_data, ci_conf = 0.95){
 	ci_lower_bd = array(NA, n_test)
 	ci_upper_bd = array(NA, n_test)	
 	
-	y_hat_posterior_samples = 
+	y_hat_posterior_samples = ##get samples
 			t(sapply(.jcall(bart_machine$java_bart_machine, "[[D", "getGibbsSamplesForPrediction",  .jarray(new_data, dispatch = TRUE), as.integer(bart_machine_num_cores())), .jevalArray))
 	
 	#to get y_hat.. just take straight mean of posterior samples, alternatively, we can let java do it if we want more bells and whistles
@@ -135,6 +140,7 @@ calc_credible_intervals = function(bart_machine, new_data, ci_conf = 0.95){
 	cbind(ci_lower_bd, ci_upper_bd)
 }
 
+##compute prediction intervals
 calc_prediction_intervals = function(bart_machine, new_data, pi_conf = 0.95, normal_samples_per_gibbs_sample = 100){
 
 	if (bart_machine$pred_type == "classification"){

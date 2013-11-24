@@ -1,4 +1,4 @@
-
+##give summary info about bart
 summary.bartMachine = function(bart_machine){
 	if (is_bart_destroyed(bart_machine)){
 		stop("This BART machine has been destroyed. Please recreate.")
@@ -10,6 +10,7 @@ summary.bartMachine = function(bart_machine){
 	#first print out characteristics of the training data
 	cat(paste("training data n =", bart_machine$n, "and p =", bart_machine$p, "\n"))
 	
+  ##build time
 	ttb = as.numeric(bart_machine$time_to_build, units = "secs")
 	if (ttb > 60){
 		ttb = as.numeric(bart_machine$time_to_build, units = "mins")
@@ -19,7 +20,7 @@ summary.bartMachine = function(bart_machine){
 	}
 	
 	if (bart_machine$pred_type == "regression"){
-		sigsq_est = sigsq_est(bart_machine)
+		sigsq_est = sigsq_est(bart_machine) ##call private function
 		cat(paste("\nsigsq est for y beforehand:", round(bart_machine$sig_sq_est, 3), "\n"))
 		cat(paste("avg sigsq estimate after burn-in:", round(sigsq_est, 5), "\n"))
 		
@@ -50,6 +51,7 @@ summary.bartMachine = function(bart_machine){
 	cat("\n")
 }
 
+#alias for summary
 print.bartMachine = function(bart_machine){ #alias for summary
 	summary(bart_machine)
 }

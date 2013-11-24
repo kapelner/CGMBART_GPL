@@ -1,5 +1,5 @@
 
-
+##check BART error assumptions via plot
 check_bart_error_assumptions = function(bart_machine, hetero_plot = "yhats"){
   	if (is_bart_destroyed(bart_machine)){
     	stop("This BART machine has been destroyed. Please recreate.")
@@ -16,13 +16,13 @@ check_bart_error_assumptions = function(bart_machine, hetero_plot = "yhats"){
 	es = bart_machine$residuals
 	y_hat = bart_machine$y_hat
 	
-	#test for normality
+	#plot/test for normality
 	normal_p_val = shapiro.test(es)$p.value
 	qqp(es, col = "blue",
 			main = paste("Assessment of Normality\n", "p-val for shapiro-wilk test of normality of residuals:", round(normal_p_val, 3)),
 			xlab = "Normal Q-Q plot for in-sample residuals\n(Theoretical Quantiles)")	
 	
-	#test for heteroskedasticity
+	#plot for heteroskedasticity
 	if (hetero_plot == "yhats"){
 		plot(y_hat, es, main = paste("Assessment of Heteroskedasticity\nFitted vs residuals"), xlab = "Fitted Values", ylab = "Residuals", col = "blue")
 	} else if (hetero_plot == "ys") {
@@ -33,6 +33,7 @@ check_bart_error_assumptions = function(bart_machine, hetero_plot = "yhats"){
 	par(mfrow = c(1, 1))
 }
 
+##private function for plotting tree depths
 plot_tree_depths = function(bart_machine){
 	if (is_bart_destroyed(bart_machine)){
 		stop("This BART machine has been destroyed. Please recreate.")
@@ -61,6 +62,7 @@ plot_tree_depths = function(bart_machine){
 	}		
 }
 
+#private function for getting tree depths to plot
 get_tree_depths = function(bart_machine){
 	tree_depths_after_burn_in = NULL
 	for (c in 1 : bart_machine$num_cores){
@@ -70,6 +72,7 @@ get_tree_depths = function(bart_machine){
 	tree_depths_after_burn_in
 }
 
+#private function for plotting number of nodes in the trees
 plot_tree_num_nodes = function(bart_machine){
 	if (is_bart_destroyed(bart_machine)){
 		stop("This BART machine has been destroyed. Please recreate.")
@@ -97,7 +100,7 @@ plot_tree_num_nodes = function(bart_machine){
 		}		
 	}	
 }
-
+##private function for getting the number of nodes in the trees
 get_tree_num_nodes_and_leaves = function(bart_machine){
 	tree_num_nodes_and_leaves_after_burn_in = NULL
 	for (c in 1 : bart_machine$num_cores){
@@ -107,6 +110,7 @@ get_tree_num_nodes_and_leaves = function(bart_machine){
 	tree_num_nodes_and_leaves_after_burn_in
 }
 
+#private function for plotting the MH acceptance proportions by core
 plot_mh_acceptance_reject = function(bart_machine){
 	if (is_bart_destroyed(bart_machine)){
 		stop("This BART machine has been destroyed. Please recreate.")
@@ -140,7 +144,7 @@ plot_mh_acceptance_reject = function(bart_machine){
 	
 }
 
-
+##private function for getting the MH acceptance proportions by core
 get_mh_acceptance_reject = function(bart_machine){
 	a_r_before_burn_in = t(sapply(.jcall(bart_machine$java_bart_machine, "[[Z", "getAcceptRejectMHsBurnin"), .jevalArray)) * 1
 	
@@ -155,6 +159,7 @@ get_mh_acceptance_reject = function(bart_machine){
 	)
 }
 
+#plot y vs yhat for training or test data
 plot_y_vs_yhat = function(bart_machine, Xtest = NULL, ytest = NULL, credible_intervals = FALSE, prediction_intervals = FALSE, interval_confidence_level = 0.95){
 	if (is_bart_destroyed(bart_machine)){
 		stop("This BART machine has been destroyed. Please recreate.")
@@ -241,7 +246,7 @@ plot_y_vs_yhat = function(bart_machine, Xtest = NULL, ytest = NULL, credible_int
 	abline(a = 0, b = 1, lty = 2)	
 }
 
-
+##get sigsqs and plot a histogram, if desired
 get_sigsqs = function(bart_machine, after_burn_in = T, plot_hist = F, plot_CI = .95, plot_sigma = F){
 	if (is_bart_destroyed(bart_machine)){
 		stop("This BART machine has been destroyed. Please recreate.")
@@ -287,6 +292,7 @@ get_sigsqs = function(bart_machine, after_burn_in = T, plot_hist = F, plot_CI = 
 	}
 }
 
+#private function for plotting convergence diagnostics for sigma^2
 plot_sigsqs_convergence_diagnostics = function(bart_machine){
 	if (is_bart_destroyed(bart_machine)){
 		stop("This BART machine has been destroyed. Please recreate.")
@@ -328,6 +334,7 @@ plot_sigsqs_convergence_diagnostics = function(bart_machine){
 
 }
 
+##function for investigating variable inclusion proportions
 investigate_var_importance = function(bart_machine, type = "splits", plot = TRUE, num_replicates_for_avg = 5, num_trees_bottleneck = 20, num_var_plot = Inf, bottom_margin = 10){
 	if (is_bart_destroyed(bart_machine)){
 		stop("This BART machine has been destroyed. Please recreate.")
@@ -335,7 +342,7 @@ investigate_var_importance = function(bart_machine, type = "splits", plot = TRUE
 
 	var_props = array(0, c(num_replicates_for_avg, bart_machine$p))
 	for (i in 1 : num_replicates_for_avg){
-		if (i == 1 & num_trees_bottleneck == bart_machine$num_trees){
+		if (i == 1 & num_trees_bottleneck == bart_machine$num_trees){ ##if original BART is using right number of trees
 			var_props[i, ] = get_var_props_over_chain(bart_machine, type)
 		} else {
 			bart_machine_dup = build_bart_machine(bart_machine$X, bart_machine$y, 
@@ -396,6 +403,7 @@ investigate_var_importance = function(bart_machine, type = "splits", plot = TRUE
 	invisible(list(avg_var_props = avg_var_props, sd_var_props = sd_var_props))	
 }
 
+##user function calling private plotting methods
 plot_convergence_diagnostics = function(bart_machine, plots = c("sigsqs", "mh_acceptance", "num_nodes", "tree_depths")){
   if (is_bart_destroyed(bart_machine)){
   	stop("This BART machine has been destroyed. Please recreate.")
@@ -427,15 +435,12 @@ plot_convergence_diagnostics = function(bart_machine, plots = c("sigsqs", "mh_ac
 	par(mfrow = c(1, 1))
 }
 
-#defunct
-#plot.bartMachine = function(bart_machine){
-#	plot_convergence_diagnostics(bart_machine)
-#}
-
+##private function
 shapiro_wilk_p_val = function(vec){
 	tryCatch(shapiro.test(vec)$p.value, error = function(e){})
 }
 
+##function for investigating interactions
 interaction_investigator = function(bart_machine, plot = TRUE, num_replicates_for_avg = 5, num_trees_bottleneck = 20, num_var_plot = 50, cut_bottom = NULL, bottom_margin = 10){
 	
 	interaction_counts = array(NA, c(bart_machine$p, bart_machine$p, num_replicates_for_avg))
@@ -523,7 +528,7 @@ interaction_investigator = function(bart_machine, plot = TRUE, num_replicates_fo
 	invisible(list(interaction_counts_avg = interaction_counts_avg, interaction_counts_sd = interaction_counts_sd))
 }
 
-
+##partial dependence plot
 pd_plot = function(bart_machine, j, levs = c(0.05, seq(from = 0.10, to = 0.90, by = 0.10), 0.95), lower_ci = 0.025, upper_ci = 0.975){
 	if (is_bart_destroyed(bart_machine)){
 		stop("This BART machine has been destroyed. Please recreate.")
@@ -579,9 +584,9 @@ pd_plot = function(bart_machine, j, levs = c(0.05, seq(from = 0.10, to = 0.90, b
 	lines(x_j_quants, bart_avg_predictions_upper, type = "o", col = "blue")
 	
 	invisible(list(x_j_quants = x_j_quants, bart_avg_predictions_by_quantile = bart_avg_predictions_by_quantile))
-
 }
 
+##plot and invisibly return out-of-sample RMSE by the number of trees
 rmse_by_num_trees = function(bart_machine, tree_list = c(5, seq(10, 50, 10), 100, 150, 200), in_sample = FALSE, plot = TRUE, holdout_pctg = 0.3, num_replicates = 4){
 	if (is_bart_destroyed(bart_machine)){
 		stop("This BART machine has been destroyed. Please recreate.")
@@ -608,7 +613,7 @@ rmse_by_num_trees = function(bart_machine, tree_list = c(5, seq(10, 50, 10), 100
 				ytest = y[holdout_indicies]
 				
 				bart_machine_dup = bart_machine_duplicate(bart_machine, Xtrain, ytrain, num_trees = tree_list[t])
-				predict_obj = bart_predict_for_test_data(bart_machine_dup, Xtest, ytest)
+				predict_obj = bart_predict_for_test_data(bart_machine_dup, Xtest, ytest) ##predict on holdout
 				rmses[r, t] = predict_obj$rmse				
 			}
 			destroy_bart_machine(bart_machine_dup)
@@ -620,7 +625,7 @@ rmse_by_num_trees = function(bart_machine, tree_list = c(5, seq(10, 50, 10), 100
 	
 	rmse_means = colMeans(rmses)
 
-	if (plot){
+	if (plot){ ##plotting
 		rmse_sds = apply(rmses, 2, sd)
 		y_mins = rmse_means - 2 * rmse_sds
 		y_maxs = rmse_means + 2 * rmse_sds

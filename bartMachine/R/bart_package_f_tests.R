@@ -1,4 +1,4 @@
-
+##function to permute columns of X and check BART's performance
 cov_importance_test = function(bart_machine, covariates = NULL, num_permutations = 100, num_trees = NULL, plot = TRUE){
 	if (is.null(covariates)){
 		title = "BART omnibus test for covariate importance\n"
@@ -57,7 +57,8 @@ cov_importance_test = function(bart_machine, covariates = NULL, num_permutations
 		destroy_bart_machine(bart_machine_samp)		
 	}
 	cat("\n")
-	
+  
+	##compute p-value
 	pval = ifelse(bart_machine$pred_type == "regression", sum(observed_error_estimate < permutation_samples_of_error), sum(observed_error_estimate > permutation_samples_of_error)) / (num_permutations + 1)
 	
 	if (plot){
