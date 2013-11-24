@@ -49,7 +49,6 @@ public class CGMBARTRegressionMultThread extends Classifier {
 	protected Double hyper_nu;
 	protected Double prob_grow;
 	protected Double prob_prune;
-	protected Double prob_change;
 	protected boolean verbose = true;
 	protected boolean mem_cache_for_speed = true;
 
@@ -69,8 +68,7 @@ public class CGMBARTRegressionMultThread extends Classifier {
 		hyper_q = HYPER_Q_DEFAULT;
 		hyper_nu = HYPER_NU_DEFAULT;
 		prob_grow = PROB_GROW_DEFAULT;
-		prob_prune = PROB_PRUNE_DEFAULT;
-		prob_change = PROB_CHANGE_DEFAULT;		
+		prob_prune = PROB_PRUNE_DEFAULT;	
 		setNumGibbsTotalIterations(num_gibbs_total_iterations);
 	}
 	
@@ -97,7 +95,6 @@ public class CGMBARTRegressionMultThread extends Classifier {
 		bart.setK(hyper_k);
 		bart.setProbGrow(prob_grow);
 		bart.setProbPrune(prob_prune);
-		bart.setProbChange(prob_change);		
 		//set thread num and data
 		bart.setThreadNum(t);
 		bart.setTotalNumThreads(num_cores);
@@ -246,7 +243,7 @@ public class CGMBARTRegressionMultThread extends Classifier {
 	}	
 
 	public void setProbChange(double prob_change) {
-		this.prob_change = prob_change;
+		//this does nothing
 	}
 	
 	public void setVerbose(boolean verbose){
