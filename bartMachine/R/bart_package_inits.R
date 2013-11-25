@@ -62,15 +62,3 @@ sigsq_est = function(bart_machine){
 sample_mode = function(data){
 	as.numeric(names(sort(-table(data)))[1])
 }
-
-#set up a logging system
-LOG_DIR = "r_log"
-log_file_name = "bart_log.txt"
-bart_log = matrix(nrow = 0, ncol = 1)
-
-##private function for handling logging
-append_to_log = function(text){
-	bart_log = rbind(bart_log, paste(Sys.time(), "\t", text)) #log the time and the actual message
-	assign("bart_log", bart_log, .GlobalEnv)
-	write.table(bart_log, paste(LOG_DIR, "/", log_file_name, sep = ""), quote = FALSE, col.names = FALSE, row.names = FALSE)
-}
