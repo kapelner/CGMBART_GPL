@@ -263,7 +263,6 @@ get_sigsqs = function(bart_machine, after_burn_in = T, plot_hist = F, plot_CI = 
 	num_trees = bart_machine$num_trees
 	
 	sigsqs_after_burnin = sigsqs[(length(sigsqs) - num_iterations_after_burn_in) : length(sigsqs)]
-	assign("sigsqs_after_burnin", sigsqs_after_burnin, .GlobalEnv)
 	avg_sigsqs = mean(sigsqs_after_burnin, na.rm = TRUE)
 	
 	if(plot_hist){
