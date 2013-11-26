@@ -39,7 +39,7 @@ Adam Kapelner and Justin Bleich
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-\code{\link{plot_sigsqs_convergence_diagnostics}}, \code{\link{plot_convergence_diagnostics}}
+\code{\link{plot_convergence_diagnostics}}
 }
 \examples{
 #generate Friedman data
