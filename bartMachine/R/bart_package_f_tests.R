@@ -13,20 +13,15 @@ cov_importance_test = function(bart_machine, covariates = NULL, num_permutations
 		title = paste("BART test for importance of", length(covariates), "covariates", "\n")
 	}
 	cat(title)
-	sd_y = sd(bart_machine$y)
 	
-	if (is.null(num_trees)){
-		num_trees = bart_machine$num_trees
-		observed_error_estimate = ifelse(bart_machine$pred_type == "regression", bart_machine$PseudoRsq, bart_machine$misclassification_error)
-	} else {
-		bart_machine_copy = build_bart_machine(X = bart_machine$X, y = bart_machine$y, 
-				use_missing_data = bart_machine$use_missing_data,
-				use_missing_data_dummies_as_covars = bart_machine$use_missing_data_dummies_as_covars, 
-				num_trees = num_trees, 
-				verbose = FALSE) #we have to turn verbose off otherwise there would be too many outputs
-		observed_error_estimate = ifelse(bart_machine$pred_type == "regression", bart_machine$PseudoRsq, bart_machine$misclassification_error)
-		destroy_bart_machine(bart_machine_copy)	
+
+	if (!is.null(num_trees) && bart_machine$num_trees != num_trees){
+		stop("The original model was not built with", num_trees, "trees.")
 	}
+	
+	num_trees = bart_machine$num_trees
+	observed_error_estimate = ifelse(bart_machine$pred_type == "regression", bart_machine$PseudoRsq, bart_machine$misclassification_error)
+	
 	
 	permutation_samples_of_error = array(NA, num_permutations)
 	for (nsim in 1 : num_permutations){

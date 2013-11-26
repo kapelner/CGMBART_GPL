@@ -135,11 +135,14 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 	}	
 
 	model_matrix_training_data = cbind(pre_process_training_data(X, use_missing_data_dummies_as_covars, rf_imputations_for_missing, verbose), y_remaining)
-
+	cat("original model_matrix\n")
+	print(model_matrix_training_data[1 : 15, ])
 	#this is a private parameter ONLY called by cov_importance_test
 	if (!is.null(covariates_to_permute)){
 		for (j in covariates_to_permute){
 			model_matrix_training_data[, j] = sample(model_matrix_training_data[, j])
+			cat("after permute covariate", j, "\n")
+			print(model_matrix_training_data[1 : 15, ])
 		}		
 	}
 	

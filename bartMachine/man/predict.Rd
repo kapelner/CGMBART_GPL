@@ -8,11 +8,11 @@ Make a prediction on data using a BART object
 Makes a prediction on new data given a fitted BART model for regression or classification.
 }
 \usage{
-\method{predict}{bartMachine}(bart_machine, new_data, type, prob_rule_class)
+\method{predict}{bartMachine}(object, new_data, type, prob_rule_class, ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{bart_machine}{
+  \item{object}{
 	 An object of class ``bartMachine''.
 }
   \item{new_data}{
@@ -25,9 +25,12 @@ Makes a prediction on new data given a fitted BART model for regression or class
 	 class of the object, in the original label, based on if the probability estimate is greater 
 	 than \code{prob_rule_class}. Default is ``prob.''
 }
-\item{prob_rule_class}{
+  \item{prob_rule_class}{
 	The rule to determine when the class estimate is \eqn{Y = 1} (the ``positive'' class) based on the probability estimate. This
 	defaults to what was originally specified in the \code{bart_machine} object. 
+}
+  \item{...}{
+	Parameters that are ignored.
 }
 }
 \details{

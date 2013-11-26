@@ -7,12 +7,15 @@ Summarizes information about a \code{bartMachine} object.
 This is an alias for the \code{\link{summary}} function. See description in that section.
 }
 \usage{
-\method{print}{bartMachine}(bart_machine)
+\method{print}{bartMachine}(x, ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{bart_machine}{
+  \item{x}{
 	An object of class ``bartMachine''.
+}
+  \item{...}{
+	Parameters that are ignored.
 }
 }
 \details{

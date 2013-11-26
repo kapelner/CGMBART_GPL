@@ -8,12 +8,15 @@ Summarizes information about a \code{bartMachine} object.
 Provides a quick summary of the BART model.
 }
 \usage{
-\method{summary}{bartMachine}(bart_machine)
+\method{summary}{bartMachine}(object, ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{bart_machine}{
+  \item{object}{
 	An object of class ``bartMachine''.
+}
+  \item{...}{
+	Parameters that are ignored.
 }
 }
 \details{

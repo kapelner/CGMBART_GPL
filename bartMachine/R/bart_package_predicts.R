@@ -1,21 +1,21 @@
 #S3 predict method
-predict.bartMachine = function(bart_machine, new_data, type = "prob", prob_rule_class = NULL){
-	if (is_bart_destroyed(bart_machine)){
+predict.bartMachine = function(object, new_data, type = "prob", prob_rule_class = NULL, ...){
+	if (is_bart_destroyed(object)){
 		stop("This BART machine has been destroyed. Please recreate.")
 	}
 	if(!(type %in% c("prob", "class"))){
 		stop("For classification, type must be either \"prob\" or \"class\". ")
 	}
   
-	if (bart_machine$pred_type == "regression"){	
-		bart_machine_get_posterior(bart_machine, new_data)$y_hat
+	if (object$pred_type == "regression"){	
+		bart_machine_get_posterior(object, new_data)$y_hat
 	} else { ##classification
 	    if (type == "prob"){
-	    	bart_machine_get_posterior(bart_machine, new_data)$y_hat
+	    	bart_machine_get_posterior(object, new_data)$y_hat
 	    } else {
-	    	labels = bart_machine_get_posterior(bart_machine, new_data)$y_hat > ifelse(is.null(prob_rule_class), bart_machine$prob_rule_class, prob_rule_class)
+	    	labels = bart_machine_get_posterior(object, new_data)$y_hat > ifelse(is.null(prob_rule_class), object$prob_rule_class, prob_rule_class)
 	      	#return whatever the raw y_levels were
-	      	labels_to_y_levels(bart_machine, labels)      
+	      	labels_to_y_levels(object, labels)      
 	    }
 	}	
 }

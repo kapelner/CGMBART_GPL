@@ -81,6 +81,31 @@ cov_importance_test(bart_machine_cv, covariates = c("curb_weight",
 	"length",
 	"horsepower"))
 
+cov_importance_test(bart_machine_cv, covariates = c("curb_weight",
+	"city_mpg",
+	"width",
+	"length",
+	"horsepower",
+	"body_style_convertible",
+	"highway_mpg",
+	"wheel_drive_rwd",
+	"peak_rpm",
+	"engine_size")) #0.68
+#	"fuel_system_mpfi")) #0.039
+#	"wheel_base")) #0.019
+#	"normalized_losses"))
+#	"num_cylinders",
+#	"engine_type_ohc"))
+#	"stroke",
+#	"aspiration_std",
+#	"aspiration_turbo",
+#	"bore",
+#	"engine_type_l",
+#	"wheel_drive_fwd",
+#	"body_style_hardtop",
+#	"engine_type_dohc",
+#	"height"))
+
 
 #Figure 9c
 windows()
