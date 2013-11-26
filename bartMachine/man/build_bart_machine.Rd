@@ -158,7 +158,7 @@ independent MCMC chain of size \cr
 
 \seealso{
 \code{\link{destroy_bart_machine}},
-\code{\link{bart_machine_cv}}
+\code{\link{build_bart_machine_cv}}
 }
 \examples{
 ##regression example
