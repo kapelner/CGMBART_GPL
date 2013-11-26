@@ -14,9 +14,9 @@ summary.bartMachine = function(bart_machine){
 	ttb = as.numeric(bart_machine$time_to_build, units = "secs")
 	if (ttb > 60){
 		ttb = as.numeric(bart_machine$time_to_build, units = "mins")
-		cat(paste("built in", round(ttb, 2), "mins on", bart_machine$num_cores, ifelse(bart_machine$num_cores == 1, "core,", "cores,"), bart_machine$num_trees, "trees,", bart_machine$num_burn_in, "burn in and", bart_machine$num_iterations_after_burn_in, "posterior samples\n"))
+		cat(paste("built in", round(ttb, 2), "mins on", bart_machine$num_cores, ifelse(bart_machine$num_cores == 1, "core,", "cores,"), bart_machine$num_trees, "trees,", bart_machine$num_burn_in, "burn in and", bart_machine$num_iterations_after_burn_in, "post. samples\n"))
 	} else {
-		cat(paste("built in", round(ttb, 1), "secs on", bart_machine$num_cores, ifelse(bart_machine$num_cores == 1, "core,", "cores,"), bart_machine$num_trees, "trees,", bart_machine$num_burn_in, "burn in and", bart_machine$num_iterations_after_burn_in, "posterior samples\n"))
+		cat(paste("built in", round(ttb, 1), "secs on", bart_machine$num_cores, ifelse(bart_machine$num_cores == 1, "core,", "cores,"), bart_machine$num_trees, "trees,", bart_machine$num_burn_in, "burn in and", bart_machine$num_iterations_after_burn_in, "post. samples\n"))
 	}
 	
 	if (bart_machine$pred_type == "regression"){

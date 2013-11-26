@@ -64,7 +64,7 @@ cov_importance_test = function(bart_machine, covariates = NULL, num_permutations
 	if (plot){
 		hist(permutation_samples_of_error, 
 				xlim = c(min(permutation_samples_of_error, 0.99 * observed_error_estimate), max(permutation_samples_of_error, 1.01 * observed_error_estimate)),
-				xlab = paste("permutation samples\n pval = ", pval),
+				xlab = paste("permutation samples\n pval = ", round(pval, 3)),
 				br = num_permutations / 10,
 				main = paste(title, "Null Samples of", ifelse(bart_machine$pred_type == "regression", "Pseudo-R^2's", "Misclassification Errors")))
 		abline(v = observed_error_estimate, col = "blue", lwd = 3)
