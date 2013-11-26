@@ -52,6 +52,6 @@ summary.bartMachine = function(bart_machine){
 }
 
 #alias for summary
-print.bartMachine = function(bart_machine){ #alias for summary
-	summary(bart_machine)
+print.bartMachine = function(x, ...){ #alias for summary
+	summary(x)
 }

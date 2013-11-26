@@ -200,7 +200,7 @@ var_selection_by_permute_response_cv = function(bart_machine, k_folds = 5, num_r
 		
 		#pull out test data
 		test_X_k = bart_machine$model_matrix_training_data[holdout_index_i : holdout_index_f, -ncol(bart_machine$model_matrix_training_data)]
-		test_y_k = y[holdout_index_i : holdout_index_f]
+		test_y_k = bart_machine$y[holdout_index_i : holdout_index_f]
 		
 		cat("method")
 		for (method in colnames(L2_err_mat)){
