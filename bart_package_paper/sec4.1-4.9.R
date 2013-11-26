@@ -1,11 +1,6 @@
 setwd("C:\\Users\\Kapelner\\workspace\\CGMBART_GPL")
-setwd("C:\\Users\\jbleich\\workspace\\CGMBART_GPL")
-setwd("~/workspace//CGMBART_GPL")
 
 library(bartMachine)
-
-#setwd("~/workspace//CGMBART_GPL/bartMachine/man/")
-#prompt(bart_machine_num_cores)
 
 Xy = read.csv("datasets/r_automobile.csv")
 Xy = rbind(Xy)
@@ -23,28 +18,94 @@ Xy$num_cylinders = ifelse(Xy$num_cylinders == "twelve", 12, ifelse(Xy$num_cylind
 X = Xy
 X$price = NULL
 
-#head(X)
-#dim(X)
-#summary(X)
-#hist(y, br = 30)
-#hist(y, br = 30)
 
+###### section 4.1
 set_bart_machine_num_cores(4)
 init_java_for_bart_machine_with_mem_in_mb(2500)
 
+###### section 4.2
 bart_machine = build_bart_machine(X, y)
+#Figure 2
 bart_machine
-
-plot_y_vs_yhat(bart_machine ,pred = T)
-
 
 oos_stats = k_fold_cv(X, y, k_folds = 10)
 oos_stats
 
+#Figure 3
+rmse_by_num_trees(bart_machine, num_replicates = 20)
+
+bart_machine_cv = build_bart_machine_cv(X, y)
+bart_machine_cv
+
+oos_stats_cv = k_fold_cv(X, y, k_folds = 10, k = 2, nu = 10, q = 0.75, num_trees = 200)
+oos_stats_cv
+
+predict(bart_machine_cv, X[1 : 14, ])
+
+##### section 4.3
+
+#Figure 4
+check_bart_error_assumptions(bart_machine_cv)
+
+#Figure 5
+plot_convergence_diagnostics(bart_machine_cv)
+
+##### section 4.4
+
+calc_credible_intervals(bart_machine_cv, new_data = X[100, ], ci_conf = 0.95)
+calc_prediction_intervals(bart_machine_cv, new_data = X[100, ], pi_conf = 0.95)
+
+#Figure 6a
+plot_y_vs_yhat(bart_machine_cv, credible_intervals = TRUE)
+#Figure 6b
+plot_y_vs_yhat(bart_machine_cv, prediction_intervals = TRUE)
+
+##### section 4.5
+
+#Figure 7
+investigate_var_importance(bart_machine_cv, num_replicates_for_avg = 20)
+
+#Figure 8
+interaction = interaction_investigator(bart_machine_cv, num_replicates_for_avg = 200, bottom_margin = 20)
+
+##### section 4.6
+
+#Figure 9a
+cov_importance_test(bart_machine_cv, covariates = c("curb_weight"))
+#Figure 9b
+windows()
+#cov_importance_test(bart_machine_cv, covariates = c("city_mpg"))
+cov_importance_test(bart_machine_cv, covariates = c("curb_weight",
+	"city_mpg",
+	"width",
+	"length",
+	"horsepower"))
+
+
+#Figure 9c
+windows()
+cov_importance_test(bart_machine_cv, covariates = c("num_doors",
+	"fuel_type_gas",
+	"symboling",
+	"fuel_type_diesel",
+	"fuel_system_mfi",
+	"fuel_system_idi",
+	"engine_type_ohcv",
+	"fuel_system_2bbl",
+	"wheel_drive_4wd",
+	"engine_type_ohcf",
+	"body_style_hatchback",
+	"fuel_system_spdi",
+	"fuel_system_1bbl",
+	"body_style_sedan",
+	"body_style_wagon"))
+#Figure 9d
+windows()
+cov_importance_test(bart_machine_cv)
 
 
 
-#build another model with alpha beta to show depth of trees
+
 
 vs = var_selection_by_permute_response_three_methods(bart_machine, bottom_margin = 10, num_permute_samples=10) ##fix dot printing
 names(vs)
@@ -61,34 +122,24 @@ pd_plot(bart_machine, j="horsepower")
 #pd_plot(bart_machine, j="horsepower")
 
 
-rmse_by_num_trees(bart_machine, num_replicates = 20)
-
-bart_machine_cv = build_bart_machine_cv(X, y, verbose = T)
-# BART CV win: k: 2 nu, q: 3, 0.9 m: 200
-bart_machine_cv
-
-#what is oosRMSE?
-oos_stats = k_fold_cv(X, y, k_folds = 10, k = 2, nu = 3, q = 0.9, num_trees = 200)
-oos_stats
-
-
-check_bart_error_assumptions(bart_machine_cv)
-plot(bart_machine_cv)
-
-
-calc_credible_intervals(bart_machine_cv, new_data = X[100, ], ci_conf = 0.95)
-calc_prediction_intervals(bart_machine_cv, new_data = X[100, ], pi_conf = 0.95)
-
-investigate_var_importance(bart_machine_cv, num_replicates_for_avg = 20)
-
-ints = interaction_investigator(bart_machine_cv, num_replicates_for_avg = 200, bottom_margin = 20)
 
 
 
-cov_importance_test(bart_machine_cv, covariates = c("body_style_wagon"))
-cov_importance_test(bart_machine_cv, covariates = c("width"))
-cov_importance_test(bart_machine_cv, covariates = c("body_style_wagon", "body_style_sedan", "fuel_system_1bbl", "fuel_system_spdi", "wheel_drive_4wd", "engine_type_dohc", "height", "engine_type_ohcf", "engine_type_ohcv", "compression_ratio", "fuel_system_mfi", "body_style_hatchback", "bore", "symboling", "stroke"))
-cov_importance_test(bart_machine_cv)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #symboling,normalized_losses,make,fuel_type,aspiration,num_doors,body_style,wheel_drive,engine_location,wheel_base,length,width,height,curb_weight,engine_type,num_cylinders,engine_size,fuel_system,bore,stroke,compression_ratio,horsepower,peak_rpm,city_mpg,highway_mpg,price
 

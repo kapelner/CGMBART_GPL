@@ -75,7 +75,7 @@ r_log/*.txt
 bin/*
 randsamps/chisq*
 RWeka/
-
+rJAVA_examples/
 bartMachine.pdf
 bartMachine.Rcheck
 bartMachine.Rcheck/*
