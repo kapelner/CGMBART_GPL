@@ -11,11 +11,11 @@ num_trees = 50,
 num_burn_in = 250, 
 num_iterations_after_burn_in = 1000, 
 alpha = 0.95, beta = 2, k = 2, q = 0.9, nu = 3, 
-s_sq_y = "mse",
 prob_rule_class = 0.5, 
 mh_prob_steps = c(2.5, 2.5, 4)/9,
 debug_log = FALSE, 
 run_in_sample = TRUE,  
+s_sq_y = "mse",
 cov_prior_vec = NULL, 
 use_missing_data = FALSE, 
 covariates_to_permute = NULL,
@@ -175,13 +175,14 @@ bart_machine = build_bart_machine(X, y)
 summary(bart_machine)
 
 #destroy BART model
-destory(bart_machine)
+destroy_bart_machine(bart_machine)
 
 ##Build another BART regression model
 bart_machine = build_bart_machine(X,y, num_trees = 200, num_burn_in = 500,
 num_iterations_after_burn_in =1000)
+
 #Destroy BART model
-destroy(bart_machine)
+destroy_bart_machine(bart_machine)
 
 ##Classification example
 

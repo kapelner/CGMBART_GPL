@@ -1,5 +1,5 @@
-\name{print}
-\alias{summary}
+\name{print.bartMachine}
+\alias{print.bartMachine}
 \title{
 Summarizes information about a \code{bartMachine} object.
 }
@@ -7,7 +7,7 @@ Summarizes information about a \code{bartMachine} object.
 This is an alias for the \code{\link{summary}} function. See description in that section.
 }
 \usage{
-print(bart_machine)
+\method{print}{bartMachine}(bart_machine)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{

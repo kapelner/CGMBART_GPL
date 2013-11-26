@@ -8,8 +8,8 @@ Get Posterior Error Variance Estimates
 Returns the posterior estimates of the error variance from the Gibbs samples with an option to create a histogram of the posterior estimates of the error variance  with a credible interval overlaid.
 }
 \usage{
-hist_sigsqs(bart_machine, after_burn_in = T, 
-plot_hist = F, plot_CI = .95)
+get_sigsqs(bart_machine, after_burn_in = T, 
+plot_hist = F, plot_CI = .95, plot_sigma = F)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -19,7 +19,7 @@ An object of class ``bartMachine''.
   \item{after_burn_in}{
 If TRUE, only the \eqn{\sigma^2} draws after the burn-in period are returned.
 }
-  \item{bart_machine}{
+  \item{plot_hist}{
 If TRUE, a histogram of the posterior \eqn{\sigma^2} draws is generated.
 }
   \item{plot_CI}{
@@ -62,7 +62,7 @@ y = 10 * sin(pi* X[ ,1] * X[,2]) +20 * (X[,3] -.5)^2 + 10 * X[ ,4] + 5 * X[,5] +
 bart_machine = build_bart_machine(X, y)
 
 #get posterior sigma^2's after burn-in and plot
-sigsqs = get_sigsqs(bart_machine, plot_hist = T)
+sigsqs = get_sigsqs(bart_machine, plot_hist = TRUE)
 
 #destroy BART model
 destroy_bart_machine(bart_machine)

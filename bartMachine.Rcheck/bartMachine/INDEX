@@ -1,9 +1,9 @@
 bart_machine_get_posterior
-                        Get Posterior
+                        Get Full Posterior Distribution
 bart_machine_num_cores
-                        Return number of cores being used
+                        Get Number of Cores Used by BART
 bart_predict_for_test_data
-                        Predict for test data
+                        Predict for Test Data with Known Outcomes
 build_bart_machine      Build a BART Model
 build_bart_machine_cv   Build BART-CV
 calc_credible_intervals
@@ -12,21 +12,18 @@ calc_prediction_intervals
                         Calculate Prediction Intervals
 check_bart_error_assumptions
                         Check BART Error Assumptions
-cov_importance_test     Covariance Importance Test
-destroy_bart_machine    Destroy BART Model
-dummify_data            Dummify Data
+cov_importance_test     Importance Test for Covariate(s) of Interest
+destroy_bart_machine    Destroy BART Model in Java
+dummify_data            Dummify Design Matrix
 get_sigsqs              Get Posterior Error Variance Estimates
-get_tree_depths         Get the Posterior Tree Depths
 get_var_counts_over_chain
                         Get the Variable Inclusion Counts
 get_var_props_over_chain
                         Get the Variable Inclusion Proportions
-hist_sigsqs             Create a Histogram of the Posterior Error
-                        Variance Estimates
 init_java_for_bart_machine_with_mem_in_mb
-                        Initialize a JVM with a specified heap size
+                        Initialize a JVM with a pre-specified heap size
 interaction_investigator
-                        Explore Interactions within BART Model
+                        Explore Pairwise Interactions in BART Model
 investigate_var_importance
                         Explore Variable Inclusion Proportions in BART
                         Model
@@ -35,20 +32,19 @@ k_fold_cv               Estimate Out-of-sample Error with K-fold Cross
 pd_plot                 Partial Dependence Plot
 plot_convergence_diagnostics
                         Plot Convergence Diagnostics
-plot_mh_acceptance_reject
-                        Plot the proportion of Metropolis-Hastings
-                        Acceptances
-plot_sigsqs_convergence_diagnostics
-                        Plot Error Variance Estimates to Assess
-                        Convergence
-plot_tree_depths        Plot Tree Depths
-plot_tree_num_nodes     Plot the Average Number of Nodes in the Trees
 plot_y_vs_yhat          Plot the fitted Versus Actual Response
-rmse_by_num_trees       Plot the Out-of-sample RMSE by Number of Trees
+predict.bartMachine     Make a prediction on data using a BART object
+print.bartMachine       Summarizes information about a 'bartMachine'
+                        object.
+rmse_by_num_trees       Assess the Out-of-sample RMSE by Number of
+                        Trees
 set_bart_machine_num_cores
-                        Set the number of cores for BART
+                        Set the Number of Cores for BART
+summary.bartMachine     Summarizes information about a 'bartMachine'
+                        object.
 var_selection_by_permute_response_cv
                         Perform Variable Selection Using
-                        Cross-validation Method
+                        Cross-validation Procedure
 var_selection_by_permute_response_three_methods
-                        Perform Variable Selection
+                        Perform Variable Selection using Three
+                        Threshold-based Procedures

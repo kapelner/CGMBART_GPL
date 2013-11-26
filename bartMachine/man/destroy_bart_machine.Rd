@@ -50,7 +50,7 @@ bart_machine = build_bart_machine(X, y)
 
 ##should be called when object is no longer needed 
 ##and before potentially removing the object from R
-destory(bart_machine) 
+destroy_bart_machine(bart_machine) 
 
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the

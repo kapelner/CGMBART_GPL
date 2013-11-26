@@ -78,7 +78,7 @@ RWeka/
 
 bartMachine.pdf
 bartMachine.Rcheck
-bartMachine.Rcheck/*
+bartMachine.Rcheck/**/*
 old_mar/*
 datasets/r_zach.csv
 datasets/c_crime.csv

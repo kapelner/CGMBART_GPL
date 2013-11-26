@@ -1,4 +1,7 @@
 import(rJava)
+import(car)
+import(randomForest)
+import(missForest)
 
 export(build_bart_machine)
 export(destroy_bart_machine)

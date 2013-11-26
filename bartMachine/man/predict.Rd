@@ -1,5 +1,5 @@
-\name{predict}
-\alias{predict}
+\name{predict.bartMachine}
+\alias{predict.bartMachine}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 Make a prediction on data using a BART object
@@ -8,7 +8,7 @@ Make a prediction on data using a BART object
 Makes a prediction on new data given a fitted BART model for regression or classification.
 }
 \usage{
-predict(bart_machine, new_data, type, prob_rule_class)
+\method{predict}{bartMachine}(bart_machine, new_data, type, prob_rule_class)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{

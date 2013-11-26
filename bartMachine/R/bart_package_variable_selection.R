@@ -173,7 +173,7 @@ var_selection_by_permute_response_cv = function(bart_machine, k_folds = 5, num_r
 		
 		#pull out training data
 		training_X_k = bart_machine$model_matrix_training_data[-c(holdout_index_i : holdout_index_f), -ncol(bart_machine$model_matrix_training_data)] ##toss last col bc its response
-		training_y_k = y[-c(holdout_index_i : holdout_index_f)]		
+		training_y_k = bart_machine$y[-c(holdout_index_i : holdout_index_f)]		
 		
 		#make a temporary bart machine just so we can run the var selection for all three methods
 		bart_machine_temp = build_bart_machine(as.data.frame(training_X_k), training_y_k, 				 

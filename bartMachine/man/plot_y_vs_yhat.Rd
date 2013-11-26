@@ -70,7 +70,7 @@ bart_machine = build_bart_machine(X, y)
 plot_y_vs_yhat(bart_machine)
 
 #generate plot with prediction bands
-plot_y_vs_yhat(bart_machine, prediction_intervals = T)
+plot_y_vs_yhat(bart_machine, prediction_intervals = TRUE)
 
 #destroy BART model
 destroy_bart_machine(bart_machine)

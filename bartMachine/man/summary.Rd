@@ -1,5 +1,5 @@
-\name{summary}
-\alias{summary}
+\name{summary.bartMachine}
+\alias{summary.bartMachine}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 Summarizes information about a \code{bartMachine} object.
@@ -8,7 +8,7 @@ Summarizes information about a \code{bartMachine} object.
 Provides a quick summary of the BART model.
 }
 \usage{
-summary(bart_machine)
+\method{summary}{bartMachine}(bart_machine)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
