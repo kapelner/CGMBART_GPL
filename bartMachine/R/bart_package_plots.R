@@ -344,21 +344,9 @@ investigate_var_importance = function(bart_machine, type = "splits", plot = TRUE
 		if (i == 1 & num_trees_bottleneck == bart_machine$num_trees){ ##if original BART is using right number of trees
 			var_props[i, ] = get_var_props_over_chain(bart_machine, type)
 		} else {
-			bart_machine_dup = build_bart_machine(bart_machine$X, bart_machine$y, 
-				num_trees = num_trees_bottleneck, 
-				num_burn_in = bart_machine$num_burn_in, 
-				num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in, 
-				cov_prior_vec = bart_machine$cov_prior_vec,
-				run_in_sample = FALSE,
-				use_missing_data = bart_machine$use_missing_data,
-				use_missing_data_dummies_as_covars = bart_machine$use_missing_data_dummies_as_covars,
-				num_rand_samps_in_library = bart_machine$num_rand_samps_in_library,
-				replace_missing_data_with_x_j_bar = bart_machine$replace_missing_data_with_x_j_bar,
-				impute_missingness_with_rf_impute = bart_machine$impute_missingness_with_rf_impute,
-				impute_missingness_with_x_j_bar_for_lm = bart_machine$impute_missingness_with_x_j_bar_for_lm,
-				verbose = FALSE)			
+			bart_machine_dup = bart_machine_duplicate(bart_machine, num_trees = num_trees_bottleneck, run_in_sample = FALSE, verbose = FALSE)			
 			var_props[i, ] = get_var_props_over_chain(bart_machine_dup, type)
-			destroy_bart_machine(bart_machine_dup)						
+			destroy_bart_machine(bart_machine_dup)					
 		}
 		cat(".")
 	}

@@ -2,6 +2,7 @@ setwd("C:\\Users\\Kapelner\\workspace\\CGMBART_GPL")
 
 library(bartMachine)
 
+#load the data (for information on the dataset, see the footer of this file)
 Xy = read.csv("datasets/r_automobile.csv")
 Xy = rbind(Xy)
 Xy = Xy[!is.na(Xy$price), ] #kill rows without a response
@@ -9,21 +10,21 @@ Xy = na.omit(Xy) #kill any rows with missing data (we illustrate missing data fe
 y = log(as.numeric(Xy$price))
 Xy$price = log(Xy$price)
 
-
 #now remove some variables and coerce some to numeric
 Xy$make = NULL
 Xy$num_doors = ifelse(Xy$num_doors == "two", 2, 4)
 Xy$num_cylinders = ifelse(Xy$num_cylinders == "twelve", 12, ifelse(Xy$num_cylinders == "eight", 8, ifelse(Xy$num_cylinders == "six", 6, ifelse(Xy$num_cylinders == "five", 5, ifelse(Xy$num_cylinders == "four", 4, ifelse(Xy$num_cylinders == "three", 3, 2))))))
-
 X = Xy
 X$price = NULL
 
 
 ###### section 4.1
+
 set_bart_machine_num_cores(4)
 init_java_for_bart_machine_with_mem_in_mb(2500)
 
 ###### section 4.2
+
 bart_machine = build_bart_machine(X, y)
 #Figure 2
 bart_machine
@@ -34,7 +35,7 @@ oos_stats
 #Figure 3
 rmse_by_num_trees(bart_machine, num_replicates = 20)
 
-bart_machine_cv = build_bart_machine_cv(X, y)
+bart_machine_cv = build_bart_machine_cv(X, y, verbose = FALSE)
 bart_machine_cv
 
 oos_stats_cv = k_fold_cv(X, y, k_folds = 10, k = 2, nu = 10, q = 0.75, num_trees = 200)
@@ -66,291 +67,73 @@ plot_y_vs_yhat(bart_machine_cv, prediction_intervals = TRUE)
 investigate_var_importance(bart_machine_cv, num_replicates_for_avg = 20)
 
 #Figure 8
-interaction = interaction_investigator(bart_machine_cv, num_replicates_for_avg = 200, bottom_margin = 20)
+interaction_obj = interaction_investigator(bart_machine_cv, num_replicates_for_avg = 200, bottom_margin = 20)
 
 ##### section 4.6
 
 #Figure 9a
-cov_importance_test(bart_machine_cv, covariates = c("curb_weight"))
+cov_importance_test(bart_machine_cv, covariates = c("width"))
+windows()
 #Figure 9b
 windows()
-#cov_importance_test(bart_machine_cv, covariates = c("city_mpg"))
-cov_importance_test(bart_machine_cv, covariates = c("curb_weight",
-	"city_mpg",
-	"width",
-	"length",
-	"horsepower"))
-
-cov_importance_test(bart_machine_cv, covariates = c("curb_weight",
-	"city_mpg",
-	"width",
-	"length",
-	"horsepower",
-	"body_style_convertible",
-	"highway_mpg",
-	"wheel_drive_rwd",
-	"peak_rpm",
-	"engine_size")) #0.68
-#	"fuel_system_mpfi")) #0.039
-#	"wheel_base")) #0.019
-#	"normalized_losses"))
-#	"num_cylinders",
-#	"engine_type_ohc"))
-#	"stroke",
-#	"aspiration_std",
-#	"aspiration_turbo",
-#	"bore",
-#	"engine_type_l",
-#	"wheel_drive_fwd",
-#	"body_style_hardtop",
-#	"engine_type_dohc",
-#	"height"))
-
-
+cov_importance_test(bart_machine_cv, covariates = c("body_style"))
 #Figure 9c
 windows()
-cov_importance_test(bart_machine_cv, covariates = c("num_doors",
-	"fuel_type_gas",
-	"symboling",
-	"fuel_type_diesel",
-	"fuel_system_mfi",
-	"fuel_system_idi",
-	"engine_type_ohcv",
-	"fuel_system_2bbl",
-	"wheel_drive_4wd",
-	"engine_type_ohcf",
-	"body_style_hatchback",
-	"fuel_system_spdi",
-	"fuel_system_1bbl",
-	"body_style_sedan",
-	"body_style_wagon"))
+cov_importance_test(bart_machine_cv, covariates = c("width",
+	"curb_weight",
+	"city_mpg",
+	"length",
+	"horsepower", 
+	"body_style", 
+	"engine_size", 
+	"highway_mpg", 
+	"peak_rpm", 
+	"normalized_losses"))
 #Figure 9d
 windows()
 cov_importance_test(bart_machine_cv)
 
+##### section 4.7
 
-
-
-
-vs = var_selection_by_permute_response_three_methods(bart_machine, bottom_margin = 10, num_permute_samples=10) ##fix dot printing
-names(vs)
-cv_vars = var_selection_by_permute_response_cv(bart_machine, k_folds = 2, num_reps_for_avg = 5, num_permute_samples = 20, num_trees_pred_cv = 50)
-
-
-
-vs$permute_mat[, 45] == 0
-vs$var_true_props_avg[45] == 0
-
-pd_plot(bart_machine, j="horsepower")
-#pd_plot(bart_machine, j="width")
-#pd_plot(bart_machine, j="stroke")
-#pd_plot(bart_machine, j="horsepower")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#symboling,normalized_losses,make,fuel_type,aspiration,num_doors,body_style,wheel_drive,engine_location,wheel_base,length,width,height,curb_weight,engine_type,num_cylinders,engine_size,fuel_system,bore,stroke,compression_ratio,horsepower,peak_rpm,city_mpg,highway_mpg,price
-
-
+#Figure 10a
 pd_plot(bart_machine_cv, j = "horsepower")
-pd_plot(bart_machine_cv, j = "width")
-#pd_plot(bart_machine, j="stroke")
-#pd_plot(bart_machine, j="horsepower")
+windows()
+#Figure 10b
+pd_plot(bart_machine_cv, j = "stroke")
 
-#################################
-
-
-
-
-
-
-
-
-
-
-
-
-#now let's play with missing data
-setwd("C:\\Users\\Kapelner\\workspace\\CGMBART_GPL")
-
-library(bartMachine)
+##### section 4.8
 
 Xy = read.csv("datasets/r_automobile.csv")
-Xy = Xy[!is.na(Xy$price), ] #kill rows without a response
+Xy = Xy[!is.na(Xy$price), ] #kill rows without a response but do not kill rows that are missing
 y = log(as.numeric(Xy$price))
 Xy$price = log(Xy$price)
-
-
-#now remove some variables and coerce some to numeric
 Xy$make = NULL
 Xy$num_doors = ifelse(Xy$num_doors == "two", 2, 4)
 Xy$num_cylinders = ifelse(Xy$num_cylinders == "twelve", 12, ifelse(Xy$num_cylinders == "eight", 8, ifelse(Xy$num_cylinders == "six", 6, ifelse(Xy$num_cylinders == "five", 5, ifelse(Xy$num_cylinders == "four", 4, ifelse(Xy$num_cylinders == "three", 3, 2))))))
-
 X = Xy
 X$price = NULL
 
-
-set_bart_machine_num_cores(4)
-init_java_for_bart_machine_with_mem_in_mb(5000)
-
-bart_machine = build_bart_machine(X, y, verbose = T, debug_log = T, use_missing_data = TRUE, use_missing_data_dummies_as_covars = TRUE, impute_missingness_with_rf_impute = TRUE)
+bart_machine = build_bart_machine(X, y, verbose = FALSE, use_missing_data = TRUE, use_missing_data_dummies_as_covars = TRUE)
 bart_machine
 
-bart_machine = build_bart_machine(X, y, verbose = T, debug_log = T, use_missing_data = TRUE, use_missing_data_dummies_as_covars = TRUE)
+cov_importance_test(bart_machine, covariates = c("M_normalized_losses", "M_bore", "M_stroke", "M_horsepower", "M_peak_rpm"))
+
+#build the model without these dummies but still incorporating missing data
+bart_machine = build_bart_machine(X, y, verbose = FALSE, use_missing_data = TRUE)
 bart_machine
-bart_machine$training_data_features_with_missing_features
 
-bart_machine = build_bart_machine(X, y, verbose = T, debug_log = T, replace_missing_data_with_x_j_bar = TRUE)
-bart_machine
+##### section 4.9
 
-#we ask the question: does missingness itself matter?
-cov_importance_test(bart_machine, covariates = 47 : 51, num_permutations = 100)
-#p-val = 0.47
-
-#doesn't seem to matter so let's not use the extra missing covariates
-bart_machine = build_bart_machine(X, y, verbose = T, debug_log = T, use_missing_data = TRUE)
-bart_machine
-bart_machine$training_data_features_with_missing_features
-
-oos_stats = k_fold_cv(X, y, use_missing_data = TRUE, k_folds = 10)
-oos_stats
-
-investigate_var_importance(bart_machine_cv, num_replicates_for_avg = 25)
-
-#now let's do some variable selection
-windows()
-vs = var_selection_by_permute_response_three_methods(bart_machine, bottom_margin = 10)
+vs = var_selection_by_permute_response_three_methods(bart_machine, bottom_margin = 10, num_permute_samples = 10)
 vs$important_vars_local_names
 vs$important_vars_global_max_names
 vs$important_vars_global_se_names
-
-vars_selected_cv = var_selection_by_permute_response_cv(bart_machine)
-
-#build model on just the vars selected by ptwise
-X_dummified = dummify_data(X)
-
-bart_machine_ptwise_vars = build_bart_machine(X_dummified[, vs$important_vars_local_names], y, verbose = T, debug_log = T, use_missing_data = TRUE)
-bart_machine_ptwise_vars
-bart_machine_ptwise_vars$training_data_features_with_missing_features
-
-oos_stats_red_mod = k_fold_cv(X_dummified[, vs$important_vars_local_names], y, use_missing_data = TRUE, k_folds = 20)
-oos_stats_red_mod
-
-bart_machine_simul_max_vars = build_bart_machine(X_dummified[, vs$important_vars_global_max_names], y, verbose = T, debug_log = T, use_missing_data = TRUE)
-bart_machine_simul_max_vars
-bart_machine_simul_max_vars$training_data_features_with_missing_features
-
-oos_stats_red_mod = k_fold_cv(X_dummified[, vs$important_vars_global_max_names], y, use_missing_data = TRUE, k_folds = 20)
-oos_stats_red_mod
-
-interactions = interaction_investigator(bart_machine_simul_max_vars)
-
-#conclusion: did better than original model by cutting out crap
-
-mod = lm(as.formula(paste("y ~ (", paste(vs$important_vars_global_max_names, collapse = "+"), ")^2")), data = X_dummified)
-summary(mod)
-
-
-mod = lm(y ~ ., data = X)
-summary(mod)
-
-##oosRMSE for OLS
-
-
-k_folds = 10
-Xy$fuel_system = NULL
-n = nrow(Xy)
-p = ncol(Xy) - 1
-
-holdout_size = round(n / k_folds)
-split_points = seq(from = 1, to = n, by = holdout_size)[1 : k_folds]
-
-L1_err = 0
-L2_err = 0
-
-for (k in 1 : k_folds){
-	cat(".")
-	holdout_index_i = split_points[k]
-	holdout_index_f = ifelse(k == k_folds, n, split_points[k + 1] - 1)
-	
-	test_data_k = Xy[holdout_index_i : holdout_index_f, ]
-	training_data_k = Xy[-c(holdout_index_i : holdout_index_f), ]
-	
-	training_data_k$engine_location = NULL
-	ols_mod = lm(price ~ ., training_data_k)
-	
-	y_hat = predict(ols_mod, test_data_k[, 1 : p])
-	
-	#tabulate errors
-	L1_err = L1_err + sum(abs(y_hat - test_data_k[, (p + 1)]))
-	L2_err = L2_err + sum((y_hat - test_data_k[, (p + 1)])^2)
-}
-cat("\n")
-
-list(L1_err = L1_err, L2_err = L2_err, rmse = sqrt(L2_err / n), PseudoRsq = 1 - L2_err / sum((y - mean(y))^2))
-
-
-#conclusion: can build a pretty damn good parametric model with first order interactions
+cv_vars = var_selection_by_permute_response_cv(bart_machine, num_permute_samples = 10)
+cv_vars
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#   http://archive.ics.uci.edu/ml/datasets/Automobile
 
 #1. Title: 1985 Auto Imports Database
 #
@@ -452,130 +235,3 @@ list(L1_err = L1_err, L2_err = L2_err, rmse = sqrt(L2_err / n), PseudoRsq = 1 - 
 #		23.            2
 #		26.            4
 #		
-
-# http://archive.ics.uci.edu/ml/datasets/Automobile
-
-
-
-#########PIMA classification
-
-library(bartMachine)
-library(MASS)
-
-data(Pima.te)
-X = Pima.te[, -8]
-y = Pima.te[, 8]
-
-set_bart_machine_num_cores(4)
-init_java_for_bart_machine_with_mem_in_mb(2500)
-
-bart_machine = build_bart_machine(X, y)
-y_hat = predict(bart_machine, X)
-
-#k_fold_cv(X, y)
-#doesn't work
-bart_machine_cv = build_bart_machine_cv(X, y)
-bart_machine_cv
-
-bart_machine = build_bart_machine(X, y, prob_rule_class = 0.3)
-bart_machine
-
-#doesn't work
-plot_y_vs_yhat(bart_machine_cv, credible_intervals = TRUE)
-plot_y_vs_yhat(bart_machine_cv, prediction_intervals = TRUE)
-
-
-oos_stats = k_fold_cv(X, y, k_folds = 10)
-oos_stats$confusion_matrix
-
-
-get_var_counts_over_chain(bart_machine_cv)
-
-get_var_props_over_chain(bart_machine_cv)
-
-cov_importance_test(bart_machine_cv, covariates = c("age"))
-
-check_bart_error_assumptions(bart_machine_cv)
-hist_sigsqs(bart_machine_cv)
-get_sigsqs(bart_machine_cv)
-
-plot_sigsqs_convergence_diagnostics(bart_machine_cv)
-
-investigate_var_importance(bart_machine_cv)
-
-plot_convergence_diagnostics(bart_machine_cv)
-
-interaction_investigator(bart_machine_cv)
-
-pd_plot(bart_machine_cv, j = "glu")
-
-plot_tree_depths(bart_machine_cv)
-get_tree_depths(bart_machine_cv)
-plot_tree_num_nodes(bart_machine_cv)
-plot_mh_acceptance_reject(bart_machine_cv)
-
-rmse_by_num_trees(bart_machine_cv)
-
-bart_predict_for_test_data(bart_machine_cv, X[1 : 50, ], y[1 : 50])
-
-bart_machine_get_posterior(bart_machine_cv, X[1 : 5, ])
-calc_credible_intervals(bart_machine_cv, X[1 : 2, ])
-calc_prediction_intervals(bart_machine_cv, X[1 : 2, ])
-
-vs = var_selection_by_permute_response_three_methods(bart_machine_cv, bottom_margin = 10, num_permute_samples=10) ##fix dot printing
-names(vs)
-cv_vars = var_selection_by_permute_response_cv(bart_machine_cv, k_folds = 2, num_reps_for_avg = 5, num_permute_samples = 20, num_trees_pred_cv = 50)
-
-
-
-
-
-
-
-
-
-
-#build another model with alpha beta to show depth of trees
-
-vs = var_selection_by_permute_response_three_methods(bart_machine, bottom_margin = 10, num_permute_samples=10) ##fix dot printing
-names(vs)
-cv_vars = var_selection_by_permute_response_cv(bart_machine, k_folds = 2, num_reps_for_avg = 5, num_permute_samples = 20, num_trees_pred_cv = 50)
-
-rmse_by_num_trees(bart_machine, num_replicates = 20)
-
-bart_machine_cv = build_bart_machine_cv(X, y, verbose = T)
-# BART CV win: k: 2 nu, q: 3, 0.9 m: 200
-bart_machine_cv
-
-#what is oosRMSE?
-oos_stats = k_fold_cv(X, y, k_folds = 10, k = 2, nu = 3, q = 0.9, num_trees = 200)
-oos_stats
-
-
-check_bart_error_assumptions(bart_machine_cv)
-plot_convergence_diagnostics(bart_machine_cv)
-
-
-calc_credible_intervals(bart_machine_cv, new_data = X[100, ], ci_conf = 0.95)
-calc_prediction_intervals(bart_machine_cv, new_data = X[100, ], pi_conf = 0.95)
-
-investigate_var_importance(bart_machine_cv, num_replicates_for_avg = 100)
-ints = interaction_investigator(bart_machine_cv, num_replicates_for_avg = 200, bottom_margin = 20)
-
-
-
-cov_importance_test(bart_machine_cv, covariates = c("body_style_wagon"))
-cov_importance_test(bart_machine_cv, covariates = c("width"))
-cov_importance_test(bart_machine_cv, covariates = c("body_style_wagon", "body_style_sedan", "fuel_system_1bbl", "fuel_system_spdi", "wheel_drive_4wd", "engine_type_dohc", "height", "engine_type_ohcf", "engine_type_ohcv", "compression_ratio", "fuel_system_mfi", "body_style_hatchback", "bore", "symboling", "stroke"))
-cov_importance_test(bart_machine_cv)
-
-#symboling,normalized_losses,make,fuel_type,aspiration,num_doors,body_style,wheel_drive,engine_location,wheel_base,length,width,height,curb_weight,engine_type,num_cylinders,engine_size,fuel_system,bore,stroke,compression_ratio,horsepower,peak_rpm,city_mpg,highway_mpg,price
-
-
-pd_plot(bart_machine_cv, j = "horsepower")
-pd_plot(bart_machine_cv, j = "width")
-pd_plot(bart_machine_cv, j = "stroke")
-
-
-# http://archive.ics.uci.edu/ml/datasets/Automobile
-

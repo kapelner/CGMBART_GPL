@@ -10,8 +10,7 @@ do not affect the response under the assumptions of the BART
 model.
 }
 \usage{
-cov_importance_test(bart_machine, covariates = NULL, 
-num_permutations = 100, num_trees = NULL, plot = TRUE)
+cov_importance_test(bart_machine, covariates = NULL, num_permutations = 100, plot = TRUE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -19,15 +18,12 @@ num_permutations = 100, num_trees = NULL, plot = TRUE)
   An object of class ``bart_machine''.
 }
   \item{covariates}{
-	A vector indicating the covariates of interest to be tested for having an effect on the response.
+	A vector of names of covariates of interest to be tested for having an effect on the response. A value of NULL
+	indicates an omnibus test for all covariates having an effect on the response. If the name of a covariate is a factor,
+	the entire factor will be permuted. We do not recommend entering the names of factor covariate dummies.
 }
-  \item{num_permutations}{
+  \item{num_permutation_samples}{
 	The number of times to permute the covariates of interest and create a corresponding new BART model (see details).
-}
-  \item{num_trees}{
-	The number of trees to use during the permutations of the covariates of interest (see details). This
-	parameter is not thought to have an effect on the result if left in the reasonable range of 50-200. 
-	Default is to use the number of trees in the \code{bart_machine} object.
 }
   \item{plot}{
 	If \code{TRUE}, this produces a histogram of the Pseudo-Rsq's / total misclassifcation error rates from

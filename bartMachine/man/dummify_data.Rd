@@ -8,16 +8,13 @@ Dummify Design Matrix
 Create a data frame with factors converted to dummies. 
 }
 \usage{
-dummify_data(data, ...)
+dummify_data(data)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{data}{
-Data frame to be dummified. 
-}
-  \item{\dots}{
-Additional parameters. For internal processing only. 
-}
+	Data frame to be dummified. 
+	}
 }
 \details{
 The column names of the dummy variables are given by the ``FactorName_LevelName'' and are augmented to the end of the design matrix. See the example below.

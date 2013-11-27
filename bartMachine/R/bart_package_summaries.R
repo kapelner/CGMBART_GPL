@@ -14,9 +14,9 @@ summary.bartMachine = function(object, ...){
 	ttb = as.numeric(object$time_to_build, units = "secs")
 	if (ttb > 60){
 		ttb = as.numeric(object$time_to_build, units = "mins")
-		cat(paste("built in", round(ttb, 2), "mins on", object$num_cores, ifelse(object$num_cores == 1, "core,", "cores,"), object$num_trees, "trees,", object$num_burn_in, "burn in and", object$num_iterations_after_burn_in, "post. samples\n"))
+		cat(paste("built in", round(ttb, 2), "mins on", object$num_cores, ifelse(object$num_cores == 1, "core,", "cores,"), object$num_trees, "trees,", object$num_burn_in, "burn-in and", object$num_iterations_after_burn_in, "post. samples\n"))
 	} else {
-		cat(paste("built in", round(ttb, 1), "secs on", object$num_cores, ifelse(object$num_cores == 1, "core,", "cores,"), object$num_trees, "trees,", object$num_burn_in, "burn in and", object$num_iterations_after_burn_in, "post. samples\n"))
+		cat(paste("built in", round(ttb, 1), "secs on", object$num_cores, ifelse(object$num_cores == 1, "core,", "cores,"), object$num_trees, "trees,", object$num_burn_in, "burn-in and", object$num_iterations_after_burn_in, "post. samples\n"))
 	}
 	
 	if (object$pred_type == "regression"){

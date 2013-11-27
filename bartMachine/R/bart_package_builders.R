@@ -42,9 +42,9 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		stop("You need to give BART a training set either by specifying X and y or by specifying a matrix Xy which contains the response named \"y.\"\n")
 	} else if (is.null(X) && is.null(y)){ #they specified Xy, so now just pull out X,y
 		y = Xy[, ncol(Xy)]
-		for (j in 1 : (ncol(Xy) - 1)){
-			if (colnames(Xy)[j] == ""){
-				colnames(Xy)[j] = paste("V", j, sep = "")
+		for (cov in 1 : (ncol(Xy) - 1)){
+			if (colnames(Xy)[cov] == ""){
+				colnames(Xy)[cov] = paste("V", cov, sep = "")
 			}
 		}
 		X = as.data.frame(Xy[, 1 : (ncol(Xy) - 1)])
@@ -134,16 +134,19 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 		}
 	}	
 
-	model_matrix_training_data = cbind(pre_process_training_data(X, use_missing_data_dummies_as_covars, rf_imputations_for_missing, verbose), y_remaining)
-	cat("original model_matrix\n")
-	print(model_matrix_training_data[1 : 15, ])
+	model_matrix_training_data = cbind(pre_process_training_data(X, use_missing_data_dummies_as_covars, rf_imputations_for_missing), y_remaining)
+#	cat("original model_matrix\n")
+#	print(model_matrix_training_data[1 : 5, ])
 	#this is a private parameter ONLY called by cov_importance_test
 	if (!is.null(covariates_to_permute)){
-		for (j in covariates_to_permute){
-			model_matrix_training_data[, j] = sample(model_matrix_training_data[, j])
-			cat("after permute covariate", j, "\n")
-			print(model_matrix_training_data[1 : 15, ])
-		}		
+		for (cov in covariates_to_permute){
+			if (!(cov %in% colnames(model_matrix_training_data)) && class(cov) == "character"){
+				stop("Covariate \"", cov, "\" not found in design matrix.")
+			}
+			model_matrix_training_data[, cov] = sample(model_matrix_training_data[, cov])
+		}
+#		cat("after permute covariates", paste(covariates_to_permute), "\n")
+#		print(model_matrix_training_data[1 : 5, ])
 	}
 	
 	#now set whether we want the program to log to a file
@@ -295,6 +298,8 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 			impute_missingness_with_rf_impute = impute_missingness_with_rf_impute,
 			impute_missingness_with_x_j_bar_for_lm = impute_missingness_with_x_j_bar_for_lm,			
 			verbose = verbose,
+			mem_cache_for_speed = mem_cache_for_speed,
+			debug_log = debug_log,
 			num_rand_samps_in_library = num_rand_samps_in_library
 	)
 	
@@ -354,7 +359,7 @@ build_bart_machine = function(X = NULL, y = NULL, Xy = NULL,
 }
 
 ##private function that creates a duplicate of an existing bartMachine object.
-bart_machine_duplicate = function(bart_machine, X = NULL, y = NULL, cov_prior_vec = NULL, num_trees = NULL, run_in_sample = NULL, ...){
+bart_machine_duplicate = function(bart_machine, X = NULL, y = NULL, cov_prior_vec = NULL, num_trees = NULL, run_in_sample = NULL, covariates_to_permute = NULL, verbose = NULL, ...){
   if (is_bart_destroyed(bart_machine)){
     stop("This BART machine has been destroyed. Please recreate.")
 	}	
@@ -373,25 +378,35 @@ bart_machine_duplicate = function(bart_machine, X = NULL, y = NULL, cov_prior_ve
 	if (is.null(run_in_sample)){
 		run_in_sample = FALSE
 	}
+	if (is.null(covariates_to_permute)){
+		covariates_to_permute = bart_machine$covariates_to_permute
+	}
+	if (is.null(verbose)){
+		verbose = FALSE
+	}	
 	build_bart_machine(X, y,
-			num_trees = num_trees,
-			num_burn_in = bart_machine$num_burn_in, 
-			num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in, 
-			alpha = bart_machine$alpha,
-			beta = bart_machine$beta,
-			debug_log = FALSE,
-			prob_rule_class = bart_machine$prob_rule_class,
-			s_sq_y = bart_machine$s_sq_y,
-			cov_prior_vec = cov_prior_vec,
-			run_in_sample = run_in_sample,
-			use_missing_data = bart_machine$use_missing_data,
-			use_missing_data_dummies_as_covars = bart_machine$use_missing_data_dummies_as_covars,
-			num_rand_samps_in_library = bart_machine$num_rand_samps_in_library,
-			replace_missing_data_with_x_j_bar = bart_machine$replace_missing_data_with_x_j_bar,
-			impute_missingness_with_rf_impute = bart_machine$impute_missingness_with_rf_impute,
-			impute_missingness_with_x_j_bar_for_lm = bart_machine$impute_missingness_with_x_j_bar_for_lm,			
-			verbose = FALSE, 
-			...)
+		num_trees = num_trees, #found many times to not get better after this value... so let it be the default, it's faster too 
+		num_burn_in = bart_machine$num_burn_in, 
+		num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in, 
+		alpha = bart_machine$alpha,
+		beta = bart_machine$beta,
+		k = bart_machine$k,
+		q = bart_machine$q,
+		nu = bart_machine$nu,
+		prob_rule_class = bart_machine$prob_rule_class,
+		mh_prob_steps = bart_machine$mh_prob_steps, #only the first two matter
+		run_in_sample = run_in_sample,
+		s_sq_y =  bart_machine$s_sq_y, # "mse" or "var"
+		cov_prior_vec = cov_prior_vec,
+		use_missing_data = bart_machine$use_missing_data,
+		covariates_to_permute = covariates_to_permute, #PRIVATE
+		num_rand_samps_in_library = bart_machine$num_rand_samps_in_library, #give the user the option to make a bigger library of random samples of normals and inv-gammas
+		use_missing_data_dummies_as_covars = bart_machine$use_missing_data_dummies_as_covars,
+		replace_missing_data_with_x_j_bar = bart_machine$replace_missing_data_with_x_j_bar,
+		impute_missingness_with_rf_impute = bart_machine$impute_missingness_with_rf_impute,
+		impute_missingness_with_x_j_bar_for_lm = bart_machine$impute_missingness_with_x_j_bar_for_lm,
+		mem_cache_for_speed = bart_machine$mem_cache_for_speed,
+		verbose = verbose)
 }
 
 #build a BART-cv model

@@ -176,20 +176,9 @@ var_selection_by_permute_response_cv = function(bart_machine, k_folds = 5, num_r
 		training_y_k = bart_machine$y[-c(holdout_index_i : holdout_index_f)]		
 		
 		#make a temporary bart machine just so we can run the var selection for all three methods
-		bart_machine_temp = build_bart_machine(as.data.frame(training_X_k), training_y_k, 				 
-				num_trees = bart_machine$num_trees, 
-				num_burn_in = bart_machine$num_burn_in,
-				cov_prior_vec = bart_machine$cov_prior_vec,
-				run_in_sample = FALSE,
-				use_missing_data = bart_machine$use_missing_data,
-				use_missing_data_dummies_as_covars = bart_machine$use_missing_data_dummies_as_covars,
-				num_rand_samps_in_library = bart_machine$num_rand_samps_in_library,
-				replace_missing_data_with_x_j_bar = bart_machine$replace_missing_data_with_x_j_bar,
-				impute_missingness_with_rf_impute = bart_machine$impute_missingness_with_rf_impute,
-				impute_missingness_with_x_j_bar_for_lm = bart_machine$impute_missingness_with_x_j_bar_for_lm,	
-				verbose = FALSE)
+		bart_machine_temp = bart_machine_duplicate(bart_machine, X = as.data.frame(training_X_k), y = training_y_k, run_in_sample = FALSE, verbose = FALSE)
     
-    ##do variable selection
+        ##do variable selection
 		bart_variables_select_obj_k = var_selection_by_permute_response_three_methods(bart_machine_temp, 
 				num_permute_samples = num_permute_samples, 
 				num_trees_for_permute = num_trees_for_permute,
@@ -213,11 +202,8 @@ var_selection_by_permute_response_cv = function(bart_machine, k_folds = 5, num_r
 				#and we take L2 error against ybar
 				L2_err_mat[k, method] = sum((test_y_k - ybar_est)^2)
 			} else {
-				training_X_k_red_by_vars_picked_by_method = data.frame(training_X_k[, vars_selected_by_method])
 				#now build the bart machine based on reduced model
-				bart_machine_temp = build_bart_machine(training_X_k_red_by_vars_picked_by_method, training_y_k,
-						num_burn_in = bart_machine$num_burn_in,
-						num_iterations_after_burn_in = bart_machine$num_iterations_after_burn_in,
+				bart_machine_temp = bart_machine_duplicate(bart_machine, X = data.frame(training_X_k[, vars_selected_by_method]), y = training_y_k,
 						num_trees = num_trees_pred_cv,
 						run_in_sample = FALSE,
 						verbose = FALSE)
@@ -242,7 +228,7 @@ var_selection_by_permute_response_cv = function(bart_machine, k_folds = 5, num_r
 	bart_variables_select_obj = var_selection_by_permute_response_three_methods(bart_machine, 
 			num_permute_samples = num_permute_samples, 
 			num_trees_for_permute = num_trees_for_permute, 
-	    num_reps_for_avg = num_reps_for_avg,                                                                        
+	    	num_reps_for_avg = num_reps_for_avg,                                                                        
 			alpha = alpha, 
 			plot = FALSE)
 	

@@ -7,12 +7,12 @@ check_for_errors_in_training_data = function(data){
 	FALSE
 }
 
-dummify_data = function(data, ...){
-	as.data.frame(pre_process_training_data(data, ...))
+dummify_data = function(data){
+	as.data.frame(pre_process_training_data(data))
 }
 
 ##private function that handles all pre-processing (dummification, missing data, etc.)
-pre_process_training_data = function(data, use_missing_data_dummies_as_covars = FALSE, imputations = NULL, verbose = FALSE){
+pre_process_training_data = function(data, use_missing_data_dummies_as_covars = FALSE, imputations = NULL){
 
 	#first convert characters to factors
 	character_vars = names(which(sapply(data, class) == "character"))
@@ -72,7 +72,7 @@ pre_process_new_data = function(new_data, bart_machine){
 		imputations = imputations[1 : nrow(new_data), ]
 		colnames(imputations) = paste(colnames(imputations), "_imp", sep = "")
 	}
-	new_data = pre_process_training_data(new_data, bart_machine$use_missing_data_dummies_as_covars, imputations, bart_machine$verbose)
+	new_data = pre_process_training_data(new_data, bart_machine$use_missing_data_dummies_as_covars, imputations)
 	n = nrow(new_data)
 	new_data_features = colnames(new_data)
 	
