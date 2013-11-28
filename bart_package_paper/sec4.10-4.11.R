@@ -43,4 +43,5 @@ X = fr_data[, 2 : 101]
 
 bart_machine = build_bart_machine(X, y)
 
+# Figure 11
 interaction_investigator(bart_machine, num_replicates_for_avg = 25, num_var_plot = 10)

@@ -1,33 +1,10 @@
-/*
-    BART - Bayesian Additive Regressive Trees
-    Software for Supervised Statistical Learning
-    
-    Copyright (C) 2012 Professor Ed George & Adam Kapelner, 
-    Dept of Statistics, The Wharton School of the University of Pennsylvania
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details:
-    
-    http://www.gnu.org/licenses/gpl-2.0.txt
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-*/
-
 package AlgorithmTesting;
 
 import java.io.File;
 import java.io.IOException;
 
 import CGM_BART.*;
+import CGM_BART.Classifier.ErrorTypes;
 
 public class DataAnalysis {
 	
@@ -70,8 +47,8 @@ public class DataAnalysis {
 			System.out.println("errors: " + 
 					(int)machine.calculateInSampleLoss(Classifier.ErrorTypes.MISCLASSIFICATION, 4) + 
 					"/" + 
-					machine.getN() + 
-					"  (" + machine.calculateMisclassificationRate(4) + "%)");
+					machine.getN() +
+					"  (" + machine.calculateInSampleLoss(ErrorTypes.MISCLASSIFICATION, 4) / (double) machine.getN() * 100 + "%)");
 			long end_time = System.currentTimeMillis();
 			System.out.println("Current Time:"+ (end_time-start_time)/1000);
 		}

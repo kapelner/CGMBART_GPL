@@ -140,7 +140,8 @@ addAll( collection );
 
 /**
 * Creates a new <code>TDoubleHashSet</code> instance containing the
-* elements of <tt>array</tt>.
+* elements of <tt>array</tt>. bartMachine: we also instantiate a 
+* <code>TDoubleArrayList</code> along with the <code>TDoubleHashSet</code>.
 *
 * @param array an array of <code>double</code> primitives
 */
@@ -175,7 +176,9 @@ return dest;
 }
 
 
-/** {@inheritDoc} */
+/** {@inheritDoc} 
+ * bartMachine: we also add the value to the array
+ */
 public boolean add( double val ) {
 	int index = insertKey(val);
 	
@@ -191,17 +194,18 @@ public boolean add( double val ) {
 	return true;            // yes, we added something
 }
 
-
+/**
+ * bartMachine: we send this object back as an array
+ */
 public double[] toArray() {
 	return array.toArray();
 }
 
+/**
+ * bartMachine: we get the value at an index in the array
+ */
 public double getAtIndex(int index){
 	return array.get(index);
-}
-
-public double[] getAsArray(){
-	return array.toArray();
 }
 
 /**
@@ -213,7 +217,9 @@ public int size() {
     return array.size();
 }
 
-/** {@inheritDoc} */
+/** {@inheritDoc} 
+ * bartMachine: we also remove the value in the array
+ */
 public boolean remove( double val ) {
 	//we only need to remove the value from the array since that's all we care about
 	//the hash function is only needed during construction to get rid of the non-unique
