@@ -2,13 +2,27 @@ package CGM_BART;
 
 import gnu.trove.list.array.TIntArrayList;
 
+/**
+ * This portion of the code implements the informed prior information on covariates feature.
+ * 
+ * @author 	Adam Kapelner and Justin Bleich
+ * @see 	Section 4.10 of Kapelner, A and Bleich, J. bartMachine: A Powerful Tool for Machine Learning in R. ArXiv e-prints, 2013
+ */
 public class CGMBART_F1_prior_cov_spec extends CGMBART_09_eval {
 	
+	/** Do we use this feature in this BART model? */
 	protected boolean use_prior_cov_spec;
-	/** This is the prior on which covs to split */
+	/** This is a probability vector which is the prior on which covariates to split instead of the uniform discrete distribution by default */
 	protected double[] cov_split_prior;	
 
 	
+	/**
+	 * Pick one predictor from a set of valid predictors that can be part of a split rule at a node
+	 * while accounting for the covariate prior.
+	 * 
+	 * @param node	The node of interest
+	 * @return		The index of the column to split on
+	 */
 	private int pickRandomPredictorThatCanBeAssignedF1(CGMBARTTreeNode node){
 		TIntArrayList predictors = node.predictorsThatCouldBeUsedToSplitAtNode();
 		//get probs of split prior based on predictors that can be used and weight it accordingly
@@ -17,6 +31,12 @@ public class CGMBART_F1_prior_cov_spec extends CGMBART_09_eval {
 		return StatToolbox.multinomial_sample(predictors, weighted_cov_split_prior_subset);
 	}
 	
+	/**
+	 * The prior-adjusted number of covariates available to be split at this node
+	 *  
+	 * @param node		The node of interest
+	 * @return			The prior-adjusted number of covariates that can be split
+	 */
 	private double pAdjF1(CGMBARTTreeNode node) {
 		if (node.padj == null){
 			node.padj = node.predictorsThatCouldBeUsedToSplitAtNode().size();
@@ -45,6 +65,13 @@ public class CGMBART_F1_prior_cov_spec extends CGMBART_09_eval {
 		return 1 / weighted_cov_split_prior_subset[index];
 	}
 	
+	/**
+	 * Given a set of valid predictors return the probability vector that corresponds to the
+	 * elements of <code>cov_split_prior</code> re-normalized because some entries may be deleted
+	 * 
+	 * @param predictors	The indices of the valid covariates
+	 * @return				The updated and renormalized prior probability vector on the covariates to split
+	 */
 	private double[] getWeightedCovSplitPriorSubset(TIntArrayList predictors) {
 		double[] weighted_cov_split_prior_subset = new double[predictors.size()];
 		for (int i = 0; i < predictors.size(); i++){
@@ -54,11 +81,6 @@ public class CGMBART_F1_prior_cov_spec extends CGMBART_09_eval {
 		return weighted_cov_split_prior_subset;
 	}	
 
-	/**
-	 * set the general version of the vector here
-	 * 
-	 * @param cov_split_prior
-	 */
 	public void setCovSplitPrior(double[] cov_split_prior) {
 		this.cov_split_prior = cov_split_prior;
 		//if we're setting the vector, we're using this feature
@@ -74,11 +96,6 @@ public class CGMBART_F1_prior_cov_spec extends CGMBART_09_eval {
 		return super.pickRandomPredictorThatCanBeAssigned(node);
 	}	
 	
-	/**
-	 * Gets the total number of predictors that could be used for rules at this juncture
-	 * @param node 
-	 * @return
-	 */
 	public double pAdj(CGMBARTTreeNode node){
 		if (use_prior_cov_spec){
 			return pAdjF1(node);
