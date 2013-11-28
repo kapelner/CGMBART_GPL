@@ -1,14 +1,17 @@
 package CGM_BART;
 
+/**
+ * This portion of the code used to have many debug functions. These have 
+ * been removed during the tidy up for release.
+ * 
+ * @author Adam Kapelner and Justin Bleich
+ */
 public abstract class CGMBART_03_debug extends CGMBART_02_hyperparams {
 
+	/** should we create illustrations of the trees and save the images to the debug directory? */
 	protected boolean tree_illust = false;
 	
-
-//	static {		
-//		TreeIllustration.DeletePreviousTreeIllustrations();
-//	}
-	
+	/** the hook that gets called to save the tree illustrations when the Gibbs sampler begins */
 	protected void DebugInitialization() {
 		CGMBARTTreeNode[] initial_trees = gibbs_samples_of_cgm_trees[0];
 			
@@ -22,16 +25,18 @@ public abstract class CGMBART_03_debug extends CGMBART_02_hyperparams {
 		}
 	}
 	
-	public void printTreeIllustations(){
-		tree_illust = true;
-	}		
-
+	/** the hook that gets called to save the tree illustrations for each Gibbs sample */
 	protected void DebugSample(int gibbs_sample_num, TreeArrayIllustration tree_array_illustration) {
 		if (tree_illust){ //
 			tree_array_illustration.CreateIllustrationAndSaveImage();
 		}
 	}
 	
+	/**
+	 * Get the untransformed samples of the sigsqs from the Gibbs chaing
+	 * 
+	 * @return	The vector of untransformed variances over all the Gibbs samples
+	 */
 	public double[] getGibbsSamplesSigsqs(){
 		double[] sigsqs_to_export = new double[gibbs_samples_of_sigsq.length];
 		for (int n_g = 0; n_g < gibbs_samples_of_sigsq.length; n_g++){			
@@ -40,30 +45,13 @@ public abstract class CGMBART_03_debug extends CGMBART_02_hyperparams {
 		return sigsqs_to_export;
 	}	
 	
-	private int maximalTreeGeneration(){
-		int max_gen = Integer.MIN_VALUE;
-		for (CGMBARTTreeNode[] cgm_trees : gibbs_samples_of_cgm_trees){
-			if (cgm_trees != null){				
-				for (CGMBARTTreeNode tree : cgm_trees){					
-					int gen = tree.deepestNode();
-					if (gen >= max_gen){
-						max_gen = gen;
-					}
-				}
-			}
-		}
-		return max_gen;
-	}
-	
-	public int maximalNodeNumber(){
-		int max_gen = maximalTreeGeneration();
-		int node_num = 0;
-		for (int g = 0; g <= max_gen; g++){
-			node_num += (int)Math.pow(2, g);
-		}
-		return node_num;
-	}	
-	
+	/**
+	 * Queries the depths of the <code>num_trees</code> trees between a range of Gibbs samples
+	 * 
+	 * @param n_g_i		The Gibbs sample number to start querying
+	 * @param n_g_f		The Gibbs sample number (+1) to stop querying
+	 * @return			The depths of all <code>num_trees</code> trees for each Gibbs sample specified
+	 */
 	public int[][] getDepthsForTrees(int n_g_i, int n_g_f){
 		int[][] all_depths = new int[n_g_f - n_g_i][num_trees];
 		for (int g = n_g_i; g < n_g_f; g++){
@@ -74,7 +62,13 @@ public abstract class CGMBART_03_debug extends CGMBART_02_hyperparams {
 		return all_depths;
 	}
 	
-	
+	/**
+	 * Queries the number of nodes (terminal and non-terminal) in the <code>num_trees</code> trees between a range of Gibbs samples
+	 * 
+	 * @param n_g_i		The Gibbs sample number to start querying
+	 * @param n_g_f		The Gibbs sample number (+1) to stop querying
+	 * @return			The number of nodes of all <code>num_trees</code> trees for each Gibbs sample specified
+	 */
 	public int[][] getNumNodesAndLeavesForTrees(int n_g_i, int n_g_f){
 		int[][] all_new_nodes = new int[n_g_f - n_g_i][num_trees];
 		for (int g = n_g_i; g < n_g_f; g++){
@@ -84,7 +78,9 @@ public abstract class CGMBART_03_debug extends CGMBART_02_hyperparams {
 		}
 		return all_new_nodes;
 	}	
-
-
+	
+	public void printTreeIllustations(){
+		tree_illust = true;
+	}
 
 }

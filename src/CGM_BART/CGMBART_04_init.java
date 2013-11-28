@@ -10,7 +10,6 @@ public abstract class CGMBART_04_init extends CGMBART_03_debug {
 	protected double[] sum_resids_vec;	
 	
 	protected void SetupGibbsSampling(){
-//		System.out.println("SetupGibbsSampling");
 		InitGibbsSamplingData();	
 		InitizializeSigsq();
 		InitializeTrees();
@@ -58,9 +57,7 @@ public abstract class CGMBART_04_init extends CGMBART_03_debug {
 	
 	protected static final double INITIAL_SIGSQ = Math.pow(0.5 / 3, 2); //median, doesn't matter anyway
 	protected void InitizializeSigsq() {
-//		System.out.println("InitizializeSigsq");
 		gibbs_samples_of_sigsq[0] = INITIAL_SIGSQ;
-//		gibbs_samples_of_sigsq.add(0, sampleInitialSigsqByDrawingFromThePrior());
 	}
 	
 	protected double sampleInitialSigsqByDrawingFromThePrior() {
@@ -68,6 +65,10 @@ public abstract class CGMBART_04_init extends CGMBART_03_debug {
 		//which is equivalent to sampling (1 / sigsq) ~ Gamma(nu / 2, 2 / (nu * lambda))
 		return StatToolbox.sample_from_inv_gamma(hyper_nu / 2, 2 / (hyper_nu * hyper_lambda)); 
 	}	
+	
+	public int numSamplesAfterBurningAndThinning(){
+		return num_gibbs_total_iterations - num_gibbs_burn_in;
+	}
 
 	public void setNumGibbsBurnIn(int num_gibbs_burn_in){
 		this.num_gibbs_burn_in = num_gibbs_burn_in;
@@ -76,10 +77,6 @@ public abstract class CGMBART_04_init extends CGMBART_03_debug {
 	public void setNumGibbsTotalIterations(int num_gibbs_total_iterations){
 		this.num_gibbs_total_iterations = num_gibbs_total_iterations;
 	}
-	
-	public int numSamplesAfterBurningAndThinning(){
-		return num_gibbs_total_iterations - num_gibbs_burn_in;
-	}	
 	
 	public void setSigsq(double fixed_sigsq){
 		this.fixed_sigsq = fixed_sigsq;
