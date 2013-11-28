@@ -2,37 +2,38 @@ package CGM_BART;
 
 import java.util.ArrayList;
 
-
+/**
+ * This portion of the code performs the Metropolis-Hastings tree search step
+ * 
+ * @author Adam Kapelner and Justin Bleich
+ */
 public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal {
+	
+	/** turning this flag on prints out debugging information about the Metropolis-Hastings tree search step */
 	private static final boolean DEBUG_MH = false;
-
+	
+	/** the probability of picking a grow step */
 	protected double prob_grow;
+	/** the probability of picking a prune step */
 	protected double prob_prune;
 
-	//this enum has to include all potential types of steps, even if they aren't used in this class's implementation
+	/** the types of steps in the Metropolis-Hastings tree search */
 	public enum Steps {GROW, PRUNE, CHANGE};
+	
 	/**
-	 * Iterates the Metropolis-Hastings algorithm by one step
-	 * This does the MH
+	 * Performs one Metropolis-Hastings step for one tree
 	 * 
-	 * @param T_i				the original tree
-	 * @param iteration_name	we just use this when naming the image file of this illustration
-	 * @return 					the next tree (T_{i+1}) via one iteration of M-H
+	 * @param T_i				The original tree to be changed by a proposal step
+	 * @param iteration_name	we just use this when naming the image file of this illustration (debugging only)
+	 * @return 					the next tree (T_{i+1}) via one iteration of M-H which can be the proposal tree (if the step was accepted) or the original tree (if the step was rejected)
 	 */
 	protected CGMBARTTreeNode metroHastingsPosteriorTreeSpaceIteration(CGMBARTTreeNode T_i, int tree_num, boolean[][] accept_reject_mh, char[][] accept_reject_mh_steps) {
-//		System.out.println("iterateMHPosteriorTreeSpaceSearch");
-		final CGMBARTTreeNode T_star = T_i.clone();
-//		System.out.println("SampleTree T_i \n responses: " + 
-//				Tools.StringJoin(T_i.responses) + 
-//				"\n indicies " + Tools.StringJoin(T_i.indicies));		
-//		System.out.println("SampleTree T_star \n responses: " + 
-//				Tools.StringJoin(T_star.responses) + 
-//				"\n indicies " + Tools.StringJoin(T_star.indicies)); 		
+		CGMBARTTreeNode T_star = T_i.clone();		
 		//each proposal will calculate its own value, but this has to be initialized atop		
 		double log_r = 0;
 		
 		//if it's a stump force a GROW change, otherwise pick randomly from the steps according to the "hidden parameters"
-		switch (T_i.isStump() ? Steps.GROW : randomlyPickAmongTheProposalSteps(T_i)){
+		switch (T_i.isStump() ? Steps.GROW : randomlyPickAmongTheProposalSteps()){
 			case GROW:
 				accept_reject_mh_steps[gibbs_sample_num][tree_num] = 'G';
 				log_r = doMHGrowAndCalcLnR(T_i, T_star);
@@ -45,23 +46,15 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal {
 				accept_reject_mh_steps[gibbs_sample_num][tree_num] = 'C';
 				log_r = doMHChangeAndCalcLnR(T_i, T_star);
 				break;				
-		}		
+		}	
+		//draw from a Uniform 0, 1 and log it
 		double ln_u_0_1 = Math.log(StatToolbox.rand());
-//		if (log_r > Double.MIN_VALUE){
 		if (DEBUG_MH){
 			System.out.println("ln u = " + ln_u_0_1 + 
 					" <? ln(r) = " + 
 					(log_r < -99999 ? "very small" : log_r));
 		}
-//		}
-		//ACCEPT/REJECT,STEP_name,log_prop_lik_o,log_prop_lik_f,log_r 
-//		CGMBART_03_debug.mh_iterations_full_record.println(
-//			(acceptProposal(ln_u_0_1, log_r) ? "A" : "R") + "," +  
-//			TreeIllustration.one_digit_format.format(log_r) + "," +
-//			TreeIllustration.two_digit_format.format(ln_u_0_1)
-//		);		
-//		System.out.println("ln_u_0_1: " + ln_u_0_1 + " ln_r: " + log_r);
-		if (acceptProposal(ln_u_0_1, log_r)){ //accept proposal
+		if (ln_u_0_1 < log_r){ //accept proposal if the draw is less than the ratio
 			if (DEBUG_MH){
 				System.out.println("proposal ACCEPTED\n\n");
 			}
@@ -77,12 +70,19 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal {
 		return T_i;
 	}
 
+	/**
+	 * Perform the grow step on a tree and return the log Metropolis-Hastings ratio
+	 * 
+	 * @param T_i		The root node of the original tree 
+	 * @param T_star	The root node of a copy of the original tree where one node will be grown
+	 * @return			The log Metropolis-Hastings ratio
+	 * @see 			Section A.1 of Kapelner, A and Bleich, J. bartMachine: A Powerful Tool for Machine Learning in R. ArXiv e-prints, 2013
+	 */
 	protected double doMHGrowAndCalcLnR(CGMBARTTreeNode T_i, CGMBARTTreeNode T_star) {
-//		System.out.println("doMHGrowAndCalcLnR on " + T_star.stringID() + " old depth: " + T_star.deepestNode());
+		//first select a node that can be grown
 		CGMBARTTreeNode grow_node = pickGrowNode(T_star);
-		//if we can't grow, reject offhand
-		if (grow_node == null){ // || grow_node.generation >= 2
-//			System.out.println("no valid grow nodes    proposal ln(r) = -oo DUE TO CANNOT GROW\n\n");
+		//if we couldn't find a node that be grown, then we can't grow, so reject offhand
+		if (grow_node == null){
 			return Double.NEGATIVE_INFINITY;					
 		}
 		
@@ -93,13 +93,8 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal {
 		grow_node.splitValue = grow_node.pickRandomSplitValue();
 		//now pick randomly which way the missing data goes - left (false) or right (true)
 		grow_node.sendMissingDataRight = CGMBARTTreeNode.pickRandomDirectionForMissingData();
-//		System.out.print("split_value = " + split_value);
 		//inform the user if things go awry
 		if (grow_node.splitValue == CGMBARTTreeNode.BAD_FLAG_double){
-//			System.err.println("ERROR!!! GROW <<" + grow_node.stringLocation(true) + ">> ---- X_" + (grow_node.splitAttributeM) + "  proposal ln(r) = -oo DUE TO NO SPLIT VALUES");
-//			if (CGMBARTTreeNode.DEBUG_NODES){
-//				grow_node.printNodeDebugInfo("ERROR GROW");
-//			}
 			return Double.NEGATIVE_INFINITY;					
 		}			
 		grow_node.isLeaf = false;
@@ -113,9 +108,7 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal {
 			}
 			return Double.NEGATIVE_INFINITY;
 		}
-//		System.out.print("grow_node.splitValue = " + grow_node.splitValue);
 		
-//		System.out.println("grow_node: " + grow_node.stringID() + " new depth: " + T_star.deepestNode() + " " + grow_node.deepestNode());
 		double ln_transition_ratio_grow = calcLnTransRatioGrow(T_i, T_star, grow_node);
 		double ln_likelihood_ratio_grow = calcLnLikRatioGrow(grow_node);
 		double ln_tree_structure_ratio_grow = calcLnTreeStructureRatioGrow(grow_node);
@@ -134,11 +127,19 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal {
 		return ln_transition_ratio_grow + ln_likelihood_ratio_grow + ln_tree_structure_ratio_grow;
 	}
 	
+	/**
+	 * Perform the prune step on a tree and return the log Metropolis-Hastings ratio
+	 * 
+	 * @param T_i		The root node of the original tree 
+	 * @param T_star	The root node of a copy of the original tree where one set of terminal nodes will be pruned
+	 * @return			The log Metropolis-Hastings ratio
+	 * @see 			Section A.2 of Kapelner, A and Bleich, J. bartMachine: A Powerful Tool for Machine Learning in R. ArXiv e-prints, 2013
+	 */
 	protected double doMHPruneAndCalcLnR(CGMBARTTreeNode T_i, CGMBARTTreeNode T_star) {
-		CGMBARTTreeNode prune_node = pickPruneNodeOrChangeNode(T_star, "prune");
-		//if we can't grow, reject offhand
+		//first select a node that can be pruned
+		CGMBARTTreeNode prune_node = pickPruneNodeOrChangeNode(T_star);
+		//if we didn't find one to prune, then we can't prunce, so reject offhand
 		if (prune_node == null){
-//			System.err.println("proposal ln(r) = -oo DUE TO CANNOT PRUNE");
 			return Double.NEGATIVE_INFINITY;
 		}		
 		T_star.decrement_variable_count(prune_node.splitAttributeM);
@@ -161,20 +162,25 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal {
 		return ln_transition_ratio_prune + ln_likelihood_ratio_prune + ln_tree_structure_ratio_prune;
 	}	
 	
-	protected CGMBARTTreeNode pickPruneNodeOrChangeNode(CGMBARTTreeNode T, String change_or_prune) {
+	/**
+	 * This function picks a node suitable for pruning or changing. In our implementation this is a 
+	 * node that is "singly internal" (ie it has two children and its children are both terminal nodes)
+	 * 
+	 * @param T					The root of the tree we wish to find singly internal nodes	
+	 * @return					A singly internal node selected at random from all candididates or null if none exist
+	 */
+	protected CGMBARTTreeNode pickPruneNodeOrChangeNode(CGMBARTTreeNode T) {
 		
-		//2 checks
+		//Two checks need to be performed first before we run a search on the tree structure
 		//a) If this is the root, we can't prune so return null
 		//b) If there are no prunable nodes (not sure how that could happen), return null as well
 		
 		if (T.isStump()){
-//			System.err.println("ERROR!!! cannot " + change_or_prune + " a stump!");
 			return null;			
 		}
 		
 		ArrayList<CGMBARTTreeNode> prunable_and_changeable_nodes = T.getPrunableAndChangeableNodes();
 		if (prunable_and_changeable_nodes.size() == 0){
-//			System.err.println("ERROR!!! no prune nodes in " + change_or_prune + " step!  T parent: " + T.parent + " T left: " + T.left + " T right: " + T.right);
 			return null;
 		}		
 		
@@ -182,34 +188,35 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal {
 		return prunable_and_changeable_nodes.get((int)Math.floor(StatToolbox.rand() * prunable_and_changeable_nodes.size()));
 	}
 	
-	protected double calcLnTransRatioPrune(CGMBARTTreeNode T_i, CGMBARTTreeNode T_star, CGMBARTTreeNode prune_node) {
-		int w_2 = T_i.numPruneNodesAvailable();
+	/**
+	 * Calculates the log transition ratio for a grow step
+	 * 
+	 * @param T_i					The root node of the original tree
+	 * @param T_star				The root node of the proposal tree
+	 * @param node_grown_in_Tstar	The node that was grown in the proposal tree
+	 * @return						The log of the transition ratio
+	 * @see 						Section A.1.1 of Kapelner, A and Bleich, J. bartMachine: A Powerful Tool for Machine Learning in R. ArXiv e-prints, 2013
+	 */
+	protected double calcLnTransRatioGrow(CGMBARTTreeNode T_i, CGMBARTTreeNode T_star, CGMBARTTreeNode node_grown_in_Tstar) {
 		int b = T_i.numLeaves();
-		double p_adj = pAdj(prune_node);
-		int n_adj = prune_node.nAdj();
-		return Math.log(w_2) - Math.log(b - 1) - Math.log(p_adj) - Math.log(n_adj); 
+		double p_adj = pAdj(node_grown_in_Tstar);
+		int n_adj = node_grown_in_Tstar.nAdj();
+		int w_2_star = T_star.numPruneNodesAvailable();
+		return Math.log(b) + Math.log(p_adj) + Math.log(n_adj) - Math.log(w_2_star); 
 	}
 
-	protected double calcLnTreeStructureRatioGrow(CGMBARTTreeNode grow_node) {
-		int d_eta = grow_node.depth;
-		double p_adj = pAdj(grow_node);
-		int n_adj = grow_node.nAdj();
-//		System.out.println("calcLnTreeStructureRatioGrow d_eta: " + d_eta + " p_adj: " + p_adj + " n_adj: " + n_adj + " n_repeat: " + n_repeat + " ALPHA: " + ALPHA + " BETA: " + BETA);
-		return Math.log(alpha) 
-				+ 2 * Math.log(1 - alpha / Math.pow(2 + d_eta, beta))
-				- Math.log(Math.pow(1 + d_eta, beta) - alpha)
-				- Math.log(p_adj) 
-				- Math.log(n_adj);
-	}
-
+	/**
+	 * Calculates the log of the likelihood ratio for a grow step
+	 * 
+	 * @param grow_node		The node that was grown in the proposal tree
+	 * @return				The log of the likelihood ratio
+	 * @see 				Section A.1.2 of Kapelner, A and Bleich, J. bartMachine: A Powerful Tool for Machine Learning in R. ArXiv e-prints, 2013
+	 */
 	protected double calcLnLikRatioGrow(CGMBARTTreeNode grow_node) {
 		double sigsq = gibbs_samples_of_sigsq[gibbs_sample_num - 1];
 		int n_ell = grow_node.n_eta;
 		int n_ell_L = grow_node.left.n_eta;
 		int n_ell_R = grow_node.right.n_eta;
-		
-//		System.out.println(" sigsq: " + sigsq);
-//		System.out.println("calcLnLikRatioGrow n_ell: " + n_ell + " n_ell_L: " + n_ell_L + " n_ell_R: " + n_ell_R);
 
 		//now go ahead and calculate it out	in an organized fashion:
 		double sigsq_plus_n_ell_hyper_sisgsq_mu = sigsq + n_ell * hyper_sigsq_mu;
@@ -224,23 +231,50 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal {
 		double e = grow_node.left.sumResponsesQuantitySqd() / sigsq_plus_n_ell_L_hyper_sisgsq_mu
 				+ grow_node.right.sumResponsesQuantitySqd() / sigsq_plus_n_ell_R_hyper_sisgsq_mu
 				- grow_node.sumResponsesQuantitySqd() / sigsq_plus_n_ell_hyper_sisgsq_mu;
-//		System.out.println("calcLnLikRatioGrow c: " + c + " d: " + d + " e: " + e);
 		return c + d * e;
-	}
+	}	
 
-	protected double calcLnTransRatioGrow(CGMBARTTreeNode T_i, CGMBARTTreeNode T_star, CGMBARTTreeNode node_grown_in_Tstar) {
+	/**
+	 * Calculates the log transition ratio for a grow step
+	 * 
+	 * @param grow_node		The node that was grown in the proposal tree
+	 * @return				The log of the transition ratio
+	 * @see 				Section A.1.3 of Kapelner, A and Bleich, J. bartMachine: A Powerful Tool for Machine Learning in R. ArXiv e-prints, 2013
+	 */
+	protected double calcLnTreeStructureRatioGrow(CGMBARTTreeNode grow_node) {
+		int d_eta = grow_node.depth;
+		double p_adj = pAdj(grow_node);
+		int n_adj = grow_node.nAdj();
+		return Math.log(alpha) 
+				+ 2 * Math.log(1 - alpha / Math.pow(2 + d_eta, beta))
+				- Math.log(Math.pow(1 + d_eta, beta) - alpha)
+				- Math.log(p_adj) 
+				- Math.log(n_adj);
+	}	
+	
+	/**
+	 * This calculates the log transition ratio for the prune step.
+	 * 
+	 * @param T_i			The root node of the original tree
+	 * @param T_star		The root node of the proposal tree
+	 * @param prune_node	The node that was pruned
+	 * @return				The log transition ratio
+	 * @see 				Section A.2.1 of Kapelner, A and Bleich, J. bartMachine: A Powerful Tool for Machine Learning in R. ArXiv e-prints, 2013
+	 */
+	protected double calcLnTransRatioPrune(CGMBARTTreeNode T_i, CGMBARTTreeNode T_star, CGMBARTTreeNode prune_node) {
+		int w_2 = T_i.numPruneNodesAvailable();
 		int b = T_i.numLeaves();
-		double p_adj = pAdj(node_grown_in_Tstar);
-		int n_adj = node_grown_in_Tstar.nAdj();
-		int w_2_star = T_star.numPruneNodesAvailable();
-//		System.out.println("calcLnTransRatioGrow b:" + b + " p_adj: " + p_adj + " n_adj: " + n_adj + " w_2_star:" + w_2_star + " n_repeat:" + n_repeat);
-		return Math.log(b) + Math.log(p_adj) + Math.log(n_adj) - Math.log(w_2_star); 
+		double p_adj = pAdj(prune_node);
+		int n_adj = prune_node.nAdj();
+		return Math.log(w_2) - Math.log(b - 1) - Math.log(p_adj) - Math.log(n_adj); 
 	}
 
-	protected boolean acceptProposal(double ln_u_0_1, double log_r){
-		return ln_u_0_1 < log_r ? true : false;
-	}
-
+	/**
+	 * Selects a node in a tree that is eligible for being grown with two children
+	 * 
+	 * @param T		The root node of the tree to be searched
+	 * @return		The node that is viable for growing
+	 */
 	protected CGMBARTTreeNode pickGrowNode(CGMBARTTreeNode T) {
 		ArrayList<CGMBARTTreeNode> growth_nodes = T.getTerminalNodesWithDataAboveOrEqualToN(2);
 		
@@ -250,7 +284,6 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal {
 		
 		//do check a
 		if (growth_nodes.size() == 0){
-//			System.err.println("ERROR!!! no growth nodes in GROW step!");
 			return null;
 		}		
 		
@@ -259,29 +292,31 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal {
 
 		//do check b
 		if (pAdj(growth_node) == 0){
-//			System.err.println("ERROR!!! no attributes available in GROW step!");
 			return null;			
 		}
 		//if we passed, we can use this node
 		return growth_node;
 	}
 
-
+	/**
+	 * Perform the change step on a tree and return the log Metropolis-Hastings ratio
+	 * 
+	 * @param T_i		The root node of the original tree 
+	 * @param T_star	The root node of a copy of the original tree where one node will be changed
+	 * @return			The log Metropolis-Hastings ratio
+	 * @see 			Section A.3 of Kapelner, A and Bleich, J. bartMachine: A Powerful Tool for Machine Learning in R. ArXiv e-prints, 2013
+	 */
 	protected double doMHChangeAndCalcLnR(CGMBARTTreeNode T_i, CGMBARTTreeNode T_star) {
-		CGMBARTTreeNode eta_star = pickPruneNodeOrChangeNode(T_star, "change");		
+		CGMBARTTreeNode eta_star = pickPruneNodeOrChangeNode(T_star);		
 		CGMBARTTreeNode eta_just_for_calculation = eta_star.clone();
 		
 		//now start the growth process
 		//first pick the attribute and then the split and then which way to send the missing data		
 		eta_star.splitAttributeM = pickRandomPredictorThatCanBeAssigned(eta_star);
 		eta_star.splitValue = eta_star.pickRandomSplitValue();
-//		System.out.println("PICKED SPLIT VALUE: " + eta_star.splitValue + " on attr: " + eta_star.splitAttributeM);
 		eta_star.sendMissingDataRight = CGMBARTTreeNode.pickRandomDirectionForMissingData();
-//		System.out.print("split_value = " + split_value);
 		//inform the user if things go awry
 		if (eta_star.splitValue == CGMBARTTreeNode.BAD_FLAG_double){
-//			System.err.println("ERROR!!! CHANGE <<" + eta_star.stringLocation(true) + ">> ---- X_" + (eta_star.splitAttributeM + 1) + "  proposal ln(r) = -oo DUE TO NO SPLIT VALUES");
-//			eta_star.printNodeDebugInfo("ERROR");
 			return Double.NEGATIVE_INFINITY;					
 		}
 		
@@ -306,7 +341,14 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal {
 		return ln_tree_structure_ratio_change; //the transition ratio cancels out the tree structure ratio
 	}
 	
-	
+	/**
+	 * Calculates the log likelihood ratio for a change step
+	 * 
+	 * @param eta		The node in the original tree that was targeted for a change in the splitting rule
+	 * @param eta_star	The same node but now with a different splitting rule
+	 * @return			The log likelihood ratio
+	 * @see 			Section A.3.2 of Kapelner, A and Bleich, J. bartMachine: A Powerful Tool for Machine Learning in R. ArXiv e-prints, 2013
+	 */
 	private double calcLnLikRatioChange(CGMBARTTreeNode eta, CGMBARTTreeNode eta_star) {
 		int n_1_star = eta_star.left.n_eta;
 		int n_2_star = eta_star.right.n_eta;
@@ -326,8 +368,6 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal {
 		
 		//couple checks
 		if (n_1_star == 0 || n_2_star == 0){
-//			System.err.println("ERROR!!! CHANGE picked an invalid split rule and we ended up with a blank node  proposal ln(r) = -oo DUE TO NO SPLIT VALUES");
-
 			eta.printNodeDebugInfo("PARENT BEFORE");
 			eta_star.printNodeDebugInfo("PARENT AFTER");
 			eta.left.printNodeDebugInfo("LEFT BEFORE");
@@ -364,7 +404,12 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal {
 		}
 	}
 
-	protected Steps randomlyPickAmongTheProposalSteps(CGMBARTTreeNode T) {
+	/**
+	 * Randomly chooses among the valid tree proposal steps from a multinomial distribution
+	 * 
+	 * @return	The step that was chosen
+	 */
+	protected Steps randomlyPickAmongTheProposalSteps() {
 		double roll = StatToolbox.rand();
 		if (roll < prob_grow){
 			return Steps.GROW;

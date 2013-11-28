@@ -18,7 +18,6 @@ public abstract class CGMBART_09_eval extends CGMBART_07_mh {
 	}
 
 	protected double[] getGibbsSamplesForPrediction(double[] data_record, int num_cores_evaluate){
-//		System.out.println("eval record: " + record + " numtrees:" + this.bayesian_trees.size());
 		//the results for each of the gibbs samples
 		double[] y_gibbs_samples = new double[numSamplesAfterBurningAndThinning()];	
 		for (int g = 0; g < numSamplesAfterBurningAndThinning(); g++){
@@ -40,9 +39,7 @@ public abstract class CGMBART_09_eval extends CGMBART_07_mh {
 		//calculate index of the CI_a and CI_b
 		int n_bottom = (int)Math.round((1 - coverage) / 2 * y_gibbs_samples_sorted.length) - 1; //-1 because arrays start at zero
 		int n_top = (int)Math.round(((1 - coverage) / 2 + coverage) * y_gibbs_samples_sorted.length) - 1; //-1 because arrays start at zero
-//		System.out.print("getPostPredictiveIntervalForPrediction record = " + IOTools.StringJoin(record, ",") + "  Ng=" + y_gibbs_samples_sorted.length + " n_a=" + n_bottom + " n_b=" + n_top + " guess = " + Evaluate(record));
 		double[] conf_interval = {y_gibbs_samples_sorted[n_bottom], y_gibbs_samples_sorted[n_top]};
-//		System.out.println("  [" + conf_interval[0] + ", " + conf_interval[1] + "]");
 		return conf_interval;
 	}
 	

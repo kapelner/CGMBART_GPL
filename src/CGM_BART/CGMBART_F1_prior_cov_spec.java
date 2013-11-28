@@ -13,9 +13,6 @@ public class CGMBART_F1_prior_cov_spec extends CGMBART_09_eval {
 		TIntArrayList predictors = node.predictorsThatCouldBeUsedToSplitAtNode();
 		//get probs of split prior based on predictors that can be used and weight it accordingly
 		double[] weighted_cov_split_prior_subset = getWeightedCovSplitPriorSubset(predictors);
-//		System.out.println("predictors: " + Tools.StringJoin(predictors));
-//		System.out.println("cov_split_prior: " + Tools.StringJoin(cov_split_prior));
-//		System.out.println("weighted_cov_split_prior_subset: " + Tools.StringJoin(weighted_cov_split_prior_subset));
 		//choose predictor based on random prior value	
 		return StatToolbox.multinomial_sample(predictors, weighted_cov_split_prior_subset);
 	}
@@ -35,8 +32,6 @@ public class CGMBART_F1_prior_cov_spec extends CGMBART_09_eval {
 		//get probs of split prior based on predictors that can be used and weight it accordingly
 		double[] weighted_cov_split_prior_subset = getWeightedCovSplitPriorSubset(predictors);	
 		
-//		System.out.println("predictors: " + Tools.StringJoin(predictors));
-//		System.out.println("splitAttributeM: " + node.splitAttributeM);
 		//find index inside predictor vector
 		int index = CGMBARTTreeNode.BAD_FLAG_int;
 		for (int i = 0; i < predictors.size(); i++){
@@ -46,8 +41,7 @@ public class CGMBART_F1_prior_cov_spec extends CGMBART_09_eval {
 			}
 		}
 		
-		//return inverse probability
-		
+		//return inverse probability		
 		return 1 / weighted_cov_split_prior_subset[index];
 	}
 	
