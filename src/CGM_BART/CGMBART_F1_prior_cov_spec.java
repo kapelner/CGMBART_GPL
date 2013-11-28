@@ -56,7 +56,7 @@ public class CGMBART_F1_prior_cov_spec extends CGMBART_09_eval {
 		for (int i = 0; i < predictors.size(); i++){
 			weighted_cov_split_prior_subset[i] = cov_split_prior[predictors.get(i)];
 		}
-		Tools.weight_arr_by_sum(weighted_cov_split_prior_subset);
+		Tools.normalize_array(weighted_cov_split_prior_subset);
 		return weighted_cov_split_prior_subset;
 	}	
 

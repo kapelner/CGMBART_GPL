@@ -434,8 +434,8 @@ public class CGMBARTRegressionMultThread extends Classifier {
 		for (int g = 0; g < num_gibbs_total_iterations - num_gibbs_burn_in; g++){
 			attribute_counts = Tools.add_arrays(attribute_counts, variable_counts_all_gibbs[g]);
 		}
-		
-		return Tools.scale_array(attribute_counts); //will turn it into proportions
+		Tools.normalize_array(attribute_counts); //will turn it into proportions
+		return attribute_counts;
 	}
 
 	public int[][] getCountsForAllAttribute(final int num_cores, final String type) {
@@ -525,46 +525,25 @@ public class CGMBARTRegressionMultThread extends Classifier {
 	
 
 	public int[][] getInteractionCounts(int num_cores){
-		final int[][] interaction_count_matrix = new int[p][p];
-//		ExecutorService interaction_count_getter_pool = Executors.newFixedThreadPool(num_cores);
+		int[][] interaction_count_matrix = new int[p][p];
 		
 		for (int g = 0; g < gibbs_samples_of_cgm_trees_after_burn_in.length; g++){
-			final int gf = g;
-//	    	interaction_count_getter_pool.execute(new Runnable(){
-//				public void run() {
-					CGMBARTTreeNode[] trees = gibbs_samples_of_cgm_trees_after_burn_in[gf];
-					
-					for (CGMBARTTreeNode tree : trees){
-						//get the set of pairs of interactions
-						HashSet<UnorderedPair<Integer>> set_of_interaction_pairs = new HashSet<UnorderedPair<Integer>>(p * p);
-						//find all interactions
-						tree.findInteractions(set_of_interaction_pairs);
-//						Tools.print_unordered_pair_set(set_of_interaction_pairs);
-						//now tabulate these interactions in our count matrix
-//						synchronized(interaction_count_matrix){
-							for (UnorderedPair<Integer> pair : set_of_interaction_pairs){
-//								System.out.println("interaction: " + pair.getFirst() + " " + pair.getSecond());
-								interaction_count_matrix[pair.getFirst()][pair.getSecond()]++; 
-							}
-//						}
-					}
-//				}
-//			});			
-//			
+			CGMBARTTreeNode[] trees = gibbs_samples_of_cgm_trees_after_burn_in[g];
+			
+			for (CGMBARTTreeNode tree : trees){
+				//get the set of pairs of interactions
+				HashSet<UnorderedPair<Integer>> set_of_interaction_pairs = new HashSet<UnorderedPair<Integer>>(p * p);
+				//find all interactions
+				tree.findInteractions(set_of_interaction_pairs);
+				//now tabulate these interactions in our count matrix
+				for (UnorderedPair<Integer> pair : set_of_interaction_pairs){
+					interaction_count_matrix[pair.getFirst()][pair.getSecond()]++; 
+				}
+			}	
 		}
-//		interaction_count_getter_pool.shutdown();
-//		try {	         
-//	         interaction_count_getter_pool.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS); //effectively infinity
-//		} catch (InterruptedException ignored){}
 		
 		return interaction_count_matrix;
 	}
-
-//	int[][] ics = getInteractionCounts(num_cores);
-//	System.out.println("interaction counts");
-//	for (int j1 = 0; j1 < p; j1++){
-//		System.out.println(Tools.StringJoin(ics[j1], "\t"));
-//	}
 	
 	public boolean isDestroyed(){		
 		return destroyed;
