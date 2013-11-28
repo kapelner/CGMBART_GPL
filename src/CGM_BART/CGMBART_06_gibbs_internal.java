@@ -2,16 +2,26 @@ package CGM_BART;
 
 import gnu.trove.list.array.TIntArrayList;
 
+/**
+ * This portion of the code that performs the posterior sampling
+ * in the Gibbs sampler except for the Metropolis-Hastings tree search step
+ * 
+ * @author Adam Kapelner and Justin Bleich
+ */
 public abstract class CGMBART_06_gibbs_internal extends CGMBART_05_gibbs_base {
 
+	/**
+	 * Assigns a value to this terminal node; the value is the prediction at this corner of X space.
+	 * 
+	 * @node	The node to assign a prediction guess for
+	 * @sigsq	The current guess of the variance of the model errors
+	 */
 	protected void assignLeafValsBySamplingFromPosteriorMeanAndSigsqAndUpdateYhats(CGMBARTTreeNode node, double sigsq) {
-//		System.out.println("assignLeafValsUsingPosteriorMeanAndCurrentSigsq sigsq: " + sigsq);
 		if (node.isLeaf){
 			//update ypred
 			double posterior_var = calcLeafPosteriorVar(node, sigsq);
 			//draw from posterior distribution
 			double posterior_mean = calcLeafPosteriorMean(node, sigsq, posterior_var);
-//			System.out.println("assignLeafVals posterior_mean = " + posterior_mean + " posterior_sigsq = " + posterior_var + " node.avg_response = " + node.avg_response_untransformed());
 			node.y_pred = StatToolbox.sample_from_norm_dist(posterior_mean, posterior_var);
 			if (node.y_pred == StatToolbox.ILLEGAL_FLAG){				
 				node.y_pred = 0.0; //this could happen on an empty node
@@ -19,7 +29,6 @@ public abstract class CGMBART_06_gibbs_internal extends CGMBART_05_gibbs_base {
 			}
 			//now update yhats
 			node.updateYHatsWithPrediction();
-//			System.out.println("assignLeafFINAL " + un_transform_y(node.y_prediction) + " (sigsq = " + sigsq * y_range_sq + ")");
 		}
 		else {
 			assignLeafValsBySamplingFromPosteriorMeanAndSigsqAndUpdateYhats(node.left, sigsq);
@@ -27,44 +36,62 @@ public abstract class CGMBART_06_gibbs_internal extends CGMBART_05_gibbs_base {
 		}
 	}
 
+	/**
+	 * Calculate the posterior mean of the prediction distribution at a certain node
+	 * 
+	 * @param node				The node we are calculating the posterior mean for
+	 * @param sigsq				The current guess of the variance of the model errors
+	 * @param posterior_var		The posterior variance of the prediction distribution at this node
+	 * @return					The posterior mean for this node
+	 */
 	protected double calcLeafPosteriorMean(CGMBARTTreeNode node, double sigsq, double posterior_var) {
-//		System.out.println("leafPosteriorMean hyper_sigsq_mu " + hyper_sigsq_mu + " node.n " + node.n + " sigsq " + sigsq + " node.avg_response() " + node.avg_response() + " posterior_var " + posterior_var);
 		return (hyper_mu_mu / hyper_sigsq_mu + node.n_eta / sigsq * node.avgResponse()) * posterior_var;
 	}
 
+	/**
+	 * Calculate the posterior variance of the prediction distribution at a certain node
+	 * 
+	 * @param node		The node we are calculating the posterior variance for
+	 * @param sigsq		The current guess of the variance of the model errors
+	 * @return			The posterior variance for this node
+	 */
 	protected double calcLeafPosteriorVar(CGMBARTTreeNode node, double sigsq) {
-//		System.out.println("calcLeafPosteriorVar: node.n_eta = " + node.nEta());
 		return 1 / (1 / hyper_sigsq_mu + node.n_eta / sigsq);
 	}
 	
+	/**
+	 * Draws one variance from the posterior distribution
+	 * 
+	 * @param sample_num	The current sample number of the Gibbs sampler
+	 * @param es			The vector of residuals at this point in the Gibbs chain
+	 */
 	protected double drawSigsqFromPosterior(int sample_num, double[] es) {
 		//first calculate the SSE
 		double sse = 0;
 		for (double e : es){
 			sse += e * e; 
 		}
-//		System.out.println("hyper_nu = " + hyper_nu + " hyper_lambda = " + hyper_lambda + " esl = " + es.length + " sse = " + sse);
 		//we're sampling from sigsq ~ InvGamma((nu + n) / 2, 1/2 * (sum_i error^2_i + lambda * nu))
 		//which is equivalent to sampling (1 / sigsq) ~ Gamma((nu + n) / 2, 2 / (sum_i error^2_i + lambda * nu))
 		return StatToolbox.sample_from_inv_gamma((hyper_nu + es.length) / 2, 2 / (sse + hyper_nu * hyper_lambda));
 	}
 
 	/**
-	 * Pick a random predictor from the set of possible predictors at this juncture
-	 * @param node 
-	 * @return
+	 * Pick a random predictor from the set of valid, possible predictors at this point in the tree
+	 * 
+	 * @param node	The node to pick a predictor for
+	 * @return		The index of the picked predictor
 	 */
 	public int pickRandomPredictorThatCanBeAssigned(CGMBARTTreeNode node){
         TIntArrayList predictors = node.predictorsThatCouldBeUsedToSplitAtNode();
         return predictors.get((int)Math.floor(StatToolbox.rand() * pAdj(node)));
 	}
 	
-	
-	
 	/**
-	 * Gets the total number of predictors that could be used for rules at this juncture
-	 * @param node 
-	 * @return
+	 * Gets the total number of predictors that could be used for rules at this point in the tree
+	 * 
+	 * @param node 	The node to calculate the number of predictors for
+	 * @return		The number of valid predictors
 	 */
 	public double pAdj(CGMBARTTreeNode node){
 		if (node.padj == null){

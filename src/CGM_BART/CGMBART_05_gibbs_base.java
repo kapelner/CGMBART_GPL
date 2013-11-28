@@ -1,27 +1,32 @@
 package CGM_BART;
 
+/**
+ * This portion of the code performs everything in 
+ * the Gibbs sampling except for the posterior sampling itself
+ * 
+ * @author Adam Kapelner and Justin Bleich
+ */
 public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init {
 
-	public static final boolean ON_WINDOWS = System.getProperty("os.name").toLowerCase().indexOf("win") >= 0;
-	@Override
+	/** Builds a BART model by unleashing the Gibbs sampler */
 	public void Build() {
 		SetupGibbsSampling();
 		DoGibbsSampling();	
 	}	
 
-	protected void DoGibbsSampling(){	
-
-		while(gibbs_sample_num <= num_gibbs_total_iterations){			
+	/** Run the Gibbs sampler for the total number of samples prespecified while flushing unneeded memory from the previous sample */
+	protected void DoGibbsSampling(){
+		while (gibbs_sample_num <= num_gibbs_total_iterations){			
 			DoOneGibbsSample();
 			//now flush the previous previous gibbs sample to not leak memory
 			FlushDataForSample(gibbs_samples_of_cgm_trees[gibbs_sample_num - 1]);
-			DeleteBurnInSampleOnOtherThreads();
+			DeleteBurnInsOnPreviousSamples();
 			gibbs_sample_num++;
 		}
 	}
 	
+	/** Run one Gibbs sample at the current sample number */ 
 	protected void DoOneGibbsSample(){
-//		tree_liks.print(gibb_sample_num + ",");
 		//this array is the array of trees for this given sample
 		final CGMBARTTreeNode[] cgm_trees = new CGMBARTTreeNode[num_trees];				
 		final TreeArrayIllustration tree_array_illustration = new TreeArrayIllustration(gibbs_sample_num, unique_name);
@@ -40,8 +45,9 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init {
 //		DebugSample(gibbs_sample_num, tree_array_illustration);
 	}
 
+	/** Print a Gibbs sample debug message */
 	protected void GibbsSampleDebugMessage(int t) {
-		if (t == 0 && gibbs_sample_num % 100 == 0){//&& gibbs_sample_num % 100 == 0
+		if (t == 0 && gibbs_sample_num % 100 == 0){
 			String message = "Sampling M_" + (t + 1) + "/" + num_trees + " iter " + gibbs_sample_num + "/" + num_gibbs_total_iterations;
 			if (num_cores > 1){
 				message += "  thread: " + (threadNum + 1);
@@ -55,36 +61,53 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init {
 		}
 	}
 
+	/** 
+	 * A wrapper for sampling the mus (mean predictions at terminal nodes). This function implements part of the "residual diffing" explained in the paper.
+	 * 
+	 * @param sample_num	The current sample number of the Gibbs sampler
+	 * @param t				The tree index number in 1...<code>num_trees</code>
+	 * @see Section 3.1 of Kapelner, A and Bleich, J. bartMachine: A Powerful Tool for Machine Learning in R. ArXiv e-prints, 2013
+	 */
 	protected void SampleMusWrapper(int sample_num, int t) {
 		CGMBARTTreeNode previous_tree = gibbs_samples_of_cgm_trees[sample_num - 1][t];
 		//subtract out previous tree's yhats
-//		System.out.println("  previous yhats = " + Tools.StringJoin(previous_tree.yhats));
 		sum_resids_vec = Tools.subtract_arrays(sum_resids_vec, previous_tree.yhats);
-//		System.out.println("SampleMu sample_num " +  sample_num + " t " + t + " gibbs array " + gibbs_samples_of_cgm_trees.get(sample_num));
 		CGMBARTTreeNode tree = gibbs_samples_of_cgm_trees[sample_num][t];
 
-		SampleMus(sample_num, tree);
+		double current_sigsq = gibbs_samples_of_sigsq[sample_num - 1];
+		assignLeafValsBySamplingFromPosteriorMeanAndSigsqAndUpdateYhats(tree, current_sigsq);
 		
 		//after mus are sampled, we need to update the sum_resids_vec
-		//add in current tree's yhats
-//		System.out.println("  current  yhats = " + Tools.StringJoin(tree.yhats));
-		
+		//add in current tree's yhats		
 		sum_resids_vec = Tools.add_arrays(sum_resids_vec, tree.yhats);
 	}
 
-	private void DeleteBurnInSampleOnOtherThreads() {
+	/** deletes from memory tree Gibbs samples in the burn-in portion of the chain */
+	private void DeleteBurnInsOnPreviousSamples() {
 		if (gibbs_sample_num <= num_gibbs_burn_in + 1 && gibbs_sample_num >= 2){
 			gibbs_samples_of_cgm_trees[gibbs_sample_num - 2] = null;
-//			System.out.println("DeleteBurnInSampleOnOtherThreads() thread:" + (threadNum + 1) + " gibbs_sample_num = " + gibbs_sample_num + " num_gibbs_burn_in = " + num_gibbs_burn_in + " len = " + gibbs_samples_of_cgm_trees.size());
-			
 		}
 	}
 
+	/**
+	 * A wrapper that is responsible for drawing variance values
+	 *  
+	 * @param sample_num	The current sample number of the Gibbs sampler
+	 * @param es			The vector of residuals at this point in the Gibbs chain
+	 */
 	protected void SampleSigsq(int sample_num, double[] es) {
 		double sigsq = drawSigsqFromPosterior(sample_num, es);
 		gibbs_samples_of_sigsq[sample_num] = sigsq;
 	}
 	
+	/**
+	 * This function calculates the residuals from the sum-of-trees model using the diff trick explained in the paper
+	 * 
+	 * @param sample_num	The current sample number of the Gibbs sampler
+	 * @param R_j			The residuals of the model save the last tree's contribution
+	 * @return				The vector of residuals at this point in the Gibbs chain
+	 * @see Section 3.1 of Kapelner, A and Bleich, J. bartMachine: A Powerful Tool for Machine Learning in R. ArXiv e-prints, 2013
+	 */
 	protected double[] getResidualsFromFullSumModel(int sample_num, double[] R_j){	
 		//all we need to do is subtract the last tree's yhats now
 		CGMBARTTreeNode last_tree = gibbs_samples_of_cgm_trees[sample_num][num_trees - 1];
@@ -92,25 +115,24 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init {
 			R_j[i] -= last_tree.yhats[i];
 		}
 		return R_j;
-	}		
-
-	protected abstract double drawSigsqFromPosterior(int sample_num, double[] es);
-
-	protected void SampleMus(int sample_num, CGMBARTTreeNode tree) {
-		double current_sigsq = gibbs_samples_of_sigsq[sample_num - 1];
-		assignLeafValsBySamplingFromPosteriorMeanAndSigsqAndUpdateYhats(tree, current_sigsq);
 	}
 	
-	protected abstract void assignLeafValsBySamplingFromPosteriorMeanAndSigsqAndUpdateYhats(CGMBARTTreeNode node, double current_sigsq);
-	
-	protected double[] SampleTree(int sample_num, int t, CGMBARTTreeNode[] cgm_trees, TreeArrayIllustration tree_array_illustration) {
+	/**
+	 * A wrapper for sampling one tree during the Gibbs sampler
+	 * 
+	 * @param sample_num					The current sample number of the Gibbs sampler
+	 * @param t								The current tree to be sampled
+	 * @param trees							The trees in this Gibbs sampler
+	 * @param tree_array_illustration		The tree array (for debugging purposes only)
+	 * @return								The responses minus the sum of the trees' contribution up to this point
+	 */
+	protected double[] SampleTree(int sample_num, int t, CGMBARTTreeNode[] trees, TreeArrayIllustration tree_array_illustration) {
 		//first copy the tree from the previous gibbs position
 		final CGMBARTTreeNode copy_of_old_jth_tree = gibbs_samples_of_cgm_trees[sample_num - 1][t].clone();
 		
 		//okay so first we need to get "y" that this tree sees. This is defined as R_j in formula 12 on p274
 		//just go to sum_residual_vec and subtract it from y_trans
 		double[] R_j = Tools.add_arrays(Tools.subtract_arrays(y_trans, sum_resids_vec), copy_of_old_jth_tree.yhats);
-//		System.out.println("sample tree gs#" + sample_num + " t = " + t + " sum_resids = " + Tools.StringJoin(sum_resids_vec));
 		
 		//now, (important!) set the R_j's as this tree's data.
 		copy_of_old_jth_tree.updateWithNewResponsesRecursively(R_j);
@@ -120,35 +142,18 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init {
 		CGMBARTTreeNode new_jth_tree = metroHastingsPosteriorTreeSpaceIteration(copy_of_old_jth_tree, t, accept_reject_mh, accept_reject_mh_steps);
 		
 		//add it to the vector of current sample's trees
-		cgm_trees[t] = new_jth_tree;
+		trees[t] = new_jth_tree;
 		
-		//now set the new trees in the gibbs sample pantheon, keep updating it...
-		gibbs_samples_of_cgm_trees[sample_num] = cgm_trees;
+		//now set the new trees in the gibbs sample pantheon
+		gibbs_samples_of_cgm_trees[sample_num] = trees;
 		tree_array_illustration.AddTree(new_jth_tree);		
+		//return the updated residuals
 		return R_j;
 	}
 	
+	protected abstract double drawSigsqFromPosterior(int sample_num, double[] es);
+	
 	protected abstract CGMBARTTreeNode metroHastingsPosteriorTreeSpaceIteration(CGMBARTTreeNode copy_of_old_jth_tree, int t, boolean[][] accept_reject_mh, char[][] accept_reject_mh_steps);
 
-//	private void BurnTreeAndSigsqChain() {		
-//		for (int i = num_gibbs_burn_in; i < num_gibbs_total_iterations; i++){
-//			gibbs_samples_of_cgm_trees_after_burn_in[i - num_gibbs_burn_in] = gibbs_samples_of_cgm_trees[i];
-//			gibbs_samples_of_sigsq_after_burn_in[i - num_gibbs_burn_in] = gibbs_samples_of_sigsq[i];
-//		}	
-////		System.out.println("BurnTreeAndSigsqChain gibbs_samples_of_sigsq_after_burn_in length = " + gibbs_samples_of_sigsq_after_burn_in.size());
-//	}
-	
-//	public double[] getMuValuesForAllItersByTreeAndLeaf(int t, int leaf_num){
-//		double[] mu_vals = new double[num_gibbs_total_iterations];
-//		for (int n_g = 0; n_g < num_gibbs_total_iterations; n_g++){
-////			System.out.println("n_g: " + n_g + "length of tree vec: " + gibbs_samples_of_cgm_trees.get(n_g).size());
-//			CGMBARTTreeNode tree = gibbs_samples_of_cgm_trees.get(n_g).get(t);
-//			
-//			Double pred_y = tree.get_pred_for_nth_leaf(leaf_num);
-////			System.out.println("t: " + t + " leaf: " + leaf_num + " pred_y: " + pred_y);
-//			mu_vals[n_g] = un_transform_y(pred_y);
-//		}
-//		return mu_vals;
-//	}
-	
+	protected abstract void assignLeafValsBySamplingFromPosteriorMeanAndSigsqAndUpdateYhats(CGMBARTTreeNode node, double current_sigsq);
 }

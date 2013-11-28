@@ -20,6 +20,9 @@ import CustomLogging.*;
  */
 public abstract class Classifier {
 
+	/** Are we on a Windows machine (sometimes this matters) */
+	public static final boolean ON_WINDOWS = System.getProperty("os.name").toLowerCase().indexOf("win") >= 0;
+	
 	/** The way we represent missing values from within our implementation */
 	public static final double MISSING_VALUE = Double.NaN;
 	/**
