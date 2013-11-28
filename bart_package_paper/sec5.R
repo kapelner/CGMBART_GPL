@@ -20,16 +20,6 @@ oos_stats$confusion_matrix
 
 # Figure 12
 cov_importance_test(bart_machine_cv, covariates = c("age"))
-windows()
-cov_importance_test(bart_machine_cv, covariates = c("npreg"))
-windows()
-cov_importance_test(bart_machine_cv, covariates = c("glu"))
-windows()
-cov_importance_test(bart_machine_cv, covariates = c("bp"))
-windows()
-cov_importance_test(bart_machine_cv, covariates = c("skin"))
-windows()
-cov_importance_test(bart_machine_cv, covariates = c("bmi"))
 
 calc_credible_intervals(bart_machine_cv, X[1 : 2, ])
 
