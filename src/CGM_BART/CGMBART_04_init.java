@@ -1,14 +1,20 @@
 package CGM_BART;
 
+/**
+ * This portion of the code initializes the Gibbs sampler
+ * 
+ * @author Adam Kapelner and Justin Bleich
+ */
 public abstract class CGMBART_04_init extends CGMBART_03_debug {
 
 	/** during debugging, we may want to fix sigsq */
 	protected double fixed_sigsq;
-	/** which gibbs sample are we on now? */
+	/** the number of the current Gibbs sample */
 	protected int gibbs_sample_num;
-	/** cached current sum resids_vec */
+	/** cached current sum of residuals vector */
 	protected double[] sum_resids_vec;	
 	
+	/** Initializes the Gibbs sampler setting all zero entries and moves the counter to the first sample */
 	protected void SetupGibbsSampling(){
 		InitGibbsSamplingData();	
 		InitizializeSigsq();
@@ -20,6 +26,7 @@ public abstract class CGMBART_04_init extends CGMBART_03_debug {
 		sum_resids_vec = new double[n];
 	}
 	
+	/** Initializes the vectors that hold information across the Gibbs sampler */
 	protected void InitGibbsSamplingData(){
 		//now initialize the gibbs sampler array for trees and error variances
 		gibbs_samples_of_cgm_trees = new CGMBARTTreeNode[num_gibbs_total_iterations + 1][num_trees];
@@ -31,7 +38,7 @@ public abstract class CGMBART_04_init extends CGMBART_03_debug {
 		accept_reject_mh_steps = new char[num_gibbs_total_iterations + 1][num_trees];
 	}
 	
-	
+	/** Initializes the tree structures in the zeroth Gibbs sample to be merely stumps */
 	protected void InitializeTrees() {
 		//create the array of trees for the zeroth gibbs sample
 		CGMBARTTreeNode[] cgm_trees = new CGMBARTTreeNode[num_trees];		
@@ -43,29 +50,20 @@ public abstract class CGMBART_04_init extends CGMBART_03_debug {
 		gibbs_samples_of_cgm_trees[0] = cgm_trees;	
 	}
 
-	protected static final double INITIAL_PRED = 0; //median, doesn't matter anyway
+	
+	/** Initializes the leaf structure (the mean predictions) by setting them to zero (in the transformed scale, this is the center of the range) */
 	protected void InitializeMus() {
-//		System.out.println("InitializeMus");
-		//we don't want to do this
-//		for (CGMBARTTreeNode tree : gibbs_samples_of_cgm_trees.get(0)){
-//			assignLeafValsBySamplingFromPosteriorMeanGivenCurrentSigsq(tree, gibbs_samples_of_sigsq.get(0));
-//		}	
 		for (CGMBARTTreeNode stump : gibbs_samples_of_cgm_trees[0]){
-			stump.y_pred = INITIAL_PRED;
+			stump.y_pred = 0;
 		}
 	}
 	
-	protected static final double INITIAL_SIGSQ = Math.pow(0.5 / 3, 2); //median, doesn't matter anyway
+	/** Initializes the first variance value by drawing from the prior */
 	protected void InitizializeSigsq() {
-		gibbs_samples_of_sigsq[0] = INITIAL_SIGSQ;
-	}
-	
-	protected double sampleInitialSigsqByDrawingFromThePrior() {
-		//we're sampling from sigsq ~ InvGamma(nu / 2, nu * lambda / 2)
-		//which is equivalent to sampling (1 / sigsq) ~ Gamma(nu / 2, 2 / (nu * lambda))
-		return StatToolbox.sample_from_inv_gamma(hyper_nu / 2, 2 / (hyper_nu * hyper_lambda)); 
+		gibbs_samples_of_sigsq[0] = StatToolbox.sample_from_inv_gamma(hyper_nu / 2, 2 / (hyper_nu * hyper_lambda));
 	}	
 	
+	/** this is the number of posterior Gibbs samples afte burn-in (thinning was never implemented) */
 	public int numSamplesAfterBurningAndThinning(){
 		return num_gibbs_total_iterations - num_gibbs_burn_in;
 	}
