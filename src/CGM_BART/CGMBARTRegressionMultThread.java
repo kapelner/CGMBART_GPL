@@ -212,11 +212,6 @@ public class CGMBARTRegressionMultThread extends Classifier {
 		this.sample_var_y = sample_var_y;
 	}
 	
-	public void setPrintOutEveryNIter(int print_out_every){
-		CGMBART_01_base.PrintOutEvery = print_out_every;
-	}
-	
-	
 	public void setAlpha(double alpha){
 		this.alpha = alpha;
 	}

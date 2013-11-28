@@ -10,15 +10,8 @@ public abstract class CGMBART_05_gibbs_base extends CGMBART_04_init {
 	}	
 
 	protected void DoGibbsSampling(){	
-//		System.out.println("DoGibbsSampling");
+
 		while(gibbs_sample_num <= num_gibbs_total_iterations){			
-			if (stop_bit){ //rounded to the nearest gibbs sample
-				return;
-			}	
-//			if (PrintOutEvery != null && gibb_sample_num % PrintOutEvery == 0){
-//				System.out.println("gibbs iter: " + gibb_sample_num + "/" + num_gibbs_total_iterations);
-//			}
-			
 			DoOneGibbsSample();
 			//now flush the previous previous gibbs sample to not leak memory
 			FlushDataForSample(gibbs_samples_of_cgm_trees[gibbs_sample_num - 1]);

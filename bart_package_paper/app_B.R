@@ -150,6 +150,7 @@ for (nrep in 1 : NREP){
 	}	
 	print(oos_rmse_results[,, nrep])	
 }
+save(oos_rmse_results, file = "oos_rmse_results.RData")
 
 
 oos_rmse_results_avg = apply(oos_rmse_results, c(1, 2), mean)
@@ -170,7 +171,12 @@ t.test(oos_rmse_results[7, 1 ,], oos_rmse_results[7, 2 ,])$p.value < alpha_bonfe
 t.test(oos_rmse_results[8, 1 ,], oos_rmse_results[8, 2 ,])$p.value < alpha_bonferroni
 t.test(oos_rmse_results[9, 1 ,], oos_rmse_results[9, 2 ,])$p.value < alpha_bonferroni
 
-#add the TRUE's to the table as *'s
+#add the TRUE's to the table as *'s (in the appropriate column)
+
+
+#=======================================================================================
+
+
 
 #more fancy regressions (not included in paper)
 #is bartMachine and BayesTree different? Assume a linear shift and construct an ANOVA
@@ -190,4 +196,3 @@ summary(mod_interactions)
 
 anova(mod_interactions, mod)
 
-save(oos_rmse_results, file = "oos_rmse_results.RData")
