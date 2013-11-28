@@ -16,7 +16,7 @@ public abstract class CGMBART_02_hyperparams extends CGMBART_01_base {
 	protected double hyper_mu_mu;
 	protected double hyper_sigsq_mu;
 	protected double hyper_lambda;
-	protected double hyper_k = 2.0; //StatToolbox.inv_norm_dist(1 - (1 - CGMShared.MostOfTheDistribution) / 2.0);	
+	protected double hyper_k = 2.0;
 	protected double hyper_q = 0.9;
 	protected double hyper_nu = 3.0;	
 	protected double alpha = 0.95;
@@ -36,23 +36,11 @@ public abstract class CGMBART_02_hyperparams extends CGMBART_01_base {
 	public void setData(ArrayList<double[]> X_y){
 		super.setData(X_y);
 		calculateHyperparameters();	
-//		tabulateSimulationDistributions();
-	}		
+	}
 	
-//	protected void tabulateSimulationDistributions() {
-//		StatToolbox.cacheInvGammas(hyper_nu, n);
-//	}
-
-	// hist(1 / rgamma(5000, 1.5, 1.5 * 153.65), br=100)
 	protected void calculateHyperparameters() {
-//		System.out.println("calculateHyperparameters in BART\n\n");
 		hyper_mu_mu = 0;
 		hyper_sigsq_mu = Math.pow(YminAndYmaxHalfDiff / (hyper_k * Math.sqrt(num_trees)), 2);
-//		System.out.println("hyper_sigsq_mu: " + hyper_sigsq_mu);
-		
-		//now we do a simple search for the best value of lambda
-		//if sig_sq ~ \nu\lambda * X where X is Inv chi sq, then sigsq ~ InvGamma(\nu/2, \nu\lambda/2) \neq InvChisq
-//		System.out.println("y_trans: " + Tools.StringJoin(y_trans));
 		
 		if (sample_var_y == null){
 			sample_var_y = StatToolbox.sample_variance(y_trans); //0.00001;//
@@ -69,22 +57,7 @@ public abstract class CGMBART_02_hyperparams extends CGMBART_01_base {
 		}
 
 		hyper_lambda = ten_pctile_chisq_df_hyper_nu / hyper_nu * sample_var_y;
-//		System.out.println("hyper_lambda via invcumprob: " + hyper_lambda);			
-
-//		OLD GRID METHOD BEFORE 
-//		double prob_diff = Double.MAX_VALUE;
-//		for (double lambda = 0.00001; lambda < 10 * sample_var_y; lambda += (sample_var_y / 100000)){
-//			double p = StatToolbox.cumul_dens_function_inv_gamma(hyper_nu / 2, hyper_nu * lambda / 2, sample_var_y);			
-//			if (Math.abs(p - hyper_q) < prob_diff){
-////				System.out.println("hyper_lambda = " + hyper_lambda + " lambda = " + lambda + " p = " + p + " ssq = " + ssq);
-//				hyper_lambda = lambda;
-//				prob_diff = Math.abs(p - hyper_q);
-//			}
-//		}
-//		System.out.println("hyper_lambda via grid: " + hyper_lambda);
-//		System.out.println("y_min = " + y_min + " y_max = " + y_max + " R_y = " + Math.sqrt(y_range_sq));
-//		System.out.println("hyperparams:  k = " + hyper_k + " hyper_mu_mu = " + hyper_mu_mu + " sigsq_mu = " + hyper_sigsq_mu + " hyper_lambda = " + hyper_lambda + " hyper_nu = " + hyper_nu + " hyper_q = " + hyper_q + " s_y_trans^2 = " + sample_var_y + " R_y = " + Math.sqrt(y_range_sq) + "\n\n");
-	}	
+}	
 	
 	public void setK(double hyper_k) {
 		this.hyper_k = hyper_k;
@@ -118,13 +91,6 @@ public abstract class CGMBART_02_hyperparams extends CGMBART_01_base {
 		for (int i = 0; i < n; i++){
 			y_trans[i] = transform_y(y_orig[i]);
 		}
-		//debug stuff
-	//	y_and_y_trans.println("y,y_trans");
-	//	for (int i = 0; i < n; i++){
-	//		System.out.println("y_trans[i] = " + y_trans[i] + " y[i] = " + y[i] + " y_untransform = " + un_transform_y(y_trans[i]));
-	//		y_and_y_trans.println(y[i] + "," + y_trans[i]);
-	//	}
-	//	y_and_y_trans.close();
 	}
 
 	public double transform_y(double y_i){
@@ -150,8 +116,10 @@ public abstract class CGMBART_02_hyperparams extends CGMBART_01_base {
 		return un_transform_y((double)yt_i);
 	}	
 	
-	//Var[y^t] = Var[y / R_y] = 1/R_y^2 Var[y]
+	
 	public double un_transform_sigsq(double sigsq_t_i){
+		//Based on the following elementary calculation: 
+		//Var[y^t] = Var[y / R_y] = 1/R_y^2 Var[y]
 		return sigsq_t_i * y_range_sq;
 	}
 	

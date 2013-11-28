@@ -643,10 +643,6 @@ public class CGMBARTTreeNode implements Cloneable {
 			System.out.println("y_hat_vec: (size " + yhats.length + ") [" + Tools.StringJoin(cgmbart.un_transform_y_and_round(yhats)) + "]");
 		}
 		System.out.println("-----------------------------------------\n\n\n");
-//			System.out.println("X_y y:   " + Tools.StringJoin(cgmbart.getResponses()));
-//			System.out.println("y_trans: " + Tools.StringJoin(cgmbart.un_transform_y_and_round(cgmbart.y_trans)));
-//			
-//			System.out.println("-----------------------------------------\n\n\n");
 	}
 
 	public void updateWithNewResponsesRecursively(double[] new_responses) {

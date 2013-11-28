@@ -1,44 +1,24 @@
-/*
-    BART - Bayesian Additive Regressive Trees
-    Software for Supervised Statistical Learning
-    
-    Copyright (C) 2012 Professor Ed George & Adam Kapelner, 
-    Dept of Statistics, The Wharton School of the University of Pennsylvania
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details:
-    
-    http://www.gnu.org/licenses/gpl-2.0.txt
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-*/
-
 package CGM_BART;
 
 import OpenSourceExtensions.StatUtil;
 
-public final class CGMBARTClassification extends CGMBARTRegression {
+/**
+ * The class that is instantiated to build a binary classification BART model
+ * 
+ * @author Adam Kapelner and Justin Bleich
+ *
+ */
+public class CGMBARTClassification extends CGMBARTRegression {
 
-	/**
-	 * Constructs the BART classifier for classification. We rely on the SetupClassification class to set the raw data
-	 * 
-	 * @param datumSetup
-	 * @param buildProgress
-	 */
 	public CGMBARTClassification() {
 		super();		
 	}
 
-	@Override
+	/**
+	 * A Gibbs sample for binary classification BART is a little different
+	 * than for regression BART. We no longer sample sigsq's. We instead {@link SampleZs},
+	 * the latent variables that allow us to estimate the prob(Y = 1).
+	 */
 	protected void DoOneGibbsSample(){
 //		System.out.println("DoOneGibbsSample CGMBARTClassification");
 		//this array is the array of trees for this given sample
@@ -55,6 +35,10 @@ public final class CGMBARTClassification extends CGMBARTRegression {
 		}
 	}
 	
+	/** We sample the latent variables, Z, for each of the n observations
+	 * 
+	 * @see Section 2.3 of Kapelner, A and Bleich, J. bartMachine: A Powerful Tool for Machine Learning in R. ArXiv e-prints, 2013
+	 */
 	private void SampleZs() {
 		for (int i = 0; i < n; i++){
 			double g_x_i = 0;
@@ -67,6 +51,10 @@ public final class CGMBARTClassification extends CGMBARTRegression {
 		}
 	}
 
+	/** We sample one latent variable, Z_i
+	 * 
+	 * @see Section 2.3 of Kapelner, A and Bleich, J. bartMachine: A Powerful Tool for Machine Learning in R. ArXiv e-prints, 2013
+	 */
 	private double SampleZi(double g_x_i, double y_i) {
 		double u = StatToolbox.rand();
 		if (y_i == 1){ 
@@ -80,7 +68,11 @@ public final class CGMBARTClassification extends CGMBARTRegression {
 		return -1;
 	}
 
+	/** A dummy value for the unused sigsq's in binary classification BART */
 	private static final double SIGSQ_FOR_PROBIT = 1;
+	/** 
+	 * Sets up Gibbs sampling. We should also blank out the vector <code>gibbs_samples_of_sigsq</code> with dummy values.
+	 */
 	protected void SetupGibbsSampling(){
 		super.SetupGibbsSampling();
 		//all sigsqs are now 1 all the time
@@ -89,14 +81,15 @@ public final class CGMBARTClassification extends CGMBARTRegression {
 		}
 	}
 
-	//all we need is the new sigsq_mu hyperparam
+	/**
+	 * Calculates the hyperparameters needed for binary classifcation BART.
+	 * This only need <code>hyper_sigsq_mu</code>
+	 */
 	protected void calculateHyperparameters() {
-//		System.out.println("calculateHyperparameters in CGMBARTClassification\n\n");
 		hyper_mu_mu = 0;
 		hyper_sigsq_mu = Math.pow(3 / (hyper_k * Math.sqrt(num_trees)), 2);	
 	}
-	
-	
+		
 	//do nothing
 	protected void transformResponseVariable() {
 		y_trans = new double[y_orig.length];		

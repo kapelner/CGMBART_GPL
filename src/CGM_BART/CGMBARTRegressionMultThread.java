@@ -11,7 +11,11 @@ import java.util.concurrent.TimeUnit;
 
 import OpenSourceExtensions.UnorderedPair;
 
-
+/**
+ * This class sets up regression BARTs for many CPU cores
+ * 
+ * @author Adam Kapelner and Justin Bleich
+ */
 public class CGMBARTRegressionMultThread extends Classifier {
 	
 	private static final int DEFAULT_NUM_CORES = 4;//Runtime.getRuntime().availableProcessors() - 1;
@@ -49,14 +53,15 @@ public class CGMBARTRegressionMultThread extends Classifier {
 	protected Double hyper_nu;
 	protected Double prob_grow;
 	protected Double prob_prune;
+	
+	
 	protected boolean verbose = true;
 	protected boolean mem_cache_for_speed = true;
 
 	protected boolean destroyed;
 
 	
-	public CGMBARTRegressionMultThread(){
-//		System.out.print("new CGMBARTRegressionMultThread()");		
+	public CGMBARTRegressionMultThread(){	
 		//we need to set defaults here		
 		num_cores = DEFAULT_NUM_CORES;
 		num_trees = NUM_TREES_DEFAULT;
@@ -73,13 +78,11 @@ public class CGMBARTRegressionMultThread extends Classifier {
 	}
 	
 	protected void SetupBARTModels() {
-//		System.out.print("begin SetupBARTModels()");
 		bart_gibbs_chain_threads = new CGMBARTRegression[num_cores];
 		for (int t = 0; t < num_cores; t++){
 			CGMBARTRegression bart = new CGMBARTRegression();
 			SetupBartModel(bart, t);
-		}	
-//		System.out.print("end SetupBARTModels()");
+		}
 	}
 
 	protected void SetupBartModel(CGMBARTRegression bart, int t) {
@@ -127,7 +130,6 @@ public class CGMBARTRegressionMultThread extends Classifier {
 
 	@Override
 	public void Build() {
-//		System.out.println("Build()");
 		SetupBARTModels();
 		//run a build on all threads
 		long t0 = System.currentTimeMillis();
@@ -167,6 +169,10 @@ public class CGMBARTRegressionMultThread extends Classifier {
 		}
 	}
 
+	/**
+	 * This is the core of BART's parallelization for model creation: build one BART model 
+	 * on each CPU core in parallel.
+	 */
 	private void BuildOnAllThreads(){
 		ExecutorService bart_gibbs_chain_pool = Executors.newFixedThreadPool(num_cores);
 		for (int t = 0; t < num_cores; t++){
@@ -196,11 +202,9 @@ public class CGMBARTRegressionMultThread extends Classifier {
 	public void setNumGibbsTotalIterations(int num_gibbs_total_iterations){
 		this.num_gibbs_total_iterations = num_gibbs_total_iterations;
 		total_iterations_multithreaded = num_gibbs_burn_in + (int)Math.ceil((num_gibbs_total_iterations - num_gibbs_burn_in) / (double) num_cores);
-//		System.out.println("num_gibbs_total_iterations: " + num_gibbs_total_iterations + " total_iterations_multithreaded: " + total_iterations_multithreaded + " num_cores: " + num_cores);
 	}	
 
 	public void setNumTrees(int num_trees){
-//		System.out.print("setNumTrees()");
 		this.num_trees = num_trees;
 	}
 	
@@ -251,7 +255,6 @@ public class CGMBARTRegressionMultThread extends Classifier {
 	}
 	
 	public void setNumCores(int num_cores){
-//		System.out.print("setNumCores()");
 		this.num_cores = num_cores;
 	}
 	
@@ -266,22 +269,22 @@ public class CGMBARTRegressionMultThread extends Classifier {
 		}
 	}
 
-	public double Evaluate(double[] record) { //posterior sample median (it's what Rob uses)		
+	public double Evaluate(double[] record) {	
 		return EvaluateViaSampAvg(record, 1);
 	}	
 	
-	public double Evaluate(double[] record, int num_cores_evaluate) { //posterior sample median (it's what Rob uses)		
+	public double Evaluate(double[] record, int num_cores_evaluate) {		
 		return EvaluateViaSampAvg(record, num_cores_evaluate);
 	}		
 	
-	public double EvaluateViaSampMed(double[] record, int num_cores_evaluate) { //posterior sample average		
+	public double EvaluateViaSampMed(double[] record, int num_cores_evaluate) {	
 		double[][] data = new double[1][record.length];
 		data[0] = record;
 		double[][] gibbs_samples = getGibbsSamplesForPrediction(data, num_cores_evaluate);
 		return StatToolbox.sample_median(gibbs_samples[0]);
 	}
 	
-	public double EvaluateViaSampAvg(double[] record, int num_cores_evaluate) { //posterior sample average		
+	public double EvaluateViaSampAvg(double[] record, int num_cores_evaluate) {		
 		double[][] data = new double[1][record.length];
 		data[0] = record;
 		double[][] gibbs_samples = getGibbsSamplesForPrediction(data, num_cores_evaluate);
@@ -306,7 +309,6 @@ public class CGMBARTRegressionMultThread extends Classifier {
 		
 		final int n = data.length;
 		final double[][] y_hat = new double[n][data[0].length];
-//		System.out.println("getGibbsSamplesForPrediction n: " + n);
 		
 		if (num_cores == 1){
 			for (int i = 0; i < n; i++){
@@ -319,12 +321,11 @@ public class CGMBARTRegressionMultThread extends Classifier {
 					}
 					//just make sure we switch it back to really what y is for the user
 					y_gibbs_samples[g] = first_bart.un_transform_y(yt_i);
-//					System.out.println("y_gibbs_samples[g]: " + y_gibbs_samples[g]);
 				}
 				y_hat[i] = y_gibbs_samples;
 			}			
 		}
-		else { //probably should put back executor service here for cleanliness
+		else {
 			Thread[] fixed_thread_pool = new Thread[num_cores];
 			for (int t = 0; t < num_cores; t++){
 				final int final_t = t;
@@ -334,10 +335,10 @@ public class CGMBARTRegressionMultThread extends Classifier {
 							if (i % num_cores == final_t){
 								double[] y_gibbs_samples = new double[num_samples_after_burn_in];
 								for (int g = 0; g < num_samples_after_burn_in; g++){									
-									CGMBARTTreeNode[] cgm_trees = gibbs_samples_of_cgm_trees_after_burn_in[g];
+									CGMBARTTreeNode[] trees = gibbs_samples_of_cgm_trees_after_burn_in[g];
 									double yt_i = 0;
 									for (int m = 0; m < num_trees; m++){ //sum of trees right?
-										yt_i += cgm_trees[m].Evaluate(data[i]);
+										yt_i += trees[m].Evaluate(data[i]);
 									}
 									//just make sure we switch it back to really what y is for the user
 									y_gibbs_samples[g] = first_bart.un_transform_y(yt_i);	
@@ -371,9 +372,7 @@ public class CGMBARTRegressionMultThread extends Classifier {
 		//calculate index of the CI_a and CI_b
 		int n_bottom = (int)Math.round((1 - coverage) / 2 * y_gibbs_samples_sorted.length) - 1; //-1 because arrays start at zero
 		int n_top = (int)Math.round(((1 - coverage) / 2 + coverage) * y_gibbs_samples_sorted.length) - 1; //-1 because arrays start at zero
-//		System.out.print("getPostPredictiveIntervalForPrediction record = " + IOTools.StringJoin(record, ",") + "  Ng=" + y_gibbs_samples_sorted.length + " n_a=" + n_bottom + " n_b=" + n_top + " guess = " + Evaluate(record));
 		double[] conf_interval = {y_gibbs_samples_sorted[n_bottom], y_gibbs_samples_sorted[n_top]};
-//		System.out.println("  [" + conf_interval[0] + ", " + conf_interval[1] + "]");
 		return conf_interval;
 	}
 	
@@ -391,13 +390,7 @@ public class CGMBARTRegressionMultThread extends Classifier {
 			else {
 				sigsqs_to_export.addAll(sigsqs_to_export_by_thread.subList(num_gibbs_burn_in, total_iterations_multithreaded));
 			}
-		}	
-		//what's the SIGSQ?
-//		for (int g = 0; g < sigsqs_to_export.size(); g++){
-//			System.out.println("g = " + g + " sigsq: " + sigsqs_to_export.get(g));			
-//		}
-//		System.out.println("MEAN: " + StatToolbox.sample_average(sigsqs_to_export.toArray()));
-		
+		}
 		return sigsqs_to_export.toArray();
 	}
 	
@@ -419,23 +412,14 @@ public class CGMBARTRegressionMultThread extends Classifier {
 		return accept_reject_mh_after_burn_ins;
 	}	
 	
-//	public int[][] getCountForAttributesForEntireChain(){
-//		int[][] var_count_matrix = new int[gibbs_samples_of_cgm_trees_after_burn_in.length][p];
-//		
-//		for (int g = 0; g < gibbs_samples_of_cgm_trees_after_burn_in.length; g++){
-//			var_count_matrix[g] = getCountForAttributeInGibbsSample(g);
-//		}
-//		return var_count_matrix;
-//	}	
-	
 	public double[] getAttributeProps(final int num_cores, final String type) {
 		int[][] variable_counts_all_gibbs = getCountsForAllAttribute(num_cores, type);
 		double[] attribute_counts = new double[p];
 		for (int g = 0; g < num_gibbs_total_iterations - num_gibbs_burn_in; g++){
 			attribute_counts = Tools.add_arrays(attribute_counts, variable_counts_all_gibbs[g]);
 		}
-		
-		return Tools.scale_array(attribute_counts); //will turn it into proportions
+		Tools.normalize_array(attribute_counts); //will turn it into proportions
+		return attribute_counts;
 	}
 
 	public int[][] getCountsForAllAttribute(final int num_cores, final String type) {
@@ -454,46 +438,11 @@ public class CGMBARTRegressionMultThread extends Classifier {
 				
 			}
 			variable_counts_all_gibbs[g] = variable_counts_one_gibbs;
-		}
-		
-//		ExecutorService get_count_for_attribute_pool = Executors.newFixedThreadPool(num_cores);
-//		
-//		for (int c = 0; c < num_cores; c++){
-//			final int cf = c;
-//			get_count_for_attribute_pool.execute(new Runnable(){
-//				public void run() {
-//					for (int g = 0; g < num_gibbs_total_iterations - num_gibbs_burn_in; g++){
-//						if (g % num_cores == cf){
-//							final CGMBARTTreeNode[] trees = gibbs_samples_of_cgm_trees_after_burn_in[g];			
-//							
-//							int[] total_for_trees = new int[p]; //each entry in this array is the number of times attr j was used for all m trees in this gibbs sample
-//							for (CGMBARTTreeNode tree : trees){	
-//								if (type.equals("splits")){
-//									tree.numTimesAttrUsed(total_for_trees);
-//								}
-//								else if (type.equals("trees")){
-//									int[] total_for_trees_temp = new int[p];
-//									tree.attrUsed(total_for_trees_temp);
-//									total_for_trees = Tools.add_arrays(total_for_trees_temp, total_for_trees);
-//								}
-//							}
-//							counts[g] = total_for_trees;
-//						}
-//					}					
-//				}
-//			});
-//		}
-//		
-//		//now join em up and ship out the result
-//		get_count_for_attribute_pool.shutdown();
-//		try {	         
-//			get_count_for_attribute_pool.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS); //effectively infinity
-//	    } catch (InterruptedException ignored){}	
-		
+		}		
 		return variable_counts_all_gibbs;
 	}
 
-	@Override
+	/** {@inheritDoc} */
 	public void StopBuilding() {
 		for (int t = 0; t < num_cores; t++){
 			bart_gibbs_chain_threads[t].StopBuilding();
@@ -525,46 +474,25 @@ public class CGMBARTRegressionMultThread extends Classifier {
 	
 
 	public int[][] getInteractionCounts(int num_cores){
-		final int[][] interaction_count_matrix = new int[p][p];
-//		ExecutorService interaction_count_getter_pool = Executors.newFixedThreadPool(num_cores);
+		int[][] interaction_count_matrix = new int[p][p];
 		
 		for (int g = 0; g < gibbs_samples_of_cgm_trees_after_burn_in.length; g++){
-			final int gf = g;
-//	    	interaction_count_getter_pool.execute(new Runnable(){
-//				public void run() {
-					CGMBARTTreeNode[] trees = gibbs_samples_of_cgm_trees_after_burn_in[gf];
-					
-					for (CGMBARTTreeNode tree : trees){
-						//get the set of pairs of interactions
-						HashSet<UnorderedPair<Integer>> set_of_interaction_pairs = new HashSet<UnorderedPair<Integer>>(p * p);
-						//find all interactions
-						tree.findInteractions(set_of_interaction_pairs);
-//						Tools.print_unordered_pair_set(set_of_interaction_pairs);
-						//now tabulate these interactions in our count matrix
-//						synchronized(interaction_count_matrix){
-							for (UnorderedPair<Integer> pair : set_of_interaction_pairs){
-//								System.out.println("interaction: " + pair.getFirst() + " " + pair.getSecond());
-								interaction_count_matrix[pair.getFirst()][pair.getSecond()]++; 
-							}
-//						}
-					}
-//				}
-//			});			
-//			
+			CGMBARTTreeNode[] trees = gibbs_samples_of_cgm_trees_after_burn_in[g];
+			
+			for (CGMBARTTreeNode tree : trees){
+				//get the set of pairs of interactions
+				HashSet<UnorderedPair<Integer>> set_of_interaction_pairs = new HashSet<UnorderedPair<Integer>>(p * p);
+				//find all interactions
+				tree.findInteractions(set_of_interaction_pairs);
+				//now tabulate these interactions in our count matrix
+				for (UnorderedPair<Integer> pair : set_of_interaction_pairs){
+					interaction_count_matrix[pair.getFirst()][pair.getSecond()]++; 
+				}
+			}	
 		}
-//		interaction_count_getter_pool.shutdown();
-//		try {	         
-//	         interaction_count_getter_pool.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS); //effectively infinity
-//		} catch (InterruptedException ignored){}
 		
 		return interaction_count_matrix;
 	}
-
-//	int[][] ics = getInteractionCounts(num_cores);
-//	System.out.println("interaction counts");
-//	for (int j1 = 0; j1 < p; j1++){
-//		System.out.println(Tools.StringJoin(ics[j1], "\t"));
-//	}
 	
 	public boolean isDestroyed(){		
 		return destroyed;

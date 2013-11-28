@@ -66,18 +66,15 @@ plot_y_vs_yhat(bart_machine_cv, prediction_intervals = TRUE)
 #Figure 7
 investigate_var_importance(bart_machine_cv, num_replicates_for_avg = 20)
 
-#Figure 8
-interaction_obj = interaction_investigator(bart_machine_cv, num_replicates_for_avg = 200, bottom_margin = 20)
-
 ##### section 4.6
 
-#Figure 9a
+#Figure 8a
 cov_importance_test(bart_machine_cv, covariates = c("width"))
 windows()
-#Figure 9b
+#Figure 8b
 windows()
 cov_importance_test(bart_machine_cv, covariates = c("body_style"))
-#Figure 9c
+#Figure 8c
 windows()
 cov_importance_test(bart_machine_cv, covariates = c("width",
 	"curb_weight",
@@ -89,16 +86,16 @@ cov_importance_test(bart_machine_cv, covariates = c("width",
 	"highway_mpg", 
 	"peak_rpm", 
 	"normalized_losses"))
-#Figure 9d
+#Figure 8d
 windows()
 cov_importance_test(bart_machine_cv)
 
 ##### section 4.7
 
-#Figure 10a
+#Figure 9a
 pd_plot(bart_machine_cv, j = "horsepower")
 windows()
-#Figure 10b
+#Figure 9b
 pd_plot(bart_machine_cv, j = "stroke")
 
 ##### section 4.8
@@ -124,6 +121,7 @@ bart_machine
 
 ##### section 4.9
 
+#Figure 10
 vs = var_selection_by_permute_response_three_methods(bart_machine, bottom_margin = 10, num_permute_samples = 10)
 vs$important_vars_local_names
 vs$important_vars_global_max_names

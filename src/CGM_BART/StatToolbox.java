@@ -27,24 +27,8 @@ package CGM_BART;
 import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.list.array.TIntArrayList;
 
-//import java.io.BufferedInputStream;
-//import java.io.BufferedOutputStream;
-//import java.io.BufferedReader;
-//import java.io.DataInputStream;
-//import java.io.DataOutputStream;
-//import java.io.File;
-//import java.io.FileInputStream;
-//import java.io.FileNotFoundException;
-//import java.io.FileOutputStream;
-//import java.io.FileReader;
-//import java.io.IOException;
 import java.util.Arrays;
 import java.util.Random;
-
-import org.apache.commons.math.MathException;
-import org.apache.commons.math.distribution.GammaDistributionImpl;
-import org.apache.commons.math.distribution.NormalDistributionImpl;
-import org.apache.commons.math.special.Gamma;
 
 /**
  * This is a class where we're going to put all sorts of useful functions
@@ -52,167 +36,36 @@ import org.apache.commons.math.special.Gamma;
  */
 public class StatToolbox {
 	
+	/** A convenience for a Random object */
 	private static final Random R = new Random();
-
+	/** A flag that indicates an illegal value or failed operation */
 	public static final double ILLEGAL_FLAG = -999999999;	
-//	private static final int NUM_CHI_SQ_SAMPS = 10000;
-//	private static final String cacheDirectory = "randsamps";	
-//	private static final String norm_samps_file = "rnorm.csv";
-//	
-//	private static double[] NORM_SAMPS;
-//	private static int NUM_NORM_SAMPS;	
-//	static {
-//		System.out.println("TRYING TO MAKE CACHE");
-//		BufferedReader in;
-//		try {
-//			in = new BufferedReader(new FileReader(cacheDirectory + "/" + norm_samps_file));
-//			try {
-//				String raw = in.readLine();
-//				String[] random_samps = raw.split(",");
-//				NUM_NORM_SAMPS = random_samps.length;
-//				NORM_SAMPS = new double[NUM_NORM_SAMPS];
-////				START_POS = (int)Math.floor(rand() * NUM_NORM_SAMPS);
-//				for (int i = 0; i < NUM_NORM_SAMPS; i++){
-//					NORM_SAMPS[i] = Double.parseDouble(random_samps[i]);
-//				}	
-////				System.out.println("NUM_NORM_SAMPS: " + NUM_NORM_SAMPS);
-////				System.out.println("START_POS: " + START_POS);
-////				System.out.println("NORM_SAMPS: " + Tools.StringJoin(NORM_SAMPS));
-//			} catch (IOException e) {
-//				e.printStackTrace();
-//			}
-//		} catch (FileNotFoundException e1) {
-//			e1.printStackTrace();
-//		}					
-//	}
-	
-//	private static final String chisq_df_samps_file_prefix = cacheDirectory + "/chisq_nu_n_";
-//	public static void cacheInvGammas(double hyper_nu, int n, CGMBART_02_hyperparams bart) {
-//		//check if cache file exists, if it does, load it up
-//		File cache_file = new File(chisq_df_samps_file_prefix + hyper_nu + "_" + n + ".bin");
-//		if (cache_file.exists()){
-//			if (bart.verbose){
-//				System.out.print("load inv cache from file...");
-//			}
-//			try {
-//				bart.samps_chi_sq_df_eq_nu_plus_n = loadInvGammaCacheFromFile(cache_file);
-//			} catch (Exception e) {
-//				System.err.println("CANNOT LOAD INV GAMMA CACHE! Now computing...\n\n");
-//				bart.samps_chi_sq_df_eq_nu_plus_n = computeInvGammaCache(hyper_nu, n);
-//			}
-//			if (bart.verbose){
-//				System.out.println("done");
-//			}
-//		}
-//		//otherwise compute the cache and save for future runs
-//		else {
-//			if (bart.verbose){
-//				System.out.print("compute inv cache...");
-//			}
-//			bart.samps_chi_sq_df_eq_nu_plus_n = computeInvGammaCache(hyper_nu, n);
-//			if (bart.verbose){
-//				System.out.print("saving for future runs...");
-//			}
-//			saveInvGammaCacheToFile(hyper_nu, n, bart.samps_chi_sq_df_eq_nu_plus_n, cache_file);
-//			if (bart.verbose){
-//				System.out.println("done");
-//			}
-//		}
-//	}
-	
-//	public static int numBytesForInvChisqCache(){
-//		int bytes = 0;
-//		for (File file : new File(cacheDirectory).listFiles()){
-//			if (!file.getName().equals(norm_samps_file)){
-//				bytes += file.length();
-//			}
-//		}
-//		return bytes;
-//	}
-	
-//	public static void clearInvChisqHash(){
-//		for (File file : new File(cacheDirectory).listFiles()){
-//			if (!file.getName().equals(norm_samps_file)){ /////////////WRONG
-//				file.delete();
-//			}
-//		}		
-//	}
-	
-//	private static double[] loadInvGammaCacheFromFile(File cache_file) throws Exception {
-//		double[] samps_chi_sq_df_eq_nu_plus_n = new double[NUM_CHI_SQ_SAMPS];
-//		try {
-//			DataInputStream in_file = new DataInputStream(new BufferedInputStream(new FileInputStream(cache_file)));
-//			for (int i = 0; i < NUM_CHI_SQ_SAMPS; i++){
-//				samps_chi_sq_df_eq_nu_plus_n[i] = in_file.readDouble();
-//			}
-//			in_file.close();
-//		} catch (FileNotFoundException e) {
-//			e.printStackTrace();
-//		}
-//		return samps_chi_sq_df_eq_nu_plus_n;
-//	}
-//
-//	private static void saveInvGammaCacheToFile(double hyper_nu, int n, double[] samps_chi_sq_df_eq_nu_plus_n, File cache_file) {
-//		DataOutputStream out = null;
-//		try {
-//			out = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(cache_file)));
-//			for (int i = 0; i < NUM_CHI_SQ_SAMPS; i++){
-//				out.writeDouble(samps_chi_sq_df_eq_nu_plus_n[i]);
-//			}
-//			out.close();
-//		} catch (IOException e) {
-//			System.err.println("CANNOT SAVE INV GAMMA CACHE");
-//			System.exit(0);
-//		}
-//	}
 
-//	private static double[] computeInvGammaCache(double hyper_nu, int n){
-//		double nu_plus_hyper_nu = n + hyper_nu;
-//		double[] samps_chi_sq_df_eq_nu_plus_n = new double[NUM_CHI_SQ_SAMPS];
-//		for (int i = 0; i < NUM_CHI_SQ_SAMPS; i++){
-//			samps_chi_sq_df_eq_nu_plus_n[i] = sample_from_gamma(nu_plus_hyper_nu / 2, 2);
-//		}
-//		return samps_chi_sq_df_eq_nu_plus_n;
-//	}
 
+	/**
+	 * Draws a sample from an inverse gamma distribution.
+	 * 
+	 * @param k			The shape parameter of the inverse gamma distribution of interest	
+	 * @param theta		The scale parameter of the inverse gamma distribution of interest
+	 * @return			The sampled value
+	 */
 	public static double sample_from_inv_gamma(double k, double theta){
-//		System.out.println("sample_from_inv_gamma k = " + k + " theta = " + theta);
 		return (1 / (theta / 2)) / CGMBART_02_hyperparams.samps_chi_sq_df_eq_nu_plus_n[(int)Math.floor(rand() * CGMBART_02_hyperparams.samps_chi_sq_df_eq_nu_plus_n_length)];
 	}
 	
-
-
-	
-
+	/**
+	 * Draws a sample from a normal distribution.
+	 * 
+	 * @param mu		The mean of the normal distribution of interest
+	 * @param sigsq		The variance of the normal distribution of interest
+	 * @return			The sample value
+	 */
 	public static double sample_from_norm_dist(double mu, double sigsq){
 		double std_norm_realization = CGMBART_02_hyperparams.samps_std_normal[(int)Math.floor(rand() * CGMBART_02_hyperparams.samps_std_normal_length)];
-//		System.out.println("sample_from_norm_dist S = " + START_POS + " P = " + START_POS % NUM_NORM_SAMPS + "real = " + std_norm_realization);
-//		START_POS++;
 		return mu + Math.sqrt(sigsq) * std_norm_realization;
 	}
-
 	
-	public static double inv_norm_dist(double p){
-		//System.out.println("inv_norm_dist p=" + p);
-		try {
-			return new NormalDistributionImpl().inverseCumulativeProbability(p);
-		} catch (MathException e) {
-			e.printStackTrace();
-		}
-		return ILLEGAL_FLAG;
-	}
-	
-	public static double sample_from_gamma(double k, double theta){
-		GammaDistributionImpl gamma_dist = new GammaDistributionImpl(k, theta);
-		try {
-			return gamma_dist.inverseCumulativeProbability(StatToolbox.rand());
-		} catch (MathException e) {
-//			System.out.println("sample_from_inv_gamma failed: " + e.toString());
-			e.printStackTrace();
-		}
-		return ILLEGAL_FLAG;
-	}
-	
+	// constants for the {@link normal_cdf} function
     private static double NORM_CDF_a1 =  0.254829592;
     private static double NORM_CDF_a2 = -0.284496736;
     private static double NORM_CDF_a3 =  1.421413741;
@@ -220,17 +73,15 @@ public class StatToolbox {
     private static double NORM_CDF_a5 =  1.061405429;
     private static double NORM_CDF_p  =  0.3275911;	
 	
+    /**
+     * Calculate the cumulative density under a standard normal to a point of interest.
+     *      
+     * @param x	The point of interest on the standard normal density support
+     * @return	The probability of interest
+     * 
+     * @see http://www.johndcook.com/cpp_phi.html
+     */
 	public static double normal_cdf(double x) {
-//		try {
-//			return new NormalDistributionImpl(0, 1).cumulativeProbability(x);
-//		} catch (MathException e) {
-//			e.printStackTrace();
-//			System.exit(0);
-//			return 0;
-//		}
-		    // constants
-
-		//from http://www.johndcook.com/cpp_phi.html
 	    // Save the sign of x
 	    int sign = 1;
 	    if (x < 0){
@@ -239,32 +90,18 @@ public class StatToolbox {
 	    x = Math.abs(x) / Math.sqrt(2.0);
 
 	    // A&S formula 7.1.26
-	    double t = 1.0 / (1.0 + NORM_CDF_p*x);
-	    double y = 1.0 - (((((NORM_CDF_a5*t + NORM_CDF_a4)*t) + NORM_CDF_a3)*t + NORM_CDF_a2)*t + NORM_CDF_a1)*t*Math.exp(-x*x);
+	    double t = 1.0 / (1.0 + NORM_CDF_p * x);
+	    double y = 1.0 - (((((NORM_CDF_a5 * t + NORM_CDF_a4) * t) + NORM_CDF_a3) * t + NORM_CDF_a2) * t + NORM_CDF_a1) * t * Math.exp(-x * x);
 
-	    return 0.5*(1.0 + sign*y);
-	}	
+	    return 0.5 * (1.0 + sign * y);
+	}
 	
-	
-	
-//	public static double sample_from_norm_dist(double mu, double sigsq){
-////		System.out.println("sample_from_norm_dist mu=" + mu + " sigsq=" + sigsq);
-//		try {
-//			return new NormalDistributionImpl(mu, Math.sqrt(sigsq)).inverseCumulativeProbability(StatToolbox.rand());
-//		} catch (MathException e) {
-////			System.err.println("ERROR sample_from_norm_dist mu=" + mu + " sigsq=" + sigma);
-////			e.printStackTrace();
-//		}
-//		return ILLEGAL_FLAG;		
-//	}
-	
-	// test the sampling of the normal
-//	static {
-//		for (int i = 0; i < 1000; i++){
-//			System.out.println(sample_from_norm_dist(0, 2));
-//		}
-//	}
-	
+	/**
+	 * Compute the sample average of a vector of data
+	 * 
+	 * @param y	The vector of data values
+	 * @return	The sample average
+	 */
 	public static final double sample_average(double[] y){
 		double y_bar = 0;
 		for (int i = 0; i < y.length; i++){
@@ -272,7 +109,13 @@ public class StatToolbox {
 		}
 		return y_bar / (double)y.length;
 	}
-	
+
+	/**
+	 * Compute the sample average of a vector of data
+	 * 
+	 * @param y	The vector of data values
+	 * @return	The sample average
+	 */
 	public static final double sample_average(TDoubleArrayList y){
 		double y_bar = 0;
 		for (int i = 0; i < y.size(); i++){
@@ -281,119 +124,26 @@ public class StatToolbox {
 		return y_bar / (double)y.size();
 	}	
 	
+	/**
+	 * Compute the sample average of a vector of data
+	 * 
+	 * @param y	The vector of data values
+	 * @return	The sample average
+	 */
 	public static final double sample_average(int[] y){
 		double y_bar = 0;
 		for (int i = 0; i < y.length; i++){
 			y_bar += y[i];
 		}
 		return y_bar / (double)y.length;
-	}	
-	
-	public static final double sample_standard_deviation(int[] y){
-		double y_bar = sample_average(y);
-		double sum_sqd_deviations = 0;
-		for (int i = 0; i < y.length; i++){
-			sum_sqd_deviations += Math.pow(y[i] - y_bar, 2);
-		}
-		return Math.sqrt(sum_sqd_deviations / ((double)y.length - 1));		
-	}
-	
-	public static final double sample_standard_deviation(double[] y){
-		return Math.sqrt(sample_variance(y));
-	}	
-	
-	public static final double sample_variance(double[] y){
-		return sample_sum_sq_err(y) / ((double)y.length - 1);		
-	}		
-	
-	public static final double sample_sum_sq_err(double[] y){
-		double y_bar = sample_average(y);
-		double sum_sqd_deviations = 0;
-		for (int i = 0; i < y.length; i++){
-			sum_sqd_deviations += Math.pow(y[i] - y_bar, 2);
-		}
-		return sum_sqd_deviations;
-	}
-	
-	public static final double cumul_dens_function_inv_gamma(double alpha, double beta, double lower, double upper){
-		return cumul_dens_function_inv_gamma(alpha, beta, upper) - cumul_dens_function_inv_gamma(alpha, beta, lower);
-	}
-	
-	public static final double cumul_dens_function_inv_gamma(double alpha, double beta, double x){
-		try {
-			return Gamma.regularizedGammaQ(alpha, beta / x);
-		} catch (MathException e) {
-			e.printStackTrace();
-		}
-		return ILLEGAL_FLAG;
-	}	
-	
-//	public static final double inverse_cumul_dens_function_inv_gamma(double nu, double lambda, double p){
-//		try {
-//			return nu * lambda / (nu - 2);
-//		} catch (MathException e) {
-//			e.printStackTrace();
-//		}
-//		return ILLEGAL_FLAG;
-//	}	
-
-	public static double sample_minimum(int[] y) {
-		int min = Integer.MAX_VALUE;
-		for (int y_i : y){
-			if (y_i < min){
-				min = y_i;
-			}
-		}
-		return min;
 	}
 
-	public static double sample_maximum(int[] y) {
-		int max = Integer.MIN_VALUE;
-		for (int y_i : y){
-			if (y_i > max){
-				max = y_i;
-			}
-		}
-		return max;		
-	}
-
-	public static double sample_minimum(double[] y){
-		double min = Double.MAX_VALUE;
-		for (double y_i : y){
-			if (y_i < min){
-				min = y_i;
-			}
-		}
-		return min;		
-	}
-	
-	public static double sample_maximum(double[] y){
-		double max = Double.NEGATIVE_INFINITY;
-		for (double y_i : y){
-			if (y_i > max){
-				max = y_i;
-			}
-		}
-		return max;			
-	}
 	/**
-	 * Given an array, return the index that houses the maximum value
+	 * Compute the sample median of a vector of data
 	 * 
-	 * @param arr	the array to be investigated
-	 * @return		the index of the greatest value in the array
+	 * @param y	The vector of data values
+	 * @return	The sample median
 	 */
-	public static int FindMaxIndex(int[] arr){
-		int index=0;
-		int max=Integer.MIN_VALUE;
-		for (int i=0;i<arr.length;i++){
-			if (arr[i] > max){
-				max=arr[i];
-				index=i;
-			}				
-		}
-		return index;
-	}
-
 	public static double sample_median(double[] arr) {
 		int n = arr.length;
 		Arrays.sort(arr);
@@ -407,7 +157,146 @@ public class StatToolbox {
 		}
 		
 	}
+	
+	/**
+	 * Compute the sample standard deviation of a vector of data
+	 * 
+	 * @param y	The vector of data values
+	 * @return	The sample standard deviation
+	 */
+	public static final double sample_standard_deviation(int[] y){
+		double y_bar = sample_average(y);
+		double sum_sqd_deviations = 0;
+		for (int i = 0; i < y.length; i++){
+			sum_sqd_deviations += Math.pow(y[i] - y_bar, 2);
+		}
+		return Math.sqrt(sum_sqd_deviations / ((double)y.length - 1));		
+	}
+	
+	/**
+	 * Compute the sample standard deviation of a vector of data
+	 * 
+	 * @param y	The vector of data values
+	 * @return	The sample standard deviation
+	 */
+	public static final double sample_standard_deviation(double[] y){
+		return Math.sqrt(sample_variance(y));
+	}	
+	
+	/**
+	 * Compute the sample variance of a vector of data
+	 * 
+	 * @param y	The vector of data values
+	 * @return	The sample variance
+	 */
+	public static final double sample_variance(double[] y){
+		return sample_sum_sq_err(y) / ((double)y.length - 1);		
+	}	
+	
+	/**
+	 * Compute the sum of squared error (the squared deviation from the sample average) of a vector of data
+	 * 
+	 * @param y	The vector of data values
+	 * @return	The sum of squared error
+	 */	
+	public static final double sample_sum_sq_err(double[] y){
+		double y_bar = sample_average(y);
+		double sum_sqd_deviations = 0;
+		for (int i = 0; i < y.length; i++){
+			sum_sqd_deviations += Math.pow(y[i] - y_bar, 2);
+		}
+		return sum_sqd_deviations;
+	}
 
+	/**
+	 * Compute the sample minimum of a vector of data
+	 * 
+	 * @param y	The vector of data values
+	 * @return	The sample minimum
+	 */
+	public static double sample_minimum(int[] y) {
+		int min = Integer.MAX_VALUE;
+		for (int y_i : y){
+			if (y_i < min){
+				min = y_i;
+			}
+		}
+		return min;
+	}
+
+	/**
+	 * Compute the sample maximum of a vector of data
+	 * 
+	 * @param y	The vector of data values
+	 * @return	The sample maximum
+	 */
+	public static double sample_maximum(int[] y) {
+		int max = Integer.MIN_VALUE;
+		for (int y_i : y){
+			if (y_i > max){
+				max = y_i;
+			}
+		}
+		return max;		
+	}
+
+	/**
+	 * Compute the sample minimum of a vector of data
+	 * 
+	 * @param y	The vector of data values
+	 * @return	The sample minimum
+	 */
+	public static double sample_minimum(double[] y){
+		double min = Double.MAX_VALUE;
+		for (double y_i : y){
+			if (y_i < min){
+				min = y_i;
+			}
+		}
+		return min;		
+	}
+	
+	/**
+	 * Compute the sample maximum of a vector of data
+	 * 
+	 * @param y	The vector of data values
+	 * @return	The sample maximum
+	 */
+	public static double sample_maximum(double[] y){
+		double max = Double.NEGATIVE_INFINITY;
+		for (double y_i : y){
+			if (y_i > max){
+				max = y_i;
+			}
+		}
+		return max;			
+	}
+	
+	/**
+	 * Given an array, return the index of the maximum value
+	 * 
+	 * @param y		The vector of data value
+	 * @return		The index of the greatest value in the array
+	 */
+	public static int FindMaxIndex(int[] y){
+		int index = 0;
+		int max = Integer.MIN_VALUE;
+		for (int i = 0; i < y.length; i++){
+			if (y[i] > max){
+				max = y[i];
+				index = i;
+			}				
+		}
+		return index;
+	}
+
+	/**
+	 * Sample from a multinomial distribution
+	 * 
+	 * @param vals		The integer values of the labels in this multinomial distribution
+	 * @param probs		The probabilities with which to sample the labels (must be the same length of the vals)
+	 * @return			The integer label of the value that was drawn from this multinomial distribution
+	 */
 	public static int multinomial_sample(TIntArrayList vals, double[] probs) {
 		double r = StatToolbox.rand();
 		double cum_prob = 0;
@@ -424,10 +313,20 @@ public class StatToolbox {
 		}
 	}
 
+	/**
+	 * Set the seed of the random number generator
+	 * 
+	 * @param seed	The seed
+	 */
 	public static void setSeed(long seed) {
 		R.setSeed(seed);
 	}
 	
+	/** 
+	 * A convenience method for a random object
+	 * 
+	 * @return	A random number drawn from a uniform distirbution bounded between 0 and 1.
+	 */
 	public static double rand(){
 		return R.nextDouble();
 	}	
