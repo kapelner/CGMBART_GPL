@@ -12,21 +12,23 @@ import OpenSourceExtensions.TDoubleHashSetAndArray;
 import OpenSourceExtensions.UnorderedPair;
 
 /**
- * A dumb struct to store information about a 
- * node in the Bayesian decision tree.
+ * The class that stores all the information in one node of the BART trees
  * 
- * Unfortunately, this has parted ways too much with a CART
- * structure, so I needed to create something new
- * 
- * @author Adam Kapelner
+ * @author Adam Kapelner and Justin Bleich
  */
 public class CGMBARTTreeNode implements Cloneable {
 	
+	/** Setting this to true will print out debug information at the node level during Gibbs sampling */
 	public static final boolean DEBUG_NODES = false;
+	
+	/** a flag that represents an invalid double value */
+	protected static final double BAD_FLAG_double = -Double.MAX_VALUE;
+	/** a flag that represents an invalid integer value */
+	protected static final int BAD_FLAG_int = -Integer.MAX_VALUE;
 	
 	/** a link back to the overall bart model */
 	private CGMBART_02_hyperparams cgmbart;	
-	/** the parent node */
+	/** the parent node of this node */
 	public CGMBARTTreeNode parent;
 	/** the left daughter node */
 	public CGMBARTTreeNode left;
@@ -34,7 +36,7 @@ public class CGMBARTTreeNode implements Cloneable {
 	public CGMBARTTreeNode right;
 	/** the generation of this node from the top node (root note has generation = 0 by definition) */
 	public int depth;
-	/** is this node a terminal leaf? */
+	/** is this node a terminal node? */
 	public boolean isLeaf;
 	/** the attribute this node makes a decision on */
 	public int splitAttributeM;
@@ -43,37 +45,39 @@ public class CGMBARTTreeNode implements Cloneable {
 	/** send missing data to the right? */ 
 	public boolean sendMissingDataRight;
 	/** if this is a leaf node, then the result of the prediction for regression, otherwise null */
-	protected static final double BAD_FLAG_double = -Double.MAX_VALUE;
-	protected static final int BAD_FLAG_int = -Integer.MAX_VALUE;
 	public double y_pred = BAD_FLAG_double;
 	
-	/** the number of data points */
+	/** the number of data points in this node */
 	public transient int n_eta;
 	/** these are the yhats in the correct order */
 	public transient double[] yhats;
 
-	//variables that get cached
-	/** the indices in {0,1,...,n-1} of the data records in this node */
+	/** the indices in {0, 1, ..., n-1} of the data records in this node */
 	protected transient int[] indicies;	
 	/** the y's in this node */
 	protected transient double[] responses;
-	/** self-explanatory */
+	/** the square of the sum of the responses, y */
 	private transient double sum_responses_qty_sqd;
-	/** self-explanatory */
+	/** the sum of the responses, y */
 	private transient double sum_responses_qty;	
-	/** this caches the possible split variables */
+	/** this caches the possible split variables populated only if the <code>mem_cache_for_speed</code> feature is set to on */
 	private transient TIntArrayList possible_rule_variables;
-	/** this caches the possible split values BY variable */
+	/** this caches the possible split values BY variable populated only if the <code>mem_cache_for_speed</code> feature is set to on */
 	private transient HashMap<Integer, TDoubleHashSetAndArray> possible_split_vals_by_attr;
-	/** this caches the number of possible split variables */
+	/** this number of possible split variables at this node */
 	protected transient Integer padj;	
 	
 	protected int[] attribute_split_counts;
 
 	
-	
 	public CGMBARTTreeNode(){}	
-
+	
+	/**
+	 * Creates a new node
+	 * 
+	 * @param parent		The parent of this node
+	 * @param cgmbart		The BART model this node belongs to
+	 */
 	public CGMBARTTreeNode(CGMBARTTreeNode parent, CGMBART_02_hyperparams cgmbart){
 		this.parent = parent;
 		this.yhats = parent.yhats;
@@ -86,16 +90,32 @@ public class CGMBARTTreeNode implements Cloneable {
 		isLeaf = true; //default is that it is a leaf
 	}
 	
+	/**
+	 * Creates a new node
+	 * 
+	 * @param parent		The parent of this node
+	 */
 	public CGMBARTTreeNode(CGMBARTTreeNode parent){
 		this(parent, parent.cgmbart);
 	}
 	
+	/**
+	 * Creates a new node
+	 * 
+	 * @param cgmbart		The BART model this node belongs to
+	 */
 	public CGMBARTTreeNode(CGMBART_02_hyperparams cgmbart) {
 		this.cgmbart = cgmbart;
 		isLeaf = true;
 		depth = 0;
 	}
 
+	/**
+	 * Creates a cloned copy of the tree beginning at this node by recursing cloning its children.
+	 * The clone is shallow to save memory.
+	 * 
+	 * @return	A cloned copy of this tree
+	 */
 	public CGMBARTTreeNode clone(){
 		CGMBARTTreeNode copy = new CGMBARTTreeNode();
 		copy.cgmbart = cgmbart;
@@ -103,20 +123,10 @@ public class CGMBARTTreeNode implements Cloneable {
 		copy.isLeaf = isLeaf;
 		copy.splitAttributeM = splitAttributeM;
 		copy.splitValue = splitValue;
-//		//deep copy
-//		if (possible_rule_variables != null){
-//			TIntArrayList possible_rule_variables_clone = new TIntArrayList(possible_rule_variables.size());
-//			possible_rule_variables_clone.addAll(possible_rule_variables);
-//			copy.possible_rule_variables = possible_rule_variables_clone;
-//		}
 		copy.possible_rule_variables = possible_rule_variables;
 		copy.sendMissingDataRight = sendMissingDataRight;
-		//deep copy
 		copy.possible_split_vals_by_attr = possible_split_vals_by_attr;
 		copy.depth = depth;
-		//////do not copy y_pred
-		//now do data stuff
-//		copy.data = data;
 		copy.responses = responses;
 		copy.indicies = indicies;
 		copy.n_eta = n_eta;
@@ -134,11 +144,20 @@ public class CGMBARTTreeNode implements Cloneable {
 		return copy;
 	}
 	
+	/**
+	 * The average repsonse value at this node
+	 * 
+	 * @return	The average value
+	 */
 	public double avgResponse(){
 		return StatToolbox.sample_average(responses);
 	}
 	
-	//toolbox functions
+	/**
+	 * 
+	 * @param n_rule
+	 * @return
+	 */
 	public ArrayList<CGMBARTTreeNode> getTerminalNodesWithDataAboveOrEqualToN(int n_rule){
 		ArrayList<CGMBARTTreeNode> terminal_nodes_data_above_n = new ArrayList<CGMBARTTreeNode>();
 		findTerminalNodesDataAboveOrEqualToN(this, terminal_nodes_data_above_n, n_rule);
