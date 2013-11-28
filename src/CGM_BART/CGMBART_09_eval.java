@@ -2,35 +2,75 @@ package CGM_BART;
 
 import java.util.Arrays;
 
-
+/**
+ * This portion of the code performs the evaluation / prediction on the BART model
+ * 
+ * @author Adam Kapelner and Justin Bleich
+ */
 public abstract class CGMBART_09_eval extends CGMBART_07_mh {
 	
-	public double Evaluate(double[] record, int num_cores_evaluate) { //posterior sample median (it's what Rob uses)		
+	/**
+	 * The default BART evaluation of a new observations is done via sample average of the 
+	 * posterior predictions. Other functions can be used here such as median, mode, etc.
+	 * 
+	 * @param record				The observation to be evaluated / predicted
+	 * @param num_cores_evaluate	The number of CPU cores to use during evaluation
+	 */
+	public double Evaluate(double[] record, int num_cores_evaluate) {		
 		return EvaluateViaSampAvg(record, num_cores_evaluate);
-	}	
+	}		
 	
-	public double EvaluateViaSampMed(double[] record, int num_cores_evaluate) { //posterior sample average		
-		return StatToolbox.sample_median(getGibbsSamplesForPrediction(record, num_cores_evaluate));
-	}
-	
-	public double EvaluateViaSampAvg(double[] record, int num_cores_evaluate) { //posterior sample average		
+	/**
+	 * Evaluates a new observations via sample average of the posterior predictions.
+	 * 
+	 * @param record				The observation to be evaluated / predicted
+	 * @param num_cores_evaluate	The number of CPU cores to use during evaluation
+	 */
+	public double EvaluateViaSampAvg(double[] record, int num_cores_evaluate) {	
 		return StatToolbox.sample_average(getGibbsSamplesForPrediction(record, num_cores_evaluate));
 	}
+	
+	/**
+	 * Evaluates a new observations via sample median of the posterior predictions.
+	 * 
+	 * @param record				The observation to be evaluated / predicted
+	 * @param num_cores_evaluate	The number of CPU cores to use during evaluation
+	 */
+	public double EvaluateViaSampMed(double[] record, int num_cores_evaluate) {	
+		return StatToolbox.sample_median(getGibbsSamplesForPrediction(record, num_cores_evaluate));
+	}
 
-	protected double[] getGibbsSamplesForPrediction(double[] data_record, int num_cores_evaluate){
+	/**
+	 * For each sum-of-trees in each psoterior of the Gibbs samples, evaluate / predict these new records by summing over
+	 * the prediction for each tree
+	 * 
+	 * @param record				The observation to be evaluated / predicted
+	 * @param num_cores_evaluate	The number of CPU cores to use during evaluation
+	 * @return						The predicted values as the result of the sum over many trees for all posterior gibbs samples
+	 */
+	protected double[] getGibbsSamplesForPrediction(double[] record, int num_cores_evaluate){
 		//the results for each of the gibbs samples
 		double[] y_gibbs_samples = new double[numSamplesAfterBurningAndThinning()];	
 		for (int g = 0; g < numSamplesAfterBurningAndThinning(); g++){
 			CGMBARTTreeNode[] cgm_trees = gibbs_samples_of_cgm_trees_after_burn_in[g];
 			double yt_g = 0;
 			for (CGMBARTTreeNode tree : cgm_trees){ //sum of trees right?
-				yt_g += tree.Evaluate(data_record);
+				yt_g += tree.Evaluate(record);
 			}			
 			y_gibbs_samples[g] = un_transform_y(yt_g);
 		}
 		return y_gibbs_samples;
 	}
 	
+	/**
+	 * For each sum-of-trees in each psoterior of the Gibbs samples, evaluate / predict these new records by summing over
+	 * the prediction for each tree then order these by value and create an uncertainty interval
+	 * 
+	 * @param record				The observation for which to create an uncertainty interval		
+	 * @param coverage				The percent coverage (between 0 and 1)
+	 * @param num_cores_evaluate	The number of CPU cores to use during evaluation
+	 * @return						A tuple which is the lower value in the interval followed by the higher value
+	 */
 	protected double[] getPostPredictiveIntervalForPrediction(double[] record, double coverage, int num_cores_evaluate){
 		//get all gibbs samples sorted
 		double[] y_gibbs_samples_sorted = getGibbsSamplesForPrediction(record, num_cores_evaluate);
@@ -43,6 +83,14 @@ public abstract class CGMBART_09_eval extends CGMBART_07_mh {
 		return conf_interval;
 	}
 	
+	/**
+	 * For each sum-of-trees in each psoterior of the Gibbs samples, evaluate / predict these new records by summing over
+	 * the prediction for each tree then order these by value and create a 95% uncertainty interval
+	 * 
+	 * @param record				The observation for which to create an uncertainty interval
+	 * @param num_cores_evaluate	The number of CPU cores to use during evaluation
+	 * @return						A tuple which is the lower value in the 95% interval followed by the higher value
+	 */
 	protected double[] get95PctPostPredictiveIntervalForPrediction(double[] record, int num_cores_evaluate){
 		return getPostPredictiveIntervalForPrediction(record, 0.95, num_cores_evaluate);
 	}	

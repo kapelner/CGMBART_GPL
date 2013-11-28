@@ -88,15 +88,13 @@ public class CGMBARTClassification extends CGMBARTRegression {
 	protected void calculateHyperparameters() {
 		hyper_mu_mu = 0;
 		hyper_sigsq_mu = Math.pow(3 / (hyper_k * Math.sqrt(num_trees)), 2);	
-	}
-		
-	//do nothing
+	}		
+	
 	protected void transformResponseVariable() {
-		y_trans = new double[y_orig.length];		
+		y_trans = new double[y_orig.length]; //do nothing		
 	}	
 	
-	//do nothing
 	public double un_transform_y(double yt_i){
-		return yt_i;
+		return yt_i; //do nothing
 	}	
 }
