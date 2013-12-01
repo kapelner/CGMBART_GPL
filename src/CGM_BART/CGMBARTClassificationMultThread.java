@@ -1,9 +1,10 @@
 package CGM_BART;
 
 /**
- * This class sets up binary classification BARTs for many CPU cores
- * 
+ * This class handles the parallelization of many Gibbs chains over many CPU cores
+ * to create one BART regression model. It also handles all operations on the completed model.
  * @author Adam Kapelner and Justin Bleich
+ * 
  */
 public class CGMBARTClassificationMultThread extends CGMBARTRegressionMultThread {
 	
@@ -12,7 +13,7 @@ public class CGMBARTClassificationMultThread extends CGMBARTRegressionMultThread
 	/** The value of the classification rule which if the probability estimate of Y = 1 is greater than, we predict 1 */
 	private double classification_rule;
 
-	/** Set up an array of binary classification BARTs with length equal to the number of CPU cores requested */
+	/** Set up an array of binary classification BARTs with length equal to <code>num_cores</code>, the number of CPU cores requested */
 	protected void SetupBARTModels() {
 		bart_gibbs_chain_threads = new CGMBARTClassification[num_cores];
 		for (int t = 0; t < num_cores; t++){

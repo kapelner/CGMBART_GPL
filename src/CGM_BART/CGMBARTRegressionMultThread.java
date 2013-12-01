@@ -12,71 +12,84 @@ import java.util.concurrent.TimeUnit;
 import OpenSourceExtensions.UnorderedPair;
 
 /**
- * This class sets up regression BARTs for many CPU cores
+ * This class handles the parallelization of many Gibbs chains over many CPU cores
+ * to create one BART regression model. It also handles all operations on the completed model.
  * 
  * @author Adam Kapelner and Justin Bleich
  */
 public class CGMBARTRegressionMultThread extends Classifier {
 	
-	private static final int DEFAULT_NUM_CORES = 1;
-		
-	protected static final int NUM_TREES_DEFAULT = 50;
-	protected static final int NUM_GIBBS_BURN_IN_DEFAULT = 250;
-	protected static final int NUM_GIBBS_TOTAL_ITERATIONS_DEFAULT = 1250; //this must be larger than the number of burn in!!!
-
-	protected static double HYPER_ALPHA_DEFAULT = 0.95;
-	protected static double HYPER_BETA_DEFUALT = 2; //see p271 in CGM10	
-	protected static double HYPER_K_DEFAULT = 2.0;	
-	protected static double HYPER_Q_DEFAULT = 0.9;
-	protected static double HYPER_NU_DEFAULT = 3.0;
-	protected static double PROB_GROW_DEFAULT = 2.5 / 9.0;
-	protected static double PROB_PRUNE_DEFAULT = 2.5 / 9.0;
-	protected static double PROB_CHANGE_DEFAULT = 4 / 9.0;	
+	/** the number of CPU cores to build many different Gibbs chain within a BART model */
+	protected int num_cores = 1;
+	/** the number of trees in this BART model on all Gibbs chains */
+	protected int num_trees = 50;
 	
-	protected int num_cores;
-	protected int num_trees;
-	
+	/** the collection of <code>num_cores</code> BART models which will run separate Gibbs chains */
 	protected transient CGMBARTRegression[] bart_gibbs_chain_threads;
+	/** this is the combined gibbs samples after burn in from all of the <code>num_cores</code> chains */
 	protected CGMBARTTreeNode[][] gibbs_samples_of_cgm_trees_after_burn_in;
 	
+	/** the estimate of some upper limit of the variance of the response which is usually the MSE from a a linear regression */
 	private Double sample_var_y;
-	protected int num_gibbs_burn_in;
-	protected int num_gibbs_total_iterations;
+	/** the number of burn-in samples in each Gibbs chain */
+	protected int num_gibbs_burn_in = 250;
+	/** the total number of gibbs samples where each chain gets a number of burn-in and then the difference from the total divided by <code>num_cores</code> */ 
+	protected int num_gibbs_total_iterations = 1250;
+	/** the total number of Gibbs samples for each of the <code>num_cores</code> chains */
 	protected int total_iterations_multithreaded;
 
-	//set all hyperparameters here
+	/** The probability vector that samples covariates for selecting split rules */
 	protected double[] cov_split_prior;
-	protected Double alpha;
-	protected Double beta;
-	protected Double hyper_k;
-	protected Double hyper_q;
-	protected Double hyper_nu;
-	protected Double prob_grow;
-	protected Double prob_prune;
+	/** A hyperparameter that controls how easy it is to grow new nodes in a tree independent of depth */
+	protected Double alpha = 0.95;
+	/** A hyperparameter that controls how easy it is to grow new nodes in a tree dependent on depth which makes it more difficult as the tree gets deeper */
+	protected Double beta = 2.0;
+	/** this controls where to set <code>hyper_sigsq_mu</code> by forcing the variance to be this number of standard deviations on the normal CDF */
+	protected Double hyper_k = 2.0;
+	/** At a fixed <code>hyper_nu</code>, this controls where to set <code>hyper_lambda</code> by forcing q proportion to be at that value in the inverse gamma CDF */
+	protected Double hyper_q = 0.9;
+	/** half the shape parameter and half the multiplicand of the scale parameter of the inverse gamma prior on the variance */
+	protected Double hyper_nu = 3.0;
+	/** the hyperparameter of the probability of picking a grow step during the Metropolis-Hastings tree proposal */
+	protected Double prob_grow = 2.5 / 9.0;
+	/** the hyperparameter of the probability of picking a prune step during the Metropolis-Hastings tree proposal */
+	protected Double prob_prune = 2.5 / 9.0;
 	
-	
+	/** should we print select messages to the screen */
 	protected boolean verbose = true;
+	/** 
+	 * whether or not we use the memory cache feature
+	 * 
+	 * @see Section 3.1 of Kapelner, A and Bleich, J. bartMachine: A Powerful Tool for Machine Learning in R. ArXiv e-prints, 2013
+	 */
 	protected boolean mem_cache_for_speed = true;
-
+	/** "Destroyed" means this model's Gibbs samplers' data has been released to RAM and hence cannot be operated on */
 	protected boolean destroyed;
 
 	
+	/** the default constructor sets the number of total iterations each Gibbs chain is charged with sampling */
 	public CGMBARTRegressionMultThread(){	
-		//we need to set defaults here		
-		num_cores = DEFAULT_NUM_CORES;
-		num_trees = NUM_TREES_DEFAULT;
-		num_gibbs_burn_in = NUM_GIBBS_BURN_IN_DEFAULT;
-		num_gibbs_total_iterations = NUM_GIBBS_TOTAL_ITERATIONS_DEFAULT;
-		alpha = HYPER_ALPHA_DEFAULT;
-		beta = HYPER_BETA_DEFUALT;
-		hyper_k = HYPER_K_DEFAULT;
-		hyper_q = HYPER_Q_DEFAULT;
-		hyper_nu = HYPER_NU_DEFAULT;
-		prob_grow = PROB_GROW_DEFAULT;
-		prob_prune = PROB_PRUNE_DEFAULT;	
 		setNumGibbsTotalIterations(num_gibbs_total_iterations);
 	}
 	
+	/**
+	 * This is a simple setter for the number of total Gibbs samples and
+	 * it also sets the total iterations per Gibbs chain running on each CPU
+	 * core (see formula in the code)
+	 * 
+	 * @param num_gibbs_total_iterations	The number of total Gibbs iterations to set
+	 */
+	public void setNumGibbsTotalIterations(int num_gibbs_total_iterations){
+		this.num_gibbs_total_iterations = num_gibbs_total_iterations;
+		total_iterations_multithreaded = num_gibbs_burn_in + (int)Math.ceil((num_gibbs_total_iterations - num_gibbs_burn_in) / (double) num_cores);
+	}
+	
+	/** The number of samples after burning is simply the title minus the burn-in */
+	public int numSamplesAfterBurning(){
+		return num_gibbs_total_iterations - num_gibbs_burn_in;
+	}
+	
+	/** Set up an array of regression BARTs with length equal to <code>num_cores</code>, the number of CPU cores requested */
 	protected void SetupBARTModels() {
 		bart_gibbs_chain_threads = new CGMBARTRegression[num_cores];
 		for (int t = 0; t < num_cores; t++){
@@ -85,6 +98,13 @@ public class CGMBARTRegressionMultThread extends Classifier {
 		}
 	}
 
+	/**
+	 * Initialize one of the <code>num_cores</code> BART models by setting
+	 * all its custom parameters
+	 * 
+	 * @param bart		The BART model to initialize
+	 * @param t			The number of the core this BART model corresponds to
+	 */
 	protected void SetupBartModel(CGMBARTRegression bart, int t) {
 		bart.setVerbose(verbose);
 		//now set specs on each of the bart models
@@ -117,18 +137,27 @@ public class CGMBARTRegressionMultThread extends Classifier {
 		bart_gibbs_chain_threads[t] = bart;
 	}
 	
+	/**
+	 * Takes a library of standard normal samples provided external and caches them
+	 * 
+	 * @param norm_samples	The externally provided cache
+	 */
 	public void setNormSamples(double[] norm_samples){
 		CGMBART_02_hyperparams.samps_std_normal = norm_samples;
 		CGMBART_02_hyperparams.samps_std_normal_length = norm_samples.length;
 	}
 	
-	
+	/**
+	 * Takes a library of chi-squared samples provided external and caches them
+	 * 
+	 * @param norm_samples	The externally provided cache
+	 */
 	public void setGammaSamples(double[] gamma_samples){
 		CGMBART_02_hyperparams.samps_chi_sq_df_eq_nu_plus_n = gamma_samples;
 		CGMBART_02_hyperparams.samps_chi_sq_df_eq_nu_plus_n_length = gamma_samples.length;
 	}
 
-	@Override
+	/** This function actually initiates the Gibbs sampling to build all the BART models */
 	public void Build() {
 		SetupBARTModels();
 		//run a build on all threads
@@ -145,6 +174,7 @@ public class CGMBARTRegressionMultThread extends Classifier {
 		ConstructBurnedChainForTreesAndOtherInformation();
 	}	
 	
+	/** Create a post burn-in chain for ease of manipulation later */
 	protected void ConstructBurnedChainForTreesAndOtherInformation() {
 		gibbs_samples_of_cgm_trees_after_burn_in = new CGMBARTTreeNode[numSamplesAfterBurning()][num_trees];
 
@@ -169,10 +199,7 @@ public class CGMBARTRegressionMultThread extends Classifier {
 		}
 	}
 
-	/**
-	 * This is the core of BART's parallelization for model creation: build one BART model 
-	 * on each CPU core in parallel.
-	 */
+	/** This is the core of BART's parallelization for model creation: build one BART model on each CPU core in parallel */
 	private void BuildOnAllThreads(){
 		ExecutorService bart_gibbs_chain_pool = Executors.newFixedThreadPool(num_cores);
 		for (int t = 0; t < num_cores; t++){
@@ -189,130 +216,32 @@ public class CGMBARTRegressionMultThread extends Classifier {
 	    } catch (InterruptedException ignored){}		
 	}
 
-	public void setData(ArrayList<double[]> X_y){
-		this.X_y = X_y;
-	 	n = X_y.size();
-	 	p = X_y.get(0).length - 1;
-	}
-	
-	public void setNumGibbsBurnIn(int num_gibbs_burn_in){
-		this.num_gibbs_burn_in = num_gibbs_burn_in;
-	}
-	
-	public void setNumGibbsTotalIterations(int num_gibbs_total_iterations){
-		this.num_gibbs_total_iterations = num_gibbs_total_iterations;
-		total_iterations_multithreaded = num_gibbs_burn_in + (int)Math.ceil((num_gibbs_total_iterations - num_gibbs_burn_in) / (double) num_cores);
-	}	
-
-	public void setNumTrees(int num_trees){
-		this.num_trees = num_trees;
-	}
-	
-	public void setSampleVarY(double sample_var_y){
-		this.sample_var_y = sample_var_y;
-	}
-	
-	public void setAlpha(double alpha){
-		this.alpha = alpha;
-	}
-	
-	public void setBeta(double beta){
-		this.beta = beta;
-	}	
-	
-	public void setK(double hyper_k) {
-		this.hyper_k = hyper_k;
-	}
-
-	public void setQ(double hyper_q) {
-		this.hyper_q = hyper_q;
-	}
-
-	public void setNU(double hyper_nu) {
-		this.hyper_nu = hyper_nu;
-	}	
-	
-	
-	public void setProbGrow(double prob_grow) {
-		this.prob_grow = prob_grow;
-	}
-
-	public void setProbPrune(double prob_prune) {
-		this.prob_prune = prob_prune;
-	}	
-
-	public void setProbChange(double prob_change) {
-		//this does nothing
-	}
-	
-	public void setVerbose(boolean verbose){
-		this.verbose = verbose;
-	}
-	
-	public void setNumCores(int num_cores){
-		this.num_cores = num_cores;
-	}
-	
-	public void setMemCacheForSpeed(boolean mem_cache_for_speed){
-		this.mem_cache_for_speed = mem_cache_for_speed;
-	}
-
-	@Override
-	protected void FlushData() {
-		for (int t = 0; t < num_cores; t++){
-			bart_gibbs_chain_threads[t].FlushData();
-		}
-	}
-
-	public double Evaluate(double[] record) {	
-		return EvaluateViaSampAvg(record, 1);
-	}	
-	
-	public double Evaluate(double[] record, int num_cores_evaluate) {		
-		return EvaluateViaSampAvg(record, num_cores_evaluate);
-	}		
-	
-	public double EvaluateViaSampMed(double[] record, int num_cores_evaluate) {	
-		double[][] data = new double[1][record.length];
-		data[0] = record;
-		double[][] gibbs_samples = getGibbsSamplesForPrediction(data, num_cores_evaluate);
-		return StatToolbox.sample_median(gibbs_samples[0]);
-	}
-	
-	public double EvaluateViaSampAvg(double[] record, int num_cores_evaluate) {		
-		double[][] data = new double[1][record.length];
-		data[0] = record;
-		double[][] gibbs_samples = getGibbsSamplesForPrediction(data, num_cores_evaluate);
-		return StatToolbox.sample_average(gibbs_samples[0]);
-	}
-	
-	public int numSamplesAfterBurning(){
-		return num_gibbs_total_iterations - num_gibbs_burn_in;
-	}	
-	
 	/**
-	 * Code is ugly and not decomped because it is optimized
+	 * Return the predictions from each tree for each burned-in Gibbs sample
 	 * 
 	 * 
-	 * @param data
-	 * @param num_cores
+	 * .
+	 * 
+	 * @param records
+	 * @param num_cores_evaluate02
 	 * @return
 	 */
-	protected double[][] getGibbsSamplesForPrediction(final double[][] data, final int num_cores){
+	protected double[][] getGibbsSamplesForPrediction(final double[][] records, final int num_cores_evaluate){
 		final int num_samples_after_burn_in = numSamplesAfterBurning();
 		final CGMBARTRegression first_bart = bart_gibbs_chain_threads[0];
 		
-		final int n = data.length;
-		final double[][] y_hat = new double[n][data[0].length];
+		final int n = records.length;
+		final double[][] y_hat = new double[n][records[0].length];
 		
-		if (num_cores == 1){
+		//this is really ugly, but it's faster (we've checked in a Profiler)
+		if (num_cores_evaluate == 1){
 			for (int i = 0; i < n; i++){
 				double[] y_gibbs_samples = new double[num_samples_after_burn_in];
 				for (int g = 0; g < num_samples_after_burn_in; g++){
 					CGMBARTTreeNode[] cgm_trees = gibbs_samples_of_cgm_trees_after_burn_in[g];
 					double yt_i = 0;
 					for (int m = 0; m < num_trees; m++){ //sum of trees right?
-						yt_i += cgm_trees[m].Evaluate(data[i]);
+						yt_i += cgm_trees[m].Evaluate(records[i]);
 					}
 					//just make sure we switch it back to really what y is for the user
 					y_gibbs_samples[g] = first_bart.un_transform_y(yt_i);
@@ -321,19 +250,19 @@ public class CGMBARTRegressionMultThread extends Classifier {
 			}			
 		}
 		else {
-			Thread[] fixed_thread_pool = new Thread[num_cores];
-			for (int t = 0; t < num_cores; t++){
+			Thread[] fixed_thread_pool = new Thread[num_cores_evaluate];
+			for (int t = 0; t < num_cores_evaluate; t++){
 				final int final_t = t;
 				Thread thread = new Thread(){
 					public void run(){
 						for (int i = 0; i < n; i++){
-							if (i % num_cores == final_t){
+							if (i % num_cores_evaluate == final_t){
 								double[] y_gibbs_samples = new double[num_samples_after_burn_in];
 								for (int g = 0; g < num_samples_after_burn_in; g++){									
 									CGMBARTTreeNode[] trees = gibbs_samples_of_cgm_trees_after_burn_in[g];
 									double yt_i = 0;
 									for (int m = 0; m < num_trees; m++){ //sum of trees right?
-										yt_i += trees[m].Evaluate(data[i]);
+										yt_i += trees[m].Evaluate(records[i]);
 									}
 									//just make sure we switch it back to really what y is for the user
 									y_gibbs_samples[g] = first_bart.un_transform_y(yt_i);	
@@ -346,7 +275,7 @@ public class CGMBARTRegressionMultThread extends Classifier {
 				thread.start();
 				fixed_thread_pool[t] = thread;
 			}
-			for (int t = 0; t < num_cores; t++){
+			for (int t = 0; t < num_cores_evaluate; t++){
 				try {
 					fixed_thread_pool[t].join();
 				} catch (InterruptedException e) {}
@@ -437,15 +366,33 @@ public class CGMBARTRegressionMultThread extends Classifier {
 		return variable_counts_all_gibbs;
 	}
 
-	/** {@inheritDoc} */
-	public void StopBuilding() {
+	/** Flush all unnecessary data from the Gibbs chains to conserve RAM */
+	protected void FlushData() {
 		for (int t = 0; t < num_cores; t++){
-			bart_gibbs_chain_threads[t].StopBuilding();
+			bart_gibbs_chain_threads[t].FlushData();
 		}
 	}
+
+	public double Evaluate(double[] record) {	
+		return EvaluateViaSampAvg(record, 1);
+	}	
 	
-	public void setCovSplitPrior(double[] cov_split_prior){
-		this.cov_split_prior = cov_split_prior;
+	public double Evaluate(double[] record, int num_cores_evaluate) {		
+		return EvaluateViaSampAvg(record, num_cores_evaluate);
+	}		
+	
+	public double EvaluateViaSampMed(double[] record, int num_cores_evaluate) {	
+		double[][] data = new double[1][record.length];
+		data[0] = record;
+		double[][] gibbs_samples = getGibbsSamplesForPrediction(data, num_cores_evaluate);
+		return StatToolbox.sample_median(gibbs_samples[0]);
+	}
+	
+	public double EvaluateViaSampAvg(double[] record, int num_cores_evaluate) {		
+		double[][] data = new double[1][record.length];
+		data[0] = record;
+		double[][] gibbs_samples = getGibbsSamplesForPrediction(data, num_cores_evaluate);
+		return StatToolbox.sample_average(gibbs_samples[0]);
 	}
 
 	public double[] getSigsqsByGibbsSample(int g){
@@ -489,8 +436,78 @@ public class CGMBARTRegressionMultThread extends Classifier {
 		return interaction_count_matrix;
 	}
 	
+	public void setData(ArrayList<double[]> X_y){
+		this.X_y = X_y;
+	 	n = X_y.size();
+	 	p = X_y.get(0).length - 1;
+	}
+	
+	public void setCovSplitPrior(double[] cov_split_prior){
+		this.cov_split_prior = cov_split_prior;
+	}
+	
+	public void setNumGibbsBurnIn(int num_gibbs_burn_in){
+		this.num_gibbs_burn_in = num_gibbs_burn_in;
+	}	
+
+	public void setNumTrees(int num_trees){
+		this.num_trees = num_trees;
+	}
+	
+	public void setSampleVarY(double sample_var_y){
+		this.sample_var_y = sample_var_y;
+	}
+	
+	public void setAlpha(double alpha){
+		this.alpha = alpha;
+	}
+	
+	public void setBeta(double beta){
+		this.beta = beta;
+	}	
+	
+	public void setK(double hyper_k) {
+		this.hyper_k = hyper_k;
+	}
+
+	public void setQ(double hyper_q) {
+		this.hyper_q = hyper_q;
+	}
+
+	public void setNU(double hyper_nu) {
+		this.hyper_nu = hyper_nu;
+	}	
+	
+	
+	public void setProbGrow(double prob_grow) {
+		this.prob_grow = prob_grow;
+	}
+
+	public void setProbPrune(double prob_prune) {
+		this.prob_prune = prob_prune;
+	}	
+
+	public void setProbChange(double prob_change) {
+		//this does nothing
+	}
+	
+	public void setVerbose(boolean verbose){
+		this.verbose = verbose;
+	}
+	
+	public void setNumCores(int num_cores){
+		this.num_cores = num_cores;
+	}
+	
+	public void setMemCacheForSpeed(boolean mem_cache_for_speed){
+		this.mem_cache_for_speed = mem_cache_for_speed;
+	}
+	
 	public boolean isDestroyed(){		
 		return destroyed;
 	}
+	
+	/** Must be implemented, but does nothing */
+	public void StopBuilding() {}
 	
 }

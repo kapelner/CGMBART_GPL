@@ -12,9 +12,9 @@ public abstract class CGMBART_07_mh extends CGMBART_06_gibbs_internal {
 	/** turning this flag on prints out debugging information about the Metropolis-Hastings tree search step */
 	private static final boolean DEBUG_MH = false;
 	
-	/** the probability of picking a grow step */
+	/** the hyperparameter of the probability of picking a grow step during the Metropolis-Hastings tree proposal */
 	protected double prob_grow;
-	/** the probability of picking a prune step */
+	/** the hyperparameter of the probability of picking a prune step during the Metropolis-Hastings tree proposal */
 	protected double prob_prune;
 
 	/** the types of steps in the Metropolis-Hastings tree search */

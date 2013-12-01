@@ -43,7 +43,7 @@ public abstract class CGMBART_01_base extends Classifier {
 	
 
 
-	/** Remove unnecessary data from the Gibbs chain to save memory */
+	/** Remove unnecessary data from the Gibbs chain to conserve RAM */
 	protected void FlushData() {
 		for (CGMBARTTreeNode[] cgm_trees : gibbs_samples_of_cgm_trees){
 			FlushDataForSample(cgm_trees);

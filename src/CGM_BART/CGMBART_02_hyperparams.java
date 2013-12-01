@@ -40,9 +40,9 @@ public abstract class CGMBART_02_hyperparams extends CGMBART_01_base {
 	/** At a fixed <code>hyper_nu</code>, this controls where to set <code>hyper_lambda</code> by forcing q proportion to be at that value in the inverse gamma CDF */
 	protected double hyper_q = 0.9;
 		
-	/** A hyperparameter that controls how easy it is to grow new nodes in a tree indepedent of depth */
+	/** A hyperparameter that controls how easy it is to grow new nodes in a tree independent of depth */
 	protected double alpha = 0.95;
-	/** A hyperparameter that controls how easy it is to grow new nodes in a tree depedent on depth which makes it more difficult as the tree gets deeper */
+	/** A hyperparameter that controls how easy it is to grow new nodes in a tree dependent on depth which makes it more difficult as the tree gets deeper */
 	protected double beta = 2;
 	/** the minimum of the response variable on its original scale */
 	protected double y_min;
