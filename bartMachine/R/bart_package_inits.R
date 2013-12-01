@@ -36,7 +36,7 @@ get_var_counts_over_chain = function(bart_machine, type = "splits"){
 	if (!(type %in% c("trees", "splits"))){
 		stop("type must be \"trees\" or \"splits\"")
 	}
-	C = t(sapply(.jcall(bart_machine$java_bart_machine, "[[I", "getCountsForAllAttribute", as.integer(bart_machine_num_cores()), type), .jevalArray))
+	C = t(sapply(.jcall(bart_machine$java_bart_machine, "[[I", "getCountsForAllAttribute", type), .jevalArray))
 	colnames(C) = colnames(bart_machine$model_matrix_training_data)[1 : bart_machine$p]
 	C
 }
@@ -46,7 +46,7 @@ get_var_props_over_chain = function(bart_machine, type = "splits"){
 	if (!(type %in% c("trees", "splits"))){
 		stop("type must be \"trees\" or \"splits\"")
 	}	
-	attribute_props = .jcall(bart_machine$java_bart_machine, "[D", "getAttributeProps", as.integer(bart_machine_num_cores()), type)
+	attribute_props = .jcall(bart_machine$java_bart_machine, "[D", "getAttributeProps", type)
 	names(attribute_props) = colnames(bart_machine$model_matrix_training_data)[1 : bart_machine$p]
 	attribute_props
 }

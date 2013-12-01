@@ -187,7 +187,6 @@ public class CGMBARTRegressionMultThread extends Classifier {
 			for (int i = num_gibbs_burn_in; i < total_iterations_multithreaded; i++){
 				int offset = t * (total_iterations_multithreaded - num_gibbs_burn_in);
 				int g = offset + (i - num_gibbs_burn_in);
-//				System.out.println("t = " + t + " total_iterations_multithreaded = " + total_iterations_multithreaded + " g = " + g);
 				if (g >= numSamplesAfterBurning()){
 					break;
 				}
@@ -219,34 +218,31 @@ public class CGMBARTRegressionMultThread extends Classifier {
 	/**
 	 * Return the predictions from each tree for each burned-in Gibbs sample
 	 * 
-	 * 
-	 * .
-	 * 
-	 * @param records
-	 * @param num_cores_evaluate02
-	 * @return
+	 * @param records				the observations / records for which to return predictions
+	 * @param num_cores_evaluate	The number of CPU cores to use during evaluation	
+	 * @return						Predictions for all records further indexed by Gibbs sample
 	 */
 	protected double[][] getGibbsSamplesForPrediction(final double[][] records, final int num_cores_evaluate){
 		final int num_samples_after_burn_in = numSamplesAfterBurning();
 		final CGMBARTRegression first_bart = bart_gibbs_chain_threads[0];
 		
 		final int n = records.length;
-		final double[][] y_hat = new double[n][records[0].length];
+		final double[][] y_hats = new double[n][records[0].length];
 		
 		//this is really ugly, but it's faster (we've checked in a Profiler)
 		if (num_cores_evaluate == 1){
 			for (int i = 0; i < n; i++){
 				double[] y_gibbs_samples = new double[num_samples_after_burn_in];
 				for (int g = 0; g < num_samples_after_burn_in; g++){
-					CGMBARTTreeNode[] cgm_trees = gibbs_samples_of_cgm_trees_after_burn_in[g];
+					CGMBARTTreeNode[] trees = gibbs_samples_of_cgm_trees_after_burn_in[g];
 					double yt_i = 0;
-					for (int m = 0; m < num_trees; m++){ //sum of trees right?
-						yt_i += cgm_trees[m].Evaluate(records[i]);
+					for (int m = 0; m < num_trees; m++){ 
+						yt_i += trees[m].Evaluate(records[i]); //sum of trees, right?
 					}
 					//just make sure we switch it back to really what y is for the user
 					y_gibbs_samples[g] = first_bart.un_transform_y(yt_i);
 				}
-				y_hat[i] = y_gibbs_samples;
+				y_hats[i] = y_gibbs_samples;
 			}			
 		}
 		else {
@@ -267,7 +263,7 @@ public class CGMBARTRegressionMultThread extends Classifier {
 									//just make sure we switch it back to really what y is for the user
 									y_gibbs_samples[g] = first_bart.un_transform_y(yt_i);	
 								}
-								y_hat[i] = y_gibbs_samples;
+								y_hats[i] = y_gibbs_samples;
 							}
 						}
 					}
@@ -280,11 +276,19 @@ public class CGMBARTRegressionMultThread extends Classifier {
 					fixed_thread_pool[t].join();
 				} catch (InterruptedException e) {}
 			}
-		}		
-
-		return y_hat;
+		}
+		return y_hats;
 	}
 
+	/**
+	 * Using the {@link #getGibbsSamplesForPrediction} function, return a credible interval at a specified
+	 * level of coverage
+	 * 
+	 * @param record				The record for which to obtain an interval
+	 * @param coverage				The desired coverage
+	 * @param num_cores_evaluate	The number of CPU cores to use during evaluation
+	 * @return						A double pair which represents the upper and lower bound of coverage
+	 */
 	protected double[] getPostPredictiveIntervalForPrediction(double[] record, double coverage, int num_cores_evaluate){
 		double[][] data = new double[1][record.length];
 		data[0] = record;		
@@ -300,6 +304,13 @@ public class CGMBARTRegressionMultThread extends Classifier {
 		return conf_interval;
 	}
 	
+	/**
+	 * Using the {@link #getPostPredictiveIntervalForPrediction} function, return a 95\% credible interval 
+	 * 
+	 * @param record				The record for which to obtain an interval
+	 * @param num_cores_evaluate	The number of CPU cores to use during evaluation
+	 * @return						A double pair which represents the upper and lower bound of coverage
+	 */
 	protected double[] get95PctPostPredictiveIntervalForPrediction(double[] record, int num_cores_evaluate){
 		return getPostPredictiveIntervalForPrediction(record, 0.95, num_cores_evaluate);
 	}	
@@ -318,6 +329,11 @@ public class CGMBARTRegressionMultThread extends Classifier {
 		return sigsqs_to_export.toArray();
 	}
 	
+	/**
+	 * Returns a record of Metropolis-Hastings acceptances or rejections for all trees during burn-in
+	 * 
+	 * @return	Yes/No's for acceptances for all Gibbs samples further indexed by tree
+	 */
 	public boolean[][] getAcceptRejectMHsBurnin(){
 		boolean[][] accept_reject_mh_first_thread = bart_gibbs_chain_threads[0].getAcceptRejectMH();
 		boolean[][] accept_reject_mh_burn_ins = new boolean[num_gibbs_burn_in][num_trees];
@@ -327,6 +343,12 @@ public class CGMBARTRegressionMultThread extends Classifier {
 		return accept_reject_mh_burn_ins;
 	}
 	
+	/**
+	 * Returns a record of Metropolis-Hastings acceptances or rejections for all trees after burn-in
+	 * 
+	 * @param thread_num	Which CPU core's acceptance / rejection record should be returned
+	 * @return				Yes/No's for acceptances for all Gibbs samples further indexed by tree
+	 */
 	public boolean[][] getAcceptRejectMHsAfterBurnIn(int thread_num){
 		boolean[][] accept_reject_mh_by_core = bart_gibbs_chain_threads[thread_num - 1].getAcceptRejectMH();
 		boolean[][] accept_reject_mh_after_burn_ins = new boolean[total_iterations_multithreaded - num_gibbs_burn_in][num_trees];
@@ -335,18 +357,15 @@ public class CGMBARTRegressionMultThread extends Classifier {
 		}
 		return accept_reject_mh_after_burn_ins;
 	}	
-	
-	public double[] getAttributeProps(final int num_cores, final String type) {
-		int[][] variable_counts_all_gibbs = getCountsForAllAttribute(num_cores, type);
-		double[] attribute_counts = new double[p];
-		for (int g = 0; g < num_gibbs_total_iterations - num_gibbs_burn_in; g++){
-			attribute_counts = Tools.add_arrays(attribute_counts, variable_counts_all_gibbs[g]);
-		}
-		Tools.normalize_array(attribute_counts); //will turn it into proportions
-		return attribute_counts;
-	}
 
-	public int[][] getCountsForAllAttribute(final int num_cores, final String type) {
+	/**
+	 * Return the number of times each of the attributes were used during the construction of the sum-of-trees
+	 * by Gibbs sample.
+	 * 
+	 * @param type	Either "splits" or "trees" ("splits" means total number and "trees" means sum of binary values of whether or not it has appeared in the tree)
+	 * @return		The counts for all Gibbs samples further indexed by the attribute 1, ..., p
+	 */
+	public int[][] getCountsForAllAttribute(final String type) {
 		final int[][] variable_counts_all_gibbs = new int[num_gibbs_total_iterations - num_gibbs_burn_in][p];		
 		
 		for (int g = 0; g < num_gibbs_total_iterations - num_gibbs_burn_in; g++){
@@ -365,57 +384,31 @@ public class CGMBARTRegressionMultThread extends Classifier {
 		}		
 		return variable_counts_all_gibbs;
 	}
-
-	/** Flush all unnecessary data from the Gibbs chains to conserve RAM */
-	protected void FlushData() {
-		for (int t = 0; t < num_cores; t++){
-			bart_gibbs_chain_threads[t].FlushData();
+	
+	/**
+	 * Return the proportion of times each of the attributes were used (count over total number of splits) 
+	 * during the construction of the sum-of-trees by Gibbs sample.
+	 * 
+	 * @param type	Either "splits" or "trees" ("splits" means total number and "trees" means sum of binary values of whether or not it has appeared in the tree)
+	 * @return		The proportion of splits for all Gibbs samples further indexed by the attribute 1, ..., p
+	 */
+	public double[] getAttributeProps(final String type) {
+		int[][] variable_counts_all_gibbs = getCountsForAllAttribute(type);
+		double[] attribute_counts = new double[p];
+		for (int g = 0; g < num_gibbs_total_iterations - num_gibbs_burn_in; g++){
+			attribute_counts = Tools.add_arrays(attribute_counts, variable_counts_all_gibbs[g]);
 		}
-	}
-
-	public double Evaluate(double[] record) {	
-		return EvaluateViaSampAvg(record, 1);
-	}	
-	
-	public double Evaluate(double[] record, int num_cores_evaluate) {		
-		return EvaluateViaSampAvg(record, num_cores_evaluate);
-	}		
-	
-	public double EvaluateViaSampMed(double[] record, int num_cores_evaluate) {	
-		double[][] data = new double[1][record.length];
-		data[0] = record;
-		double[][] gibbs_samples = getGibbsSamplesForPrediction(data, num_cores_evaluate);
-		return StatToolbox.sample_median(gibbs_samples[0]);
+		Tools.normalize_array(attribute_counts); //will turn it into proportions
+		return attribute_counts;
 	}
 	
-	public double EvaluateViaSampAvg(double[] record, int num_cores_evaluate) {		
-		double[][] data = new double[1][record.length];
-		data[0] = record;
-		double[][] gibbs_samples = getGibbsSamplesForPrediction(data, num_cores_evaluate);
-		return StatToolbox.sample_average(gibbs_samples[0]);
-	}
-
-	public double[] getSigsqsByGibbsSample(int g){
-		return bart_gibbs_chain_threads[0].un_transform_sigsq(bart_gibbs_chain_threads[0].gibbs_samples_of_sigsq);
-	}	
-		
-	public int[][] getDepthsForTreesInGibbsSampAfterBurnIn(int thread_num){
-		return bart_gibbs_chain_threads[thread_num - 1].getDepthsForTrees(num_gibbs_burn_in, total_iterations_multithreaded);
-	}	
-	
-	public int[][] getNumNodesAndLeavesForTreesInGibbsSampAfterBurnIn(int thread_num){
-		return bart_gibbs_chain_threads[thread_num - 1].getNumNodesAndLeavesForTrees(num_gibbs_burn_in, total_iterations_multithreaded);
-	}	
-	
-	public void destroy(){
-		bart_gibbs_chain_threads = null;
-		gibbs_samples_of_cgm_trees_after_burn_in = null;
-		cov_split_prior = null;
-		destroyed = true; 
-	}
-	
-
-	public int[][] getInteractionCounts(int num_cores){
+	/**
+	 * For all Gibbs samples after burn in, calculate the set of interaction counts (consider a split on x_j 
+	 * and a daughter node splits on x_k and that would be considered an "interaction")
+	 * 
+	 * @return	A matrix of size p x p where the row is top split and the column is a bottom split. It is recommended to triangularize the matrix after ignoring the order.
+	 */
+	public int[][] getInteractionCounts(){
 		int[][] interaction_count_matrix = new int[p][p];
 		
 		for (int g = 0; g < gibbs_samples_of_cgm_trees_after_burn_in.length; g++){
@@ -434,6 +427,89 @@ public class CGMBARTRegressionMultThread extends Classifier {
 		}
 		
 		return interaction_count_matrix;
+	}
+
+	/** Flush all unnecessary data from the Gibbs chains to conserve RAM */
+	protected void FlushData() {
+		for (int t = 0; t < num_cores; t++){
+			bart_gibbs_chain_threads[t].FlushData();
+		}
+	}
+
+	/**
+	 * The default BART evaluation of a new observations is done via sample average of the 
+	 * posterior predictions. Other functions can be used here such as median, mode, etc. 
+	 * Default is to use one CPU core.
+	 * 
+	 * @param record				The observation to be evaluated / predicted
+	 */
+	public double Evaluate(double[] record) {	
+		return EvaluateViaSampAvg(record, 1);
+	}	
+	
+	/**
+	 * The default BART evaluation of a new observations is done via sample average of the 
+	 * posterior predictions. Other functions can be used here such as median, mode, etc.
+	 * 
+	 * @param record				The observation to be evaluated / predicted
+	 * @param num_cores_evaluate	The number of CPU cores to use during evaluation
+	 */
+	public double Evaluate(double[] record, int num_cores_evaluate) {		
+		return EvaluateViaSampAvg(record, num_cores_evaluate);
+	}	
+	
+	/**
+	 * Evaluates a new observations via sample average of the posterior predictions.
+	 * 
+	 * @param record				The observation to be evaluated / predicted
+	 * @param num_cores_evaluate	The number of CPU cores to use during evaluation
+	 */
+	public double EvaluateViaSampAvg(double[] record, int num_cores_evaluate) {		
+		double[][] data = new double[1][record.length];
+		data[0] = record;
+		double[][] gibbs_samples = getGibbsSamplesForPrediction(data, num_cores_evaluate);
+		return StatToolbox.sample_average(gibbs_samples[0]);
+	}
+	
+	/**
+	 * Evaluates a new observations via sample median of the posterior predictions.
+	 * 
+	 * @param record				The observation to be evaluated / predicted
+	 * @param num_cores_evaluate	The number of CPU cores to use during evaluation
+	 */
+	public double EvaluateViaSampMed(double[] record, int num_cores_evaluate) {	
+		double[][] data = new double[1][record.length];
+		data[0] = record;
+		double[][] gibbs_samples = getGibbsSamplesForPrediction(data, num_cores_evaluate);
+		return StatToolbox.sample_median(gibbs_samples[0]);
+	}	
+	
+	/**
+	 * After burn in, find the depth (greatest generation of a terminal node) of each tree for each Gibbs sample
+	 * 
+	 * @param thread_num	which CPU core (which Gibbs chain) to return results for
+	 * @return				for each Gibbs chain return a vector of depths for all <code>num_trees</code> chains
+	 */
+	public int[][] getDepthsForTreesInGibbsSampAfterBurnIn(int thread_num){
+		return bart_gibbs_chain_threads[thread_num - 1].getDepthsForTrees(num_gibbs_burn_in, total_iterations_multithreaded);
+	}	
+	
+	/**
+	 * After burn in, return the number of total nodes (internal plus terminal) of each tree for each Gibbs sample
+	 * 
+	 * @param thread_num	which CPU core (which Gibbs chain) to return results for
+	 * @return				for each Gibbs chain return a vector of number of nodes for all <code>num_trees</code> chains
+	 */
+	public int[][] getNumNodesAndLeavesForTreesInGibbsSampAfterBurnIn(int thread_num){
+		return bart_gibbs_chain_threads[thread_num - 1].getNumNodesAndLeavesForTrees(num_gibbs_burn_in, total_iterations_multithreaded);
+	}	
+	
+	/** to save memory, delete all the data for this BART model on all Gibbs chains */
+	public void destroy(){
+		bart_gibbs_chain_threads = null;
+		gibbs_samples_of_cgm_trees_after_burn_in = null;
+		cov_split_prior = null;
+		destroyed = true; 
 	}
 	
 	public void setData(ArrayList<double[]> X_y){
@@ -485,10 +561,6 @@ public class CGMBARTRegressionMultThread extends Classifier {
 
 	public void setProbPrune(double prob_prune) {
 		this.prob_prune = prob_prune;
-	}	
-
-	public void setProbChange(double prob_change) {
-		//this does nothing
 	}
 	
 	public void setVerbose(boolean verbose){
@@ -508,6 +580,5 @@ public class CGMBARTRegressionMultThread extends Classifier {
 	}
 	
 	/** Must be implemented, but does nothing */
-	public void StopBuilding() {}
-	
+	public void StopBuilding() {}	
 }

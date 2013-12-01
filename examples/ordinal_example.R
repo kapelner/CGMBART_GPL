@@ -182,8 +182,7 @@ var_selection_by_permute_response_three_methods(bart_machine, num_permute_sample
 
 
 for (i in 1 : 50){
-	t(sapply(.jcall(bart_machine$java_bart_machine, "[[I", "getCountsForAllAttribute", as.integer(BART_NUM_CORES), "splits"), .jevalArray))
-#	sapply(.jcall(bart_machine$java_bart_machine, "[[I", "getInteractionCounts", as.integer(BART_NUM_CORES)), .jevalArray)
+	t(sapply(.jcall(bart_machine$java_bart_machine, "[[I", "getCountsForAllAttribute", "splits"), .jevalArray))
 	cat(".")
 }
 plot_y_vs_yhat(bart_machine, ppis=T)
