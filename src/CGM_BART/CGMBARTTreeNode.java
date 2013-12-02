@@ -66,7 +66,7 @@ public class CGMBARTTreeNode implements Cloneable {
 	private transient HashMap<Integer, TDoubleHashSetAndArray> possible_split_vals_by_attr;
 	/** this number of possible split variables at this node */
 	protected transient Integer padj;	
-	
+	/** a shared pointer to an object that tabulates the counts of attributes being used in split points in this tree */
 	protected int[] attribute_split_counts;
 
 	
@@ -145,18 +145,20 @@ public class CGMBARTTreeNode implements Cloneable {
 	}
 	
 	/**
-	 * The average repsonse value at this node
+	 * The sample average response value at this node
 	 * 
-	 * @return	The average value
+	 * @return	The sample average value
 	 */
 	public double avgResponse(){
 		return StatToolbox.sample_average(responses);
 	}
 	
 	/**
+	 * Search the tree below this current node for terminal nodes that have more than <code>n_rule</code>
+	 * data records
 	 * 
-	 * @param n_rule
-	 * @return
+	 * @param n_rule	The number of data records in in terminal nodes of interest we wish to select
+	 * @return			A list of these nodes
 	 */
 	public ArrayList<CGMBARTTreeNode> getTerminalNodesWithDataAboveOrEqualToN(int n_rule){
 		ArrayList<CGMBARTTreeNode> terminal_nodes_data_above_n = new ArrayList<CGMBARTTreeNode>();
@@ -164,10 +166,23 @@ public class CGMBARTTreeNode implements Cloneable {
 		return terminal_nodes_data_above_n;
 	}
 	
+	/**
+	 * Return all terminal nodes under this node
+	 * 
+	 * @return	A list of the terminal nodes
+	 */
 	public ArrayList<CGMBARTTreeNode> getTerminalNodes(){
 		return getTerminalNodesWithDataAboveOrEqualToN(0);
 	}
 	
+	/**
+	 * Search the tree recursively below a node for terminal nodes that have more than <code>n_rule</code>
+	 * data records
+	 * 
+	 * @param node				The node under investigation
+	 * @param terminal_nodes	The growing list of nodes that fit this criteria
+	 * @param n_rule			The number of data records in in terminal nodes of interest we wish to select
+	 */
 	private static void findTerminalNodesDataAboveOrEqualToN(CGMBARTTreeNode node, ArrayList<CGMBARTTreeNode> terminal_nodes, int n_rule) {
 		if (node.isLeaf && node.n_eta >= n_rule){
 			terminal_nodes.add(node);
@@ -175,27 +190,31 @@ public class CGMBARTTreeNode implements Cloneable {
 		else if (!node.isLeaf){ //as long as we're not in a leaf we should recurse
 			if (node.left == null || node.right == null){
 				System.err.println("error node no children during findTerminalNodesDataAboveOrEqualToN id: " + node.stringID());
-//				DebugNode(node);
 			}			
 			findTerminalNodesDataAboveOrEqualToN(node.left, terminal_nodes, n_rule);
 			findTerminalNodesDataAboveOrEqualToN(node.right, terminal_nodes, n_rule);
 		}
 	}
-
-//	public static int numTerminalNodes(CGMBARTTreeNode node){
-//		return getTerminalNodesWithDataAboveOrEqualToN(node, 0).size();
-//	}
-//	
-//	public static int numTerminalNodesDataAboveN(CGMBARTTreeNode node, int n_rule){
-//		return getTerminalNodesWithDataAboveOrEqualToN(node, n_rule).size();
-//	}
 	
+	/**
+	 * Find a list of prunable and changeable nodes (ie singly internal nodes) 
+	 * from this point in the tree and below
+	 * 
+	 * @return	The list of these nodes
+	 */
 	public ArrayList<CGMBARTTreeNode> getPrunableAndChangeableNodes(){
 		ArrayList<CGMBARTTreeNode> prunable_and_changeable_nodes = new ArrayList<CGMBARTTreeNode>();
 		findPrunableAndChangeableNodes(this, prunable_and_changeable_nodes);
 		return prunable_and_changeable_nodes;
 	}
 
+	/**
+	 * Find a list of prunable and changeable nodes (ie singly internal nodes) 
+	 * from a node and below using recursion
+	 * 
+	 * @param node				The node to find singly internal nodes below
+	 * @param prunable_nodes	A running list of singly internal nodes
+	 */
 	private static void findPrunableAndChangeableNodes(CGMBARTTreeNode node, ArrayList<CGMBARTTreeNode> prunable_nodes) {
 		if (node.isLeaf){
 			return;
@@ -210,10 +229,10 @@ public class CGMBARTTreeNode implements Cloneable {
 	}
 
 	/**
-	 * We prune the tree at this node. We cut off its children, mark is as a leaf,
-	 * and delete its split rule
+	 * We prune the tree at this node. We cut off its children, mark it as a leaf / terminal node,
+	 * and erase its split rule
 	 * 
-	 * @param node	the node at which to trim the tree at
+	 * @param node		The node at which to trim the tree at
 	 */
 	public static void pruneTreeAt(CGMBARTTreeNode node) {
 		node.left = null;
@@ -223,6 +242,11 @@ public class CGMBARTTreeNode implements Cloneable {
 		node.splitValue = BAD_FLAG_double;
 	}
 	
+	/**
+	 * Find the terminal node at the largest depth from this point in the tree and down
+	 * 
+	 * @return	The depth of the deepest terminal node
+	 */
 	public int deepestNode(){
 		if (this.isLeaf){
 			return 0;
@@ -239,7 +263,13 @@ public class CGMBARTTreeNode implements Cloneable {
 		}
 	}
 
-	public double Evaluate(double[] xs) {
+	/**
+	 * Evaluate a record recursively accounting for split rules and the presence of missing data
+	 * 
+	 * @param record		The record which to evaluate in this tree
+	 * @return				The returned prediction from the terminal node that this tree structure maps the record to
+	 */
+	public double Evaluate(double[] record) {
 		CGMBARTTreeNode evalNode = this;
 		while (true){
 			if (evalNode.isLeaf){
@@ -249,10 +279,10 @@ public class CGMBARTTreeNode implements Cloneable {
 			//it's a convention that makes sense - if X_.j is binary, and the split values can only be 0/1
 			//then it MUST be <= so both values can be considered
 			//handle missing data first
-			if (Classifier.isMissing(xs[evalNode.splitAttributeM])){
+			if (Classifier.isMissing(record[evalNode.splitAttributeM])){
 				evalNode = evalNode.sendMissingDataRight ? evalNode.right : evalNode.left;
 			}			
-			else if (xs[evalNode.splitAttributeM] <= evalNode.splitValue){
+			else if (record[evalNode.splitAttributeM] <= evalNode.splitValue){
 				evalNode = evalNode.left;
 			}
 			else {
@@ -261,6 +291,7 @@ public class CGMBARTTreeNode implements Cloneable {
 		}
 	}
 
+	/** Remove all the data in this node and its children recursively to save memory */
 	public void flushNodeData() {
 		yhats = null;
 		indicies = null;	
@@ -274,6 +305,7 @@ public class CGMBARTTreeNode implements Cloneable {
 			this.right.flushNodeData();
 	}
 	
+	/** Propagates the records to the appropriate daughter nodes recursively after a change in split rule. */
 	public void propagateDataByChangedRule() {		
 		if (isLeaf){ //only propagate if we are in a split node and NOT a leaf
 			if (DEBUG_NODES){
@@ -291,15 +323,12 @@ public class CGMBARTTreeNode implements Cloneable {
 		for (int i = 0; i < n_eta; i++){
 			double[] datum = cgmbart.X_y.get(indicies[i]);
 			//handle missing data first
-//			System.out.println("propagate: " + i + "val = " + datum[splitAttributeM] + " missing? " + (Classifier.isMissing(datum[splitAttributeM])));
 			if (Classifier.isMissing(datum[splitAttributeM])){
 				if (sendMissingDataRight){
-//					System.out.println("send missing RIGHT");
 					right_indices.add(indicies[i]);
 					right_responses.add(responses[i]);
 				} 
 				else {
-//					System.out.println("send missing LEFT");
 					left_indices.add(indicies[i]);
 					left_responses.add(responses[i]);					
 				}
@@ -313,19 +342,51 @@ public class CGMBARTTreeNode implements Cloneable {
 				right_responses.add(responses[i]);
 			}
 		}
-		
+		//populate the left daughter
 		left.n_eta = left_responses.size();
 		left.responses = left_responses.toArray();
 		left.indicies = left_indices.toArray();
-		
+		//populate the right daughter
 		right.n_eta = right_responses.size();
 		right.responses = right_responses.toArray();
 		right.indicies = right_indices.toArray();
-		
+		//recursively propagate to children
 		left.propagateDataByChangedRule();
 		right.propagateDataByChangedRule();
 	}
 	
+	/**
+	 * Update this node and its children with a set of new responses recursively
+	 * 
+	 * @param new_responses		The new responses
+	 */
+	public void updateWithNewResponsesRecursively(double[] new_responses) {
+		//nuke previous responses and sums
+		responses = new double[n_eta]; //ensure correct dimension
+		sum_responses_qty_sqd = 0; //need to be primitives
+		sum_responses_qty = 0; //need to be primitives
+		//copy all the new data in appropriately
+		for (int i = 0; i < n_eta; i++){
+			double y_new = new_responses[indicies[i]];
+			responses[i] = y_new;
+		}
+		if (DEBUG_NODES){
+			System.out.println("new_responses: (size " + new_responses.length + ") [" + Tools.StringJoin(cgmbart.un_transform_y_and_round(new_responses)) + "]");
+			printNodeDebugInfo("updateWithNewResponsesRecursively");
+		}
+		
+		if (this.isLeaf){
+			return;
+		}		
+		this.left.updateWithNewResponsesRecursively(new_responses);
+		this.right.updateWithNewResponsesRecursively(new_responses);
+	}
+	
+	/**
+	 * How many terminal nodes are below this node?
+	 * 
+	 * @return	The number of terminal nodes
+	 */
 	public int numLeaves(){
 		if (this.isLeaf){
 			return 1;
@@ -335,7 +396,11 @@ public class CGMBARTTreeNode implements Cloneable {
 		}
 	}
 	
-
+	/**
+	 * Find the total number of nodes (internal and terminal) recursively below this node
+	 * 
+	 * @return	The number of nodes
+	 */
 	public int numNodesAndLeaves() {
 		if (this.isLeaf){
 			return 1;
@@ -345,6 +410,12 @@ public class CGMBARTTreeNode implements Cloneable {
 		}
 	}	
 
+	/**
+	 * Find the number of singly internal nodes (available for pruning) recursively
+	 * from this point in the tree down
+	 * 
+	 * @return		The number of nodes available for pruning or changing
+	 */
 	public int numPruneNodesAvailable() {
 		if (this.isLeaf){
 			return 0;
@@ -355,33 +426,29 @@ public class CGMBARTTreeNode implements Cloneable {
 		return this.left.numPruneNodesAvailable() + this.right.numPruneNodesAvailable();
 	}	
 	
-	//CHECK as well
+	/**
+	 * Get the prediction for this node transformed back to the original response scale
+	 * 
+	 * @return	The untransformed prediction
+	 */
 	public double prediction_untransformed(){
-		if (y_pred == BAD_FLAG_double){
-			return BAD_FLAG_double;
-		}
-		return cgmbart.un_transform_y(y_pred);
+		return y_pred == BAD_FLAG_double ? BAD_FLAG_double : cgmbart.un_transform_y(y_pred);
 	}
 	
+	/**
+	 * Find the average repsonse in this node and then transform it back to the original response scale
+	 * 
+	 * @return	The untransformed average
+	 */
 	public double avg_response_untransformed(){
 		return cgmbart.un_transform_y(avgResponse());
 	}
 
-	public String stringLocation(boolean show_parent) {
-		if (this.parent == null){
-			return show_parent ? "P" : "";
-		}
-		else if (this.parent.left == this){
-			return this.parent.stringLocation(false) + "L";
-		}
-		else if (this.parent.right == this){
-			return this.parent.stringLocation(false) + "R";
-		}
-		else {
-			return this.parent.stringLocation(false) + "?";
-		}
-	}
-
+	/**
+	 * Find the square of the sum of responses and cache it
+	 * 
+	 * @return	The squared quantity of the sum of responses
+	 */
 	public double sumResponsesQuantitySqd() {
 		if (sum_responses_qty_sqd == 0){
 			sum_responses_qty_sqd = Math.pow(sumResponses(), 2);
@@ -389,6 +456,11 @@ public class CGMBARTTreeNode implements Cloneable {
 		return sum_responses_qty_sqd;
 	}
 
+	/**
+	 * Simply the sum of the repsonses in this node
+	 * 
+	 * @return	The sum
+	 */
 	public double sumResponses() {
 		if (sum_responses_qty == 0){
 			sum_responses_qty = 0.0;
@@ -399,6 +471,13 @@ public class CGMBARTTreeNode implements Cloneable {
 		return sum_responses_qty;
 	}	
 	
+	/**
+	 * A wrapper to find a list of predictors that are valid for splitting at this node. 
+	 * If <code>mem_cache_for_speed</code> is turned on in the construction of the BART model, 
+	 * this list gets cached.
+	 * 
+	 * @return		The list of predictors indexed by the columns in the design matrix
+	 */
 	protected TIntArrayList predictorsThatCouldBeUsedToSplitAtNode() {
 		if (cgmbart.mem_cache_for_speed){
 			if (possible_rule_variables == null){
@@ -411,6 +490,11 @@ public class CGMBARTTreeNode implements Cloneable {
 		}
 	}
 	
+	/**
+	 * Finds a list of predictors that are valid for splitting at this node.
+	 * 
+	 * @return		The list of predictors indexed by the columns in the design matrix
+	 */
 	private TIntArrayList tabulatePredictorsThatCouldBeUsedToSplitAtNode() {
 		TIntArrayList possible_rule_variables = new TIntArrayList();
 		
@@ -429,14 +513,22 @@ public class CGMBARTTreeNode implements Cloneable {
 	}
 
 	/**
-	 * Gets the total number of split points that can be used for rules at this juncture
-	 * @return
+	 * Gets the total number of valid split points that can be used for rules at this juncture
+	 * for the selected split rule predictor (it will be different for each predictor)
+	 * 
+	 * @return		The number of valid split points  
 	 */
 	public int nAdj(){
 		return possibleSplitValuesGivenAttribute().size();
 	}	
 	
-	
+	/**
+	 * A wrapper to find a list of split values that are valid for splitting at this node. 
+	 * If <code>mem_cache_for_speed</code> is turned on in the construction of the BART model, 
+	 * this list gets cached.
+	 * 
+	 * @return		The list of split values
+	 */
 	protected TDoubleHashSetAndArray possibleSplitValuesGivenAttribute() {
 		if (cgmbart.mem_cache_for_speed){
 			if (possible_split_vals_by_attr == null){
@@ -452,6 +544,11 @@ public class CGMBARTTreeNode implements Cloneable {
 		}
 	}
 	
+	/**
+	 * Finds a list of split values that are valid for splitting at this node.
+	 * 
+	 * @return		The list of split values
+	 */
 	private TDoubleHashSetAndArray tabulatePossibleSplitValuesGivenAttribute() {
 		double[] x_dot_j = cgmbart.X_y_by_col.get(splitAttributeM);
 		double[] x_dot_j_node = new double[n_eta];
@@ -472,80 +569,46 @@ public class CGMBARTTreeNode implements Cloneable {
 		return unique_x_dot_j_node;
 	}
 
+	/**
+	 * Of the valid split values to split at for this split rule at this node, pick one at random
+	 * 
+	 * @return		The randomly selected split value
+	 */
 	public double pickRandomSplitValue() {	
 		TDoubleHashSetAndArray split_values = possibleSplitValuesGivenAttribute();
 		if (split_values.size() == 0){
 			return CGMBARTTreeNode.BAD_FLAG_double;
 		}
 		int rand_index = (int) Math.floor(StatToolbox.rand() * split_values.size());
-//		System.out.println("split_values: " + Tools.StringJoin(split_values.toArray()));
 		return split_values.getAtIndex(rand_index);
 	}
 	
+	/**
+	 * Is this node a stump? That is, does it have no parents and no children?
+	 * 
+	 * @return	True if it's a stump
+	 */
 	public boolean isStump() {
 		return parent == null && left == null && right == null;
 	}
+	
+	/**
+	 * Find the string ID of this node
+	 * 
+	 * @return	The unique ID of this node
+	 */
 	public String stringID() {
 		return toString().split("@")[1];
 	}	
-	
-	
-	//serializable happy
-	public CGMBARTTreeNode getLeft() {
-		return left;
-	}
-	public CGMBARTTreeNode getRight() {
-		return right;
-	}
-	public int getGeneration() {
-		return depth;
-	}
-	public void setGeneration(int generation) {
-		this.depth = generation;
-	}	
-	public boolean isLeaf() {
-		return isLeaf;
-	}
-	public void setLeaf(boolean isLeaf) {
-		this.isLeaf = isLeaf;
-	}
-	public void setLeft(CGMBARTTreeNode left) {
-		this.left = left;
-	}
-	public void setRight(CGMBARTTreeNode right) {
-		this.right = right;
-	}
-	public int getSplitAttributeM() {
-		return splitAttributeM;
-	}
-	public void setSplitAttributeM(int splitAttributeM) {
-		this.splitAttributeM = splitAttributeM;
-	}
-	public double getSplitValue() {
-		return splitValue;
-	}
-	public void setSplitValue(double splitValue) {
-		this.splitValue = splitValue;
-	}
 
-	public void numTimesAttrUsed(int[] total_for_trees) {
-		if (this.isLeaf){
-			return;
-		}
-		total_for_trees[this.splitAttributeM]++;
-		left.numTimesAttrUsed(total_for_trees);
-		right.numTimesAttrUsed(total_for_trees);
-	}
-	
-	public void attrUsed(int[] total_for_trees) {
-		if (this.isLeaf){
-			return;
-		}
-		total_for_trees[this.splitAttributeM] = 1;
-		left.numTimesAttrUsed(total_for_trees);
-		right.numTimesAttrUsed(total_for_trees);
-	}	
-
+	/**
+	 * When a new stump gets created, this function sets its data. This allows
+	 * the stump to grow a tree within a BART model
+	 * 
+	 * @param X_y		the training data that will be filtered down the tree structure
+	 * @param y_trans	the transformed responses that correspond to the <code>X_y</code> data records
+	 * @param p			the number of attributes in the training data
+	 */
 	public void setStumpData(ArrayList<double[]> X_y, double[] y_trans, int p) {
 		//pull out X data, set y's, and indices appropriately
 		n_eta = X_y.size();
@@ -577,11 +640,101 @@ public class CGMBARTTreeNode implements Cloneable {
 		}
 	}
 
+	/** Given new yhat predictions, update them for this node */
+	public void updateYHatsWithPrediction() {		
+		for (int i = 0; i < indicies.length; i++){
+			yhats[indicies[i]] = y_pred;
+		}
+		if (DEBUG_NODES){
+			printNodeDebugInfo("updateYHatsWithPrediction");
+		}
+	}
+
+	/**
+	 * A wrapper to find all interactions recursively by checking all splits underneath this node
+	 *  
+	 * @param set_of_interaction_pairs	A running list of interaction pairs
+	 */
+	public void findInteractions(HashSet<UnorderedPair<Integer>> set_of_interaction_pairs) {		
+		if (this.isLeaf){
+			return;
+		}
+		//add all pairs for which this split at this node interacts
+		findSplitAttributesUsedUnderneath(this.splitAttributeM, set_of_interaction_pairs);
+		//recurse further to all the children
+		this.left.findInteractions(set_of_interaction_pairs);
+		this.right.findInteractions(set_of_interaction_pairs);
+		
+	}
+
+	/**
+	 * Finds interactions recursively for one node's attribute by checking all splits underneath this node
+	 * 
+	 * @param interacted_attribute			The attribute in the top node that is being interacted with split rules in the daughter nodes
+	 * @param set_of_interaction_pairs		A running list of interaction pairs
+	 */
+	private void findSplitAttributesUsedUnderneath(int interacted_attribute, HashSet<UnorderedPair<Integer>> set_of_interaction_pairs) {
+		if (this.isLeaf){
+			return;
+		}
+		//add new pair
+		if (!this.left.isLeaf){
+			set_of_interaction_pairs.add(new UnorderedPair<Integer>(interacted_attribute, this.left.splitAttributeM));
+		}
+		if (!this.right.isLeaf){
+			set_of_interaction_pairs.add(new UnorderedPair<Integer>(interacted_attribute, this.right.splitAttributeM));
+		}
+		//now recurse
+		this.left.findSplitAttributesUsedUnderneath(interacted_attribute, set_of_interaction_pairs);
+		this.right.findSplitAttributesUsedUnderneath(interacted_attribute, set_of_interaction_pairs);
+	}
+
+	/** When <code>mem_cache_for_speed</code> is set in the BART model, running this function will reset the caches for this node's valid predictors and valid split values */
+	public void clearRulesAndSplitCache() {
+		possible_rule_variables = null;
+		possible_split_vals_by_attr = null;
+	}
+	
+	/**
+	 * Picks a random direction for missing data to flow down the tree from this node. As of
+	 * now, this is a 50-50 coin flip left:right.
+	 * 
+	 * @return	True / false is returned
+	 */
+	public static boolean pickRandomDirectionForMissingData() {
+		return StatToolbox.rand() < 0.5 ? false : true;
+	}
+	
+	/**
+	 * In debugging, print a string that codes this node's location in the entire tree
+	 * 	
+	 * @param show_parent	Show a character if this node is a stump
+	 * @return				The coded string
+	 */
+	public String stringLocation(boolean show_parent) {
+		if (this.parent == null){
+			return show_parent ? "P" : "";
+		}
+		else if (this.parent.left == this){
+			return this.parent.stringLocation(false) + "L";
+		}
+		else if (this.parent.right == this){
+			return this.parent.stringLocation(false) + "R";
+		}
+		else {
+			return this.parent.stringLocation(false) + "?";
+		}
+	}	
+
+	/**
+	 * Prints debug information about this node, its parent and its immediate children
+	 * 
+	 * @param title		A string to print within this message
+	 */
 	public void printNodeDebugInfo(String title) {		
 		System.out.println("\n" + title + " node debug info for " + this.stringLocation(true) + (isLeaf ? " (LEAF) " : " (INTERNAL NODE) ") + " d = " + depth);
 		System.out.println("-----------------------------------------");
 		System.out.println("n_eta = " + n_eta + " y_pred = " + (y_pred == BAD_FLAG_double ? "BLANK" : cgmbart.un_transform_y_and_round(y_pred)));
-//		System.out.print("cgmbart = " + cgmbart + " ");
 		System.out.println("parent = " + parent + " left = " + left + " right = " + right);
 		
 		if (this.parent != null){
@@ -636,84 +789,60 @@ public class CGMBARTTreeNode implements Cloneable {
 			System.out.println("y_hat_vec: (size " + yhats.length + ") [" + Tools.StringJoin(cgmbart.un_transform_y_and_round(yhats)) + "]");
 		}
 		System.out.println("-----------------------------------------\n\n\n");
-	}
-
-	public void updateWithNewResponsesRecursively(double[] new_responses) {
-		//nuke previous responses and sums
-		responses = new double[n_eta]; //ensure correct dimension
-		sum_responses_qty_sqd = 0; //need to be primitives
-		sum_responses_qty = 0; //need to be primitives
-		//copy all the new data in appropriately
-		for (int i = 0; i < n_eta; i++){
-			double y_new = new_responses[indicies[i]];
-//			this.data.get(i)[cgmbart.p] = y_new;
-			responses[i] = y_new;
-		}
-		if (DEBUG_NODES){
-			System.out.println("new_responses: (size " + new_responses.length + ") [" + Tools.StringJoin(cgmbart.un_transform_y_and_round(new_responses)) + "]");
-			printNodeDebugInfo("updateWithNewResponsesRecursively");
-		}
-		
-		if (this.isLeaf){
-			return;
-		}		
-		this.left.updateWithNewResponsesRecursively(new_responses);
-		this.right.updateWithNewResponsesRecursively(new_responses);
-	}
-
-	public void updateYHatsWithPrediction() {		
-		for (int i = 0; i < indicies.length; i++){
-			yhats[indicies[i]] = y_pred;
-		}
-		if (DEBUG_NODES){
-			printNodeDebugInfo("updateYHatsWithPrediction");
-		}
-	}
-
-	public void findInteractions(HashSet<UnorderedPair<Integer>> set_of_interaction_pairs) {		
-		if (this.isLeaf){
-			return;
-		}
-		//add all pairs for which this split at this node interacts
-		findSplitAttributesUsedUnderneath(this.splitAttributeM, set_of_interaction_pairs);
-		//recurse further
-		this.left.findInteractions(set_of_interaction_pairs);
-		this.right.findInteractions(set_of_interaction_pairs);
-		
-	}
-
-	private void findSplitAttributesUsedUnderneath(int interacted_attribute, HashSet<UnorderedPair<Integer>> set_of_interaction_pairs) {
-		if (this.isLeaf){
-			return;
-		}
-		//add new pair
-		if (!this.left.isLeaf){
-			set_of_interaction_pairs.add(new UnorderedPair<Integer>(interacted_attribute, this.left.splitAttributeM));
-		}
-		if (!this.right.isLeaf){
-			set_of_interaction_pairs.add(new UnorderedPair<Integer>(interacted_attribute, this.right.splitAttributeM));
-		}
-		//now recurse
-		this.left.findSplitAttributesUsedUnderneath(interacted_attribute, set_of_interaction_pairs);
-		this.right.findSplitAttributesUsedUnderneath(interacted_attribute, set_of_interaction_pairs);
-	}
-
-	public void clearRulesAndSplitCache() {
-		possible_rule_variables = null;
-		possible_split_vals_by_attr = null;
-	}
-
+	}	
+	
+	/**
+	 * When counting the attributes used in this tree's split rules, decrement the following attribute
+	 * 
+	 * @param j		The attribute number (in the original traning data design matrix) to decrement in count
+	 */
 	public void decrement_variable_count(int j) {
 		attribute_split_counts[j]--;
 	}
 
+	/**
+	 * When counting the attributes used in this tree's split rules, increment the following attribute
+	 * 
+	 * @param j		The attribute number (in the original traning data design matrix) to increment in count
+	 */
 	public void increment_variable_count(int j) {
-		attribute_split_counts[j]++;
-		
+		attribute_split_counts[j]++;		
 	}
-
-	public static boolean pickRandomDirectionForMissingData() {
-		return StatToolbox.rand() < 0.5 ? false : true;
+	
+	public CGMBARTTreeNode getLeft() {
+		return left;
 	}
-
+	public CGMBARTTreeNode getRight() {
+		return right;
+	}
+	public int getGeneration() {
+		return depth;
+	}
+	public void setGeneration(int generation) {
+		this.depth = generation;
+	}	
+	public boolean isLeaf() {
+		return isLeaf;
+	}
+	public void setLeaf(boolean isLeaf) {
+		this.isLeaf = isLeaf;
+	}
+	public void setLeft(CGMBARTTreeNode left) {
+		this.left = left;
+	}
+	public void setRight(CGMBARTTreeNode right) {
+		this.right = right;
+	}
+	public int getSplitAttributeM() {
+		return splitAttributeM;
+	}
+	public void setSplitAttributeM(int splitAttributeM) {
+		this.splitAttributeM = splitAttributeM;
+	}
+	public double getSplitValue() {
+		return splitValue;
+	}
+	public void setSplitValue(double splitValue) {
+		this.splitValue = splitValue;
+	}
 }
