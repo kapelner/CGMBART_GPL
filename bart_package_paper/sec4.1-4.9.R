@@ -43,7 +43,10 @@ oos_stats_cv
 
 predict(bart_machine_cv, X[1 : 14, ])
 
-##### section 4.3
+##section 4.3
+destroy_bart_machine(bart_machine)
+
+##### section 4.4
 
 #Figure 4
 check_bart_error_assumptions(bart_machine_cv)
@@ -51,7 +54,7 @@ check_bart_error_assumptions(bart_machine_cv)
 #Figure 5
 plot_convergence_diagnostics(bart_machine_cv)
 
-##### section 4.4
+##### section 4.5
 
 calc_credible_intervals(bart_machine_cv, new_data = X[100, ], ci_conf = 0.95)
 calc_prediction_intervals(bart_machine_cv, new_data = X[100, ], pi_conf = 0.95)
@@ -61,12 +64,12 @@ plot_y_vs_yhat(bart_machine_cv, credible_intervals = TRUE)
 #Figure 6b
 plot_y_vs_yhat(bart_machine_cv, prediction_intervals = TRUE)
 
-##### section 4.5
+##### section 4.6
 
 #Figure 7
 investigate_var_importance(bart_machine_cv, num_replicates_for_avg = 20)
 
-##### section 4.6
+##### section 4.7
 
 #Figure 8a
 cov_importance_test(bart_machine_cv, covariates = c("width"))
@@ -90,7 +93,7 @@ cov_importance_test(bart_machine_cv, covariates = c("width",
 windows()
 cov_importance_test(bart_machine_cv)
 
-##### section 4.7
+##### section 4.8
 
 #Figure 9a
 pd_plot(bart_machine_cv, j = "horsepower")
@@ -98,7 +101,7 @@ windows()
 #Figure 9b
 pd_plot(bart_machine_cv, j = "stroke")
 
-##### section 4.8
+##### section 4.9
 
 Xy = read.csv("datasets/r_automobile.csv")
 Xy = Xy[!is.na(Xy$price), ] #kill rows without a response but do not kill rows that are missing
@@ -119,7 +122,7 @@ cov_importance_test(bart_machine, covariates = c("M_normalized_losses", "M_bore"
 bart_machine = build_bart_machine(X, y, verbose = FALSE, use_missing_data = TRUE)
 bart_machine
 
-##### section 4.9
+##### section 4.10
 
 #Figure 10
 vs = var_selection_by_permute_response_three_methods(bart_machine, bottom_margin = 10, num_permute_samples = 10)
