@@ -60,7 +60,6 @@ Adam Kapelner and Justin Bleich
 }
 \note{
 In the plot, the red bars correspond to the standard error of the variable inclusion proportion estimates (since multiple replicates were used).
-This function is parallelized by the number of cores set in \code{\link{set_bart_machine_num_cores}}.
 }
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~

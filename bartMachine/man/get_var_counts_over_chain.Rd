@@ -33,7 +33,6 @@ by \code{p} (where \code{p} is the number of predictors after dummifying factors
 Adam Kapelner and Justin Bleich
 }
 \note{
-This function is parallelized by the number of cores set in \code{\link{set_bart_machine_num_cores}}.
 }
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
